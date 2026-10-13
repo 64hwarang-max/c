@@ -9932,6 +9932,12 @@ document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest
 
 /* ---- 2) 짜투리 앱 바로가기: 누르면 그 앱(예: 밀리의 서재)이 바로 열림 ---- */
 const QLK=()=>{SET.qlinks=Array.isArray(SET.qlinks)?SET.qlinks:[];return SET.qlinks};
+/* 기본 바로가기: 밀리의 서재 · TED · 듀오링고 (처음 한 번만 넣음, 지우면 다시 안 넣음) */
+const QLDEF=[{id:'ql-millie',name:'밀리의 서재',emo:'📚',kw:'책, 독서',pkg:'kr.co.millie.millieshelf',url:'https://www.millie.co.kr'},
+  {id:'ql-ted',name:'TED',emo:'🎤',kw:'강연, 강의, TED',pkg:'com.ted.android',url:'https://www.ted.com'},
+  {id:'ql-duo',name:'듀오링고',emo:'🦉',kw:'영어, 외국어, 언어, 단어',pkg:'com.duolingo',url:'https://www.duolingo.com'}];
+function qlSeed(){try{if(!SET||SET.qlInit)return;const L=QLK();QLDEF.forEach(d=>{if(!L.some(x=>x.id===d.id||x.pkg===d.pkg))L.push({...d})});SET.qlInit=1;saveSet().catch(()=>{})}catch(e){}}
+setTimeout(qlSeed,2500);
 (function(){const st=document.createElement('style');st.textContent=`
 .qlrow{display:flex;align-items:stretch;gap:6px;overflow-x:auto;padding:2px 0 8px;margin:0 0 6px;scrollbar-width:none}.qlrow::-webkit-scrollbar{display:none}
 .qlh{flex:none;align-self:center;font-size:.76rem;font-weight:700;color:var(--muted);margin-right:2px;writing-mode:horizontal-tb}
@@ -9968,6 +9974,7 @@ async function qlMgr(){const S=$('#sheet');if(!S)return;if(!$('#qlx'))QLFROM=!!$
   S.innerHTML=`<div class="sheetbox" role="dialog" aria-label="바로가기"><div class="shead"><b>🚀 짜투리 바로가기</b><button class="del" id="qlx">${QLFROM?'뒤로':'닫기'}</button></div>
   <p class="hint" style="margin:0 0 8px">짜투리 시간에 자주 여는 앱을 등록해 두면 한 번에 열립니다. <b>연결 단어</b>를 넣으면 그 단어가 들어간 짜투리 제안 옆에 ‘열기’ 버튼이 붙습니다. 예: 📚 밀리의 서재 · 연결 단어 “책, 독서”.</p>
   ${L.length?`<ul class="mnlist qlm">${L.map((q,i)=>`<li><b>${esc(q.emo||'📱')}</b><span>${esc(q.name)}<br><small>${q.pkg?'앱 '+esc(q.pkg):''}${q.pkg&&q.url?' · ':''}${q.url?esc(q.url):''}${q.kw?' · 연결: '+esc(q.kw):''}</small></span><button class="del" data-qlup="${i}" ${i?'':'disabled'} aria-label="위로">▲</button><button class="del" data-qled="${esc(q.id)}">고치기</button><button class="del" data-qldel="${esc(q.id)}">✕</button></li>`).join('')}</ul>`:''}
+  ${QLDEF.filter(d=>!L.some(x=>x.id===d.id||x.pkg===d.pkg)).length?`<p class="hint" style="margin:8px 0 4px">추천 바로가기</p><div class="chips">${QLDEF.filter(d=>!L.some(x=>x.id===d.id||x.pkg===d.pkg)).map(d=>`<button type="button" class="chip" data-qldef="${d.id}">${d.emo} ${d.name} ＋</button>`).join('')}</div>`:''}
   <div class="qlf"><b style="font-size:.88rem">${E.id?'✏️ 바로가기 고치기':'＋ 새 바로가기'}</b>
    <div class="g2"><input type="text" id="qlemo" value="${esc(E.emo||'')}" maxlength="4" aria-label="아이콘(이모지)" placeholder="📚"><input type="text" id="qlname" value="${esc(E.name)}" placeholder="이름 (예: 밀리의 서재)"></div>
    <input type="text" id="qlkw" value="${esc(E.kw||'')}" placeholder="연결 단어 (예: 책, 독서) — 쉼표로 나눔">
@@ -9980,6 +9987,7 @@ async function qlMgr(){const S=$('#sheet');if(!S)return;if(!$('#qlx'))QLFROM=!!$
   S.querySelectorAll('[data-qldel]').forEach(b=>b.onclick=async()=>{const q=L.find(x=>x.id===b.dataset.qldel);if(!q||!await uiConfirm(`‘${q.name}’ 바로가기를 뺄까요?`))return;SET.qlinks=L.filter(x=>x!==q);saveSet().catch(()=>{});qlMgr()});
   S.querySelectorAll('[data-qled]').forEach(b=>b.onclick=()=>{const q=L.find(x=>x.id===b.dataset.qled);if(q){QLE={...q};qlMgr()}});
   S.querySelectorAll('[data-qlup]').forEach(b=>b.onclick=()=>{const i=+b.dataset.qlup;if(i<1)return;[L[i-1],L[i]]=[L[i],L[i-1]];saveSet().catch(()=>{});qlMgr()});
+  S.querySelectorAll('[data-qldef]').forEach(b=>b.onclick=()=>{const d=QLDEF.find(x=>x.id===b.dataset.qldef);if(d){L.push({...d});saveSet().catch(()=>{});qlMgr()}});
   const nw=$('#qlnew');if(nw)nw.onclick=()=>{QLE={id:'',name:'',emo:'📚',kw:'',pkg:'',url:''};qlMgr()};
   const pk=$('#qlpick');if(pk)pk.onclick=async()=>{rdE();const box=$('#qlapps');box.innerHTML='<p class="hint">설치된 앱을 읽는 중…</p>';
     try{if(!QLAPPS){const r=await BKB().listApps();QLAPPS=(r&&r.apps)||[]}}catch(e){box.innerHTML='<p class="hint">앱 목록을 읽지 못했습니다.</p>';return}
