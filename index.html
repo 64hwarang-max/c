@@ -1,4 +1,4 @@
-<!-- 성장일지 v3.88 · 2026-10-14 · 어성경 느낀점 쓰기 · 말씀+느낀점 공유 · 짜투리 연동 · 일기 대분류 -->
+<!-- 성장일지 v3.89 · 2026-10-14 · 기도노트 사람별 한 번에 넣기 · 말씀+느낀점 공유 · 어성경 느낀점 -->
 <!doctype html>
 <html lang="ko" class="simple">
 <head>
@@ -10727,7 +10727,7 @@ function prCardHTML(e){const x=e.x,st=prStat(x),T=today();const lg=prLog(x);cons
     <div class="g2"><label class="f">기도 시작일<input type="date" id="pre_d" value="${esc(x.d||T)}"></label>${x.ans?`<label class="f">응답일<input type="date" id="pre_ad" value="${esc(x.ad||T)}"></label>`:'<span></span>'}</div>
     ${x.ans?`<label class="f">응답 내용<textarea id="pre_an" rows="2">${esc(x.an||'')}</textarea></label>`:''}
     <div class="row" style="justify-content:space-between;flex-wrap:wrap;gap:6px"><span class="row" style="gap:6px">${st==='on'?'<button class="del" data-prrest="1">내려놓기</button>':''}<button class="del" data-prdel="1" style="color:var(--c-mis)">지우기</button></span><span class="row" style="gap:6px"><button class="btn small ghost" data-prcancel="1">취소</button><button class="btn small" data-prsave="1">저장</button></span></div></div>`;
-  const who=e.p?`<span class="prwho">👤 ${esc(e.p.name||'')}</span>`:'';
+  const who=e.p?`<span class="prwho">👤 ${esc(e.p.name||'')}</span>`:x.who?`<span class="prwho">👤 ${esc(x.who)}</span>`:'';
   const meta=[`<span class="prcat">${esc(prCatOf(e))}</span>`,who,st==='ans'?`🙌 ${md(x.ad||T)} 응답${x.d?` · ${prDays(x)}일 만에`:''}`:st==='rest'?`내려놓음${x.rd?` · ${md(x.rd)}`:''}`:`${x.d?`${prDays(x)}일째`:''}${n?` · ${n}번 기도`:''}`].filter(Boolean).join(' ');
   return`<div class="prc ${st} ${on?'td':''}" data-prid="${esc(x.id)}">
     ${st==='on'?`<button class="prck ${on?'on':''}" data-prtg="${esc(x.id)}" aria-label="${on?'오늘 기도 취소':'오늘 기도함'}">${on?'✓':''}</button>`:`<span class="prck ${st}">${st==='ans'?'🙌':'·'}</span>`}
@@ -10741,17 +10741,17 @@ function prHTML(){const P=prSt(),T=today();const A=prAll();const on=A.filter(e=>
     <div class="prsum"><div><b>${on.length}</b><span>기도 중</span></div><div><b>${tdN}<small>/${on.length}</small></b><span>오늘 기도</span></div><div><b>${ans.length}</b><span>응답${ansY?` · 올해 ${ansY}`:''}</span></div></div>
     ${on.length?`<div class="pilbar" style="margin-top:8px"><i style="width:${on.length?Math.round(tdN/on.length*100):0}%;background:#b07d12"></i></div>`:''}</div>`;
   h+=`<details class="card nocol pradd" ${prFormOpen||!A.length?'open':''}><summary><b>＋ 기도제목 적기</b></summary>
-    <textarea id="prn_t" rows="2" placeholder="예: 아버지 건강 회복, 이번 훈련을 안전하게 마치도록"></textarea>
+    <textarea id="prn_t" rows="2" placeholder="예: 아버지 건강 회복, 이번 훈련을 안전하게 마치도록&#10;&#10;사람별로 한 번에: 날짜(261015) 한 줄 다음에&#10;- 이름 : 기도제목  (이름 여러 명은 쉼표로)"></textarea>
     <div class="g2"><label class="f">분류<select id="prn_c">${prCatOpts(prCat||P.cats[0])}</select></label><label class="f">대상(사람)<select id="prn_p">${prPeopleOpts('')}</select></label></div>
     <input id="prn_v" placeholder="붙잡는 말씀 (선택) 예: 빌 4:6-7">
     <div class="row" style="justify-content:space-between"><button class="del" data-prcats="1">분류 고치기</button><button class="btn small" id="prn_go">기도제목 추가</button></div>
-    <p class="hint" style="margin:0">대상(사람)을 고르면 관계관리의 그 사람 카드에도 같은 기도제목이 남습니다. 여러 줄을 적으면 한 줄씩 따로 들어갑니다.</p></details>`;
+    <p class="hint" style="margin:0">대상(사람)을 고르면 관계관리의 그 사람 카드에도 같은 기도제목이 남습니다. 여러 줄을 적으면 한 줄씩 따로 들어갑니다. ‘- 이름 : 기도제목’ 형식(위에 날짜 261015 한 줄)으로 붙여 넣으면 사람마다 따로 들어가고, 이름이 둘 이상이면 각자의 기도제목이 됩니다.</p></details>`;
   const cnt={on:on.length,ans:ans.length,rest:rest.length,all:A.length};
   h+=`<div class="seg prf" style="margin:12px 0 8px">${[['on','기도 중'],['ans','응답'],['rest','내려놓음'],['all','전체']].map(([k,l])=>`<button data-prf="${k}" class="${prF===k?'on':''}">${l} ${cnt[k]}</button>`).join('')}</div>`;
   const pool=prF==='all'?A:A.filter(e=>prStat(e.x)===prF);const cats=[...new Set([...P.cats,...pool.map(prCatOf)])].filter(c=>pool.some(e=>prCatOf(e)===c));
   if(cats.length>1)h+=`<div class="chips prcf"><button class="chip ${!prCat?'on':''}" data-prc="">모두</button>${cats.map(c=>`<button class="chip ${prCat===c?'on':''}" data-prc="${esc(c)}">${esc(c)} ${pool.filter(e=>prCatOf(e)===c).length}</button>`).join('')}</div>`;
   if(A.length>6)h+=`<input type="search" id="prq" class="prq" placeholder="기도제목·사람·말씀 찾기" value="${esc(prQ)}">`;
-  const q=prQ.trim();let L=pool.filter(e=>(!prCat||prCatOf(e)===prCat)&&(!q||[e.x.t,e.x.memo,e.x.v,e.x.an,e.p&&e.p.name].some(s=>(s||'').includes(q))));
+  const q=prQ.trim();let L=pool.filter(e=>(!prCat||prCatOf(e)===prCat)&&(!q||[e.x.t,e.x.memo,e.x.v,e.x.an,e.p&&e.p.name,e.x.who].some(s=>(s||'').includes(q))));
   if(prF==='ans')L.sort((a,b)=>(b.x.ad||'').localeCompare(a.x.ad||''));else L.sort((a,b)=>(a.x.d||'').localeCompare(b.x.d||''));
   if(!L.length)h+=`<p class="empty">${A.length?'해당하는 기도제목이 없습니다.':'아직 적은 기도제목이 없습니다. 위 칸에 기도제목을 적어 보십시오.'}</p>`;
   else if(prF==='on'&&!prCat&&!q){const C=[...new Set([...P.cats,...L.map(prCatOf)])].filter(c=>L.some(e=>prCatOf(e)===c));
@@ -10759,10 +10759,22 @@ function prHTML(){const P=prSt(),T=today();const A=prAll();const on=A.filter(e=>
   else h+=`<div class="pyg">${L.map(prCardHTML).join('')}</div>`;
   if(on.length)h+=`<div class="row" style="margin-top:10px;gap:8px;flex-wrap:wrap"><button class="del" data-prcopy="1">📋 기도 목록 복사</button>${ans.length?'<button class="del" data-prcopy="ans">🙌 응답 기록 복사</button>':''}</div>`;
   return h}
+function prParseNames(raw){const L=String(raw).split('\n').map(s=>s.trim()).filter(Boolean);let d='',hasD=false,hit=0,all=true;const out=[];
+  for(const s of L){let m=s.match(/^(\d{2})(\d{2})(\d{2})$/);if(m&&+m[2]>=1&&+m[2]<=12&&+m[3]>=1&&+m[3]<=31){d=`20${m[1]}-${m[2]}-${m[3]}`;hasD=true;continue}
+    m=s.match(/^(\d{4})[-.\/](\d{1,2})[-.\/](\d{1,2})$/);if(m){d=`${m[1]}-${m[2].padStart(2,'0')}-${m[3].padStart(2,'0')}`;hasD=true;continue}
+    m=s.match(/^[\s\-•·*▪]*([^:：\-•]{1,30}?)\s*[:：]\s*(.+)$/);
+    if(m&&/^[가-힣A-Za-z][가-힣A-Za-z0-9 ,，、·&]*$/.test(m[1].trim())){const names=m[1].split(/[,，、·&]/).map(x=>x.trim()).filter(Boolean);if(names.length&&names.every(x=>x.length<=10)){names.forEach(n=>out.push({name:n,t:m[2].trim(),d}));hit++;continue}}
+    all=false;out.push({name:'',t:s.replace(/^[\s\-•·\d.)]+/,'').trim(),d})}
+  return hit&&(hasD||all)?out.filter(o=>o.t):null}
 function renderPrayer(R){const tabs=typeof memTabsHTML==='function'?memTabsHTML():'';R.innerHTML=tabs+prHTML();try{memTabsBind(R)}catch(e){}prBind(R)}
 function prBind(R){const re=()=>{const y=window.scrollY;renderPrayer(R);window.scrollTo(0,y)};const T=today();
   const dt=R.querySelector('.pradd');if(dt)dt.addEventListener('toggle',()=>{prFormOpen=dt.open});
-  const go=R.querySelector('#prn_go');if(go)go.onclick=()=>{const ts=(R.querySelector('#prn_t').value||'').split('\n').map(s=>s.replace(/^[\s\-•·\d.)]+/,'').trim()).filter(Boolean);if(!ts.length){toast('기도제목을 적어 주십시오.');return}
+  const go=R.querySelector('#prn_go');if(go)go.onclick=()=>{const NL=prParseNames(R.querySelector('#prn_t').value||'');
+    if(NL&&NL.length){const cat=R.querySelector('#prn_c').value,v=(R.querySelector('#prn_v').value||'').trim();let link=0;const T0=today();
+      NL.forEach(o=>{const x={id:'pr'+uid(),t:o.t.slice(0,300),d:o.d||T0,ans:false,cat,log:{}};if(v)x.v=v;const p=o.name&&(PEOPLE.list||[]).find(y=>String(y.name||'').trim()===o.name);
+        if(p){try{pcMig(p)}catch(e){}p.prays=p.prays||[];p.prays.push(x);pcSave(p);link++}else{if(o.name)x.who=o.name;prSt().items.push(x)}});
+      prSave();prFormOpen=true;prF='on';toast(`🙏 사람별 기도제목 ${NL.length}개를 적었습니다.${link?` (관계관리 ${link}명 연결)`:''}`);re();return}
+    const ts=(R.querySelector('#prn_t').value||'').split('\n').map(s=>s.replace(/^[\s\-•·\d.)]+/,'').trim()).filter(Boolean);if(!ts.length){toast('기도제목을 적어 주십시오.');return}
     const cat=R.querySelector('#prn_c').value,pid=R.querySelector('#prn_p').value,v=(R.querySelector('#prn_v').value||'').trim();const p=pid&&(PEOPLE.list||[]).find(y=>y.id===pid);
     ts.forEach(t=>{const x={id:'pr'+uid(),t:t.slice(0,300),d:T,ans:false,cat,log:{}};if(v)x.v=v;if(p){try{pcMig(p)}catch(e){}p.prays=p.prays||[];p.prays.push(x)}else prSt().items.push(x)});
     if(p)pcSave(p);else prSave();prFormOpen=true;prF='on';toast(`🙏 기도제목 ${ts.length}개를 적었습니다.`);re();setTimeout(()=>{const t=R.querySelector('#prn_t');if(t)t.focus()},50)};
@@ -10780,7 +10792,7 @@ function prBind(R){const re=()=>{const y=window.scrollY;renderPrayer(R);window.s
     ed.querySelector('[data-prsave]').onclick=()=>{if(!e)return;const t=(v('#pre_t')||'').trim();if(!t){toast('기도제목을 적어 주십시오.');return}
       const x=e.x;x.t=t.slice(0,300);x.cat=v('#pre_c');x.v=(v('#pre_v')||'').trim();x.memo=(v('#pre_m')||'').trim();x.d=v('#pre_d')||x.d;if(x.ans){x.ad=v('#pre_ad')||x.ad;x.an=(v('#pre_an')||'').trim()}
       if(!x.v)delete x.v;if(!x.memo)delete x.memo;
-      const pid=v('#pre_p')||'';const cur=e.p?e.p.id:'';
+      const pid=v('#pre_p')||'';if(pid)delete x.who;const cur=e.p?e.p.id:'';
       if(pid!==cur){/* 대상 바꾸기: 원래 자리에서 빼서 새 자리에 */
         if(e.p){e.p.prays=(e.p.prays||[]).filter(y=>y!==x);pcSave(e.p)}else{prSt().items=prSt().items.filter(y=>y!==x)}
         const np=pid&&(PEOPLE.list||[]).find(y=>y.id===pid);if(np){try{pcMig(np)}catch(er){}np.prays=np.prays||[];np.prays.push(x);pcSave(np)}else prSt().items.push(x)}
@@ -10790,8 +10802,8 @@ function prBind(R){const re=()=>{const y=window.scrollY;renderPrayer(R);window.s
   R.querySelectorAll('[data-prcats]').forEach(b=>b.onclick=async()=>{const P=prSt();let s=null;try{s=await uiPrompt('분류를 쉼표(,)로 나눠 적어 주십시오. 순서대로 보입니다.',P.cats.join(', '))}catch(e){}if(s==null)return;
     const C=[...new Set(String(s).split(/[,\n]/).map(x=>x.trim()).filter(Boolean))];if(!C.length)return;P.cats=C.slice(0,20);prSave();toast('분류를 바꿨습니다.');re()});
   R.querySelectorAll('[data-prcopy]').forEach(b=>b.onclick=async()=>{const A=prAll();let t='';
-    if(b.dataset.prcopy==='ans'){t=`🙌 응답된 기도\n`+A.filter(e=>prStat(e.x)==='ans').sort((a,b)=>(a.x.ad||'').localeCompare(b.x.ad||'')).map(e=>`- ${(e.x.ad||'').replace(/-/g,'.')} ${e.p?e.p.name+': ':''}${e.x.t}${e.x.an?` → ${e.x.an}`:''}`).join('\n')}
-    else{const on=A.filter(e=>prStat(e.x)==='on');const C=[...new Set([...prSt().cats,...on.map(prCatOf)])];t=`🙏 기도제목 (${T.replace(/-/g,'.')})\n`;C.forEach(c=>{const g=on.filter(e=>prCatOf(e)===c);if(g.length)t+=`\n■ ${c}\n`+g.map(e=>`- ${e.p?e.p.name+': ':''}${e.x.t}${e.x.v?` (${e.x.v})`:''}`).join('\n')+'\n'})}
+    if(b.dataset.prcopy==='ans'){t=`🙌 응답된 기도\n`+A.filter(e=>prStat(e.x)==='ans').sort((a,b)=>(a.x.ad||'').localeCompare(b.x.ad||'')).map(e=>`- ${(e.x.ad||'').replace(/-/g,'.')} ${e.p?e.p.name+': ':e.x.who?e.x.who+': ':''}${e.x.t}${e.x.an?` → ${e.x.an}`:''}`).join('\n')}
+    else{const on=A.filter(e=>prStat(e.x)==='on');const C=[...new Set([...prSt().cats,...on.map(prCatOf)])];t=`🙏 기도제목 (${T.replace(/-/g,'.')})\n`;C.forEach(c=>{const g=on.filter(e=>prCatOf(e)===c);if(g.length)t+=`\n■ ${c}\n`+g.map(e=>`- ${e.p?e.p.name+': ':e.x.who?e.x.who+': ':''}${e.x.t}${e.x.v?` (${e.x.v})`:''}`).join('\n')+'\n'})}
     try{await navigator.clipboard.writeText(t);toast('📋 복사했습니다.')}catch(e){uiPromptML?uiPromptML('아래 글을 길게 눌러 복사하십시오.',t):toast('복사하지 못했습니다.')}});
 }
 
