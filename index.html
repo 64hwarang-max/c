@@ -1,4 +1,4 @@
-<!-- 성장일지 v3.86 · 2026-10-13 · 시작 칸 열림 고침 · 짜투리 항목 연동 · 노트 일기 대분류 -->
+<!-- 성장일지 v3.87 · 2026-10-13 · 평가 칸이 시작으로 열리던 것 고침(간단 단계) · 짜투리 연동 · 일기 대분류 -->
 <!doctype html>
 <html lang="ko" class="simple">
 <head>
@@ -1724,7 +1724,7 @@ async function openDay(d){
 }
 function renderDay(){if(ZMD>0&&curSection==='day'){zmDay();return}{const v=$('#v-day');if(v)v.classList.remove('zmon')}try{zmBarSync()}catch(e){}if(mode==='sched')mode='start';document.querySelectorAll('#mode button').forEach(b=>b.classList.toggle('on',b.dataset.m===mode));
   if(curSection==='habit'&&growSub!=='habits'){renderGrow();return}if(curSection==='score'){renderScore();return}
-  if(!['start','sched','run','pm'].includes(mode))mode=mode==='plan'?'start':'pm';if(lvNow()==='easy'&&mode==='pm')mode='start';document.querySelectorAll('#mode button').forEach(b=>b.classList.toggle('on',b.dataset.m===mode));
+  if(!['start','sched','run','pm'].includes(mode))mode=mode==='plan'?'start':'pm';if(lvNow()==='easy'&&mode==='pm'&&!simOn())mode='start';document.querySelectorAll('#mode button').forEach(b=>b.classList.toggle('on',b.dataset.m===mode));
   if(applyDraft(D))schedule();{const qb=$('#qbox');if(qb)qb.hidden=true}qInit();modeSubs();navScore();{const Dh=$('#dash');if(Dh){Dh.innerHTML=dashHTML();bindDash(Dh)}}
   if(mode==='run'){const B=$('#dayBody');B.innerHTML=schedHTML('run');bindSched(B,renderDay);bindRun(B);try{gxRunCard(B)}catch(e){}try{rcBarSync()}catch(e){}return}
   $('#dayBody').innerHTML=mode==='start'?startHTML()+foldWrap('schday','🗓️ 시간표 · 할 일',schedHTML('day'),false):mode==='plan'||mode==='am'?planHTML():mode==='life'?lifeHTML():mode==='pm'?pmHTML():scoreHTML();bindAll($('#dayBody'));bindRadarDrag($('#dayBody'));if(mode==='start')bindSched($('#dayBody'),renderDay);if(mode==='pm')bindDayPhotos($('#dayBody'));{const B=$('#dayBody');B.querySelectorAll('[data-ax]').forEach(el=>el.addEventListener('click',e=>{if(e.target.closest('button'))return;const k=el.dataset.ax;if(AXO.has(k))AXO.delete(k);else AXO.add(k);renderDay();setTimeout(()=>document.getElementById('ax-'+k)?.scrollIntoView({block:'start',behavior:'smooth'}),40)}));collapsify(B);if(AXGO){const k=AXGO;AXGO=null;setTimeout(()=>document.getElementById('ax-'+k)?.scrollIntoView({block:'start'}),60)}}buildJump();try{rcBarSync()}catch(e){}if(mode==='pm')markFive();if(mode==='pm'||mode==='score')fillLists()}
