@@ -3448,6 +3448,13 @@ jobs:
           const mp='android/app/src/main/AndroidManifest.xml';fs.writeFileSync(mp,fs.readFileSync(mp,'utf8').replace(/\s*<service android:name="\.MusicService"[^>]*\/>/,''));console.log('음악 부품 뺌');
           SMJ
           node add-music.js
+      - name: 앱 아이콘 (손그림 새싹)
+        run: |
+          R=android/app/src/main/res
+          for d in mdpi hdpi xhdpi xxhdpi xxxhdpi; do mkdir -p $R/mipmap-$d && cp icons/mipmap-$d/*.png $R/mipmap-$d/; done
+          mkdir -p $R/values && printf '<?xml version="1.0" encoding="utf-8"?>\n<resources>\n    <color name="ic_launcher_background">#DFF5E7</color>\n</resources>\n' > $R/values/ic_launcher_background.xml
+          if [ -d android/wear/src/main/res ]; then W=android/wear/src/main/res; rm -f $W/drawable/ic_w.xml; mkdir -p $W/drawable-nodpi && cp icons/wear-192.png $W/drawable-nodpi/ic_w.png; fi
+          echo "아이콘 적용 완료"
       - name: 서명 키 고정 (업데이트가 기존 앱 위에 설치되도록)
         run: |
           mkdir -p ~/.android
