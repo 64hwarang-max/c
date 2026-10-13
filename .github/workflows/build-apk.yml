@@ -1705,14 +1705,20 @@ jobs:
                           .setCategory(NotificationCompat.CATEGORY_REMINDER)
                           .setPriority(silent ? NotificationCompat.PRIORITY_LOW : NotificationCompat.PRIORITY_DEFAULT);
                   if (silent) b.setSilent(true);
+                  // 알림 크기 고정: 내용이 많든 적든 펼친 모양은 항상 3줄(중간 크기)
                   JSONArray lines = o.optJSONArray("lines");
+                  String[] fx = new String[3];
+                  int fn = 0;
                   if (lines != null && lines.length() > 0) {
+                      for (int i = 0; i < lines.length() && fn < 3; i++) { String t = lines.optString(i, "").trim(); if (t.length() > 0) fx[fn++] = t; }
+                  } else if (o.optString("big", "").length() > 0) {
+                      for (String t : o.optString("big").split("\\n")) { t = t.trim(); if (t.length() > 0 && fn < 3) fx[fn++] = t; }
+                  }
+                  if (fn > 0) {
                       NotificationCompat.InboxStyle st = new NotificationCompat.InboxStyle();
-                      for (int i = 0; i < lines.length(); i++) st.addLine(lines.optString(i));
+                      for (int i = 0; i < 3; i++) st.addLine(i < fn ? fx[i] : "\u00A0");
                       st.setSummaryText(o.optString("text", ""));
                       b.setStyle(st);
-                  } else if (o.optString("big", "").length() > 0) {
-                      b.setStyle(new NotificationCompat.BigTextStyle().bigText(o.optString("big")));
                   }
                   long when = o.optLong("chrono", 0L);
                   if (when > 0L) {
