@@ -1,4 +1,4 @@
-<!-- 성장일지 v3.78 · 2026-10-13 · 노트 자동 정리 -->
+<!-- 성장일지 v3.79 · 2026-10-13 · 노트 자동 정리 · 중점 기둥 아이콘 · 주간 계획+168시간 -->
 <!doctype html>
 <html lang="ko" class="simple">
 <head>
@@ -9814,14 +9814,13 @@ function pcAnc(kind){const T=today();
       if(kind==='w'){if(T.slice(0,7)===a.slice(0,7))return T;const f=a.slice(0,7)+'-01',m=mondayOf(f);return m===f?f:addD(m,7)}
       if(pZoom==='m')return a;const r=pRange();const has=(r.months||[]).some(([y,m])=>y===+T.slice(0,4)&&m===+T.slice(5,7)-1);return has?T:a}}catch(e){}
   return T}
-function pcChips(kind,d){const F=kind==='m'?mFocus(d):wkFocus(d);const P=SCORE.filter(([k])=>k!=='habit'&&k!=='routine');return`<div class="chips">${P.map(([k,l])=>`<button type="button" class="chip fbtn ${F.includes(k)?'on':''}" data-pcf="${kind}" data-pcd="${d}" data-k="${k}">${AREA_E[k]||''} ${esc(l)}</button>`).join('')}</div>`}
+function pcChips(kind,d){const F=kind==='m'?mFocus(d):wkFocus(d);const P=SCORE.filter(([k])=>k!=='habit'&&k!=='routine');return`<div class="pcico">${P.map(([k,l])=>`<button type="button" class="${F.includes(k)?'on':''}" data-pcf="${kind}" data-pcd="${d}" data-k="${k}" title="${esc(l)}" aria-label="${esc(l)}" aria-pressed="${F.includes(k)}">${AREA_E[k]||'•'}</button>`).join('')}</div>`}
 pcCardHTML=function(kind,d){d=d||pcAnc(kind);const lv=kind==='m'?'m':'w';const gs=pcGoals(lv,d);const R=pcRel(kind,d);const rel=R.rel;
   const title=kind==='m'?`📅 ${rel} 계획 ${R.sub!==rel?`<small>${R.sub}</small>`:''}`:`🗓️ ${rel} 계획 <small>${R.sub}</small>`;
   const tag=R.df===0?'':`<span class="pcrel">${R.df<0?'지난 기간':'앞으로'}</span>`;
   return`<div class="card nocol pcc pc${kind} ${R.df<0?'pcpast':''}" data-pcd="${d}" style="--k:${kind==='m'?'#3b82f6':'#ff8a3d'}"><h3>${title}${tag}</h3>
   <p class="fl">🎯 ${rel} 목표</p><div class="plgl">${gs.map(g=>`<label class="plgi ${g.done?'dn':''}"><input type="checkbox" data-plgd="${g.id}" ${g.done?'checked':''}><span>${AREA_E[g.area]||''} ${esc(g.title)}</span></label>`).join('')}<button type="button" class="plad" data-pladd="${lv}" data-pcd="${d}">＋ 목표</button></div>
-  <p class="fl" style="margin-top:10px">🏛️ ${rel} 중점 기둥</p>${pcChips(kind,d)}
-  <p class="hint" style="margin:4px 0 0">고른 기둥은 ${rel} ${kind==='m'?'내내 점수·XP 가중치 +0.3':'점수·XP 가중치 +0.5'} · 3개까지</p></div>`};
+  <p class="fl pcfl" style="margin-top:10px">🏛️ 중점 기둥 <small>${(()=>{const F=kind==='m'?mFocus(d):wkFocus(d);const N=F.map(k=>(SCORE.find(x=>x[0]===k)||[])[1]).filter(Boolean);return N.length?esc(N.join('·'))+` · XP +${kind==='m'?'0.3':'0.5'}`:'3개까지 · 고르면 XP 가중치↑'})()}</small></p>${pcChips(kind,d)}</div>`};
 function pcRe(){if(curSection==='plan')plPaint();else if(curSection==='day')renderDay()}
 document.addEventListener('click',async e=>{const t=e.target.closest&&e.target.closest('[data-pladd][data-pcd],[data-pcf][data-pcd]');if(!t)return;e.stopImmediatePropagation();e.preventDefault();const d=t.dataset.pcd;
   if(t.dataset.pladd){const lv=t.dataset.pladd;const R=pcRel(lv==='m'?'m':'w',d);const v=((await uiPrompt(`${R.rel} 목표 (${R.sub})`))||'').trim();if(!v)return;
@@ -9851,6 +9850,20 @@ function pmPolish(){const V=$('#v-day');if(!V)return;const on=mode==='pm'&&!(ZMD
   const n=T.length||4;pd.innerHTML=`<span>오늘 기록 <b style="color:var(--ink)">${filled}/${n}</b></span><i><b style="width:${Math.round(filled/n*100)}%"></b></i><span>${filled>=n?'다 채웠습니다 🎉':'칸을 눌러 이어 적기'}</span>`}
 {const _rd=renderDay;renderDay=async function(){const r=await _rd.apply(this,arguments);try{pmPolish()}catch(e){console.warn('pm3',e)}return r}}
 document.addEventListener('input',e=>{if(e.target.closest&&e.target.closest('#v-day.pm3 .panel[data-jmp]')){clearTimeout(pmPolish.t);pmPolish.t=setTimeout(()=>{try{pmPolish()}catch(x){}},400)}});
+
+/* v3.79: 중점 기둥 아이콘 한 줄 · 이번 주 계획 + 168시간 한 카드 */
+(function(){const st=document.createElement('style');st.textContent=`
+.pcico{display:flex;gap:6px;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;padding:2px 0}.pcico::-webkit-scrollbar{display:none}
+.pcico button{flex:1 0 38px;max-width:52px;height:38px;border-radius:50%;border:1.5px solid var(--line);background:var(--paper);font-size:1.15rem;line-height:1;cursor:pointer;filter:grayscale(.85);opacity:.6;padding:0}
+.pcico button.on{filter:none;opacity:1;border-color:var(--k,#3b82f6);background:color-mix(in srgb,var(--k,#3b82f6) 14%,var(--paper));box-shadow:0 0 0 2px color-mix(in srgb,var(--k,#3b82f6) 30%,transparent)}
+.pcfl small{font-weight:500;color:var(--muted);margin-left:4px}
+html body #pbody .pcc.pcw.pcjoin{border-bottom-left-radius:0!important;border-bottom-right-radius:0!important;margin-bottom:0!important;border-bottom:0!important;padding-bottom:8px!important;box-shadow:none!important}
+html body #pbody .w168.w168join{margin-top:0!important;border-top-left-radius:0!important;border-top-right-radius:0!important;border-top:1px dashed var(--line)!important;box-shadow:none!important;--k:#ff8a3d}
+#pbody .w168.w168join::before{display:none}`;document.head.appendChild(st)})();
+function pcJoin(){try{const R=$('#pbody');if(!R||curSection!=='plan')return;const w=R.querySelector('.pcc.pcw'),t=R.querySelector('.w168');R.querySelectorAll('.pcjoin').forEach(x=>x.classList.remove('pcjoin'));if(t)t.classList.remove('w168join');if(!w||!t)return;
+  if(w.nextElementSibling!==t)w.after(t);w.classList.add('pcjoin');t.classList.add('w168join');t.style.setProperty('--k','#ff8a3d');const h=t.querySelector('.w168h h3');if(h&&!/시간 사용/.test(h.textContent))h.textContent='⏳ 시간 사용 · 168시간';const sm=t.querySelector('.w168h > small');if(sm)sm.style.display='none'}catch(e){console.warn('pcjoin',e)}}
+{const _pp2=plPaint;plPaint=function(){const r=_pp2.apply(this,arguments);pcJoin();return r}}
+{const _wp2=w168Paint;w168Paint=function(){const r=_wp2.apply(this,arguments);pcJoin();return r}}
 
 /* ===================== v3.74: 실행 화면 ‘오늘 계획 그대로 복사’ ===================== */
 (function(){const st=document.createElement('style');st.textContent=`
