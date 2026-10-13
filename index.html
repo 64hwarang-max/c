@@ -1,4 +1,4 @@
-<!-- 성장일지 v3.87 · 2026-10-13 · 평가 칸이 시작으로 열리던 것 고침(간단 단계) · 짜투리 연동 · 일기 대분류 -->
+<!-- 성장일지 v3.88 · 2026-10-14 · 어성경 느낀점 쓰기 · 짜투리 연동 · 일기 대분류 -->
 <!doctype html>
 <html lang="ko" class="simple">
 <head>
@@ -8245,6 +8245,7 @@ function gxCands(M){
    for(let i=out.length-1;i>=0;i--){const c=out[i];if(c.src!=='habit')continue;
      if(hasBk&&/독서|책/.test(c.t)){out.filter(x=>x.src==='book').forEach(x=>x.tick=c.tick);out.splice(i,1)}
      else if(hasEx&&/운동|달리기|걷기|헬스|조깅/.test(c.t)){out.filter(x=>x.src==='ex').forEach(x=>x.tick=c.tick);out.splice(i,1)}}}
+  try{if(typeof eoSt==='function'&&typeof eoPlan==='function'&&!isHid('bible')){const E=eoSt(),L=eoPlan(E.n),nx=L.findIndex(d=>!eoCovered(d.s,d.e));if(nx>=0){const rf=eoDayRef(L[nx]);[10,20].forEach(m=>add({k:'eo'+m,e:'📚',t:`어성경 Day ${nx+1} 읽고 느낀점 적기`,m,a:'spirit',why:`읽을 곳 · ${rf.slice(0,22)}`,src:'eo',go:'bible',base:2.1,eoDay:nx}))}}}catch(e){}
   GX_LIB.forEach(([k,e,t,m,a])=>add({k:'l-'+k,e,t,m,a,why:'',src:'lib',go:null,base:.7}));
   const dup={'운동':['l-m30-ex','l-m60-ex','l-m15-walk','l-m5-walk','l-m10-walk'],'독서':['l-m5-read','l-m10-read','l-m30-study'],'기도':['l-m1-pray','l-m5-pray']},skip=new Set();
   Object.keys(dup).forEach(w=>{if(out.some(c=>c.src==='habit'&&c.t.includes(w)))dup[w].forEach(k=>skip.add(k))});
@@ -8264,7 +8265,7 @@ function gxPick(M,n){
     if(hr>=22&&c.m>10)s-=.8;else if(hr>=21&&c.m>=30)s-=.8;
     if(M>0&&c.src!=='qt')s+=c.m/M*.4;if(c.src==='qt'&&c.m===10)s+=.5;
     s+=(gxH(c.k+T+GX.seed)%100)/100*(c.src==='lib'||c.src==='me'?.7:.25);c.s=s});
-  const cap={pri:2,goal:2,task:1,habit:2,cycle:1,journal:1,me:1,book:1,ex:1,qt:1,qts:1,mine:3,today:8,lib:M===0?5:3},cnt={},ac={},out=[];
+  const cap={pri:2,goal:2,task:1,habit:2,cycle:1,journal:1,me:1,book:1,ex:1,qt:1,qts:1,eo:1,mine:3,today:8,lib:M===0?5:3},cnt={},ac={},out=[];
   for(let i=0;i<n;i++){let best=null,bv=-1e9;P.forEach(c=>{if(out.includes(c))return;if((cnt[c.src]||0)>=(cap[c.src]||2))return;const v=c.s-.45*(ac[c.a]||0);if(v>bv){bv=v;best=c}});if(!best)break;out.push(best);cnt[best.src]=(cnt[best.src]||0)+1;ac[best.a]=(ac[best.a]||0)+1}
   return{list:out,pool:P.length}}
 
@@ -8346,7 +8347,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target&&e.target.i
 /* 시간 › 짜투리 시간: 미리 정해 두는 목록에 집중 */
 function gxPools(){const per=[],lib=[],seen=new Set(gxMine().map(u=>u.t));
   try{gxCands(60).forEach(c=>{if(['mine','today','qts','pri'].includes(c.src)||c.m>60)return;
-    if(c.src==='qt'&&c.m!==10)return;if(c.src==='book'&&c.m!==10)return;if(c.src==='ex'&&c.m!==20)return;
+    if(c.src==='qt'&&c.m!==10)return;if(c.src==='eo'&&c.m!==10)return;if(c.src==='book'&&c.m!==10)return;if(c.src==='ex'&&c.m!==20)return;
     const L=c.src==='lib'?lib:per;if(per.some(x=>x.t===c.t)||lib.some(x=>x.t===c.t))return;L.push(c)})}catch(e){}
   lib.sort((a,b)=>a.m-b.m||String(a.t).localeCompare(String(b.t)));per.sort((a,b)=>b.base-a.base);
   return{per:per.slice(0,16),lib:lib.slice(0,70),seen}}
@@ -10532,12 +10533,12 @@ const EO_BKREF={"1":"창 1~3장","2":"창 4~7장","3":"창 8~11장","4":"창 12~
    ‘어? 성경이 읽어지네’의 시대 순서(역사 흐름)대로 성경 전체를 배열해 날마다 나눠 읽는다.
    순서에 없던 구절은 같은 책의 바로 앞 구절 뒤에 ‘함께 읽기’로 넣어 31,102절을 모두 덮는다.
    진도는 순서상 위치(구절 누적 범위)로 저장해, 계획 기간을 바꿔도 읽은 곳이 그대로 남는다. */
-let eoView='home',eoDay=0,eoOpenEra=-1,eoAncOpen=false;
+let eoView='home',eoDay=0,eoOpenEra=-1,eoAncOpen=false,EO_FOCUS=0;
 const EO_PL=[[365,'1년'],[180,'6개월'],[90,'3개월'],[60,'60일']];
 const eoSt=()=>{const S=bbS();if(!S.eo||typeof S.eo!=='object')S.eo={};const E=S.eo;if(!Array.isArray(E.r))E.r=[];if(!+E.n)E.n=365;if(!E.notes||typeof E.notes!=='object')E.notes={};return E};
 const eoNoteGet=i=>{const n=eoSt().notes[i];return n&&n.t||''};
 function eoNoteCss(){if(document.getElementById('eonotecss'))return;const st=document.createElement('style');st.id='eonotecss';
-  st.textContent=`.eonfab{position:fixed;left:14px;bottom:calc(84px + env(safe-area-inset-top,0px) + env(safe-area-inset-bottom,0px));z-index:21;width:50px;height:50px;border-radius:50%;border:0;background:var(--pen);color:#fff;font-size:1.3rem;line-height:1;box-shadow:0 6px 18px rgba(0,0,0,.25);cursor:pointer}
+  st.textContent=`.eonb{flex:none;border:1px solid var(--line);background:none;color:var(--muted);border-radius:8px;min-width:30px;height:26px;font:inherit;font-size:.8rem;cursor:pointer;padding:0 6px}.eonb.has{color:#fff;background:#7e57c2;border-color:#7e57c2}.eonfab{position:fixed;left:14px;bottom:calc(84px + env(safe-area-inset-top,0px) + env(safe-area-inset-bottom,0px));z-index:21;width:50px;height:50px;border-radius:50%;border:0;background:var(--pen);color:#fff;font-size:1.3rem;line-height:1;box-shadow:0 6px 18px rgba(0,0,0,.25);cursor:pointer}
   .eonfab.has::after{content:'';position:absolute;top:4px;right:4px;width:9px;height:9px;border-radius:50%;background:#ff7043;border:1.5px solid var(--paper)}
   .eonq{position:fixed;left:0;right:0;bottom:0;z-index:57;background:var(--paper);border-top:1px solid var(--line);border-radius:14px 14px 0 0;box-shadow:0 -6px 24px rgba(0,0,0,.25);padding:10px 14px calc(12px + env(safe-area-inset-bottom,0px));transform:translateY(102%);transition:transform .22s ease}
   .eonq.open{transform:translateY(0)}
@@ -10620,13 +10621,13 @@ function eoHomeHTML(){const E=eoSt();const L=eoPlan(E.n);const done=L.filter(d=>
     <div class="row eoaf"><span class="hint">오늘 책은</span><input id="eotd" type="number" inputmode="numeric" min="1" max="365" placeholder="Day"><button class="btn ghost small" id="eotds">오늘로 맞추기</button></div>
     ${A.length?'<button class="del" id="eoadef" style="margin-top:6px">내가 적은 기준 모두 지우기</button>':''}</details>`}
   if(nd)h+=`<div class="card nocol eo" style="--k:#7e57c2"><h3>📖 Day ${next+1} <span class="hint" style="font-weight:400">${esc(EO_D.eras[nd.era])} · ${nd.e-nd.s}절</span></h3>
-    <p class="eoref">${esc(eoDayRef(nd))}</p><div class="row" style="margin-top:8px"><button class="btn" data-eoopen="${next}">📖 본문 읽기</button><button class="btn ghost" data-eodone="${next}">✓ 다 읽었어요</button></div>
+    <p class="eoref">${esc(eoDayRef(nd))}</p><div class="row" style="margin-top:8px"><button class="btn" data-eoopen="${next}">📖 본문 읽기</button><button class="btn ghost" data-eonote="${next}">✍️ 느낀점${eoNoteGet(next)?' ✓':''}</button><button class="btn ghost" data-eodone="${next}">✓ 다 읽었어요</button></div>
     ${E.start?'':'<p class="hint" style="margin:6px 0 0">처음 ‘다 읽었어요’를 누른 날이 시작일이 됩니다.</p>'}</div>`;
   else h+=`<div class="card nocol eo" style="--k:#7e57c2"><h3>🎉 ${L.length}일 일독을 마쳤습니다</h3><button class="del" data-eoreset="1">처음부터 다시 읽기</button></div>`;
   h+=`<p class="fl" style="margin:14px 2px 6px">시대별 흐름</p>`;
   EO_D.eras.forEach((nm,ei)=>{const ds=L.map((d,i)=>[d,i]).filter(([d])=>d.era===ei);if(!ds.length)return;const dn=ds.filter(([d])=>eoCovered(d.s,d.e)).length;const op=eoOpenEra===ei;
     h+=`<div class="eoera ${op?'open':''}"><button class="eoeh" data-eoera="${ei}"><span>${esc(nm)}</span><small>Day ${ds[0][1]+1}–${ds[ds.length-1][1]+1} · ${dn}/${ds.length}</small><i class="eob"><b style="width:${Math.round(dn/ds.length*100)}%"></b></i><em>${op?'▾':'▸'}</em></button>
-    ${op?ds.map(([d,i])=>{const ok=eoCovered(d.s,d.e);return`<div class="eod ${ok?'ok':''} ${i===next?'nx':''}"><button class="eock" data-eotg="${i}" aria-label="${ok?'안 읽음으로':'다 읽음'}">${ok?'✓':''}</button><button class="eodt" data-eoopen="${i}"><b>Day ${i+1}</b> ${esc(eoDayRef(d))}</button></div>`}).join(''):''}</div>`});
+    ${op?ds.map(([d,i])=>{const ok=eoCovered(d.s,d.e);return`<div class="eod ${ok?'ok':''} ${i===next?'nx':''}"><button class="eock" data-eotg="${i}" aria-label="${ok?'안 읽음으로':'다 읽음'}">${ok?'✓':''}</button><button class="eodt" data-eoopen="${i}"><b>Day ${i+1}</b> ${esc(eoDayRef(d))}</button><button class="eonb ${eoNoteGet(i)?'has':''}" data-eonote="${i}" aria-label="Day ${i+1} 느낀점" title="느낀점 쓰기">✎</button></div>`}).join(''):''}</div>`});
   h+=`<p class="hint" style="margin:10px 2px 0">${E.n===365&&EO_BKD.size>=365?'1년 계획의 Day는 책과 같습니다.':E.n===365&&EO_BKD.size?`Day ${Math.min(...EO_BKD)}–${Math.max(...EO_BKD)}은 책의 Reading Checklist와 같습니다. 그 밖의 Day는 분량을 고르게 나눈 것이라 책과 다를 수 있습니다.`:`${E.n}일 계획은 책의 순서를 ${E.n}일로 고르게 나눈 것입니다.`} ‘＋ 함께 읽기’는 읽기표에 따로 없던 구절을 같은 책의 앞 구절 바로 뒤에 넣은 것입니다.</p>`;
   return h}
 async function eoDayHTML(i){const E=eoSt();const L=eoPlan(E.n);const d=L[i];if(!d)return'<p class="empty">없는 날입니다.</p>';let B;try{B=await bbLoad()}catch(e){return`<p class="empty">${esc(e.message||e)}</p>`}
@@ -10656,8 +10657,9 @@ async function renderEo(R){
     if(ta)ta.oninput=()=>commit(ta.value);
     if(qa)qa.oninput=()=>commit(qa.value);
     if(fab&&nq)fab.onclick=()=>{nq.classList.toggle('open');if(nq.classList.contains('open')&&qa)setTimeout(()=>qa.focus(),260)};
-    if(nqx&&nq)nqx.onclick=()=>{flush();nq.classList.remove('open')}}
+    if(nqx&&nq)nqx.onclick=()=>{flush();nq.classList.remove('open')};if(EO_FOCUS&&nq){EO_FOCUS=0;nq.classList.add('open');if(qa)setTimeout(()=>{try{qa.focus()}catch(e){}},300)}}
   R.querySelectorAll('[data-eon]').forEach(b=>b.onclick=()=>{eoSt().n=+b.dataset.eon;saveSet().catch(()=>{});re()});
+  R.querySelectorAll('[data-eonote]').forEach(b=>b.onclick=()=>{eoFlushNote();const k=+b.dataset.eonote;if(k<0||k>=eoPlan(eoSt().n).length)return;eoView='day';eoDay=k;EO_FOCUS=1;re();window.scrollTo(0,0)});
   R.querySelectorAll('[data-eoopen]').forEach(b=>b.onclick=()=>{eoFlushNote();const k=+b.dataset.eoopen;if(k<0||k>=eoPlan(eoSt().n).length)return;eoView='day';eoDay=k;re();window.scrollTo(0,0)});
   R.querySelectorAll('[data-eoera]').forEach(b=>b.onclick=()=>{eoFlushNote();const k=+b.dataset.eoera;eoOpenEra=eoOpenEra===k?-1:k;re()});
   const done=(k,on)=>{const E=eoSt();const d=eoPlan(E.n)[k];if(!d)return;if(on&&!E.start)E.start=today();eoMark(d,on);if(on)toast(`📚 Day ${k+1}을(를) 읽었습니다.`)};
@@ -10888,7 +10890,9 @@ function gxGoDiary(){gxClose();try{nView='topic';nTopic='';nSub=''}catch(e){}ope
 function gxGoNote(){gxClose();try{nEdit=null;nView='topic';nTopic=''}catch(e){}openSection('note')}
 function gxGoBook(){gxClose();try{nEdit=null;nView='book';bkTab='reading'}catch(e){}go('note')}
 function gxGoMem(){gxClose();try{bbTab='mem';memV='home'}catch(e){}openSection('bible')}
+function gxGoEo(k){gxClose();try{const L=eoPlan(eoSt().n);if(k==null||k<0||k>=L.length)k=Math.max(0,L.findIndex(d=>!eoCovered(d.s,d.e)));bbTab='eo';eoView='day';eoDay=k;EO_FOCUS=1}catch(e){}if(curSection==='bible')renderBible();else openSection('bible');scrollTo(0,0)}
 function gxRoute(c){if(!c)return null;const t=String(c.t||''),s=c.src||'';
+  if(s==='eo'||/어성경/.test(t))return()=>gxGoEo(c.eoDay);
   if(/일기/.test(t))return gxGoDiary;
   if(/감사/.test(t))return()=>gxGoPillar('mind','#dayBody [data-p^="mgrat."]');
   if(/오늘의 생각|생각 한 줄/.test(t))return()=>gxGoPillar('mind','#dayBody [data-p="thought"]');

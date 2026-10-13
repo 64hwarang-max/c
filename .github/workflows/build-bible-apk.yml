@@ -1,0 +1,65 @@
+name: 말씀과 기도 APK 만들기
+on:
+  push:
+    paths:
+      - 'bible-app/**'
+      - '.github/workflows/build-bible-apk.yml'
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: 파일 확인
+        run: test -f bible-app/index.html || (echo "bible-app/index.html 이 없습니다." && exit 1)
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - name: 프로젝트 준비
+        run: |
+          mkdir -p www && cp bible-app/index.html www/index.html
+          sed -i "s/__BUILD__/#${GITHUB_RUN_NUMBER} $(TZ=Asia/Seoul date +%m.%d_%H:%M)/" www/index.html
+          cat > package.json <<'J'
+          {"name":"bible-prayer","version":"1.0.0","private":true,
+           "dependencies":{"@capacitor/android":"^7.0.0","@capacitor/app":"^7.0.0","@capacitor/core":"^7.0.0","@capacitor/filesystem":"^7.0.0","@capacitor/share":"^7.0.0"},
+           "devDependencies":{"@capacitor/cli":"^7.0.0"}}
+          J
+          cat > capacitor.config.json <<'J'
+          {"appId":"kr.growthjournal.bible","appName":"말씀과 기도","webDir":"www"}
+          J
+          npm install
+          npx cap add android
+          npx cap sync android
+      - name: 앱 아이콘
+        run: |
+          R=android/app/src/main/res
+          for d in mdpi hdpi xhdpi xxhdpi xxxhdpi; do mkdir -p $R/mipmap-$d && cp icons/mipmap-$d/*.png $R/mipmap-$d/; done
+          mkdir -p $R/values && printf '<?xml version="1.0" encoding="utf-8"?>\n<resources>\n    <color name="ic_launcher_background">#DFF5E7</color>\n</resources>\n' > $R/values/ic_launcher_background.xml
+      - name: 서명 키 고정
+        run: |
+          mkdir -p ~/.android
+          echo "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" | base64 -d > ~/.android/debug.keystore
+          cp ~/.android/debug.keystore android/fixed.keystore
+          cat > sign-fix.js <<'SGN'
+          const fs=require('fs');
+          const blk='\n    signingConfigs { debug { storeFile rootProject.file("fixed.keystore"); storePassword "android"; keyAlias "androiddebugkey"; keyPassword "android" } } // FIXED-SIGN\n';
+          const f='android/app/build.gradle';let g=fs.readFileSync(f,'utf8');
+          if(!g.includes('FIXED-SIGN')){g=g.replace(/android\s*\{/,m=>m+blk);fs.writeFileSync(f,g)}
+          console.log(g.includes('FIXED-SIGN')?'서명 키 고정 OK':'FAIL');
+          SGN
+          node sign-fix.js
+          VC=$(( $(date +%s) / 60 - 29000000 )); sed -i -E "s/versionCode [0-9]+/versionCode ${VC}/" android/app/build.gradle
+          sed -i -E "s/versionName \"[^\"]*\"/versionName \"1.${GITHUB_RUN_NUMBER}\"/" android/app/build.gradle
+      - name: APK 빌드
+        run: |
+          chmod +x android/gradlew
+          cd android && ./gradlew assembleDebug --console=plain
+      - name: APK 올리기
+        uses: actions/upload-artifact@v4
+        with:
+          name: bible-prayer-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
