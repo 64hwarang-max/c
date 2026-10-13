@@ -1,4 +1,4 @@
-<!-- 성장일지 v3.89 · 2026-10-14 · 기도노트 사람별 한 번에 넣기 · 말씀+느낀점 공유 · 어성경 느낀점 -->
+<!-- 성장일지 v3.90 · 2026-10-14 · 알림 카드·분류 줄 접기 · 스케줄 높이 2/3 · 기도노트 사람별 입력 · 말씀+느낀점 공유 -->
 <!doctype html>
 <html lang="ko" class="simple">
 <head>
@@ -4831,7 +4831,7 @@ function zmBarSync(){let B=$('#zmbar');if(!B){B=document.createElement('div');B.
 const ZOOMS=[['y','1년'],['h','6개월'],['q','3개월'],['m','1달'],['w','1주']];
 const CATC={'업무':'--pen','이동':'--muted','기도':'--c-grat','공부':'--c-grat','자기계발':'--c-time','운동':'--c-meet','가족·관계':'--c-mis','섬김·나눔':'--c-fin','봉사·나눔':'--c-fin','휴식':'--c-meet','흘려보냄':'--muted'};
 let pZoom='m',pAnchor=today(),pReview=false,sMode='plan',rMode='cmp',SCTX='plan',SM='plan';
-const HPX=46;
+const HPX=31;
 const SNAPM=()=>[5,10,15].includes(+SET.snapMin)?+SET.snapMin:5;
 function pRange(){const d=parseD(pAnchor),y=d.getFullYear(),m=d.getMonth();
   if(pZoom==='y')return{s:new Date(y,0,1),months:[...Array(12)].map((_,i)=>[y,i]),label:`${y}년`};
@@ -9093,7 +9093,7 @@ let CVL=0,CVB=0;
 function cvCss(){if(document.getElementById('cvcss'))return;const st=document.createElement('style');st.id='cvcss';st.textContent=`
 body.simple #mode,body.simple #daymini{display:none!important}
 body.simple .topcard{padding:6px 8px!important;margin:0 0 10px!important}
-body.simple .topfold{display:none!important}
+body.simple .topfold{margin:0 0 0 4px}
 body.simple .topcard .afs>.xpbar{margin:0;border:0;background:none;box-shadow:none;padding:4px 6px}
 body.simple .topcard .afs>.simnote{margin:0;border:0;background:none;padding:10px 6px;border-radius:10px}
 body.simple .topcard .afdots{margin-top:3px}
@@ -9133,7 +9133,11 @@ function cvMerge(r){const t=document.createElement('template');t.innerHTML=r;con
   dashHTML=function(){if(!simOn())return dh.apply(this,arguments);cvCss();
     const t0=TOPI,f0=SET.fold&&SET.fold.top;let r;
     try{if(SET.fold)SET.fold.top=false;r=dh.apply(this,arguments)}finally{if(SET.fold){if(f0===undefined)delete SET.fold.top;else SET.fold.top=f0}}
-    TOPI=t0;try{return cvMerge(r)}catch(e){console.warn('cv',e);return r}}})();
+    TOPI=t0;try{let m=cvMerge(r);if(f0){const t=document.createElement('template');t.innerHTML=m;const F=t.content;const card=F.querySelector('.topcard');
+      if(card){const n=F.querySelectorAll('.gapb,.bans>*').length;F.querySelectorAll('.gapb,.bans').forEach(e=>e.remove());
+        const bar=document.createElement('div');bar.className='card topbar nocol';bar.style.setProperty('--k','#ff7043');
+        bar.innerHTML=`<div class="fwh"><b>🔔 알림${n?' '+n:''} · 오늘의 카드</b><button type="button" class="del" data-fold="top">펼치기 ▾</button></div>`;card.replaceWith(bar);m=t.innerHTML}}
+      return m}catch(e){console.warn('cv',e);return r}}})();
 /* 레벨 막대는 슬라이드 안에서 갱신 */
 (function(){const xp=xpPaint;
   xpPaint=function(){if(!simOn())return xp.apply(this,arguments);
@@ -9453,6 +9457,8 @@ function trOpen(){const S=$('#sheet');S.hidden=false;let dk='spirit';
   draw()}
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-trman]');if(!b)return;e.preventDefault();trOpen()});
 {const _cl=catLegend;catLegend=function(){const h=_cl.apply(this,arguments);return h.replace('<button class="del" data-catmgr="1">🗂 분류 관리</button>','<button class="del" data-catmgr="1">🗂 분류 관리</button><button class="del" data-trman="1">🏷️ 단어 규칙</button>')}}
+/* 분류·규칙 줄 접기 */
+{const _c2=catLegend;catLegend=function(){const h=_c2.apply(this,arguments);if(isFold('clgrow',false))return'<div class="clg"><button class="del" data-fold="clgrow">🎨 분류·단어 규칙 ▾</button></div>';return h.replace(/<\/div>$/,'<button class="del" data-fold="clgrow">접기 ▴</button></div>')}}
 /* 블록 편집창: 규칙이 적용되면 한 줄로 알려 준다 */
 {const _bc=blkClassHTML;blkClassHTML=function(kind,b){let h=_bc.apply(this,arguments);try{const r=trFor(b&&b.act);h+=`<p class="hint" style="margin:4px 0 0">${r?`🏷️ ‘${esc(r.w)}’ 규칙 적용됨 · `:''}${b&&tx(b.who)?`👤 ${esc(b.who)} · 관계에도 셉니다 · `:''}<button type="button" class="xlink" data-trman="1" style="margin:0">🏷️ 단어 규칙</button></p>`}catch(e){}return h}}
 /* ===== 관계 그룹: 가족 · 업무관계 · 신앙 모임 … ===== */
