@@ -1,4 +1,4 @@
-<!-- 말씀과 기도 v1.2 · 2026-10-14 -->
+<!-- 말씀과 기도 v1.3 · 2026-10-14 -->
 <!doctype html>
 <html lang="ko" class="simple">
 <head>
@@ -4842,7 +4842,7 @@ function zmBarSync(){let B=$('#zmbar');if(!B){B=document.createElement('div');B.
 const ZOOMS=[['y','1년'],['h','6개월'],['q','3개월'],['m','1달'],['w','1주']];
 const CATC={'업무':'--pen','이동':'--muted','기도':'--c-grat','공부':'--c-grat','자기계발':'--c-time','운동':'--c-meet','가족·관계':'--c-mis','섬김·나눔':'--c-fin','봉사·나눔':'--c-fin','휴식':'--c-meet','흘려보냄':'--muted'};
 let pZoom='m',pAnchor=today(),pReview=false,sMode='plan',rMode='cmp',SCTX='plan',SM='plan';
-const HPX=46;
+const HPX=31;
 const SNAPM=()=>[5,10,15].includes(+SET.snapMin)?+SET.snapMin:5;
 function pRange(){const d=parseD(pAnchor),y=d.getFullYear(),m=d.getMonth();
   if(pZoom==='y')return{s:new Date(y,0,1),months:[...Array(12)].map((_,i)=>[y,i]),label:`${y}년`};
@@ -6373,7 +6373,7 @@ function bbVNEdit(R,v){const box=R.querySelector('.bbtxt');if(!box)return;R.quer
   const old=box.querySelector(`.bbvn[data-vnk="${v}"]`);if(old)old.remove();
   const ed=document.createElement('div');ed.className='bbvned';ed.innerHTML=`<textarea placeholder="${BBA[bbB]} ${bbC}:${v} — 이 말씀에서 느낀 점, 깨달은 점, 적용할 점">${esc(o&&o.t||'')}</textarea><div class="row"><button class="btn small" type="button" data-vnok>완료</button><button class="btn small ghost" type="button" data-vnsh>📤 공유</button><span class="hint" data-vnst></span>${o&&o.t?'<button class="del" type="button" data-vndel style="margin-left:auto">지우기</button>':''}</div>`;p.after(ed);
   const ta=ed.querySelector('textarea');const grow=()=>{ta.style.height='auto';ta.style.height=Math.max(76,ta.scrollHeight+2)+'px'};grow();setTimeout(()=>{ta.focus();ta.setSelectionRange(ta.value.length,ta.value.length)},30);
-  let t=null;const put=()=>{clearTimeout(t);const V=bbVN();const x=ta.value.replace(/\s+$/,'');if(x.trim()){const was=V[k];V[k]={t:x,d:(was&&was.d)||today(),u:today()}}else delete V[k];saveSet().catch(()=>{});const st=ed.querySelector('[data-vnst]');if(st)st.textContent='저장됨'};
+  let t=null;const put=()=>{clearTimeout(t);const V=bbVN();const x=ta.value.replace(/\s+$/,'');if(x.trim()){const was=V[k];V[k]={t:x,d:(was&&was.d)||today(),u:today()}}else delete V[k];saveSet().catch(()=>{});try{qtAuto('v:'+k,`${BBN[bbB]} ${bbC}:${v}`,bbPText(p),x)}catch(e){}const st=ed.querySelector('[data-vnst]');if(st)st.textContent='저장됨'};
   ta.oninput=()=>{grow();clearTimeout(t);t=setTimeout(put,700)};
   ed._close=()=>{put();const h=bbVNHTML(k,v);ed.insertAdjacentHTML('afterend',h);ed.remove();const nb=box.querySelector(`.bbvn[data-vnk="${v}"]`);if(nb)nb.onclick=e=>{e.stopPropagation();bbVNEdit(R,v)};bbVNCount(R)};
   ed.querySelector('[data-vnsh]').onclick=e=>{e.stopPropagation();put();const x=ta.value.trim();bbShareWord(`📖 ${BBN[bbB]} ${bbC}:${v} (개역개정)\n${bbPText(p)}${x?'\n\n✍️ 느낀 점\n'+x:''}`)};
@@ -8222,6 +8222,14 @@ function gxQtDone(){const T=today();if(gxLog().qt)return'manual';
   try{for(const n of NOTES.values()){if(n.date===T&&/큐티|QT/i.test(`${n.title||''} ${(n.tags||[]).join(' ')}`))return'note'}}catch(e){}
   return''}
 function gxQtHabit(){try{const d=gxDoc();const h=SET.habits.find(x=>/큐티|QT|묵상|말씀/i.test(x.name)&&!(d&&d.habits&&d.habits[x.id]));return h?h.id:null}catch(e){return null}}
+function qtAuto(key,ref,vt,txt){try{txt=String(txt||'').trim();const T=today();let n=null;for(const x of NOTES.values())if(x.qtauto&&x.date===T){n=x;break}
+  if(!n){if(!txt)return;const tp=(SET.topics.find(t=>t.name==='신앙')||{}).id||ensureTopic('성경 묵상');const id='note-'+uid();n={kind:'note',id,date:T,topic:tp,title:'큐티 '+T.replace(/-/g,'.'),body:'',photos:[],area:SCORE.some(x=>x[0]==='spirit')?'spirit':'',qtauto:true,qt:{},created:Date.now(),updated:Date.now()};NOTES.set(id,n)}
+  n.qt=n.qt||{};if(txt)n.qt[key]={r:ref,v:vt||'',t:txt,at:(n.qt[key]&&n.qt[key].at)||Date.now()};else delete n.qt[key];
+  const ks=Object.keys(n.qt).sort((a,b)=>n.qt[a].at-n.qt[b].at);
+  if(!ks.length){NOTES.delete(n.id);try{store.delDoc(n.id)}catch(e){}return}
+  n.body=ks.map(k=>{const o=n.qt[k];return`📖 ${o.r}${o.v?'\n'+o.v:''}\n✍️ ${o.t}`}).join('\n\n');saveNote(n,true);
+  if(txt){const L=gxLog();if(!L.qt){L.qt=true;gxLogSave(L)}const hid=gxQtHabit();if(hid){const d=gxDoc();if(d){d.habits=d.habits||{};if(!d.habits[hid]){d.habits[hid]=true;if(d===D){try{schedule()}catch(e){}}else{try{store.save(d.date,d)}catch(e){}}}}}}
+  }catch(e){console.warn('qtAuto',e)}}
 function bbPText(p){const c=p.cloneNode(true);c.querySelectorAll('sup').forEach(s=>s.remove());return c.textContent.trim()}
 async function bbShareWord(txt){txt=String(txt||'').trim();if(!txt)return;let SH=null;try{SH=NP('Share')}catch(e){}
   if(SH){try{await SH.share({text:txt,title:'말씀과 느낀점'});return}catch(e){if(e&&/cancel|dismiss/i.test(String(e.message||e)))return}}
@@ -9104,7 +9112,7 @@ let CVL=0,CVB=0;
 function cvCss(){if(document.getElementById('cvcss'))return;const st=document.createElement('style');st.id='cvcss';st.textContent=`
 body.simple #mode,body.simple #daymini{display:none!important}
 body.simple .topcard{padding:6px 8px!important;margin:0 0 10px!important}
-body.simple .topfold{display:none!important}
+body.simple .topfold{margin:0 0 0 4px}
 body.simple .topcard .afs>.xpbar{margin:0;border:0;background:none;box-shadow:none;padding:4px 6px}
 body.simple .topcard .afs>.simnote{margin:0;border:0;background:none;padding:10px 6px;border-radius:10px}
 body.simple .topcard .afdots{margin-top:3px}
@@ -9144,7 +9152,11 @@ function cvMerge(r){const t=document.createElement('template');t.innerHTML=r;con
   dashHTML=function(){if(!simOn())return dh.apply(this,arguments);cvCss();
     const t0=TOPI,f0=SET.fold&&SET.fold.top;let r;
     try{if(SET.fold)SET.fold.top=false;r=dh.apply(this,arguments)}finally{if(SET.fold){if(f0===undefined)delete SET.fold.top;else SET.fold.top=f0}}
-    TOPI=t0;try{return cvMerge(r)}catch(e){console.warn('cv',e);return r}}})();
+    TOPI=t0;try{let m=cvMerge(r);if(f0){const t=document.createElement('template');t.innerHTML=m;const F=t.content;const card=F.querySelector('.topcard');
+      if(card){const n=F.querySelectorAll('.gapb,.bans>*').length;F.querySelectorAll('.gapb,.bans').forEach(e=>e.remove());
+        const bar=document.createElement('div');bar.className='card topbar nocol';bar.style.setProperty('--k','#ff7043');
+        bar.innerHTML=`<div class="fwh"><b>🔔 알림${n?' '+n:''} · 오늘의 카드</b><button type="button" class="del" data-fold="top">펼치기 ▾</button></div>`;card.replaceWith(bar);m=t.innerHTML}}
+      return m}catch(e){console.warn('cv',e);return r}}})();
 /* 레벨 막대는 슬라이드 안에서 갱신 */
 (function(){const xp=xpPaint;
   xpPaint=function(){if(!simOn())return xp.apply(this,arguments);
@@ -9464,6 +9476,8 @@ function trOpen(){const S=$('#sheet');S.hidden=false;let dk='spirit';
   draw()}
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-trman]');if(!b)return;e.preventDefault();trOpen()});
 {const _cl=catLegend;catLegend=function(){const h=_cl.apply(this,arguments);return h.replace('<button class="del" data-catmgr="1">🗂 분류 관리</button>','<button class="del" data-catmgr="1">🗂 분류 관리</button><button class="del" data-trman="1">🏷️ 단어 규칙</button>')}}
+/* 분류·규칙 줄 접기 */
+{const _c2=catLegend;catLegend=function(){const h=_c2.apply(this,arguments);if(isFold('clgrow',false))return'<div class="clg"><button class="del" data-fold="clgrow">🎨 분류·단어 규칙 ▾</button></div>';return h.replace(/<\/div>$/,'<button class="del" data-fold="clgrow">접기 ▴</button></div>')}}
 /* 블록 편집창: 규칙이 적용되면 한 줄로 알려 준다 */
 {const _bc=blkClassHTML;blkClassHTML=function(kind,b){let h=_bc.apply(this,arguments);try{const r=trFor(b&&b.act);h+=`<p class="hint" style="margin:4px 0 0">${r?`🏷️ ‘${esc(r.w)}’ 규칙 적용됨 · `:''}${b&&tx(b.who)?`👤 ${esc(b.who)} · 관계에도 셉니다 · `:''}<button type="button" class="xlink" data-trman="1" style="margin:0">🏷️ 단어 규칙</button></p>`}catch(e){}return h}}
 /* ===== 관계 그룹: 가족 · 업무관계 · 신앙 모임 … ===== */
@@ -10669,7 +10683,7 @@ async function renderEo(R){
   let eoFlushNote=()=>{};
   if(eoView==='day'){const di=eoDay;const ta=R.querySelector('#eontx'),qa=R.querySelector('#eonqtx'),fab=R.querySelector('#eonfab'),nq=R.querySelector('#eonq'),nqx=R.querySelector('#eonqx'),sv=R.querySelector('#eonsaved');
     let pend=null,t=null;
-    const flush=()=>{clearTimeout(t);t=null;if(pend==null)return;const v=pend;pend=null;const E=eoSt();if(v)E.notes[di]={t:v,up:today()};else delete E.notes[di];saveSet().catch(()=>{});if(fab)fab.classList.toggle('has',!!v);if(sv)sv.textContent=v?'저장됨':''};
+    const flush=()=>{clearTimeout(t);t=null;if(pend==null)return;const v=pend;pend=null;const E=eoSt();if(v)E.notes[di]={t:v,up:today()};else delete E.notes[di];saveSet().catch(()=>{});try{const dd=eoPlan(E.n)[di];const vt=[...R.querySelectorAll('.eotxt p[data-eov].sel')].map(p=>{const[b,c,vv]=p.dataset.eov.split('-').map(Number);return`${BBN[b]} ${c}:${vv} ${bbPText(p)}`}).join('\n');qtAuto('eo:'+di,`어성경 Day ${di+1} · ${eoDayRef(dd)}`,vt,v)}catch(e){}if(fab)fab.classList.toggle('has',!!v);if(sv)sv.textContent=v?'저장됨':''};
     eoFlushNote=flush;
     const commit=v=>{if(ta&&ta.value!==v)ta.value=v;if(qa&&qa.value!==v)qa.value=v;pend=v;if(sv)sv.textContent='';clearTimeout(t);t=setTimeout(flush,500)};
     if(ta)ta.oninput=()=>commit(ta.value);
