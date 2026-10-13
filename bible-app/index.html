@@ -1,4 +1,4 @@
-<!-- 말씀과 기도 v1.0 · 2026-10-14 -->
+<!-- 말씀과 기도 v1.1 · 2026-10-14 -->
 <!doctype html>
 <html lang="ko" class="simple">
 <head>
@@ -6122,8 +6122,10 @@ async function renderBible(){const R=$('#bbbody');if(!R)return;const S=bbS();if(
     <div id="bbsb"></div>`;
   const ref=()=>{const a=[...bbSel].sort((x,y)=>x-y);if(!a.length)return'';const rs=[];let st=a[0],pv=a[0];for(const x of a.slice(1)){if(x===pv+1){pv=x;continue}rs.push(st===pv?st:st+'-'+pv);st=pv=x}rs.push(st===pv?st:st+'-'+pv);return`${BBN[bbB]} ${bbC}:${rs.join(',')}`};
   const selTxt=()=>[...bbSel].sort((x,y)=>x-y).map(n=>`${n} ${vs[n-1]}`).join('\n');
-  const bar=()=>{const sb=$('#bbsb');if(!bbSel.size){sb.innerHTML='';return}sb.innerHTML=`<div class="bbbar"><b style="align-self:center;font-size:.85rem">${esc(ref())}</b><button class="btn small" id="bbcp">📋 복사</button><button class="btn small" id="bbnt">📝 노트에 담기</button><button class="btn small" id="bbwd">☀️ 한 문장으로</button><button class="btn small" id="bbvw">✍️ 느낀 점</button><button class="btn small" id="bbdocs">📄 문서로</button><button class="del" id="bbx">✕</button></div>`;
+  const bar=()=>{const sb=$('#bbsb');if(!bbSel.size){sb.innerHTML='';return}sb.innerHTML=`<div class="bbbar"><b style="align-self:center;font-size:.85rem">${esc(ref())}</b><button class="btn small" id="bbcp">📋 복사</button><button class="btn small" id="bbnt">📝 노트에 담기</button><button class="btn small" id="bbwd">☀️ 한 문장으로</button><button class="btn small" id="bbvw">✍️ 느낀 점</button><button class="btn small" id="bbsh">📤 말씀+느낀점 공유</button><button class="btn small" id="bbdocs">📄 문서로</button><button class="del" id="bbx">✕</button></div>`;
     $('#bbdocs').onclick=()=>{const a=[...bbSel].sort((x,y)=>x-y);const tt=`${ref()} 묵상`;bbSel.clear();const n=bdNew(bbB,bbC,a,tt);bdOpen(n)};
+    $('#bbsh').onclick=()=>{const a=[...bbSel].sort((x,y)=>x-y);const V=bbVN();const ln=a.map(n=>`${n} ${vs[n-1]}`).join('\n');const ns=a.filter(n=>V[bbB+'-'+bbC+'-'+n]&&V[bbB+'-'+bbC+'-'+n].t).map(n=>`${a.length>1?n+'절 · ':''}${V[bbB+'-'+bbC+'-'+n].t}`);
+      bbShareWord(`📖 ${ref()} (개역개정)\n${ln}${ns.length?'\n\n✍️ 느낀 점\n'+ns.join('\n'):''}`)};
     $('#bbvw').onclick=()=>{const a=[...bbSel].sort((x,y)=>x-y);const v=a[a.length-1];bbSel.clear();R.querySelectorAll('.bbtxt p.sel').forEach(p=>p.classList.remove('sel'));bar();bbVNEdit(R,v)};
     $('#bbcp').onclick=async()=>{const t=`${selTxt()}\n— ${ref()} (개역개정)`;try{await navigator.clipboard.writeText(t);toast('📋 복사했습니다.')}catch(e){toast('복사하지 못했습니다.')}};
     $('#bbwd').onclick=async()=>{const t=`${selTxt().replace(/^\d+ /gm,'')} (${ref()})`;await bbToday(o=>{o.word=tx(o.word)?o.word.trim()+'\n'+t:t});toast('☀️ 오늘 ‘아침의 한 문장’에 담았습니다.')};
@@ -6369,11 +6371,12 @@ const bbVN=()=>{const S=bbS();S.vn=S.vn&&typeof S.vn==='object'?S.vn:{};return S
 const bbVNHTML=(k,v)=>{const o=bbVN()[k];return o&&o.t?`<div class="bbvn" data-vnk="${v}">✍️ ${esc(o.t)}<small>${md(o.d||today())}${o.u&&o.u!==o.d?' · 고침 '+md(o.u):''}</small></div>`:''};
 function bbVNEdit(R,v){const box=R.querySelector('.bbtxt');if(!box)return;R.querySelectorAll('.bbvned').forEach(e=>e._close&&e._close());const p=box.querySelector(`p[data-bbv="${v}"]`);if(!p)return;const k=bbB+'-'+bbC+'-'+v;const o=bbVN()[k];
   const old=box.querySelector(`.bbvn[data-vnk="${v}"]`);if(old)old.remove();
-  const ed=document.createElement('div');ed.className='bbvned';ed.innerHTML=`<textarea placeholder="${BBA[bbB]} ${bbC}:${v} — 이 말씀에서 느낀 점, 깨달은 점, 적용할 점">${esc(o&&o.t||'')}</textarea><div class="row"><button class="btn small" type="button" data-vnok>완료</button><span class="hint" data-vnst></span>${o&&o.t?'<button class="del" type="button" data-vndel style="margin-left:auto">지우기</button>':''}</div>`;p.after(ed);
+  const ed=document.createElement('div');ed.className='bbvned';ed.innerHTML=`<textarea placeholder="${BBA[bbB]} ${bbC}:${v} — 이 말씀에서 느낀 점, 깨달은 점, 적용할 점">${esc(o&&o.t||'')}</textarea><div class="row"><button class="btn small" type="button" data-vnok>완료</button><button class="btn small ghost" type="button" data-vnsh>📤 공유</button><span class="hint" data-vnst></span>${o&&o.t?'<button class="del" type="button" data-vndel style="margin-left:auto">지우기</button>':''}</div>`;p.after(ed);
   const ta=ed.querySelector('textarea');const grow=()=>{ta.style.height='auto';ta.style.height=Math.max(76,ta.scrollHeight+2)+'px'};grow();setTimeout(()=>{ta.focus();ta.setSelectionRange(ta.value.length,ta.value.length)},30);
   let t=null;const put=()=>{clearTimeout(t);const V=bbVN();const x=ta.value.replace(/\s+$/,'');if(x.trim()){const was=V[k];V[k]={t:x,d:(was&&was.d)||today(),u:today()}}else delete V[k];saveSet().catch(()=>{});const st=ed.querySelector('[data-vnst]');if(st)st.textContent='저장됨'};
   ta.oninput=()=>{grow();clearTimeout(t);t=setTimeout(put,700)};
   ed._close=()=>{put();const h=bbVNHTML(k,v);ed.insertAdjacentHTML('afterend',h);ed.remove();const nb=box.querySelector(`.bbvn[data-vnk="${v}"]`);if(nb)nb.onclick=e=>{e.stopPropagation();bbVNEdit(R,v)};bbVNCount(R)};
+  ed.querySelector('[data-vnsh]').onclick=e=>{e.stopPropagation();put();const x=ta.value.trim();bbShareWord(`📖 ${BBN[bbB]} ${bbC}:${v} (개역개정)\n${bbPText(p)}${x?'\n\n✍️ 느낀 점\n'+x:''}`)};
   ed.querySelector('[data-vnok]').onclick=e=>{e.stopPropagation();ed._close()};const dl=ed.querySelector('[data-vndel]');if(dl)dl.onclick=async e=>{e.stopPropagation();if(!await uiConfirm('이 절의 느낀 점을 지울까요?'))return;ta.value='';ed._close()};
   ed.onclick=e=>e.stopPropagation()}
 function bbVNCount(R){const n=Object.keys(bbVN()).filter(k=>k.startsWith(bbB+'-'+bbC+'-')).length;const e=R.querySelector('#bbvnc');if(e)e.textContent=n?`이 장 ✍️ ${n}`:'';const b=R.querySelector('#bbvnnote');if(b)b.hidden=!n}
@@ -8219,6 +8222,10 @@ function gxQtDone(){const T=today();if(gxLog().qt)return'manual';
   try{for(const n of NOTES.values()){if(n.date===T&&/큐티|QT/i.test(`${n.title||''} ${(n.tags||[]).join(' ')}`))return'note'}}catch(e){}
   return''}
 function gxQtHabit(){try{const d=gxDoc();const h=SET.habits.find(x=>/큐티|QT|묵상|말씀/i.test(x.name)&&!(d&&d.habits&&d.habits[x.id]));return h?h.id:null}catch(e){return null}}
+function bbPText(p){const c=p.cloneNode(true);c.querySelectorAll('sup').forEach(s=>s.remove());return c.textContent.trim()}
+async function bbShareWord(txt){txt=String(txt||'').trim();if(!txt)return;let SH=null;try{SH=NP('Share')}catch(e){}
+  if(SH){try{await SH.share({text:txt,title:'말씀과 느낀점'});return}catch(e){if(e&&/cancel|dismiss/i.test(String(e.message||e)))return}}
+  await gxShareText(txt)}
 async function gxShareText(txt){txt=String(txt||'').trim();if(!txt){toast('나눌 한 줄을 먼저 적으십시오.');return false}
   try{if(navigator.share){await navigator.share({text:txt});return'shared'}}catch(e){if(e&&e.name==='AbortError')return false}
   try{await navigator.clipboard.writeText(txt);toast('📋 복사했습니다. 메신저에 붙여 넣어 보내십시오.');return'copied'}catch(e){}
@@ -10647,10 +10654,10 @@ async function eoDayHTML(i){const E=eoSt();const L=eoPlan(E.n);const d=L[i];if(!
   d.p.forEach(p=>{h+=`<div class="eoh">${p.fill===1?'<em>＋ 함께 읽기</em> ':p.fill===2?'<em class="eopar">병행</em> ':''}${esc(BBN[p.b])} ${p.c1===p.c2?`${p.c1}${eoJ(p.b)}${p.v1!==1||p.v2!==eoVC(p.b,p.c1)?` ${p.v1===p.v2?p.v1:p.v1+'-'+p.v2}절`:''}`:`${p.c1}:${p.v1} – ${p.c2}:${p.v2}`}</div>`;
     for(let c=p.c1;c<=p.c2;c++){const a=c===p.c1?p.v1:1,z=c===p.c2?p.v2:eoVC(p.b,c);if(p.c1!==p.c2)h+=`<div class="eoch">${c}${eoJ(p.b)}</div>`;
       for(let v=a;v<=z;v++){const t=B[p.b]&&B[p.b][c-1]&&B[p.b][c-1][v-1];if(t!=null)h+=`<p data-eov="${p.b}-${c}-${v}"><sup>${v}</sup>${esc(t)}</p>`}}});
-  h+=`</div><div class="card nocol eo eonote" style="--k:#7e57c2"><h3>✍️ 느낀점</h3><textarea id="eontx" placeholder="읽으며 떠오른 생각을 적어 보세요…">${esc(note)}</textarea><p class="hint" id="eonsaved" style="margin:4px 2px 0">${note?'저장됨':''}</p></div>
+  h+=`</div><div class="card nocol eo eonote" style="--k:#7e57c2"><h3>✍️ 느낀점</h3><textarea id="eontx" placeholder="읽으며 떠오른 생각을 적어 보세요…">${esc(note)}</textarea><p class="hint" id="eonsaved" style="margin:4px 2px 0">${note?'저장됨':''}</p><div class="row" style="margin-top:6px"><button class="btn small" id="eonsh">📤 말씀+느낀점 공유</button><span class="hint">본문의 절을 눌러 고르면 그 말씀이 함께 공유됩니다.</span></div></div>
   <div class="row eonav"><button class="btn ghost small" data-eoopen="${i-1}" ${i>0?'':'disabled'}>‹ Day ${i}</button><button class="btn ${ok?'ghost':''}" data-eodone2="${i}">${ok?'✓ 읽음 (취소)':'✓ 다 읽었어요'}</button><button class="btn ghost small" data-eoopen="${i+1}" ${i<L.length-1?'':'disabled'}>Day ${i+2} ›</button></div>
   <button class="eonfab ${note?'has':''}" id="eonfab" aria-label="느낀점 적기" title="느낀점 적기">✎</button>
-  <div class="eonq" id="eonq"><div class="eonqhd"><b>Day ${i+1} 느낀점</b><button class="del" id="eonqx">✕ 닫기</button></div><textarea id="eonqtx" placeholder="읽으며 떠오른 생각을 적어 보세요…">${esc(note)}</textarea></div>`;
+  <div class="eonq" id="eonq"><div class="eonqhd"><b>Day ${i+1} 느낀점</b><span><button class="btn small" id="eonqsh">📤 공유</button> <button class="del" id="eonqx">✕ 닫기</button></span></div><textarea id="eonqtx" placeholder="읽으며 떠오른 생각을 적어 보세요…">${esc(note)}</textarea></div>`;
   return h}
 async function renderEo(R){
   try{eoNoteCss()}catch(e){}
@@ -10668,6 +10675,12 @@ async function renderEo(R){
     if(ta)ta.oninput=()=>commit(ta.value);
     if(qa)qa.oninput=()=>commit(qa.value);
     if(fab&&nq)fab.onclick=()=>{nq.classList.toggle('open');if(nq.classList.contains('open')&&qa)setTimeout(()=>qa.focus(),260)};
+    R.querySelectorAll('.eotxt p[data-eov]').forEach(p=>p.onclick=()=>p.classList.toggle('sel'));
+    const eoShare=()=>{flush();const E=eoSt();const d=eoPlan(E.n)[di];const sel=[...R.querySelectorAll('.eotxt p[data-eov].sel')];const n=E.notes&&E.notes[di]&&E.notes[di].t||'';
+      const ln=sel.map(p=>{const [b,c,v]=p.dataset.eov.split('-').map(Number);return`${BBN[b]} ${c}:${v} ${bbPText(p)}`}).join('\n');
+      if(!sel.length&&!n){toast('공유할 말씀을 누르거나 느낀점을 먼저 적으십시오.');return}
+      bbShareWord(`📖 어성경 Day ${di+1} · ${eoDayRef(d)}${ln?'\n'+ln:''}${n?'\n\n✍️ 느낀점\n'+n:''}`)};
+    const sh1=R.querySelector('#eonsh'),sh2=R.querySelector('#eonqsh');if(sh1)sh1.onclick=eoShare;if(sh2)sh2.onclick=eoShare;
     if(nqx&&nq)nqx.onclick=()=>{flush();nq.classList.remove('open')};if(EO_FOCUS&&nq){EO_FOCUS=0;nq.classList.add('open');if(qa)setTimeout(()=>{try{qa.focus()}catch(e){}},300)}}
   R.querySelectorAll('[data-eon]').forEach(b=>b.onclick=()=>{eoSt().n=+b.dataset.eon;saveSet().catch(()=>{});re()});
   R.querySelectorAll('[data-eonote]').forEach(b=>b.onclick=()=>{eoFlushNote();const k=+b.dataset.eonote;if(k<0||k>=eoPlan(eoSt().n).length)return;eoView='day';eoDay=k;EO_FOCUS=1;re();window.scrollTo(0,0)});
