@@ -1523,6 +1523,34 @@ jobs:
               }
 
               @PluginMethod
+              public void appIcons(PluginCall call) {
+                  JSObject r = new JSObject();
+                  JSObject icons = new JSObject();
+                  try {
+                      JSArray a = call.getArray("pkgs");
+                      PackageManager pm = getContext().getPackageManager();
+                      int n = a == null ? 0 : a.length();
+                      for (int k = 0; k < n; k++) {
+                          String p = a.optString(k, "");
+                          if (p == null || p.length() == 0) continue;
+                          try {
+                              android.graphics.drawable.Drawable d = pm.getApplicationIcon(p);
+                              int sz = 128;
+                              android.graphics.Bitmap bm = android.graphics.Bitmap.createBitmap(sz, sz, android.graphics.Bitmap.Config.ARGB_8888);
+                              android.graphics.Canvas cv = new android.graphics.Canvas(bm);
+                              d.setBounds(0, 0, sz, sz);
+                              d.draw(cv);
+                              java.io.ByteArrayOutputStream bo = new java.io.ByteArrayOutputStream();
+                              bm.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, bo);
+                              icons.put(p, "data:image/png;base64," + android.util.Base64.encodeToString(bo.toByteArray(), android.util.Base64.NO_WRAP));
+                          } catch (Exception e) { }
+                      }
+                  } catch (Exception e) { }
+                  r.put("icons", icons);
+                  call.resolve(r);
+              }
+
+              @PluginMethod
               public void launch(PluginCall call) {
                   String p = call.getString("pkg", "");
                   String url = call.getString("url", "");
