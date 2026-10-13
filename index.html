@@ -1,4 +1,4 @@
-<!-- 성장일지 v3.92 · 2026-10-14 · 몰입 쉬는 시간 3·4분할 · 느낀점→큐티 자동 저장 · 알림 카드·분류 줄 접기 · 스케줄 높이 2/3 · 기도노트 사람별 입력 -->
+<!-- 성장일지 v3.93 · 2026-10-14 · 알림 접기 위치 고정 · 하단 버튼 용어 쉽게 · 몰입 쉬는 시간 3·4분할 · 느낀점→큐티 자동 저장 -->
 <!doctype html>
 <html lang="ko" class="simple">
 <head>
@@ -4839,7 +4839,7 @@ function zmSet(i){const c=zmCtx();if(!c)return;i=Math.max(0,Math.min(ZMS.length-
   if(c==='day'){const was=ZMD;ZMD=i;if(i>0&&was===0)ZMA=cur;if(i===0){$('#v-day').classList.remove('zmon');openDay(ZMA);try{zmBarSync()}catch(e){}return}zmRender('day')}
   else{if(ZMP==null){pAnchor=pAnchor||cur}ZMP=i;zmRender('plan')}}
 function zmBarSync(){let B=$('#zmbar');if(!B){B=document.createElement('div');B.id='zmbar';B.className='zmbar';B.hidden=true;B.innerHTML='<span id="zml"></span><input type="range" id="zmr" min="0" max="'+(ZMS.length-1)+'" step="1" aria-label="보기 범위 (1일 ~ 1년)"><button class="rephide" id="zmshow" data-zmshow="1"></button><button class="rephide" id="zmrep" data-rephide="1"></button>';document.body.appendChild(B);B.querySelector('#zmr').addEventListener('input',e=>zmSet(+e.target.value))}
-  const c=zmCtx();B.hidden=!c;document.body.classList.toggle('zmshow',!!c);if(!c)return;{const zb=$('#zmshow');if(zb){const z=SET.zmShow||'auto';zb.textContent=z==='auto'?'📅 자동':z==='both'?'⚖️ 둘 다':z==='plan'?'🗓️ 계획':'✅ 실제';zb.classList.toggle('on',z!=='plan')}}{const rb=$('#zmrep');if(rb){rb.classList.toggle('on',!!SET.hideRep);rb.setAttribute('aria-pressed',String(!!SET.hideRep));rb.textContent=SET.hideRep?'🔁 숨김':'🔁 보임'}}const i=zmIdx(c);const r=$('#zmr');if(+r.value!==i)r.value=i;$('#zml').textContent=(c==='plan'&&ZMP==null)?((ZOOMS.find(z=>z[0]===pZoom)||['','달력'])[1]):ZMS[i][2]}
+  const c=zmCtx();B.hidden=!c;document.body.classList.toggle('zmshow',!!c);if(!c)return;{const zb=$('#zmshow');if(zb){const z=SET.zmShow||'auto';zb.textContent=z==='auto'?'📅 맞춤 보기':z==='both'?'⚖️ 계획+실제':z==='plan'?'🗓️ 계획만':'✅ 실제만';zb.title='계획·실제 보기 방식 바꾸기 (누를 때마다 바뀝니다)';zb.setAttribute('aria-label','계획·실제 보기 방식 바꾸기');zb.classList.toggle('on',z!=='plan')}}{const rb=$('#zmrep');if(rb){rb.classList.toggle('on',!!SET.hideRep);rb.setAttribute('aria-pressed',String(!!SET.hideRep));rb.textContent=SET.hideRep?'🔁 반복 숨김':'🔁 반복 보임';rb.title='반복 일정을 보이거나 숨깁니다';}}const i=zmIdx(c);const r=$('#zmr');if(+r.value!==i)r.value=i;$('#zml').textContent=(c==='plan'&&ZMP==null)?((ZOOMS.find(z=>z[0]===pZoom)||['','달력'])[1]):ZMS[i][2]}
 const ZOOMS=[['y','1년'],['h','6개월'],['q','3개월'],['m','1달'],['w','1주']];
 const CATC={'업무':'--pen','이동':'--muted','기도':'--c-grat','공부':'--c-grat','자기계발':'--c-time','운동':'--c-meet','가족·관계':'--c-mis','섬김·나눔':'--c-fin','봉사·나눔':'--c-fin','휴식':'--c-meet','흘려보냄':'--muted'};
 let pZoom='m',pAnchor=today(),pReview=false,sMode='plan',rMode='cmp',SCTX='plan',SM='plan';
@@ -9117,7 +9117,7 @@ body.simple .topfold{margin:0 0 0 4px}
 body.simple .topcard .afs>.xpbar{margin:0;border:0;background:none;box-shadow:none;padding:4px 6px}
 body.simple .topcard .afs>.simnote{margin:0;border:0;background:none;padding:10px 6px;border-radius:10px}
 body.simple .topcard .afdots{margin-top:3px}
-.cvg{display:flex;flex-direction:column}.cvg>#dash{display:contents}.cvg>.datebar{order:-1;margin:2px 0 8px}.cvg>.topcard,.cvg>#dash>.topcard{order:-2;margin:6px 0 4px;padding:6px 8px;border-radius:12px}
+.cvg{display:flex;flex-direction:column}.cvg>#dash{display:contents}.cvg>.datebar{order:-1;margin:2px 0 8px}.cvg>.topcard,.cvg>#dash>.topcard{order:-2;margin:6px 0 4px;padding:6px 8px;border-radius:12px}.cvg>#dash>.topbar{order:-2;margin:6px 0 4px}
 .cvg .datebar .d{font-size:1.02rem;text-align:left;padding:0 4px;white-space:nowrap}.cvg .datebar .d.cvtd{color:var(--acc);font-weight:700}
 .cvg .datebar #prev,.cvg .datebar #next{width:30px;height:30px;flex:none}.cvg .datebar .d{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis}
 .cvg .datebar #simzb{display:none}@media(min-width:380px){.cvg .datebar #simzb{display:flex}}
