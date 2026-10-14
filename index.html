@@ -1,4 +1,4 @@
-<!-- 성장일지 v4.09 · 2026-10-14 · 월간 보기: 연간 목표·프로젝트·버킷 아래 월간 목표(접기) · 몰입 시작 화면 순서 · 성경·기도 · 속도 개선 -->
+<!-- 성장일지 v4.10 · 2026-10-14 · 1년 보기 목표가 보는 해를 따라감 · 밀기 영역 확대 · 월간 목표 접기 · 성경·기도 · 속도 개선 -->
 <!doctype html>
 <html lang="ko" class="simple">
 <head>
@@ -9876,13 +9876,13 @@ document.addEventListener('visibilitychange',()=>{if(document.hidden)return;setT
 
 /* ---- 2) 여러 날 보기: 지난 날도 계획이 보이게 · 좌우로 밀어 기간 이동 ---- */
 zmMode=function(d){const z=SET.zmShow||'auto';if(z!=='auto')return z;const T=today();if(d>T)return'plan';if(d===T)return'both';const o=zmDoc(d);return o&&(o.time||[]).some(x=>x.s)?'both':'plan'};
-const SWZ='#v-day.zmon #dayBody .zmv,#pbody .zmv,#pbody .cal';
+const SWZ='#v-day.zmon #dayBody .zmv,#v-day.zmon #dayBody .yrg,#v-day.zmon #dayBody .pcc,#v-day.zmon #dayBody .zbtn,#pbody .zmv,#pbody .cal,#pbody .yrg';
 function swGo(dir){try{
   if(curSection==='day'&&ZMD>0)zmShift('day',dir);
   else if(curSection==='plan'&&PLM!=='goal'){if(ZMP!=null)zmShift('plan',dir);else{pShift(dir);renderPlan()}}
   else return;
   const cls=dir<0?'swin-r':'swin-l';[80,300,700].forEach(t=>setTimeout(()=>{const v=document.querySelector(curSection==='day'?'#dayBody .zmv':'#pbody .zmv,#pbody .cal');if(v&&!v.dataset.sw){v.dataset.sw=1;v.classList.add(cls)}},t));
-  if(!SET.swHint){SET.swHint=1;saveSet().catch(()=>{});toast('👈 왼쪽으로 밀면 지난 기간 · 👉 오른쪽으로 밀면 앞 기간')}
+  if(!SET.swHint){SET.swHint=1;saveSet().catch(()=>{});toast('👉 왼쪽에서 오른쪽으로 밀면 다음 기간 · 👈 오른쪽에서 왼쪽으로 밀면 지난 기간')}
 }catch(e){console.warn('sw',e)}}
 (function(){let sx=0,sy=0,t0=0,on=false,sw=0,mx=null;
   document.addEventListener('touchstart',e=>{on=false;if(e.touches.length!==1)return;try{if(curSection==='day'&&ZMD>0&&e.target.closest&&e.target.closest('#dayBody'))SW=null}catch(x){}const z=e.target.closest&&e.target.closest(SWZ);if(!z)return;try{SW=null}catch(x){}const t=e.touches[0];sx=t.clientX;sy=t.clientY;t0=Date.now();on=true},{passive:true});
@@ -10262,11 +10262,11 @@ const yrgOpen=()=>SET.yrgOpen=SET.yrgOpen&&typeof SET.yrgOpen==='object'?SET.yrg
 function yrgHTML(lv,at){lv=lv||'y';const T=at||today(),Y=T.slice(0,4);const gs=lv==='g'?[]:goalsAt(lv,perKey(lv,T));const O=yrgOpen();const pct=g=>{try{return Math.round(prog(g)*100)}catch(e){return 0}};
   const byA={};gs.forEach(g=>{const k=g.area||'';(byA[k]=byA[k]||[]).push(g)});
   const avg=gs.length?Math.round(gs.reduce((a,g)=>a+pct(g),0)/gs.length):0;
-  const gB=gs.length?Object.keys(byA).map(k=>`<p class="yrp">${k?`${AREA_E[k]||''} ${esc(areaName(k))}`:'기둥 없음'}</p>${byA[k].map(g=>`<div class="yrr ${g.done?'dn':''}"><span>${esc(g.title||'(제목 없음)')}</span><b>${pct(g)}%</b></div>`).join('')}`).join(''):'<p class="hint" style="margin:4px 0">아직 '+(lv==='m'?'이번 달':'올해')+' 목표가 없습니다.</p>';
+  const gB=gs.length?Object.keys(byA).map(k=>`<p class="yrp">${k?`${AREA_E[k]||''} ${esc(areaName(k))}`:'기둥 없음'}</p>${byA[k].map(g=>`<div class="yrr ${g.done?'dn':''}"><span>${esc(g.title||'(제목 없음)')}</span><b>${pct(g)}%</b></div>`).join('')}`).join(''):'<p class="hint" style="margin:4px 0">아직 '+(lv==='m'?'이번 달':(Y===today().slice(0,4)?'올해':Y+'년'))+' 목표가 없습니다.</p>';
   const P=(typeof PROJ!=='undefined'?PROJ.list:[]);const pB=P.length?P.map(p=>{const v=Math.round(projPct(p)*100);return`<div class="yrr ${v>=100?'dn':''}" data-yrpj="${p.id}" style="cursor:pointer"><span>🧩 ${esc(p.title)}</span>${p.due?`<small>~${md(p.due)}</small>`:''}<b>${v}%</b></div>`}).join(''):'<p class="hint" style="margin:4px 0">프로젝트가 없습니다.</p>';
   const B=bkList();const bB=B.length?B.map(b=>`<div class="yrr ${b.done?'dn':''}"><span>${esc(b.w||'○')} ${esc(b.t)}</span>${b.done?'<b>이룸</b>':''}</div>`).join(''):'<p class="hint" style="margin:4px 0">버킷리스트가 없습니다.</p>';
   return`<div class="card nocol yrg" style="--k:var(--acc)"><h3>${lv==='g'?'🧩 프로젝트 · 🪣 버킷리스트':lv==='m'?`🎯 ${+T.slice(5,7)}월 목표 · 프로젝트 · 버킷리스트`:`🎯 ${Y}년 목표 · 프로젝트 · 버킷리스트`}</h3>
-   ${lv==='g'?'':`<details data-yrg="g" ${O.g?'open':''}><summary>🎯 ${lv==='m'?'이번 달':'올해'} 목표 <small>${gs.length}개${gs.length?` · 평균 ${avg}%`:''}</small></summary>${gB}<button class="xlink" data-yrgo="pgoal" style="margin:4px 0 0">목표 화면 ›</button></details>`}
+   ${lv==='g'?'':`<details data-yrg="g" ${O.g?'open':''}><summary>🎯 ${lv==='m'?'이번 달':(Y===today().slice(0,4)?'올해':Y+'년')} 목표 <small>${gs.length}개${gs.length?` · 평균 ${avg}%`:''}</small></summary>${gB}<button class="xlink" data-yrgo="pgoal" style="margin:4px 0 0">목표 화면 ›</button></details>`}
    <details data-yrg="p" ${O.p?'open':''}><summary>🧩 프로젝트 <small>${P.length}개</small></summary>${pB}<button class="xlink" data-yrgo="work" style="margin:4px 0 0">프로젝트 화면 ›</button></details>
    <details data-yrg="b" ${O.b?'open':''}><summary>🪣 버킷리스트 <small>${B.length}개 · 이룸 ${B.filter(b=>b.done).length}</small></summary>${bB}<button class="xlink" data-yrgo="bucket" style="margin:4px 0 0">버킷리스트 ›</button></details></div>`}
 function yrgBind(R){R.querySelectorAll('details[data-yrg]').forEach(d=>d.addEventListener('toggle',()=>{yrgOpen()[d.dataset.yrg]=d.open;saveSet().catch(()=>{})}));
@@ -10274,10 +10274,10 @@ function yrgBind(R){R.querySelectorAll('details[data-yrg]').forEach(d=>d.addEven
   R.querySelectorAll('[data-yrpj]').forEach(b=>b.onclick=()=>{wOpen=b.dataset.yrpj;openSection('work');scrollTo({top:0})})}
 function yrgPaint(){try{let host=null;
   if(curSection==='day'&&ZMD>0&&ZMS[ZMD]){const k=ZMS[ZMD][0];
-    if(k==='y'){const z=document.querySelector('#v-day .cal.z-y')||document.querySelector('#v-day .zgrid');host=z?z.parentElement:null;if(host&&!host.querySelector('.yrg'))z.insertAdjacentHTML('beforebegin',yrgHTML())}
-    else if(k==='m'){host=$('#dayBody');if(host&&!host.querySelector('.yrg'))host.insertAdjacentHTML('afterbegin',yrgHTML());if(host)mgFold(host)}}
+    if(k==='y'){const z=document.querySelector('#v-day .cal.z-y')||document.querySelector('#v-day .zgrid');host=z?z.parentElement:null;if(host&&!host.querySelector('.yrg'))z.insertAdjacentHTML('beforebegin',yrgHTML('y',ZMA))}
+    else if(k==='m'){host=$('#dayBody');if(host&&!host.querySelector('.yrg'))host.insertAdjacentHTML('afterbegin',yrgHTML('y',ZMA));if(host)mgFold(host)}}
   else if(curSection==='plan'){const k=PLM==='goal'?'g':(ZMP!=null&&ZMS[ZMP]?ZMS[ZMP][0]:pZoom);host=$('#pbody');
-    if(host&&!host.querySelector('.yrg')){if(k==='y')host.insertAdjacentHTML('afterbegin',yrgHTML());else if(k==='m')host.insertAdjacentHTML('afterbegin',yrgHTML());else if(k==='g')host.insertAdjacentHTML('beforeend',yrgHTML('g'));else host=null}else if(k==='w')host=null;if(host&&k==='m')mgFold(host)}
+    if(host&&!host.querySelector('.yrg')){if(k==='y'||k==='m')host.insertAdjacentHTML('afterbegin',yrgHTML('y',pAnchor||today()));else if(k==='g')host.insertAdjacentHTML('beforeend',yrgHTML('g'));else host=null}else if(k==='w')host=null;if(host&&k==='m')mgFold(host)}
   if(host)yrgBind(host)}catch(e){console.warn('yrg',e)}}
 {const _rdy=renderDay;renderDay=async function(){const r=await _rdy.apply(this,arguments);yrgPaint();stPaint();return r}}
 {const _zd=zmDay;zmDay=async function(){const r=await _zd.apply(this,arguments);yrgPaint();return r}}
