@@ -37,8 +37,8 @@ jobs:
       - name: 앱 아이콘
         run: |
           R=android/app/src/main/res
-          for d in mdpi hdpi xhdpi xxhdpi xxxhdpi; do mkdir -p $R/mipmap-$d && cp icons/mipmap-$d/*.png $R/mipmap-$d/; done
-          mkdir -p $R/values && printf '<?xml version="1.0" encoding="utf-8"?>\n<resources>\n    <color name="ic_launcher_background">#DFF5E7</color>\n</resources>\n' > $R/values/ic_launcher_background.xml
+          for d in mdpi hdpi xhdpi xxhdpi xxxhdpi; do mkdir -p $R/mipmap-$d && cp bible-app/icons/mipmap-$d/*.png $R/mipmap-$d/; done
+          mkdir -p $R/values && printf '<?xml version="1.0" encoding="utf-8"?>\n<resources>\n    <color name="ic_launcher_background">#1E3A8A</color>\n</resources>\n' > $R/values/ic_launcher_background.xml
       - name: 서명 키 고정
         run: |
           mkdir -p ~/.android

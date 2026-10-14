@@ -1967,13 +1967,35 @@ jobs:
                   return HealthConnectClient.Companion.getOrCreate(getContext(), PROV);
               }
 
+              static final String RP = "androidx.health.connect.client.records.";
+              static final String[] CORE = { "SleepSessionRecord", "ExerciseSessionRecord", "WeightRecord" };
+              static final String[] EXTRA = { "StepsRecord", "DistanceRecord", "TotalCaloriesBurnedRecord", "ActiveCaloriesBurnedRecord", "FloorsClimbedRecord", "HeartRateRecord", "RestingHeartRateRecord", "OxygenSaturationRecord", "BloodPressureRecord", "BloodGlucoseRecord", "BodyFatRecord", "HeightRecord", "HydrationRecord", "BodyTemperatureRecord", "RespiratoryRateRecord", "HeartRateVariabilityRmssdRecord", "Vo2MaxRecord", "BasalMetabolicRateRecord", "LeanBodyMassRecord", "BoneMassRecord", "BodyWaterMassRecord", "NutritionRecord", "SpeedRecord" };
+
+              static Class rc(String n) {
+                  try { return Class.forName(RP + n); } catch (Throwable t) { return null; }
+              }
+
               private Set<String> perms() {
                   Set<String> s = new HashSet<>();
-                  s.add(HealthPermission.Companion.getReadPermission(JvmClassMappingKt.getKotlinClass(SleepSessionRecord.class)));
-                  s.add(HealthPermission.Companion.getReadPermission(JvmClassMappingKt.getKotlinClass(ExerciseSessionRecord.class)));
-                  s.add(HealthPermission.Companion.getReadPermission(JvmClassMappingKt.getKotlinClass(WeightRecord.class)));
+                  for (String[] grp : new String[][] { CORE, EXTRA }) {
+                      for (String n : grp) {
+                          try {
+                              Class c = rc(n);
+                              if (c != null) s.add(HealthPermission.Companion.getReadPermission(JvmClassMappingKt.getKotlinClass(c)));
+                          } catch (Throwable t) { }
+                      }
+                  }
                   return s;
               }
+
+              private Set<String> corePerms() {
+                  Set<String> s = new HashSet<>();
+                  for (String n : CORE) {
+                      try { s.add(HealthPermission.Companion.getReadPermission(JvmClassMappingKt.getKotlinClass(rc(n)))); } catch (Throwable t) { }
+                  }
+                  return s;
+              }
+
 
               private int sdk() {
                   try {
@@ -2010,7 +2032,11 @@ jobs:
                       public void run() {
                           try {
                               Set<String> g = granted();
-                              r.put("granted", g.containsAll(perms()));
+                              Set<String> cp = corePerms();
+                              boolean any = false;
+                              for (String q : g) if (cp.contains(q)) any = true;
+                              r.put("granted", any);
+                              r.put("all", g.containsAll(perms()));
                               r.put("count", g.size());
                           } catch (Throwable t) {
                               r.put("granted", false);
@@ -2082,14 +2108,170 @@ jobs:
               @SuppressWarnings({"unchecked", "rawtypes"})
               private List readType(Class cls, Instant a, Instant b) throws Exception {
                   final HealthConnectClient c = client();
-                  final ReadRecordsRequest rq = new ReadRecordsRequest(JvmClassMappingKt.getKotlinClass(cls), TimeRangeFilter.Companion.between(a, b), new HashSet<DataOrigin>(), true, 1000, null);
-                  ReadRecordsResponse rs = (ReadRecordsResponse) await(new Susp() {
-                      @Override
-                      public Object run(Continuation k) {
-                          return c.readRecords(rq, k);
+                  java.util.ArrayList all = new java.util.ArrayList();
+                  String token = null;
+                  for (int pg = 0; pg < 30; pg++) {
+                      final ReadRecordsRequest rq = new ReadRecordsRequest(JvmClassMappingKt.getKotlinClass(cls), TimeRangeFilter.Companion.between(a, b), new HashSet<DataOrigin>(), true, 1000, token);
+                      ReadRecordsResponse rs = (ReadRecordsResponse) await(new Susp() {
+                          @Override
+                          public Object run(Continuation k) {
+                              return c.readRecords(rq, k);
+                          }
+                      });
+                      all.addAll(rs.getRecords());
+                      token = rs.getPageToken();
+                      if (token == null || token.length() == 0) break;
+                  }
+                  return all;
+              }
+
+              static final String[] UNITS = { "getInKilocalories", "getInMeters", "getInLiters", "getInMillimetersOfMercury", "getInMillimolesPerLiter", "getInCelsius", "getInKilocaloriesPerDay", "getInKilograms", "getInGrams", "getInMetersPerSecond", "getValue" };
+
+              static Object call(Object o, String n) {
+                  try { return o.getClass().getMethod(n).invoke(o); } catch (Throwable t) { return null; }
+              }
+
+              static Double numOf(Object o, String unit) {
+                  if (o == null) return null;
+                  if (o instanceof Number) return ((Number) o).doubleValue();
+                  if (unit != null && unit.length() > 0) {
+                      Object v = call(o, unit);
+                      if (v instanceof Number) return ((Number) v).doubleValue();
+                  }
+                  for (String n : UNITS) {
+                      Object v = call(o, n);
+                      if (v instanceof Number) return ((Number) v).doubleValue();
+                  }
+                  return null;
+              }
+
+              static long timeOf(Object r) {
+                  Object t = call(r, "getStartTime");
+                  if (t == null) t = call(r, "getTime");
+                  return (t instanceof Instant) ? ((Instant) t).toEpochMilli() : 0;
+              }
+
+              static long endOf(Object r) {
+                  Object t = call(r, "getEndTime");
+                  if (t == null) t = call(r, "getTime");
+                  return (t instanceof Instant) ? ((Instant) t).toEpochMilli() : 0;
+              }
+
+              static final String[][] MORE = {
+                  { "steps", "StepsRecord", "getCount", "" },
+                  { "dist", "DistanceRecord", "getDistance", "getInMeters" },
+                  { "kcal", "TotalCaloriesBurnedRecord", "getEnergy", "getInKilocalories" },
+                  { "akcal", "ActiveCaloriesBurnedRecord", "getEnergy", "getInKilocalories" },
+                  { "floors", "FloorsClimbedRecord", "getFloors", "" },
+                  { "rhr", "RestingHeartRateRecord", "getBeatsPerMinute", "" },
+                  { "spo2", "OxygenSaturationRecord", "getPercentage", "getValue" },
+                  { "sys", "BloodPressureRecord", "getSystolic", "getInMillimetersOfMercury" },
+                  { "dia", "BloodPressureRecord", "getDiastolic", "getInMillimetersOfMercury" },
+                  { "glu", "BloodGlucoseRecord", "getLevel", "getInMillimolesPerLiter" },
+                  { "fat", "BodyFatRecord", "getPercentage", "getValue" },
+                  { "height", "HeightRecord", "getHeight", "getInMeters" },
+                  { "water", "HydrationRecord", "getVolume", "getInLiters" },
+                  { "temp", "BodyTemperatureRecord", "getTemperature", "getInCelsius" },
+                  { "resp", "RespiratoryRateRecord", "getRate", "" },
+                  { "hrv", "HeartRateVariabilityRmssdRecord", "getHeartRateVariabilityMillis", "" },
+                  { "vo2", "Vo2MaxRecord", "getVo2MillilitersPerMinuteKilogram", "" },
+                  { "bmr", "BasalMetabolicRateRecord", "getBasalMetabolicRate", "getInKilocaloriesPerDay" },
+                  { "lean", "LeanBodyMassRecord", "getMass", "getInKilograms" },
+                  { "bone", "BoneMassRecord", "getMass", "getInKilograms" },
+                  { "bwater", "BodyWaterMassRecord", "getMass", "getInKilograms" },
+                  { "nkcal", "NutritionRecord", "getEnergy", "getInKilocalories" },
+                  { "prot", "NutritionRecord", "getProtein", "getInGrams" },
+                  { "carb", "NutritionRecord", "getTotalCarbohydrate", "getInGrams" },
+                  { "fatg", "NutritionRecord", "getTotalFat", "getInGrams" },
+                  { "spd", "SpeedRecord", "getSamples", "SPEED" }
+              };
+
+              private void readMore(JSObject r, Instant a, Instant b, StringBuilder err) {
+                  java.util.LinkedHashMap<String, JSArray> out = new java.util.LinkedHashMap<>();
+                  java.util.LinkedHashSet<String> classes = new java.util.LinkedHashSet<>();
+                  for (String[] m : MORE) classes.add(m[1]);
+                  classes.add("HeartRateRecord");
+                  for (String cn : classes) {
+                      Class cls = rc(cn);
+                      if (cls == null) continue;
+                      List recs;
+                      try { recs = readType(cls, a, b); } catch (Throwable t) { continue; }
+                      for (Object rec : recs) {
+                          long ts = timeOf(rec), te = endOf(rec);
+                          if (cn.equals("HeartRateRecord")) {
+                              Object sm = call(rec, "getSamples");
+                              if (!(sm instanceof List)) continue;
+                              double sum = 0, lo = 1e9, hi = 0;
+                              int n = 0;
+                              for (Object smp : (List) sm) {
+                                  Double v = numOf(call(smp, "getBeatsPerMinute"), "");
+                                  if (v == null) continue;
+                                  sum += v; n++;
+                                  if (v < lo) lo = v;
+                                  if (v > hi) hi = v;
+                              }
+                              if (n == 0) continue;
+                              JSObject j = new JSObject();
+                              try {
+                                  j.put("t", ts); j.put("v", sum / n); j.put("n", n); j.put("lo", lo); j.put("hi", hi);
+                              } catch (Throwable t) { }
+                              JSArray ar = out.get("hr");
+                              if (ar == null) { ar = new JSArray(); out.put("hr", ar); }
+                              ar.put(j);
+                              continue;
+                          }
+                          for (String[] m : MORE) {
+                              if (!m[1].equals(cn)) continue;
+                              try {
+                                  Double v;
+                                  if (m[3].equals("SPEED")) {
+                                      Object sm = call(rec, m[2]);
+                                      if (!(sm instanceof List)) continue;
+                                      double sum = 0;
+                                      int n = 0;
+                                      for (Object smp : (List) sm) {
+                                          Double x = numOf(call(smp, "getSpeed"), "getInMetersPerSecond");
+                                          if (x != null) { sum += x; n++; }
+                                      }
+                                      if (n == 0) continue;
+                                      v = sum / n;
+                                  } else {
+                                      v = numOf(call(rec, m[2]), m[3]);
+                                  }
+                                  if (v == null) continue;
+                                  JSObject j = new JSObject();
+                                  j.put("t", ts); j.put("e", te); j.put("v", v);
+                                  JSArray ar = out.get(m[0]);
+                                  if (ar == null) { ar = new JSArray(); out.put(m[0], ar); }
+                                  ar.put(j);
+                              } catch (Throwable t) { }
+                          }
                       }
-                  });
-                  return rs.getRecords();
+                  }
+                  JSObject mo = new JSObject();
+                  for (java.util.Map.Entry<String, JSArray> en : out.entrySet()) mo.put(en.getKey(), en.getValue());
+                  r.put("more", mo);
+              }
+
+              static void stages(Object rec, JSObject j) {
+                  try {
+                      Object st = call(rec, "getStages");
+                      if (!(st instanceof List)) return;
+                      long deep = 0, light = 0, rem = 0, awake = 0;
+                      for (Object x : (List) st) {
+                          Object ty = call(x, "getStage");
+                          Object s0 = call(x, "getStartTime");
+                          Object e0 = call(x, "getEndTime");
+                          if (!(ty instanceof Number) || !(s0 instanceof Instant) || !(e0 instanceof Instant)) continue;
+                          long mn = Math.max(0, (((Instant) e0).toEpochMilli() - ((Instant) s0).toEpochMilli()) / 60000);
+                          int k = ((Number) ty).intValue();
+                          if (k == 5) deep += mn;
+                          else if (k == 4 || k == 2) light += mn;
+                          else if (k == 6) rem += mn;
+                          else if (k == 1 || k == 7 || k == 3) awake += mn;
+                      }
+                      j.put("deep", deep); j.put("light", light); j.put("rem", rem); j.put("awake", awake);
+                  } catch (Throwable t) { }
               }
 
               @PluginMethod
@@ -2110,11 +2292,14 @@ jobs:
                           try {
                               for (Object o : readType(SleepSessionRecord.class, a, b)) {
                                   SleepSessionRecord x = (SleepSessionRecord) o;
+                                  final JSObject stg = new JSObject();
+                                  stages(x, stg);
                                   JSObject j = new JSObject();
                                   j.put("id", x.getMetadata().getId());
                                   j.put("s", x.getStartTime().toEpochMilli());
                                   j.put("e", x.getEndTime().toEpochMilli());
                                   j.put("src", x.getMetadata().getDataOrigin().getPackageName());
+                                  j.put("stg", stg);
                                   sl.put(j);
                               }
                           } catch (Throwable t) {
@@ -2146,6 +2331,7 @@ jobs:
                           } catch (Throwable t) {
                               err.append("체중:").append(t).append(" ");
                           }
+                          try { readMore(r, a, b, err); } catch (Throwable t) { err.append("기타:").append(t).append(" "); }
                           r.put("sleep", sl);
                           r.put("ex", ex);
                           r.put("weight", wt);
@@ -2183,6 +2369,29 @@ jobs:
             x=x.replace('</manifest>',`    <uses-permission android:name="android.permission.health.READ_SLEEP" />
               <uses-permission android:name="android.permission.health.READ_EXERCISE" />
               <uses-permission android:name="android.permission.health.READ_WEIGHT" />
+              <uses-permission android:name="android.permission.health.READ_STEPS" />
+              <uses-permission android:name="android.permission.health.READ_DISTANCE" />
+              <uses-permission android:name="android.permission.health.READ_TOTAL_CALORIES_BURNED" />
+              <uses-permission android:name="android.permission.health.READ_ACTIVE_CALORIES_BURNED" />
+              <uses-permission android:name="android.permission.health.READ_FLOORS_CLIMBED" />
+              <uses-permission android:name="android.permission.health.READ_HEART_RATE" />
+              <uses-permission android:name="android.permission.health.READ_RESTING_HEART_RATE" />
+              <uses-permission android:name="android.permission.health.READ_OXYGEN_SATURATION" />
+              <uses-permission android:name="android.permission.health.READ_BLOOD_PRESSURE" />
+              <uses-permission android:name="android.permission.health.READ_BLOOD_GLUCOSE" />
+              <uses-permission android:name="android.permission.health.READ_BODY_FAT" />
+              <uses-permission android:name="android.permission.health.READ_HEIGHT" />
+              <uses-permission android:name="android.permission.health.READ_HYDRATION" />
+              <uses-permission android:name="android.permission.health.READ_BODY_TEMPERATURE" />
+              <uses-permission android:name="android.permission.health.READ_RESPIRATORY_RATE" />
+              <uses-permission android:name="android.permission.health.READ_HEART_RATE_VARIABILITY" />
+              <uses-permission android:name="android.permission.health.READ_VO2_MAX" />
+              <uses-permission android:name="android.permission.health.READ_BASAL_METABOLIC_RATE" />
+              <uses-permission android:name="android.permission.health.READ_LEAN_BODY_MASS" />
+              <uses-permission android:name="android.permission.health.READ_BONE_MASS" />
+              <uses-permission android:name="android.permission.health.READ_BODY_WATER_MASS" />
+              <uses-permission android:name="android.permission.health.READ_NUTRITION" />
+              <uses-permission android:name="android.permission.health.READ_SPEED" />
               <queries>
                   <package android:name="com.google.android.apps.healthdata" />
               </queries>
