@@ -1,4 +1,4 @@
-<!-- 성장일지 v4.07 · 2026-10-14 · 성경·기도 복원 · 속도 개선 · 뒤로가기 전체 · 올해 남은 날·현재 시각 · 몰입·루틴 단추 하나 · 기둥·목표·분류 구분 -->
+<!-- 성장일지 v4.08 · 2026-10-14 · 몰입 시작 화면 순서·분류 한 줄 · 성경·기도 · 속도 개선 · 뒤로가기 전체 · 올해 남은 날·현재 시각 · 몰입·루틴 단추 하나 · 기둥·목표·분류 구분 -->
 <!doctype html>
 <html lang="ko" class="simple">
 <head>
@@ -10235,6 +10235,14 @@ document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest
   {const sb=$('#fcsub');if(sb)sb.onchange=async e=>{let v=e.target.value;if(v==='__add'||v==='__addsub'){const co2=catObj(d.cat);const n=((await uiPrompt(`‘${d.cat}’ 아래 새 소분류`,''))||'').trim();if(n&&co2){co2.subs=co2.subs||[];if(!co2.subs.includes(n))co2.subs.push(n);await pmSave()}v=n||''}d.sub=v;rdA();renderFocus()}}
 }catch(e){console.warn('fcpm',e)}return r}}
 {const _fs4=fcStart;fcStart=function(){const d=fcDraft;const sub=d&&d.sub;const r=_fs4.apply(this,arguments);try{if(FC&&sub&&!FC.sub){FC.sub=sub;fcSave()}}catch(e){}return r}}
+/* ===================== v4.08: 몰입 시작 화면 — 무엇에 › 목표 › 분류(한 줄 3칸) ===================== */
+{const _rf11=renderFocus;renderFocus=function(){const r=_rf11.apply(this,arguments);try{if(FC||!fcDraft)return r;const B=$('#fcBody');if(!B||B.querySelector('.fcc3'))return r;const dk=$('#fcdk'),ct=$('#fccat'),sb=$('#fcsub'),g=$('#fcgoal');if(!dk||!ct||!sb||!g)return r;
+  const L=e=>e.closest('label');const lg=L(g),ld=L(dk),lc=L(ct),ls=L(sb);if(!lg||!ld||!lc||!ls)return r;
+  const row=document.createElement('div');row.className='fcc3';
+  [[dk,'대분류(기둥)'],[ct,'중분류'],[sb,'소분류']].forEach(([e,t])=>{const c=document.createElement('div');const sm=document.createElement('small');sm.textContent=t;c.appendChild(sm);c.appendChild(e);row.appendChild(c)});
+  lg.after(row);[ld,lc,ls].forEach(x=>{if(x.isConnected&&!x.querySelector('select'))x.remove()});
+  const h=lg.querySelector('small.hint');if(h){h.textContent='· 몰입 시간이 쌓입니다';h.style.display='inline'}B.querySelectorAll('.g2[data-pm]').forEach(x=>{if(!x.children.length)x.remove()})}catch(e){console.warn('fcc3',e)}return r}}
+{const st=document.createElement('style');st.textContent='.fcc3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:8px}.fcc3>div{min-width:0}.fcc3 small{display:block;font-size:.68rem;color:var(--muted);margin:0 0 2px 2px;white-space:nowrap}.fcc3 select{width:100%;min-width:0;padding:9px 4px!important;font-size:.82rem!important;text-overflow:ellipsis}';document.head.appendChild(st)}
 /* ===================== v4.02: 1년 보기 목표 · 비전 접기 · 짜투리 정리 · 시작 화면 목록 ===================== */
 (function(){const st=document.createElement('style');st.textContent=`
 .yrg{margin:10px 0}.yrg h3{margin-bottom:4px}.yrg details{border-top:1px solid var(--line);padding:6px 0}.yrg summary{cursor:pointer;list-style:none;display:flex;align-items:center;gap:6px;font-weight:700;font-size:.92rem;padding:4px 0}.yrg summary::-webkit-details-marker{display:none}.yrg summary::after{content:'▾';margin-left:auto;color:var(--muted);font-size:.8rem}.yrg details[open] summary::after{content:'▴'}.yrg summary small{color:var(--muted);font-weight:500;font-size:.76rem}
