@@ -1,4 +1,4 @@
-<!-- 성장일지 v4.08 · 2026-10-14 · 몰입 시작 화면 순서·분류 한 줄 · 성경·기도 · 속도 개선 · 뒤로가기 전체 · 올해 남은 날·현재 시각 · 몰입·루틴 단추 하나 · 기둥·목표·분류 구분 -->
+<!-- 성장일지 v4.09 · 2026-10-14 · 월간 보기: 연간 목표·프로젝트·버킷 아래 월간 목표(접기) · 몰입 시작 화면 순서 · 성경·기도 · 속도 개선 -->
 <!doctype html>
 <html lang="ko" class="simple">
 <head>
@@ -10275,14 +10275,20 @@ function yrgBind(R){R.querySelectorAll('details[data-yrg]').forEach(d=>d.addEven
 function yrgPaint(){try{let host=null;
   if(curSection==='day'&&ZMD>0&&ZMS[ZMD]){const k=ZMS[ZMD][0];
     if(k==='y'){const z=document.querySelector('#v-day .cal.z-y')||document.querySelector('#v-day .zgrid');host=z?z.parentElement:null;if(host&&!host.querySelector('.yrg'))z.insertAdjacentHTML('beforebegin',yrgHTML())}
-    else if(k==='m'){host=$('#dayBody');if(host&&!host.querySelector('.yrg'))host.insertAdjacentHTML('beforeend',yrgHTML('g'))}}
+    else if(k==='m'){host=$('#dayBody');if(host&&!host.querySelector('.yrg'))host.insertAdjacentHTML('afterbegin',yrgHTML());if(host)mgFold(host)}}
   else if(curSection==='plan'){const k=PLM==='goal'?'g':(ZMP!=null&&ZMS[ZMP]?ZMS[ZMP][0]:pZoom);host=$('#pbody');
-    if(host&&!host.querySelector('.yrg')){if(k==='y')host.insertAdjacentHTML('afterbegin',yrgHTML());else if(k==='m'||k==='g')host.insertAdjacentHTML('beforeend',yrgHTML('g'));else host=null}else if(k==='w')host=null}
+    if(host&&!host.querySelector('.yrg')){if(k==='y')host.insertAdjacentHTML('afterbegin',yrgHTML());else if(k==='m')host.insertAdjacentHTML('afterbegin',yrgHTML());else if(k==='g')host.insertAdjacentHTML('beforeend',yrgHTML('g'));else host=null}else if(k==='w')host=null;if(host&&k==='m')mgFold(host)}
   if(host)yrgBind(host)}catch(e){console.warn('yrg',e)}}
 {const _rdy=renderDay;renderDay=async function(){const r=await _rdy.apply(this,arguments);yrgPaint();stPaint();return r}}
 {const _zd=zmDay;zmDay=async function(){const r=await _zd.apply(this,arguments);yrgPaint();return r}}
 {const _zp=zmPlan;zmPlan=async function(){const r=await _zp.apply(this,arguments);yrgPaint();return r}}
 {const _rpy=renderPlan;renderPlan=async function(){const r=await _rpy.apply(this,arguments);yrgPaint();return r}}
+/* 월간 목표를 접을 수 있게 (연간 목표 · 프로젝트 · 버킷리스트 아래에 이어서) */
+function mgFold(R){{const y=R.querySelector('.yrg'),pc=R.querySelector('.pcc');if(y&&pc&&(y.compareDocumentPosition(pc)&Node.DOCUMENT_POSITION_PRECEDING))pc.before(y)}R.querySelectorAll('.pcc.pcm').forEach(c=>{if(c.querySelector('.pcgd'))return;const fl=[...c.children].find(x=>x.tagName==='P'&&x.classList.contains('fl')&&/목표/.test(x.textContent));const gl=fl&&fl.nextElementSibling;if(!fl||!gl||!gl.classList.contains('plgl'))return;
+  const n=gl.querySelectorAll('.plg,.plgi,[data-plg],.plgr').length||[...gl.children].filter(x=>!x.classList.contains('plad')).length;const O=yrgOpen();const d=document.createElement('details');d.className='pcgd';if(O.mg)d.open=true;
+  const sm=document.createElement('summary');sm.innerHTML=`${fl.innerHTML} <small>${n}개</small>`;d.appendChild(sm);fl.before(d);d.appendChild(gl);fl.remove();d.addEventListener('toggle',()=>{O.mg=d.open;saveSet().catch(()=>{})})})}
+{const st=document.createElement('style');st.textContent='.pcgd{border-top:1px solid var(--line);margin:6px 0 4px;padding:4px 0}.pcgd>summary{cursor:pointer;list-style:none;display:flex;align-items:center;gap:6px;font-weight:700;font-size:.92rem;padding:4px 0}.pcgd>summary::-webkit-details-marker{display:none}.pcgd>summary::after{content:"▾";margin-left:auto;color:var(--muted);font-size:.8rem}.pcgd[open]>summary::after{content:"▴"}.pcgd>summary small{color:var(--muted);font-weight:500;font-size:.76rem}';document.head.appendChild(st)}
+{const _pp9=plPaint;plPaint=function(){const r=_pp9.apply(this,arguments);try{yrgPaint()}catch(e){}return r}}
 /* ---- 2) 비전: 아이콘 작게 · 칸마다 접기 ---- */
 const vzF=()=>SET.vzf=SET.vzf&&typeof SET.vzf==='object'?SET.vzf:{};
 function vzPaint(){try{if(curSection!=='vision'||gEdit)return;const R=$('#glist');if(!R)return;const F=vzF();
