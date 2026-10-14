@@ -1,4 +1,4 @@
-<!-- 말씀과 기도 v1.8 · 2026-10-14 -->
+<!-- 말씀과 기도 v1.11 · 2026-10-15 · 밀어서 장 넘기기(오른쪽→왼쪽=다음) -->
 <!doctype html>
 <html lang="ko" class="simple">
 <head>
@@ -423,7 +423,7 @@ nav.main button,.subnav button,.favtile{-webkit-user-select:none;user-select:non
 .bbtxt p{margin:0 0 6px;padding:2px 4px;border-radius:4px;cursor:pointer}
 .bbtxt p sup{font-family:inherit;font-size:.68em;color:var(--acc);font-weight:700;margin-right:4px;vertical-align:.25em}
 .bbtxt p.sel{background:color-mix(in srgb,#ffd54f 40%,transparent)}
-.bbbar{position:sticky;bottom:calc(64px + env(safe-area-inset-bottom));z-index:20;display:flex;gap:6px;justify-content:center;flex-wrap:wrap;padding:8px;background:var(--paper);border:1px solid var(--line);border-radius:10px;box-shadow:0 4px 14px rgba(0,0,0,.12);margin-top:8px}
+.bbbar{position:fixed;left:8px;right:8px;bottom:calc(64px + env(safe-area-inset-bottom));z-index:60;display:flex;gap:6px;justify-content:flex-start;flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding:8px;background:var(--paper);border:1px solid var(--line);border-radius:10px;box-shadow:0 4px 14px rgba(0,0,0,.12);margin-top:8px}
 .bbhd{display:flex;align-items:center;justify-content:space-between;gap:6px;flex-wrap:wrap}
 .bbhd h3{margin:0}
 .bbnav{display:flex;justify-content:space-between;gap:8px;margin:6px 0}
@@ -1156,6 +1156,7 @@ nav.main button[data-navh]{display:none!important}
 .ordrow input{width:20px;height:20px}
 </style>
 <style id="bibapp">
+.bbbar,.eobar{bottom:calc(12px + env(safe-area-inset-bottom))!important}
 .wrap>.top,nav.main,#subnav,.wrap>section:not(#v-bible),#fab,#daymini,#alarmbar,#navbk,#edgebk,#focusov,#routineov{display:none!important}
 #v-bible{display:block!important}
 #bapphd{display:flex;align-items:center;justify-content:space-between;padding:10px 4px 6px;font-weight:800;font-size:19px}
@@ -1573,7 +1574,10 @@ span.prck{border:0;cursor:default;font-size:1.05rem;color:var(--ink)}
   </section>
 </div>
 
-<script>/* ---------- 💬 앱 안 확인·입력 창 (브라우저 기본 창이 막힌 곳에서도 동작) ---------- */
+<script>
+/* v4.05 속도: 글자만 바뀌는 변화(시계·타이머 숫자)는 화면 감시기에 알리지 않는다 */
+(()=>{const MO=window.MutationObserver;if(!MO)return;window.__MO0=MO;const el=n=>n.nodeType===1;window.MutationObserver=class extends MO{constructor(cb){super((recs,o)=>{const L=recs.filter(r=>r.type!=='childList'||[...r.addedNodes].some(el)||[...r.removedNodes].some(el));if(L.length)cb(L,o)})}}})();
+/* ---------- 💬 앱 안 확인·입력 창 (브라우저 기본 창이 막힌 곳에서도 동작) ---------- */
 let UIDLG=null;
 function uiDlg(o){return new Promise(res=>{let ov=document.getElementById('uidlg');if(!ov){ov=document.createElement('div');ov.id='uidlg';document.body.appendChild(ov)}ov.hidden=false;const E=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
   ov.innerHTML='<div class="uibox" role="dialog" aria-modal="true"><p class="uimsg">'+E(o.msg).replace(/\n/g,'<br>')+'</p>'+(o.input?(o.multi?'<textarea id="uiin" rows="10" style="width:100%;font:inherit">'+E(o.def)+'</textarea>':'<input type="text" id="uiin" value="'+E(o.def)+'">'):'')+'<div class="uibtn">'+(o.alert?'':'<button class="btn ghost" id="uino" type="button">취소</button>')+'<button class="btn" id="uiok" type="button">확인</button></div></div>';
@@ -3076,7 +3080,7 @@ function miniInit(){const M=$('#miniov');if(!M||M._b)return;M._b=1;try{const p=J
   const move=e=>{if(!dn)return;const t=e.touches?e.touches[0]:e;const dx=t.clientX-sx,dy=t.clientY-sy;if(!M._drag&&Math.hypot(dx,dy)<8)return;M._drag=true;e.preventDefault&&e.cancelable&&e.preventDefault();const x=Math.max(4,Math.min(innerWidth-M.offsetWidth-4,ox+dx)),y=Math.max(4,Math.min(innerHeight-M.offsetHeight-4,oy+dy));M.style.left=x+'px';M.style.top=y+'px';M.style.bottom='auto'};
   const up=()=>{if(!dn)return;dn=false;if(M._drag){try{localStorage.setItem('gj-minipos',JSON.stringify({x:parseInt(M.style.left),y:parseInt(M.style.top)}))}catch(e){}setTimeout(()=>M._drag=false,50)}};
   M.addEventListener('touchstart',down,{passive:true});M.addEventListener('touchmove',move,{passive:false});M.addEventListener('touchend',up);M.addEventListener('mousedown',down);addEventListener('mousemove',move);addEventListener('mouseup',up)}
-setInterval(()=>{try{miniInit();miniDraw()}catch(e){}},1000);
+setInterval(()=>{if(document.hidden)return;try{miniInit();miniDraw()}catch(e){}},1000);
 async function fcNotify(){if(!IS_NATIVE)return;const LN=NP('LocalNotifications');if(!LN)return;try{await LN.cancel({notifications:[{id:972},{id:973}]})}catch(e){}
   if(!FC||FC.ph==='rate')return;const rem=fcLen()-fcEl();const end=new Date(Date.now()+Math.max(0,rem)*1000);const L=[];const brk=FC.ph==='brk';
   if(!wcOn('focus'))L.push({id:973,title:`${FC.paused?'⏸':brk?'☕':'🎯'} ${brk?'쉬는 중':FC.act}`,body:FC.paused?'일시정지됨':`${hhmm(end)}까지 · ${brk?'쉬는 시간':FC.min+'분 집중'}`,ongoing:true,autoCancel:false,extra:{fcrun:1}});
@@ -3474,7 +3478,7 @@ function ntSide(){const V=$('#v-note');if(!V)return false;let on=false;try{on=cu
   if(!on){if(A){A.hidden=true;A.innerHTML=''}return false}
   if(!A){A=document.createElement('aside');A.id='ntree';V.insertBefore(A,$('#nbody'))}A.hidden=false;const sc=A.scrollTop;A.innerHTML=ntFullHTML([...NOTES.values()]);A.scrollTop=sc;ntBind(A);return true}
 function ntClassSync(){let ed=false;try{ed=curSection==='note'&&!!nEdit&&!!$('#nbodyt')}catch(e){}document.body.classList.toggle('nedit',ed);if(!ed)document.body.classList.remove('nfocus');const V=$('#v-note');const ae=document.activeElement;const typing=ae&&(/^(TEXTAREA|INPUT|SELECT)$/.test(ae.tagName)||ae.isContentEditable);if(!typing&&V&&curSection==='note'&&V.classList.contains('ntwide')!==(nView==='topic'&&!nTopic&&ntWide())){renderNotes()}}
-setInterval(ntClassSync,600);try{screen.orientation.addEventListener('change',()=>setTimeout(()=>{try{if(curSection==='note'){const ae=document.activeElement;if(ae&&ae.id==='ntq')ae.blur();renderNotes()}}catch(e){}},350))}catch(e){}window.addEventListener('resize',()=>{clearTimeout(ntClassSync._t);ntClassSync._t=setTimeout(()=>{try{ntClassSync()}catch(e){}},250)});
+setInterval(()=>{if(!document.hidden)ntClassSync()},600);try{screen.orientation.addEventListener('change',()=>setTimeout(()=>{try{if(curSection==='note'){const ae=document.activeElement;if(ae&&ae.id==='ntq')ae.blur();renderNotes()}}catch(e){}},350))}catch(e){}window.addEventListener('resize',()=>{clearTimeout(ntClassSync._t);ntClassSync._t=setTimeout(()=>{try{ntClassSync()}catch(e){}},250)});
 /* ---------- 🎙 노트 필기하며 녹음 (적은 줄 ↔ 녹음 시점) ---------- */
 const NR={mr:null,chunks:[],t0:0,nid:'',marks:[],tm:null,stream:null,mime:'',ls:null,wl:null,urls:[]};
 const nrDB=()=>nrDB.p||(nrDB.p=new Promise((res,rej)=>{const r=indexedDB.open('gj-audio',1);r.onupgradeneeded=()=>r.result.createObjectStore('a',{keyPath:'id'});r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)}));
@@ -4856,7 +4860,7 @@ function zmBarSync(){let B=$('#zmbar');if(!B){B=document.createElement('div');B.
 const ZOOMS=[['y','1년'],['h','6개월'],['q','3개월'],['m','1달'],['w','1주']];
 const CATC={'업무':'--pen','이동':'--muted','기도':'--c-grat','공부':'--c-grat','자기계발':'--c-time','운동':'--c-meet','가족·관계':'--c-mis','섬김·나눔':'--c-fin','봉사·나눔':'--c-fin','휴식':'--c-meet','흘려보냄':'--muted'};
 let pZoom='m',pAnchor=today(),pReview=false,sMode='plan',rMode='cmp',SCTX='plan',SM='plan';
-const HPX=31;
+let HPX=31;
 const SNAPM=()=>[5,10,15].includes(+SET.snapMin)?+SET.snapMin:5;
 function pRange(){const d=parseD(pAnchor),y=d.getFullYear(),m=d.getMonth();
   if(pZoom==='y')return{s:new Date(y,0,1),months:[...Array(12)].map((_,i)=>[y,i]),label:`${y}년`};
@@ -4950,7 +4954,7 @@ function openHrsMgr(done){const S=$('#sheet');S.hidden=false;let a=SET.tlS??0,z=
     const close=()=>{S.hidden=true;S.innerHTML=''};$('#hrx').onclick=close;S.onclick=e=>{if(e.target===S)close()};
     S.querySelectorAll('[data-hra]').forEach(b=>b.onclick=()=>{a=+b.dataset.hra;if(z<=a)z=24;draw()});S.querySelectorAll('[data-hrz]').forEach(b=>b.onclick=()=>{z=+b.dataset.hrz;draw()});
     $('#hr24').onclick=()=>{a=0;z=24;draw()};$('#hrok').onclick=async()=>{SET.tlS=a;SET.tlE=z;await saveSet().catch(()=>{});close();toast(`🕓 시간표를 ${pad(a)}시~${z}시로 보여 줍니다.`);done&&done();widgetSoon()}};draw()}
-function tlHTML(kind,editable){const arr=D[kind]||[];const[st,en]=tlRange(D);const H=[];for(let h=st;h<en;h++)H.push(h);
+function tlHTML(kind,editable){HPX=Math.max(16,Math.min(110,+SET.hpx||31));const arr=D[kind]||[];const[st,en]=tlRange(D);const H=[];for(let h=st;h<en;h++)H.push(h);
   let g=`<div class="tl" ${editable?`data-kind="${kind}" data-st="${st}"`:''} style="height:${H.length*HPX}px">${H.map((h,i)=>`<div class="hr" style="top:${i*HPX}px" ${editable?`data-hh="${kind}|${h}"`:''}><span>${pad(h)}</span></div>`).join('')}`;
   const LN=arr.map((b,i)=>{if(!b.s)return null;const s0=mins('00:00',b.s),e0=b.e?mins('00:00',b.e):s0+60;const e1=e0<=s0?1440:e0;return{i,s:s0,e:Math.max(e1,s0+24*60/HPX)}}).filter(Boolean).sort((a,b)=>a.s-b.s||b.e-a.e);
   {const lanes=[];LN.forEach(x=>{let k=lanes.findIndex(z=>z<=x.s);if(k<0){k=lanes.length;lanes.push(0)}lanes[k]=x.e;x.lane=k});LN.forEach(x=>{x.n=Math.max(1,...LN.filter(y=>y.s<x.e&&y.e>x.s).map(y=>y.lane+1))})}
@@ -5486,8 +5490,8 @@ function weekBudHTML(){try{const P=plan();const wb=P.accounts.reduce((s,a)=>s+ac
   const sp=spendList(m,d=>d>=a&&d<=b).filter(x=>{const f=findItem(x.acc,x.bi);return!(f.i&&isAnnual(f.i))}).reduce((s,x)=>s+x.amt,0);const T=today();const el=cur===T||(T>=a&&T<=b)?Math.min(7,Math.round((parseD(T)-parseD(a))/864e5)+1):7;const pace=wb*el/7;const left=wb-sp;const pct=Math.min(100,Math.round(sp/wb*100));
   return`<div class="wbud"><div class="wbh"><b>💰 이번 주 예산 대비</b><small>${md(a)}~${md(b)}</small></div><div class="cbar"><i class="cb" style="width:100%"></i><i class="cs ${sp>wb?'over':''}" style="width:${pct}%"></i></div><p class="hint" style="margin:4px 0 0">예산 <b>${won(wb)}</b> 중 <b>${won(sp)}</b> 사용(${pct}%) · ${left>=0?`<b class="dn">${won(left)} 남음</b>`:`<b class="up">${won(-left)} 초과</b>`}${left>0&&el<7?` · 남은 ${7-el}일 하루 ${won(left/(7-el))}`:''} · 지금까지 적정 ${won(pace)} 대비 ${sp<=pace?'여유':'빠름'}</p><button class="del" data-xgo="budget" style="padding:0;margin-top:2px">📊 예산 대비 자세히 ›</button></div>`}catch(e){return''}}
 function sleepAt(){return(D&&D.sleepAt)||SET.sleepAt||''}
-function dayLeftTxt(){const T=today();if(cur===T&&sleepAt()){const n=new Date();const[h,mm]=sleepAt().split(':').map(Number);let tgt=h*3600+mm*60;const nowS=n.getHours()*3600+n.getMinutes()*60+n.getSeconds();if(h<12&&nowS>12*3600)tgt+=86400;let r=tgt-nowS;if(r<0)return`💤 ${sleepAt()} 잘 시간이 지났습니다`;return`💤 잠들기까지 ${Math.floor(r/3600)}:${pad(Math.floor(r%3600/60))}:${pad(r%60)} (${pad(n.getHours())}:${pad(n.getMinutes())})`}if(cur!==T){const d=Math.round((parseD(cur)-parseD(T))/864e5);return d>0?`📅 ${d}일 뒤`:`📅 ${-d}일 전`}const n=new Date();const r=86400-(n.getHours()*3600+n.getMinutes()*60+n.getSeconds());return`⏳ 오늘 남은 ${Math.floor(r/3600)}:${pad(Math.floor(r%3600/60))}:${pad(r%60)} (${pad(n.getHours())}:${pad(n.getMinutes())})`}
-setInterval(()=>{const L=document.querySelectorAll('.dleft');if(L.length){const t=dayLeftTxt();L.forEach(e=>{if(e.offsetParent)e.textContent=t})}},1000);
+function dayLeftTxt(){const T=today();if(cur===T&&sleepAt()){const n=new Date();const[h,mm]=sleepAt().split(':').map(Number);let tgt=h*3600+mm*60;const nowS=n.getHours()*3600+n.getMinutes()*60+n.getSeconds();if(h<12&&nowS>12*3600)tgt+=86400;let r=tgt-nowS;if(r<0)return`💤 ${sleepAt()} 잘 시간이 지났습니다`;return`🕖 ${pad(n.getHours())}:${pad(n.getMinutes())} (💤 잠들기까지 ${Math.floor(r/3600)}:${pad(Math.floor(r%3600/60))}:${pad(r%60)})`}if(cur!==T){const d=Math.round((parseD(cur)-parseD(T))/864e5);return d>0?`📅 ${d}일 뒤`:`📅 ${-d}일 전`}const n=new Date();const r=86400-(n.getHours()*3600+n.getMinutes()*60+n.getSeconds());return`🕖 ${pad(n.getHours())}:${pad(n.getMinutes())} (남은 ${Math.floor(r/3600)}:${pad(Math.floor(r%3600/60))}:${pad(r%60)})`}
+setInterval(()=>{if(document.hidden)return;const L=document.querySelectorAll('.dleft');if(L.length){const t=dayLeftTxt();L.forEach(e=>{if(e.offsetParent)e.textContent=t})}},1000);
 function renderCycle(){const B=$('#cyHost');if(!B)return;B.innerHTML=cyHTML();bindCy(B,renderCycle);bindCyRows(B,renderCycle)}
 function openSleepAt(){const S=$('#sheet');S.hidden=false;S.innerHTML=`<div class="sheetbox" role="dialog" aria-label="잘 시간"><div class="shead"><b>💤 오늘 잘 시간</b><button class="del" id="zx">닫기</button></div><p class="hint" style="margin:0 0 8px">잠드는 시각이 사실상 오늘의 마지막 시간입니다. 정해 두면 ‘오늘 남은 시간’ 대신 ‘잠들기까지’를 셉니다.</p>${(()=>{const[zh,zm]=(sleepAt()||'23:00').split(':');return`<div class="row" style="align-items:center;gap:6px;margin:4px 0 10px"><input type="number" id="zh" inputmode="numeric" min="0" max="23" value="${+zh}" style="width:84px;font-size:1.4rem;text-align:center"><b>시</b><input type="number" id="zm" inputmode="numeric" min="0" max="59" value="${+zm}" style="width:84px;font-size:1.4rem;text-align:center"><b>분</b></div>`})()}<input type="hidden" id="zt"><label class="chk"><input type="checkbox" id="zd" ${D.sleepAt?'':'checked'}>매일 이 시각으로 (끄면 오늘만)</label><div class="row" style="justify-content:space-between;margin-top:10px"><button class="del" id="zclr">자정(24시)까지로</button><button class="btn" id="zok">저장</button></div></div>`;
   const close=()=>{S.hidden=true;S.innerHTML='';renderDay();if(!$('#v-plan').hidden)renderPlan()};$('#zx').onclick=close;S.onclick=e=>{if(e.target===S)close()};const zsync=()=>{const h=Math.min(23,Math.max(0,parseInt($('#zh').value)||0)),m=Math.min(59,Math.max(0,parseInt($('#zm').value)||0));$('#zt').value=`${pad(h)}:${pad(m)}`};$('#zh').oninput=zsync;$('#zm').oninput=zsync;zsync();
@@ -6630,7 +6634,7 @@ function mpDraw(){const S=$('#mpsheet');if(!S||!MP.open)return;const bx=S.queryS
   q('#mpaddf').onclick=mpAddFiles;q('#mpaddu').onclick=mpAddUrl;mpUI()}
 async function mpOpen(){await mpLoad();let S=$('#mpsheet');if(!S){S=document.createElement('div');S.id='mpsheet';S.className='sheet mpsheet';document.body.appendChild(S)}S.hidden=false;MP.open=true;mpDraw()}
 function mpClose(){MP.open=false;const S=$('#mpsheet');if(S){S.hidden=true;S.innerHTML=''}}
-mpLoadSt();setTimeout(()=>{mpLoad().then(()=>{mpBarSync()})},1500);setInterval(mpBarSync,700);
+mpLoadSt();setTimeout(()=>{mpLoad().then(()=>{mpBarSync()})},1500);setInterval(()=>{if(!document.hidden)mpBarSync()},700);
 /* ---------- 🚫 집중 중 다른 앱 차단 (안드로이드 앱 전용) ---------- */
 const BKB=()=>plugOK('BlockBridge')?NP('BlockBridge'):null;let BLKON=false,BLKAPPS=null;
 const BLK_REC=[['📱 SNS',['com.instagram.android','com.facebook.katana','com.twitter.android','com.instagram.barcelona','com.zhiliaoapp.musically','com.ss.android.ugc.trill','com.nhn.android.band','com.kakao.story','com.reddit.frontpage','com.linkedin.android']],
@@ -7384,7 +7388,7 @@ async function openGoogleMgr(){const S=$('#sheet');S.hidden=false;const G=gcS(),
 
 /* ---------- navigation (6 groups) ---------- */
 const GROUPS={day:['day'],plan:['vision','pgoal','goal','short','plan','task','work','gap'],pillar:['people','budget','care','routine','habit','cycle','export'],note:['note'/*BIBLE{*/,'bible'/*}BIBLE*/],goal:['mine','pmd','rv2','pillar','wins','rfx','years','stuff','report']};
-const SUB2={td:['task','work'],rp:['routine','habit','cycle'],rv:['report'],rt:['routine']},SUB2L={td:'📋 할 일·프로젝트',rp:'🔁 반복',rv:'🪞 돌아보기',rt:'🔁 반복'},last2={td:'task',rp:'routine',rv:'report',rt:'routine'};
+const SUB2={td:['work','task'],rp:['routine','habit','cycle'],rv:['report'],rt:['routine']},SUB2L={td:'🧩 프로젝트·📋 할 일',rp:'🔁 반복',rv:'🪞 돌아보기',rt:'🔁 반복'},last2={td:'task',rp:'routine',rv:'report',rt:'routine'};
 const FEAT=[['bible','📖 성경·기도','개역개정 읽기·어성경·기도노트·암송·찬송'],['people','🤝 관계관리','사람별 만남·통화 기록'],['budget','💰 재정','수입·지출·예산'],['care','🩺 몸관리','몸 측정·수면·운동'],['work','🧩 프로젝트','큰 일을 단계로 쪼개 하나씩 끝내기'],['habit','✅ 습관','습관표·습관루틴'],['lines','📜 한 줄','오늘의 한 줄·기분 모아보기'],['routine','⏰ 루틴','아침·저녁 루틴 순서대로 하기'],['cycle','🔁 주기 할 일','이발·세제처럼 주기가 있는 일'],['stuff','📦 제자리','물건 위치 기록'],['review','📊 기록 분석','숫자·목록으로 펼쳐 보기'],['gap','⏱️ 짜투리 시간','짜투리 시간 목록 · 오늘 실행 카드 · 오늘 계획 칸'],['wins','🏆 이룬 것','기간을 고르면 마친 목표·할 일·습관·책·운동을 모아 보기']];
 const FEATK=FEAT.map(x=>x[0]);
 const LVL={mid:['work','care','cycle','stuff','years','review','lines','score','me'],easy:['short','report','work','pillar','people','budget','care','routine','habit','cycle',/*BIBLE{*/'bible',/*}BIBLE*/'stuff','vision','goal','years','lines','review','me','score']};
@@ -7438,7 +7442,7 @@ function favRun(k){const S=$('#sheet');S.hidden=true;S.innerHTML='';if(FAV_ACT[k
 /* ❓ 사용법 */
 const HELP=[
  ['☀️','하루 흐름','<b>오늘</b> 화면은 하루를 세 시간으로 나눕니다.<br>📝 <b>계획</b>: 한 문장·우선순위·아이디어를 적고, 시간표와 체크리스트로 하루를 배치합니다.<br>🏃 <b>실행</b>: 루틴과 몰입을 실행하고, 방금 한 일을 기록합니다. 계획과 실제가 나란히 보입니다.<br>🌙 <b>닫는 시간</b>: 팔각형을 눌러 기둥별 점수를 매기고, 한 줄·사진·반성으로 하루를 닫습니다.'],
- ['🧭','아래 메뉴 다섯 개','<b>☀️ 오늘</b> 오늘 하루 — 계획·실행·닫기<br><b>⏳ 시간</b> 1년 이하 — 🎯 이번 주·단기 목표를 세우고, 🗓️ 계획·📋 할 일·🧩 프로젝트로 배치하고, 🪞 돌아보기(숫자·한 줄 포함)로 되짚는 한 바퀴<br><b>🧰 관리</b> 기간 없이 계속 돌보는 곳 — 🏛️ 삶의 기둥(기둥마다 원하는 모습·기준·목표·흐름·도구), 관계·재정·몸, 🔁 반복(루틴·습관·주기 할 일)<br><b>📒 기록</b> 남기기 — 노트·성경·제자리<br><b>🧭 방향</b> 3년 이상 — ✨ 비전 · 🎯 장·중기 목표 · 📜 지나온 해<br>메뉴는 길게 눌러 끌면 순서를 바꿀 수 있습니다.'],
+ ['🧭','아래 메뉴 다섯 개','<b>☀️ 오늘</b> 오늘 하루 — 계획·실행·닫기<br><b>⏳ 시간</b> 1년 이하 — 🎯 이번 주·단기 목표를 세우고, 🗓️ 계획·🧩 프로젝트·📋 할 일로 배치하고, 🪞 돌아보기(숫자·한 줄 포함)로 되짚는 한 바퀴<br><b>🧰 관리</b> 기간 없이 계속 돌보는 곳 — 🏛️ 삶의 기둥(기둥마다 원하는 모습·기준·목표·흐름·도구), 관계·재정·몸, 🔁 반복(루틴·습관·주기 할 일)<br><b>📒 기록</b> 남기기 — 노트·성경·제자리<br><b>🧭 방향</b> 3년 이상 — ✨ 비전 · 🎯 장·중기 목표 · 📜 지나온 해<br>메뉴는 길게 눌러 끌면 순서를 바꿀 수 있습니다.'],
  ['✍️','빠르게 적기','오른쪽 아래 <b>＋</b> 또는 빠른 입력칸에 말하듯 적으면 알아서 나눠 넣습니다.<br>“2시~3시 회의” → 일정 · “운동 30분 했다” → 한 일 · “점심 9000원” → 지출 · “내일 보고서 제출” → 할 일<br>🎤 버튼으로 받아쓰기도 됩니다.'],
  ['🔁','루틴·몰입','실행 화면 위쪽 고정 줄에서 바로 시작합니다. 📌 핀으로 자주 쓰는 루틴·몰입을 고정합니다.<br>실행 중 <b>⤓ 작게</b>를 누르면 작은 진행창으로 떠서, 계획표나 노트를 쓰면서도 남은 시간을 볼 수 있습니다. 작은 창은 끌어서 옮기고, 누르면 다시 크게 봅니다.<br>⌚ <b>워치 앱</b>을 따로 설치하면 휴대폰 없이 워치만으로 루틴·몰입을 실행하고, 기록은 연결될 때 넘어옵니다(⚙️ 설정 › 워치·건강에 설치 방법).<br>⌚ <b>워치 알림</b>(⚙️ 설정 › 워치·건강에서 켬): 지금 할 일을 보고 ▶ 몰입·📌 루틴을 바로 시작하고, 진행 중인 루틴은 ✓ 다음·⏸·⏭로, 몰입은 멈춤·+5분·끝내기로 다룹니다. 오늘 할 일·우선순위도 워치에서 체크합니다.<br>루틴 편집에서 “계획표에 반영”을 켜면 알람 시각에 맞춰 시간표에 블록이 들어갑니다.<br>📅 <b>D-day</b>는 ⏳ 시간 › 이번 주 맨 위 칩과 🧰 관리 › 반복 › 루틴 맨 위에 모입니다. 목표와 연결한 D-day를 누르면 그 목표의 줄기가 열립니다.'],
  ['🎯','비전과 목표','<b>✨ 비전</b>: 아홉 칸에 비전 선언·목적·청사진·비전 보드·버킷리스트·멘토 등을 적습니다.<br><b>🎯 목표</b>: 같은 목표를 🪜 사다리 · 🏛️ 기둥별 · 🔲 만다라트 · 🧠 마인드맵 · 🔺 피라미드로 바꿔 봅니다. 보기 단추는 길게 눌러 끌면 순서를 바꿉니다.<br>사다리는 📏 타임라인(한 줄씩) · 🌿 줄기(목표 하나의 위아래) · 🗂️ 카드로 바꿔 봅니다.<br><b>시간과 연결</b>: ⏳ 시간 › 계획 맨 위 ‘이번 주 · 이번 달 목표’에서 할 일을 오늘로 옮기거나 시간표에 넣고, 🗓️ 주간 배치로 요일에 나눕니다. 몰입·루틴에 목표를 연결하면 쓴 시간이 목표 옆에 쌓입니다.<br>사다리에서 목표를 누르면 아래 칸에 그 목표와 이어진 것만 보입니다. 🔲를 누르면 그 목표를 만다라트 가운데에 놓습니다.'],
@@ -7472,7 +7476,7 @@ function openFav(){const S=$('#sheet');S.hidden=false;let edit=false;
 /* ---------- 🗺️ 메뉴 지도 (묶음 사이 이동·순서) ---------- */
 const GROUPS0=JSON.parse(JSON.stringify(GROUPS));
 const MAPG=[['plan','🗓️ 계획'],['pillar','🏛️ 기둥'],['note','📒 기록'],['goal','🧬 나']];
-const BUNDLE={'@td':'📋 할 일·프로젝트','@rp':'🔁 반복','@rt':'🔁 반복','@rv':'🪞 돌아보기'};const BUNDLES={'@td':'할 일·프로젝트','@rp':'루틴·습관·주기 할 일','@rt':'루틴','@rv':'돌아보기(기록 분석·한 줄 포함)'};
+const BUNDLE={'@td':'🧩 프로젝트·📋 할 일','@rp':'🔁 반복','@rt':'🔁 반복','@rv':'🪞 돌아보기'};const BUNDLES={'@td':'프로젝트·할 일','@rp':'루틴·습관·주기 할 일','@rt':'루틴','@rv':'돌아보기(기록 분석·한 줄 포함)'};
 function navMapDef(){const d={plan:['vision','plan','@td','gap'],pillar:[...GROUPS0.pillar.filter(x=>x!=='export'&&!SUB2.rp.includes(x)&&x!=='stuff'),'@rp'],note:GROUPS0.note.slice(),goal:['mine','pmd','rv2','wins','rfx','years','stuff']};MAPG.forEach(([g])=>d[g]=ordBy(d[g],(SET.subOrd||{})[g]));return d}
 function navMap(){const D0=navMapDef();const M=SET.navMap;if(!M||typeof M!=='object')return D0;const all=new Set(MAPG.flatMap(([g])=>D0[g]));const seen=new Set();const out={};
   MAPG.forEach(([g])=>{out[g]=(Array.isArray(M[g])?M[g]:[]).filter(k=>all.has(k)&&!seen.has(k)&&seen.add(k))});
@@ -7516,7 +7520,7 @@ function segOrdAll(root){(root||document).querySelectorAll('.seg').forEach(sg=>{
   const ord=(SET.subOrd||{})['seg:'+a];if(ord){const want=ordBy(bs,ord,x=>x.dataset.sk);if(want.some((x,i)=>x!==bs[i]))want.forEach(x=>sg.appendChild(x))}
   sortable(sg,'button',ks=>subOrdSave('seg:'+a,ks),'x')})}
 /* ---------- back navigation ---------- */
-let NAVH=[],navBacking=false,exitAt=0;
+let NAVH=[],navBacking=false,exitAt=0,LB=null,LBc=null,LBS=[];
 /* 탭 줄(노트 보기·목표 보기·습관·재정·할 일 보기 등)에서 바꾼 탭도 뒤로가기로 되돌린다 */
 let TABH=[];
 document.addEventListener('click',e=>{if(navBacking||!e.isTrusted)return;const b=e.target.closest&&e.target.closest('.seg>button');if(!b)return;const a=['nm','gs','gr','fv','tv','bt'].find(x=>b.hasAttribute('data-'+x));if(!a)return;const on=b.parentElement.querySelector(':scope>button.on');if(!on||on===b)return;TABH.push({sec:curSection,a,v:on.getAttribute('data-'+a)});if(TABH.length>30)TABH.shift()},true);
@@ -7549,9 +7553,9 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!e.defaultPrevented
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-rvgo]');if(b)openSection(b.dataset.rvgo)});
 /* 이전 화면 버튼 · 왼쪽 가장자리에서 밀어 뒤로 */
 function navDest(){const b=bkInPage();if(b)return'뒤로';const v=NAVH.length?NAVH[NAVH.length-1]:curSection!=='day'?'day':null;if(!v)return null;return v==='day'?'오늘':(SUBL[v]||{goal:'목표',plan:'계획',note:'노트'}[v]||'뒤로').replace(/^[^가-힣A-Za-z0-9]+\s*/,'')}
-function navBtnSync(){const b=$('#navbk');if(!b)return;const d=navDest();b.hidden=true;if(d)$('#navbkl').textContent=d}
+function navBtnSync(){const b=$('#navbk');if(!b)return;const d=navDest();b.hidden=!(d&&LB&&LB.to===curSection&&NAVH.length&&NAVH[NAVH.length-1]===LB.from);if(!b.hidden&&document.querySelector('#focusov:not([hidden]),#routineov:not([hidden]),#sheet:not([hidden]),#blockedit:not([hidden]),#taskedit:not([hidden]),#bdov:not([hidden])'))b.hidden=true;if(d)$('#navbkl').textContent='뒤로가기'}
 {const b=$('#navbk');if(b)b.onclick=()=>{navBack();setTimeout(navBtnSync,50)}}
-setInterval(navBtnSync,700);
+setInterval(()=>{if(!document.hidden)navBtnSync()},700);
 let EG=null;
 document.addEventListener('touchstart',e=>{EG=null;if(e.touches.length!==1)return;const p=e.touches[0];if(p.clientX>26)return;EG={x:p.clientX,y:p.clientY,t:Date.now(),dx:0}},{passive:true,capture:true});
 document.addEventListener('touchmove',e=>{if(!EG)return;const p=e.touches[0];const dx=p.clientX-EG.x,dy=p.clientY-EG.y;if(Math.abs(dy)>Math.abs(dx)*1.2&&Math.abs(dy)>20){EG=null;$('#edgebk').style.opacity=0;return}EG.dx=dx;const k=$('#edgebk');const m=Math.max(0,Math.min(dx,110));k.style.transition='none';k.style.left=(-44+m*.6)+'px';k.style.top=p.clientY-20+'px';k.style.opacity=Math.min(1,m/60);k.classList.toggle('go',dx>70);if(dx>10&&e.cancelable)e.preventDefault()},{passive:false,capture:true});
@@ -9272,7 +9276,7 @@ function cvVerse(){const A=memAll(),S=memS(),t=today();const dn=Math.floor(new D
   return it}
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-cvmem]');if(!b)return;bbTab='mem';memV='home';openSection('bible')});
 /* 갓피플식 상단: 슬라이드(맨 위) → 날짜 줄(아이콘 포함) */
-const CVI=[['start','🚀','시작'],['run','📅','스케줄'],['focus','🎯','몰입'],['rt','🔁','루틴'],['gap','⏱️','짜투리'],['pm','📊','평가']];
+const CVI=[['start','🚀','시작'],['run','📅','스케줄'],['fr','🎯','몰입·루틴'],['gap','⏱️','짜투리'],['pm','📊','평가']];
 let CVM0=0;
 function rcSlim(){return'';const R=(SET.routines||[]).slice(0,4);if(!R.length||typeof rtqChip!=='function')return'';try{rtqCss()}catch(e){}return`<div class="rtqrow">${R.map(rtqChip).join('')}</div>`}
 function cvHead(){const db=document.querySelector('#v-day .datebar');if(!db)return;const V=$('#v-day');V.classList.toggle('cvg',simOn());
@@ -9281,7 +9285,7 @@ function cvHead(){const db=document.querySelector('#v-day .datebar');if(!db)retu
   if(db.querySelector('.cvi')&&!db.querySelector('[data-cvi="run"]'))db.querySelector('.cvis').remove();V.classList.toggle('cvst',mode==='start');
   if(!db.querySelector('.cvi')){const w=document.createElement('span');w.className='cvis';w.innerHTML=CVI.map(([k,e,l])=>`<button type="button" class="iconbtn cvi" data-cvi="${k}" aria-label="${l}" title="${l}"><i>${e}</i><small>${l}</small></button>`).join('');db.appendChild(w)}}
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-cvi]');if(!b)return;const k=b.dataset.cvi;
-  if(k==='focus')openFocus();else if(k==='rt')openRoutine();else if(k==='gap')cvGap();else if(k==='run'){if(ZMD>0)return;try{if(!$('#focusov').hidden)closeFocus()}catch(e){}if(mode!=='run'){mode='run';renderDay()}scrollTo({top:0})}
+  if(k==='fr')frOpen();else if(k==='focus')openFocus();else if(k==='rt')openRoutine();else if(k==='gap')cvGap();else if(k==='run'){if(ZMD>0)return;try{if(!$('#focusov').hidden)closeFocus()}catch(e){}if(mode!=='run'){mode='run';renderDay()}scrollTo({top:0})}
   else if(k==='start'||k==='pm'){if(ZMD>0)return;mode=mode===k?'run':k;renderDay();scrollTo({top:0})}});
 {const _rd2=renderDay;renderDay=function(){const r=_rd2.apply(this,arguments);try{cvHead()}catch(e){}return r}}
 /* ⏱️ 짜투리: 실행 화면 중간에 있던 짜투리 제안을 창으로 띄운다 (실행 화면에서는 뺌) */
@@ -9884,20 +9888,20 @@ document.addEventListener('visibilitychange',()=>{if(document.hidden)return;setT
 
 /* ---- 2) 여러 날 보기: 지난 날도 계획이 보이게 · 좌우로 밀어 기간 이동 ---- */
 zmMode=function(d){const z=SET.zmShow||'auto';if(z!=='auto')return z;const T=today();if(d>T)return'plan';if(d===T)return'both';const o=zmDoc(d);return o&&(o.time||[]).some(x=>x.s)?'both':'plan'};
-const SWZ='#v-day.zmon #dayBody .zmv,#pbody .zmv,#pbody .cal';
+const SWZ='#v-day.zmon #dayBody .zmv,#v-day.zmon #dayBody .yrg,#v-day.zmon #dayBody .pcc,#v-day.zmon #dayBody .zbtn,#pbody .zmv,#pbody .cal,#pbody .yrg';
 function swGo(dir){try{
   if(curSection==='day'&&ZMD>0)zmShift('day',dir);
   else if(curSection==='plan'&&PLM!=='goal'){if(ZMP!=null)zmShift('plan',dir);else{pShift(dir);renderPlan()}}
   else return;
   const cls=dir<0?'swin-r':'swin-l';[80,300,700].forEach(t=>setTimeout(()=>{const v=document.querySelector(curSection==='day'?'#dayBody .zmv':'#pbody .zmv,#pbody .cal');if(v&&!v.dataset.sw){v.dataset.sw=1;v.classList.add(cls)}},t));
-  if(!SET.swHint){SET.swHint=1;saveSet().catch(()=>{});toast('👈 왼쪽으로 밀면 지난 기간 · 👉 오른쪽으로 밀면 앞 기간')}
+  if(!SET.swHint){SET.swHint=1;saveSet().catch(()=>{});toast('👈 오른쪽에서 왼쪽으로 밀면 다음 · 👉 왼쪽에서 오른쪽으로 밀면 이전')}
 }catch(e){console.warn('sw',e)}}
 (function(){let sx=0,sy=0,t0=0,on=false,sw=0,mx=null;
   document.addEventListener('touchstart',e=>{on=false;if(e.touches.length!==1)return;try{if(curSection==='day'&&ZMD>0&&e.target.closest&&e.target.closest('#dayBody'))SW=null}catch(x){}const z=e.target.closest&&e.target.closest(SWZ);if(!z)return;try{SW=null}catch(x){}const t=e.touches[0];sx=t.clientX;sy=t.clientY;t0=Date.now();on=true},{passive:true});
   document.addEventListener('touchmove',e=>{if(on&&e.touches.length>1)on=false},{passive:true});
-  document.addEventListener('touchend',e=>{if(!on)return;on=false;const t=e.changedTouches[0];const dx=t.clientX-sx,dy=t.clientY-sy;if(Math.abs(dx)<55||Math.abs(dx)<Math.abs(dy)*1.5||Date.now()-t0>1000)return;sw=Date.now();swGo(dx<0?-1:1)},{passive:true});
+  document.addEventListener('touchend',e=>{if(!on)return;on=false;const t=e.changedTouches[0];const dx=t.clientX-sx,dy=t.clientY-sy;if(Math.abs(dx)<55||Math.abs(dx)<Math.abs(dy)*1.5||Date.now()-t0>1000)return;sw=Date.now();swGo(dx<0?1:-1)},{passive:true});
   document.addEventListener('pointerdown',e=>{if(e.pointerType!=='mouse'){mx=null;return}const z=e.target.closest&&e.target.closest(SWZ);mx=z?{x:e.clientX,y:e.clientY,t:Date.now()}:null});
-  document.addEventListener('pointerup',e=>{if(!mx||e.pointerType!=='mouse')return;const dx=e.clientX-mx.x,dy=e.clientY-mx.y;const ok=Math.abs(dx)>=70&&Math.abs(dx)>=Math.abs(dy)*1.5&&Date.now()-mx.t<1200;mx=null;if(ok){sw=Date.now();swGo(dx<0?-1:1)}});
+  document.addEventListener('pointerup',e=>{if(!mx||e.pointerType!=='mouse')return;const dx=e.clientX-mx.x,dy=e.clientY-mx.y;const ok=Math.abs(dx)>=70&&Math.abs(dx)>=Math.abs(dy)*1.5&&Date.now()-mx.t<1200;mx=null;if(ok){sw=Date.now();swGo(dx<0?1:-1)}});
   document.addEventListener('click',e=>{if(Date.now()-sw<450&&e.target.closest&&e.target.closest(SWZ)){e.stopPropagation();e.preventDefault()}},true)})();
 
 /* ---- 3) 범위 막대(조그)와 계획 카드 연동: 보고 있는 주·달의 목표·중점 기둥 ---- */
@@ -10043,8 +10047,8 @@ function fcSegInit(d){if(!Array.isArray(d.seg)||!d.seg.length)d.seg=(Array.isArr
 const fcSegNm=(d,x)=>x.n||(x.k==='f'?(tx(d.act||'')?d.act.trim():'몰입'):'쉬는 시간');
 function fcSegSum(d){const L=d.seg.filter(x=>+x.m>0);const one=L.reduce((a,x)=>a+(+x.m),0),fm=L.filter(x=>x.k==='f').reduce((a,x)=>a+(+x.m),0);const R=+d.rounds||1;
   return`${L.map(x=>`${x.k==='f'?'🎯':'☕'} ${esc(fcSegNm(d,x))} ${x.m}`).join(' → ')}분<br><b>한 바퀴 ${one}분 (몰입 ${fm}분 · ${L.length}구간)${R>1?` × ${R}회 · 모두 약 ${one*R}분`:''}</b>`}
-function fcSegHTML(d){fcSegInit(d);const mf=d.seg.find(x=>x.k==='f');const P=fcPre();const sets=Array.isArray(SET.fcSets)?SET.fcSets:[];const rts=(SET.routines||[]).filter(r=>(r.items||[]).some(x=>+x.min>0));
-  return`<div class="fcseg">${sets.length?`<p class="hint" style="margin:10px 0 4px">📌 저장한 세트</p><div class="fsel">${sets.map((x,i)=>`<button data-fcset="${i}">${esc(x.name)}</button>`).join('')}</div>`:''}
+function fcSegHTML(d){try{fcSetsMigrate()}catch(e){console.warn('fcmig',e)}fcSegInit(d);const mf=d.seg.find(x=>x.k==='f');const P=fcPre();const sets=Array.isArray(SET.fcSets)?SET.fcSets:[];const rts=(SET.routines||[]).filter(r=>(r.items||[]).some(x=>+x.min>0));
+  return`<div class="fcseg">${rts.length?`<p class="hint" style="margin:10px 0 4px">🔁 내 루틴 · 몰입과 루틴이 같은 목록입니다</p><div class="fsel">${rts.map((r,i)=>`<button data-fcrt="${i}">${esc(r.name||'루틴')} <small>${r.items.reduce((a,x)=>a+(+x.min||0),0)}분</small></button>`).join('')}</div>`:''}
   <p class="hint" style="margin:10px 0 4px">대표 시간 · 첫 🎯 몰입 구간의 길이 (시계를 누르거나 아래에서 고름)</p>
   <div class="row" style="align-items:center;gap:10px"><button class="dialv has tdial" id="fcpdial" style="--dc:#e53935"><b>${mf.m}</b><small>분</small></button><div class="fsel" style="flex:1">${[...new Set([...P,+mf.m])].sort((a,b)=>a-b).map(v=>`<button data-fcpre="${v}" class="${+mf.m===v?'on':''}">${v}분</button>`).join('')}<button data-fcpreed="1">✏️ 바꾸기</button></div></div>
   <p class="hint" style="margin:12px 0 4px"><b>한 바퀴 구성</b> · 구간마다 이름과 분을 정합니다. 🎯 몰입 구간은 실제 기록으로 남고 ☕ 쉼 구간은 남지 않습니다. 아이콘을 누르면 바뀝니다.</p>
@@ -10052,7 +10056,7 @@ function fcSegHTML(d){fcSegInit(d);const mf=d.seg.find(x=>x.k==='f');const P=fcP
   <div class="row" style="gap:6px;flex-wrap:wrap;margin-top:6px"><button class="btn small ghost" data-fcsadd="f">＋ 🎯 몰입 구간</button><button class="btn small ghost" data-fcsadd="b">＋ ☕ 쉼 구간</button></div>
   <p class="hint" style="margin:10px 0 0">반복</p><div class="fsel">${[...new Set([1,2,3,4,6,+d.rounds])].sort((x,y)=>x-y).map(v=>`<button data-fsr="${v}" class="${+d.rounds===v?'on':''}">${v}회</button>`).join('')}<label style="display:inline-flex;align-items:center;gap:4px;font-size:.84rem"><input type="number" id="fcsrn" min="1" max="20" inputmode="numeric" value="${+d.rounds||1}" style="width:56px;text-align:center">회</label></div>
   <p class="hint fcssum" style="margin:6px 0 0">${fcSegSum(d)}</p>
-  <div class="row" style="gap:6px;flex-wrap:wrap;margin-top:8px"><button class="btn small ghost" id="fcssave">📌 세트로 저장</button>${sets.length?'<button class="btn small ghost" id="fcsdel">🗑 세트 지우기</button>':''}${rts.length?'<button class="btn small ghost" id="fcsrt">🔁 루틴 불러오기</button>':''}<button class="btn small ghost" id="fcs2rt">🔁 루틴으로 저장</button></div></div>`}
+  <div class="row" style="gap:6px;flex-wrap:wrap;margin-top:8px"><button class="btn small ghost" id="fcs2rt">💾 루틴으로 저장</button></div></div>`}
 function fcSegRead(d){const B=$('#fcBody');if(!B)return;const a=$('#fcact'),c=$('#fccat'),ar=$('#fcarea'),g=$('#fcgoal');if(a)d.act=a.value;if(c)d.cat=c.value;if(ar)d.area=ar.value;if(g)d.goal=g.value;
   B.querySelectorAll('[data-fcsn]').forEach(i=>{const x=d.seg[+i.dataset.fcsn];if(x)x.n=i.value.trim()});B.querySelectorAll('[data-fcsm]').forEach(i=>{const x=d.seg[+i.dataset.fcsm];const v=Math.round(+i.value);if(x&&v>0)x.m=Math.min(300,v)});const rn=$('#fcsrn');if(rn){const v=Math.round(+rn.value);if(v>=1&&v<=20)d.rounds=v}}
 const FC_REST=/화장실|휴식|쉬는|쉼|물 ?마시|눈 ?감|스트레칭|산책/;
@@ -10071,7 +10075,8 @@ const FC_REST=/화장실|휴식|쉬는|쉼|물 ?마시|눈 ?감|스트레칭|산
   {const e=$('#fcssave');if(e)e.onclick=async()=>{fcSegRead(d);const nm=await uiPrompt('세트 이름',tx(d.act||'')?d.act.trim():'내 몰입 세트');if(!tx(nm||''))return;const L=Array.isArray(SET.fcSets)?SET.fcSets:[];const o={name:nm.trim().slice(0,20),seg:d.seg.map(y=>({...y})),rounds:+d.rounds||1};const k=L.findIndex(y=>y.name===o.name);if(k>=0)L[k]=o;else L.push(o);SET.fcSets=L.slice(-12);saveSet().catch(()=>{});toast('📌 세트를 저장했습니다.');renderFocus()}}
   {const e=$('#fcsdel');if(e)e.onclick=()=>{fcSegRead(d);ntSheet('🗑 지울 세트',(SET.fcSets||[]).map((x,i)=>[`${esc(x.name)}`,()=>{SET.fcSets.splice(i,1);saveSet().catch(()=>{});toast('세트를 지웠습니다.');renderFocus()}]))}}
   {const e=$('#fcsrt');if(e)e.onclick=()=>{fcSegRead(d);ntSheet('🔁 불러올 루틴',(SET.routines||[]).filter(r=>(r.items||[]).some(x=>+x.min>0)).map(r=>[`${esc(r.name||'루틴')} <small class="hint">${r.items.length}개 · ${r.items.reduce((a,x)=>a+(+x.min||0),0)}분</small>`,()=>{d.seg=r.items.filter(x=>+x.min>0).map(x=>({n:(x.name||'').trim(),m:Math.round(+x.min),k:FC_REST.test(x.name||'')?'b':'f'}));if(!d.seg.some(y=>y.k==='f'))d.seg.forEach(y=>y.k='f');d.rounds=1;toast(`🔁 ‘${r.name}’ 루틴을 구간으로 불러왔습니다.`);renderFocus()}]))}}
-  {const e=$('#fcs2rt');if(e)e.onclick=async()=>{fcSegRead(d);const nm=await uiPrompt('새 루틴 이름',tx(d.act||'')?d.act.trim()+' 세트':'몰입 세트');if(!tx(nm||''))return;const r=newRoutine(nm.trim());r.items=d.seg.map(x=>({id:uid(),name:fcSegNm(d,x),min:+x.m}));SET.routines.push(r);await saveSet().catch(()=>{});toast('🔁 루틴으로 저장했습니다. 🔁 루틴에서 바로 시작할 수 있습니다.')}}
+  S.querySelectorAll('[data-fcrt]').forEach(b=>b.onclick=()=>{fcSegRead(d);const r=fcRts()[+b.dataset.fcrt];if(!r)return;const its=r.items.filter(x=>+x.min>0),hz=its.some(x=>x.fz);d.seg=its.map(x=>({n:(x.name||'').trim(),m:Math.round(+x.min),k:hz?(x.fz?'f':'b'):(FC_REST.test(x.name||'')?'b':'f')}));if(!d.seg.some(y=>y.k==='f'))d.seg.forEach(y=>y.k='f');d.rounds=1;toast(`🔁 ‘${r.name||'루틴'}’ 루틴을 구간으로 불러왔습니다.`);renderFocus()});
+  {const e=$('#fcs2rt');if(e)e.onclick=async()=>{fcSegRead(d);const nm=await uiPrompt('새 루틴 이름',tx(d.act||'')?d.act.trim()+' 세트':'몰입 세트');if(!tx(nm||''))return;const r=newRoutine(nm.trim());r.items=[];for(let k=0;k<Math.min(10,Math.max(1,+d.rounds||1));k++)d.seg.forEach(x=>r.items.push(x.k==='f'?{id:uid(),name:fcSegNm(d,x),min:+x.m,fz:1}:{id:uid(),name:fcSegNm(d,x),min:+x.m}));SET.routines.push(r);await saveSet().catch(()=>{});toast('🔁 루틴으로 저장했습니다. 🔁 루틴에서 바로 시작할 수 있습니다.')}}
 }catch(e){console.warn('fcseg',e)}return r}}
 {const _fs3=fcStart;fcStart=function(){const d=fcDraft;if(!d||d.mode!=='pomo')return _fs3.apply(this,arguments);fcSegRead(d);fcSegInit(d);unlockAudio();askNotify();
   const segs=d.seg.filter(x=>+x.m>0),R=Math.max(1,Math.min(20,+d.rounds||1)),cat=d.cat,area=d.area||catArea(d.cat),q=[];
@@ -10242,6 +10247,77 @@ document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest
   {const sb=$('#fcsub');if(sb)sb.onchange=async e=>{let v=e.target.value;if(v==='__add'||v==='__addsub'){const co2=catObj(d.cat);const n=((await uiPrompt(`‘${d.cat}’ 아래 새 소분류`,''))||'').trim();if(n&&co2){co2.subs=co2.subs||[];if(!co2.subs.includes(n))co2.subs.push(n);await pmSave()}v=n||''}d.sub=v;rdA();renderFocus()}}
 }catch(e){console.warn('fcpm',e)}return r}}
 {const _fs4=fcStart;fcStart=function(){const d=fcDraft;const sub=d&&d.sub;const r=_fs4.apply(this,arguments);try{if(FC&&sub&&!FC.sub){FC.sub=sub;fcSave()}}catch(e){}return r}}
+/* ===================== v4.11: 성경 구절 길게 누르기 → 느낀 점 · 묵상 노트 ===================== */
+/*BIBLE{*/
+(()=>{let T=null,st=null,fired=0;const SEL='.bbtxt p[data-bbv],.eotxt p[data-eov]';
+  const cancel=()=>{clearTimeout(T);T=null;st=null};
+  function lpOpen(p){try{let b,c,v,eo=false;if(p.dataset.eov){[b,c,v]=p.dataset.eov.split('-').map(Number);eo=true}else{b=bbB;c=bbC;v=+p.dataset.bbv}
+    const txt=((BIB&&BIB[b]&&BIB[b][c-1]&&BIB[b][c-1][v-1])||p.textContent.replace(/^\d+(-\d+)?/,'')).trim();const ref=`${BBN[b]} ${c}:${v}`;
+    try{navigator.vibrate&&navigator.vibrate(18)}catch(e){}
+    const items=[];
+    if(eo)items.push(['✍️ 느낀 점 쓰기 (오늘 느낀점에 담기)',()=>{const ta=$('#eontx');if(!ta)return;ta.value=(ta.value.trim()?ta.value.replace(/\s+$/,'')+'\n\n':'')+`「${ref}」 ${txt.length>40?txt.slice(0,40)+'…':txt}\n`;ta.dispatchEvent(new Event('input',{bubbles:true}));ta.scrollIntoView({block:'center',behavior:'smooth'});setTimeout(()=>{ta.focus();ta.setSelectionRange(ta.value.length,ta.value.length)},250)}]);
+    else items.push(['✍️ 이 절에 느낀 점 쓰기',()=>{bbSel.clear();document.querySelectorAll('.bbtxt p.sel').forEach(x=>x.classList.remove('sel'));const R=p.closest('#bbbody')||document;try{const sb=$('#bbsb');if(sb)sb.innerHTML=''}catch(e){}bbVNEdit(R,v)}]);
+    items.push(['📝 묵상 노트 쓰기',()=>{bbNote(ref,`${v} ${txt}\n— ${ref} (개역개정)\n\n`)}]);
+    ntSheet(`${ref}`,items)}catch(e){console.warn('bblp',e)}}
+  document.addEventListener('pointerdown',e=>{if(e.pointerType==='mouse'&&e.button!==0)return;const p=e.target.closest&&e.target.closest(SEL);if(!p)return;cancel();st={x:e.clientX,y:e.clientY};T=setTimeout(()=>{T=null;st=null;fired=Date.now();lpOpen(p)},550)},true);
+  document.addEventListener('pointermove',e=>{if(st&&Math.hypot(e.clientX-st.x,e.clientY-st.y)>10)cancel()},true);
+  ['pointerup','pointercancel','pointerleave'].forEach(t=>document.addEventListener(t,cancel,true));
+  document.addEventListener('scroll',cancel,true);
+  document.addEventListener('click',e=>{if(Date.now()-fired<700&&e.target.closest&&e.target.closest(SEL)){e.stopPropagation();e.preventDefault()}},true);
+  document.addEventListener('contextmenu',e=>{if(e.target.closest&&e.target.closest(SEL))e.preventDefault()},true);
+  const css=document.createElement('style');css.textContent='.bbtxt p[data-bbv],.eotxt p[data-eov]{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}';document.head.appendChild(css)})();
+/*}BIBLE*/
+/* ===================== v4.12: 구절 누르면 바로 메뉴(고정) · 시간표 두 손가락 확대 ===================== */
+(()=>{const css=document.createElement('style');css.textContent='.bbbar::-webkit-scrollbar{display:none}.bbbar>*{flex:0 0 auto;white-space:nowrap}#bbsb:has(.bbbar){padding-bottom:76px}.eobar{position:fixed;left:8px;right:8px;bottom:calc(64px + env(safe-area-inset-bottom));z-index:60;display:flex;gap:6px;align-items:center;overflow-x:auto;scrollbar-width:none;padding:8px;background:var(--paper);border:1px solid var(--line);border-radius:10px;box-shadow:0 4px 14px rgba(0,0,0,.12)}.eobar>*{flex:0 0 auto;white-space:nowrap}.eobar::-webkit-scrollbar{display:none}.tl{touch-action:pan-y}.pzl{position:fixed;top:calc(env(safe-area-inset-top,0px) + 70px);left:50%;transform:translateX(-50%);z-index:90;background:rgba(0,0,0,.75);color:#fff;border-radius:16px;padding:6px 14px;font-size:.85rem;pointer-events:none}';document.head.appendChild(css)})();
+/*BIBLE{*/
+(()=>{let bar=null;const sync=()=>{const R=document.querySelector('#bbbody')||document;const sel=[...document.querySelectorAll('.eotxt p[data-eov].sel')];
+  if(!sel.length||!document.querySelector('.eotxt')){if(bar){bar.remove();bar=null}return}
+  if(!bar){bar=document.createElement('div');bar.className='eobar';document.body.appendChild(bar)}
+  const refs=sel.map(p=>{const[b,c,v]=p.dataset.eov.split('-').map(Number);return`${BBN[b]} ${c}:${v}`});
+  bar.innerHTML=`<b style="font-size:.85rem">${esc(refs.length>2?refs[0]+' 외 '+(refs.length-1)+'절':refs.join(', '))}</b><button class="btn small" data-a="w">✍️ 느낀 점</button><button class="btn small" data-a="sh">📤 말씀+느낀점 공유</button><button class="del" data-a="x">✕</button>`;
+  bar.onclick=e=>{const a=e.target.closest('[data-a]');if(!a)return;const k=a.dataset.a;
+    if(k==='x'){sel.forEach(p=>p.classList.remove('sel'));sync()}
+    else if(k==='sh'){const b=document.querySelector('#eonsh');if(b)b.click()}
+    else if(k==='w'){const ta=document.querySelector('#eontx');if(!ta)return;const ln=sel.map(p=>{const[b,c,v]=p.dataset.eov.split('-').map(Number);const t=(p.textContent||'').replace(/^\d+/,'').trim();return`「${BBN[b]} ${c}:${v}」 ${t.length>40?t.slice(0,40)+'…':t}`}).join('\n');
+      ta.value=(ta.value.trim()?ta.value.replace(/\s+$/,'')+'\n\n':'')+ln+'\n';ta.dispatchEvent(new Event('input',{bubbles:true}));sel.forEach(p=>p.classList.remove('sel'));sync();ta.scrollIntoView({block:'center',behavior:'smooth'});setTimeout(()=>{ta.focus();ta.setSelectionRange(ta.value.length,ta.value.length)},250)}};};
+  document.addEventListener('click',e=>{if(e.target.closest&&e.target.closest('.eotxt p[data-eov]'))setTimeout(sync,0)},false);
+  new MutationObserver(()=>{if(bar&&!document.querySelector('.eotxt'))sync()}).observe(document.body,{childList:true,subtree:true})})();
+/*}BIBLE*/
+(()=>{let syn=0,on=false,d0=0,h0=0,cur=0,tl0=null,cy0=0,y0=0,lab=null,sc=0;
+  const clamp=v=>Math.max(16,Math.min(110,v));const dist=t=>Math.hypot(t[0].clientX-t[1].clientX,t[0].clientY-t[1].clientY);
+  const px=(el,k,r)=>{const v=parseFloat(el.style[k]);if(!isNaN(v))el.style[k]=(Math.round(v*r*10)/10)+'px'};
+  function scale(r){document.querySelectorAll('.tl').forEach(t=>{px(t,'height',r);t.querySelectorAll('.hr,.sblk,.now,.dsel').forEach(e=>{px(e,'top',r);if(e.classList.contains('sblk')||e.classList.contains('dsel'))px(e,'height',r)})})}
+  window.addEventListener('touchstart',e=>{if(e.touches.length!==2){return}const t=e.target.closest&&e.target.closest('.tl');if(!t||document.querySelector('#sheet:not([hidden])'))return;
+    on=true;tl0=t;d0=dist(e.touches);h0=cur=HPX;cy0=(e.touches[0].clientY+e.touches[1].clientY)/2;y0=window.scrollY;
+    syn=1;try{e.target.dispatchEvent(new Event('touchcancel',{bubbles:true}))}catch(x){}syn=0;
+    document.querySelectorAll('.dsel').forEach(x=>x.remove());e.stopPropagation()},true);
+  window.addEventListener('touchmove',e=>{if(!on)return;e.stopPropagation();if(e.touches.length<2)return;e.preventDefault();
+    const nh=clamp(h0*dist(e.touches)/d0);if(Math.abs(nh-cur)<.4)return;const r=nh/cur;const cy=(e.touches[0].clientY+e.touches[1].clientY)/2;const p=cy-tl0.getBoundingClientRect().top;
+    scale(r);window.scrollBy(0,p*(r-1));cur=nh;
+    if(!lab){lab=document.createElement('div');lab.className='pzl';document.body.appendChild(lab)}lab.textContent=`🔍 1시간 ${Math.round(cur)}px (×${(cur/31).toFixed(1)})`},{capture:true,passive:false});
+  const fin=e=>{if(!on||syn)return;e.stopPropagation();if(e.touches&&e.touches.length>0)return;on=false;if(lab){lab.remove();lab=null}
+    if(Math.abs(cur-HPX)>=1){SET.hpx=Math.round(cur);HPX=SET.hpx;saveSet().catch(()=>{});const y=window.scrollY;try{if(!$('#v-plan').hidden)renderPlan();else renderDay()}catch(x){}requestAnimationFrame(()=>window.scrollTo(0,y))}};
+  window.addEventListener('touchend',fin,true);window.addEventListener('touchcancel',fin,true)})();
+/* ===================== v4.13: 성경 장·어성경 Day 밀어서 넘기기 ===================== */
+(()=>{const c=document.createElement('style');c.textContent='html,body{overscroll-behavior-x:none}';document.head.appendChild(c)})();
+/*BIBLE{*/
+(()=>{let g=null;const Z='.bbtxt,.eotxt';
+  window.addEventListener('touchstart',e=>{g=null;if(e.touches.length!==1)return;const t=e.touches[0];if(t.clientX<=26)return;const z=e.target.closest&&e.target.closest(Z);if(!z)return;g={x:t.clientX,y:t.clientY,t:Date.now(),eo:!!z.closest('.eotxt')||z.classList.contains('eotxt')}},{capture:true,passive:true});
+  window.addEventListener('touchmove',e=>{if(g&&e.touches.length>1)g=null},{capture:true,passive:true});
+  window.addEventListener('touchend',e=>{if(!g)return;const o=g;g=null;try{SW=null}catch(x){}const t=e.changedTouches[0];const dx=t.clientX-o.x,dy=t.clientY-o.y;
+    if(Date.now()-o.t>800||Math.abs(dx)<80||Math.abs(dx)<Math.abs(dy)*1.8)return;
+    if(document.querySelector('.bbvned textarea:focus')||[...document.querySelectorAll('.sheet,.taskedit,.lockov')].some(x=>!x.hidden))return;
+    const sel=o.eo?'[data-eoopen]':'[data-bbgo]';const bs=[...document.querySelectorAll(sel)];if(bs.length<2)return;const b=dx<0?bs[bs.length-1]:bs[0];
+    if(b&&!b.disabled){b.click();window.scrollTo(0,0)}},{capture:true,passive:true})})();
+/*}BIBLE*/
+/* ===================== v4.08: 몰입 시작 화면 — 무엇에 › 목표 › 분류(한 줄 3칸) ===================== */
+{const _rf11=renderFocus;renderFocus=function(){const r=_rf11.apply(this,arguments);try{if(FC||!fcDraft)return r;const B=$('#fcBody');if(!B||B.querySelector('.fcc3'))return r;const dk=$('#fcdk'),ct=$('#fccat'),sb=$('#fcsub'),g=$('#fcgoal');if(!dk||!ct||!sb||!g)return r;
+  const L=e=>e.closest('label');const lg=L(g),ld=L(dk),lc=L(ct),ls=L(sb);if(!lg||!ld||!lc||!ls)return r;
+  const row=document.createElement('div');row.className='fcc3';
+  [[dk,'대분류(기둥)'],[ct,'중분류'],[sb,'소분류']].forEach(([e,t])=>{const c=document.createElement('div');const sm=document.createElement('small');sm.textContent=t;c.appendChild(sm);c.appendChild(e);row.appendChild(c)});
+  lg.after(row);[ld,lc,ls].forEach(x=>{if(x.isConnected&&!x.querySelector('select'))x.remove()});
+  const h=lg.querySelector('small.hint');if(h){h.textContent='· 몰입 시간이 쌓입니다';h.style.display='inline'}B.querySelectorAll('.g2[data-pm]').forEach(x=>{if(!x.children.length)x.remove()})}catch(e){console.warn('fcc3',e)}return r}}
+{const st=document.createElement('style');st.textContent='.fcc3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:8px}.fcc3>div{min-width:0}.fcc3 small{display:block;font-size:.68rem;color:var(--muted);margin:0 0 2px 2px;white-space:nowrap}.fcc3 select{width:100%;min-width:0;padding:9px 4px!important;font-size:.82rem!important;text-overflow:ellipsis}';document.head.appendChild(st)}
 /* ===================== v4.02: 1년 보기 목표 · 비전 접기 · 짜투리 정리 · 시작 화면 목록 ===================== */
 (function(){const st=document.createElement('style');st.textContent=`
 .yrg{margin:10px 0}.yrg h3{margin-bottom:4px}.yrg details{border-top:1px solid var(--line);padding:6px 0}.yrg summary{cursor:pointer;list-style:none;display:flex;align-items:center;gap:6px;font-weight:700;font-size:.92rem;padding:4px 0}.yrg summary::-webkit-details-marker{display:none}.yrg summary::after{content:'▾';margin-left:auto;color:var(--muted);font-size:.8rem}.yrg details[open] summary::after{content:'▴'}.yrg summary small{color:var(--muted);font-weight:500;font-size:.76rem}
@@ -10258,27 +10334,36 @@ document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest
 body .stjb{display:none!important}.stlx .pdrag{display:none!important}.stlx .pprev.ok~.pfill{display:none!important}.stlx .pfill{float:right;margin-top:2px}`;document.head.appendChild(st)})();
 /* ---- 1) 1년 보기: 올해 목표 · 프로젝트 · 버킷리스트 (접어서) ---- */
 const yrgOpen=()=>SET.yrgOpen=SET.yrgOpen&&typeof SET.yrgOpen==='object'?SET.yrgOpen:{};
-function yrgHTML(){const T=today(),Y=T.slice(0,4);const gs=goalsAt('y',perKey('y',T));const O=yrgOpen();const pct=g=>{try{return Math.round(prog(g)*100)}catch(e){return 0}};
+function yrgHTML(lv,at){lv=lv||'y';const T=at||today(),Y=T.slice(0,4);const gs=lv==='g'?[]:goalsAt(lv,perKey(lv,T));const O=yrgOpen();const pct=g=>{try{return Math.round(prog(g)*100)}catch(e){return 0}};
   const byA={};gs.forEach(g=>{const k=g.area||'';(byA[k]=byA[k]||[]).push(g)});
   const avg=gs.length?Math.round(gs.reduce((a,g)=>a+pct(g),0)/gs.length):0;
-  const gB=gs.length?Object.keys(byA).map(k=>`<p class="yrp">${k?`${AREA_E[k]||''} ${esc(areaName(k))}`:'기둥 없음'}</p>${byA[k].map(g=>`<div class="yrr ${g.done?'dn':''}"><span>${esc(g.title||'(제목 없음)')}</span><b>${pct(g)}%</b></div>`).join('')}`).join(''):'<p class="hint" style="margin:4px 0">아직 올해 목표가 없습니다.</p>';
+  const gB=gs.length?Object.keys(byA).map(k=>`<p class="yrp">${k?`${AREA_E[k]||''} ${esc(areaName(k))}`:'기둥 없음'}</p>${byA[k].map(g=>`<div class="yrr ${g.done?'dn':''}"><span>${esc(g.title||'(제목 없음)')}</span><b>${pct(g)}%</b></div>`).join('')}`).join(''):'<p class="hint" style="margin:4px 0">아직 '+(lv==='m'?'이번 달':(Y===today().slice(0,4)?'올해':Y+'년'))+' 목표가 없습니다.</p>';
   const P=(typeof PROJ!=='undefined'?PROJ.list:[]);const pB=P.length?P.map(p=>{const v=Math.round(projPct(p)*100);return`<div class="yrr ${v>=100?'dn':''}" data-yrpj="${p.id}" style="cursor:pointer"><span>🧩 ${esc(p.title)}</span>${p.due?`<small>~${md(p.due)}</small>`:''}<b>${v}%</b></div>`}).join(''):'<p class="hint" style="margin:4px 0">프로젝트가 없습니다.</p>';
   const B=bkList();const bB=B.length?B.map(b=>`<div class="yrr ${b.done?'dn':''}"><span>${esc(b.w||'○')} ${esc(b.t)}</span>${b.done?'<b>이룸</b>':''}</div>`).join(''):'<p class="hint" style="margin:4px 0">버킷리스트가 없습니다.</p>';
-  return`<div class="card nocol yrg" style="--k:var(--acc)"><h3>🎯 ${Y}년 목표 · 프로젝트 · 버킷리스트</h3>
-   <details data-yrg="g" ${O.g?'open':''}><summary>🎯 올해 목표 <small>${gs.length}개${gs.length?` · 평균 ${avg}%`:''}</small></summary>${gB}<button class="xlink" data-yrgo="pgoal" style="margin:4px 0 0">목표 화면 ›</button></details>
+  return`<div class="card nocol yrg" style="--k:var(--acc)"><h3>${lv==='g'?'🧩 프로젝트 · 🪣 버킷리스트':lv==='m'?`🎯 ${+T.slice(5,7)}월 목표 · 프로젝트 · 버킷리스트`:`🎯 ${Y}년 목표 · 프로젝트 · 버킷리스트`}</h3>
+   ${lv==='g'?'':`<details data-yrg="g" ${O.g?'open':''}><summary>🎯 ${lv==='m'?'이번 달':(Y===today().slice(0,4)?'올해':Y+'년')} 목표 <small>${gs.length}개${gs.length?` · 평균 ${avg}%`:''}</small></summary>${gB}<button class="xlink" data-yrgo="pgoal" style="margin:4px 0 0">목표 화면 ›</button></details>`}
    <details data-yrg="p" ${O.p?'open':''}><summary>🧩 프로젝트 <small>${P.length}개</small></summary>${pB}<button class="xlink" data-yrgo="work" style="margin:4px 0 0">프로젝트 화면 ›</button></details>
    <details data-yrg="b" ${O.b?'open':''}><summary>🪣 버킷리스트 <small>${B.length}개 · 이룸 ${B.filter(b=>b.done).length}</small></summary>${bB}<button class="xlink" data-yrgo="bucket" style="margin:4px 0 0">버킷리스트 ›</button></details></div>`}
 function yrgBind(R){R.querySelectorAll('details[data-yrg]').forEach(d=>d.addEventListener('toggle',()=>{yrgOpen()[d.dataset.yrg]=d.open;saveSet().catch(()=>{})}));
   R.querySelectorAll('[data-yrgo]').forEach(b=>b.onclick=()=>{const g=b.dataset.yrgo;if(g==='bucket'){VSEL='bucket';openSection('vision')}else openSection(g);scrollTo({top:0})});
   R.querySelectorAll('[data-yrpj]').forEach(b=>b.onclick=()=>{wOpen=b.dataset.yrpj;openSection('work');scrollTo({top:0})})}
 function yrgPaint(){try{let host=null;
-  if(curSection==='day'&&ZMD>0&&ZMS[ZMD]&&ZMS[ZMD][0]==='y'){const z=document.querySelector('#v-day .cal.z-y')||document.querySelector('#v-day .zgrid');host=z?z.parentElement:null;if(host&&!host.querySelector('.yrg'))z.insertAdjacentHTML('beforebegin',yrgHTML())}
-  else if(curSection==='plan'&&((ZMP!=null&&ZMS[ZMP]&&ZMS[ZMP][0]==='y')||(ZMP==null&&pZoom==='y'))){host=$('#pbody');if(host&&!host.querySelector('.yrg'))host.insertAdjacentHTML('afterbegin',yrgHTML())}
+  if(curSection==='day'&&ZMD>0&&ZMS[ZMD]){const k=ZMS[ZMD][0];
+    if(k==='y'){const z=document.querySelector('#v-day .cal.z-y')||document.querySelector('#v-day .zgrid');host=z?z.parentElement:null;if(host&&!host.querySelector('.yrg'))z.insertAdjacentHTML('beforebegin',yrgHTML('y',ZMA))}
+    else if(k==='m'){host=$('#dayBody');if(host&&!host.querySelector('.yrg'))host.insertAdjacentHTML('afterbegin',yrgHTML('y',ZMA));if(host)mgFold(host)}}
+  else if(curSection==='plan'){const k=PLM==='goal'?'g':(ZMP!=null&&ZMS[ZMP]?ZMS[ZMP][0]:pZoom);host=$('#pbody');
+    if(host&&!host.querySelector('.yrg')){if(k==='y'||k==='m')host.insertAdjacentHTML('afterbegin',yrgHTML('y',pAnchor||today()));else if(k==='g')host.insertAdjacentHTML('beforeend',yrgHTML('g'));else host=null}else if(k==='w')host=null;if(host&&k==='m')mgFold(host)}
   if(host)yrgBind(host)}catch(e){console.warn('yrg',e)}}
 {const _rdy=renderDay;renderDay=async function(){const r=await _rdy.apply(this,arguments);yrgPaint();stPaint();return r}}
 {const _zd=zmDay;zmDay=async function(){const r=await _zd.apply(this,arguments);yrgPaint();return r}}
 {const _zp=zmPlan;zmPlan=async function(){const r=await _zp.apply(this,arguments);yrgPaint();return r}}
 {const _rpy=renderPlan;renderPlan=async function(){const r=await _rpy.apply(this,arguments);yrgPaint();return r}}
+/* 월간 목표를 접을 수 있게 (연간 목표 · 프로젝트 · 버킷리스트 아래에 이어서) */
+function mgFold(R){{const y=R.querySelector('.yrg'),pc=R.querySelector('.pcc');if(y&&pc&&(y.compareDocumentPosition(pc)&Node.DOCUMENT_POSITION_PRECEDING))pc.before(y)}R.querySelectorAll('.pcc.pcm').forEach(c=>{if(c.querySelector('.pcgd'))return;const fl=[...c.children].find(x=>x.tagName==='P'&&x.classList.contains('fl')&&/목표/.test(x.textContent));const gl=fl&&fl.nextElementSibling;if(!fl||!gl||!gl.classList.contains('plgl'))return;
+  const n=gl.querySelectorAll('.plg,.plgi,[data-plg],.plgr').length||[...gl.children].filter(x=>!x.classList.contains('plad')).length;const O=yrgOpen();const d=document.createElement('details');d.className='pcgd';if(O.mg)d.open=true;
+  const sm=document.createElement('summary');sm.innerHTML=`${fl.innerHTML} <small>${n}개</small>`;d.appendChild(sm);fl.before(d);d.appendChild(gl);fl.remove();d.addEventListener('toggle',()=>{O.mg=d.open;saveSet().catch(()=>{})})})}
+{const st=document.createElement('style');st.textContent='.pcgd{border-top:1px solid var(--line);margin:6px 0 4px;padding:4px 0}.pcgd>summary{cursor:pointer;list-style:none;display:flex;align-items:center;gap:6px;font-weight:700;font-size:.92rem;padding:4px 0}.pcgd>summary::-webkit-details-marker{display:none}.pcgd>summary::after{content:"▾";margin-left:auto;color:var(--muted);font-size:.8rem}.pcgd[open]>summary::after{content:"▴"}.pcgd>summary small{color:var(--muted);font-weight:500;font-size:.76rem}';document.head.appendChild(st)}
+{const _pp9=plPaint;plPaint=function(){const r=_pp9.apply(this,arguments);try{yrgPaint()}catch(e){}return r}}
 /* ---- 2) 비전: 아이콘 작게 · 칸마다 접기 ---- */
 const vzF=()=>SET.vzf=SET.vzf&&typeof SET.vzf==='object'?SET.vzf:{};
 function vzPaint(){try{if(curSection!=='vision'||gEdit)return;const R=$('#glist');if(!R)return;const F=vzF();
@@ -10325,6 +10410,59 @@ const rtCurFz=()=>!!(typeof RT!=='undefined'&&RT&&RT.items&&RT.items[RT.i]&&RT.i
   if(rtEdit&&rtDraft){const R0=rtDraft;B.querySelectorAll('.rer').forEach(row=>{const ni=row.querySelector('[data-rn]');if(!ni||row.querySelector('.rfz'))return;const i=+ni.dataset.rn;const x=R0.items[i];if(!x)return;const bt=document.createElement('button');bt.type='button';bt.className='rfz'+(x.fz?' on':'');bt.textContent=x.fz?'🎯':'✓';bt.title=x.fz?'몰입 항목 (집중 소리·실제 기록)':'보통 항목 · 누르면 몰입 항목';bt.setAttribute('aria-label',bt.title);
       bt.onclick=()=>{B.querySelectorAll('[data-rn]').forEach(e=>{const y=R0.items[+e.dataset.rn];if(y)y.name=e.value});B.querySelectorAll('[data-rm]').forEach(e=>{const y=R0.items[+e.dataset.rm];if(y)y.min=Math.max(1,+e.value||1)});x.fz=x.fz?0:1;if(!x.fz)delete x.fz;renderRoutine()};row.insertBefore(bt,row.firstChild);row.classList.add('hfz')});
     const lst=B.querySelector('#radd');if(lst&&!B.querySelector('.rfzh'))lst.insertAdjacentHTML('beforebegin','<p class="hint rfzh" style="margin:4px 0 6px">왼쪽 ✓를 누르면 🎯 몰입 항목이 됩니다. 몰입 항목은 진행 중에 집중 소리가 나고, 끝나면 실제 기록(몰입)으로 남습니다.</p>')}}catch(e){console.warn('rtfz',e)}return r}}
+/* ===================== v4.05: 몰입·루틴 시작 단추 하나 · 올해 남은 날 · 기둥·목표·분류 구분 ===================== */
+/* 1) 🎯 몰입·루틴: 단추 하나로 몰입 또는 루틴을 고른다 (진행 중이면 그 화면으로) */
+function frOpen(){try{if(FC){openFocus();return}if(RT){openRoutine();return}}catch(e){}
+  const S=$('#sheet');if(!S)return;const L=fcRts();const tm=r=>r.items.reduce((a,x)=>a+(+x.min||0),0);
+  S.hidden=false;S.innerHTML=`<div class="sheetbox" role="dialog" aria-label="몰입·루틴"><div class="shead"><b>🎯 무엇을 시작할까요</b><button class="del" id="frx">닫기</button></div>
+   <button type="button" class="frb" data-frf="1"><i>🎯</i><span>몰입<small>타이머 · 구간 나누기 · 계획대로</small></span><em>›</em></button>
+   <p class="hint" style="margin:12px 0 4px">🔁 루틴 · 누르면 바로 시작합니다. 🍅는 몰입 구간으로 불러옵니다.</p>
+   ${L.length?L.map((r,i)=>`<div class="frr"><button type="button" class="frb" data-frr="${i}"><i>▶</i><span>${esc(r.name||'루틴')}<small>${r.items.length}개 · ${tm(r)}분${r.items.some(x=>x.fz)?' · 🎯 몰입 포함':''}</small></span></button><button type="button" class="frp" data-frp="${i}" aria-label="몰입 구간으로">🍅</button></div>`).join(''):'<p class="empty">아직 루틴이 없습니다.</p>'}
+   <button type="button" class="xlink" data-fred="1" style="margin-top:8px">🔁 루틴 만들기·고치기 ›</button></div>`;
+  const close=()=>{S.hidden=true;S.innerHTML=''};$('#frx').onclick=close;S.onclick=e=>{if(e.target===S)close()};
+  S.querySelector('[data-frf]').onclick=()=>{close();openFocus()};
+  S.querySelectorAll('[data-frr]').forEach(b=>b.onclick=async()=>{const r=L[+b.dataset.frr];close();if(!r)return;if(cur!==today())await openDay(today());openRoutine();if(!RT)rtStart(r);else renderRoutine()});
+  S.querySelectorAll('[data-frp]').forEach(b=>b.onclick=()=>{const r=L[+b.dataset.frp];close();if(!r)return;openFocus();const d=fcDraft;if(!d)return;d.mode='pomo';const its=r.items.filter(x=>+x.min>0),hz=its.some(x=>x.fz);
+    d.seg=its.map(x=>({n:(x.name||'').trim(),m:Math.round(+x.min),k:hz?(x.fz?'f':'b'):(FC_REST.test(x.name||'')?'b':'f')}));if(!d.seg.some(y=>y.k==='f'))d.seg.forEach(y=>y.k='f');d.rounds=1;renderFocus()});
+  S.querySelector('[data-fred]').onclick=()=>{close();openSection('routine')}}
+/* 뒤로가기 단추: 아래로 내릴 때는 옆으로 숨겨 내용을 가리지 않는다 */
+{let y0=scrollY;addEventListener('scroll',()=>{const b=$('#navbk');if(!b)return;const y=scrollY;if(y>y0+8)b.classList.add('nbhide');else if(y<y0-8||y<40)b.classList.remove('nbhide');y0=y},{passive:true});const st=document.createElement('style');st.textContent='.navbk{transition:transform .2s,opacity .2s}.navbk.nbhide{transform:translateX(-130%);opacity:0;pointer-events:none}';document.head.appendChild(st)}
+/* 2) 날짜 옆에 올해 남은 날 */
+function ylPaint(){try{const dl=$('#dlabel');if(!dl||dl.querySelector('.yrl'))return;const T=today();const n=Math.round((parseD(T.slice(0,4)+'-12-31')-parseD(T))/864e5);dl.insertAdjacentHTML('beforeend',`<small class="yrl">올해 ${n}일 남음</small>`)}catch(e){}}
+{const _rdl=renderDay;renderDay=function(){const r=_rdl.apply(this,arguments);try{if(r&&r.then)r.then(ylPaint);else ylPaint()}catch(e){}return r}}
+/* 3) 기둥 · 목표 · 분류 구분 */
+function gcxHTML(){const P=pmKeys().filter(x=>!x.startsWith('m:'));const G=((typeof GOALS!=='undefined'&&GOALS.list)||[]).filter(g=>g.title&&!g.done);
+  const rows=P.map(k=>{const g=G.filter(x=>(x.area||'')===k).length,n=SET.cats.filter(y=>dkOf(y)===k);return`<div class="gcr"><b>${esc(dkEmo(k))} ${esc(dkName(k))}</b><span>🎯 목표 ${g}</span><span>🗂 분류 ${n.length}${n.length?` <small>${n.slice(0,3).map(c=>esc(c.name)).join('·')}${n.length>3?'…':''}</small>`:''}</span></div>`}).join('');
+  const no=G.filter(g=>!g.area||!P.includes(g.area));
+  return`<details class="card nocol gcx" ${SET.gcxOpen?'open':''}><summary>🧭 기둥 · 목표 · 분류는 이렇게 다릅니다${no.length?` <small class="gcw">기둥 없는 목표 ${no.length}</small>`:''}</summary>
+   <div class="gcd"><p><b>🏛️ 기둥</b> 내 삶에서 지킬 큰 영역입니다 (왜). 점수·레벨이 기둥에 쌓입니다.</p><p><b>🎯 목표</b> 기둥 안에서 기간을 정해 이룰 결과입니다 (무엇을). 프로젝트·할 일로 쪼갭니다.</p><p><b>🗂 분류</b> 중분류·소분류는 일정·몰입·노트에 붙이는 이름표입니다 (무엇을 했나). 기둥 아래에 속합니다.</p></div>
+   <div class="gcl">${rows}</div>
+   ${no.length?`<p class="hint" style="margin:8px 0 4px">⚠️ 기둥이 없는 목표 ${no.length}개 · 기둥을 고르면 점수와 이어집니다</p>${no.slice(0,10).map(g=>`<div class="gcr"><span>${esc(g.title)}</span><select data-gca="${g.id}"><option value="">기둥 고르기</option>${P.map(k=>`<option value="${k}">${esc(dkName(k))}</option>`).join('')}</select></div>`).join('')}`:''}</details>`}
+function gcxBind(R){const d=R.querySelector('details.gcx');if(!d)return;d.addEventListener('toggle',()=>{SET.gcxOpen=d.open;saveSet().catch(()=>{})});
+  d.querySelectorAll('[data-gca]').forEach(s=>s.onchange=()=>{const g=GOALS.list.find(x=>x.id===s.dataset.gca);if(!g||!s.value)return;g.area=s.value;saveGoals();toast(`🏛️ ‘${g.title}’ 목표를 ${dkName(s.value)} 기둥에 넣었습니다.`);SET.gcxOpen=true;const h=d.parentElement;d.remove();gcxPaint()})}
+function gcxPaint(){try{let host=null,where='afterbegin';
+  if(curSection==='pmd'&&PMV&&PMV.k==null){host=$('#pmdbody');where='beforeend'}else if(curSection==='plan'&&PLM==='goal')host=$('#pbody');
+  if(!host||host.querySelector('.gcx'))return;host.insertAdjacentHTML(where,gcxHTML());gcxBind(host)}catch(e){console.warn('gcx',e)}}
+{const _rpm=renderPmd;renderPmd=function(){const r=_rpm.apply(this,arguments);gcxPaint();return r}}
+{const _rpl=renderPlan;renderPlan=async function(){const r=await _rpl.apply(this,arguments);gcxPaint();return r}}
+{const st=document.createElement('style');st.textContent=`.frb{display:flex;align-items:center;gap:10px;width:100%;text-align:left;border:1px solid var(--line);background:var(--paper);color:var(--ink);font:inherit;border-radius:12px;padding:11px 12px;margin:6px 0;cursor:pointer}.frb i{font-style:normal;font-size:1.2rem;width:26px;text-align:center}.frb span{flex:1;font-weight:700;min-width:0}.frb small{display:block;font-weight:400;color:var(--muted);font-size:.78rem;margin-top:2px}.frb em{font-style:normal;color:var(--muted)}
+.frr{display:flex;gap:6px;align-items:center}.frr .frb{margin:4px 0}.frp{flex:none;border:1px solid var(--line);background:var(--paper);border-radius:12px;width:46px;height:46px;font-size:1.1rem;cursor:pointer}
+.cvi[data-cvi="fr"] small{white-space:nowrap;letter-spacing:-.06em}
+#dlabel .yrl{display:inline-block;margin-left:5px;font-size:.7rem;font-weight:500;color:var(--muted);white-space:nowrap;font-family:inherit}
+.gcx>summary{font-weight:700;cursor:pointer;list-style:none}.gcx>summary::-webkit-details-marker{display:none}.gcx .gcw{color:#c62828;font-weight:600;font-size:.76rem;margin-left:4px}.gcd p{margin:6px 0;font-size:.86rem;line-height:1.45}.gcd b{display:inline-block;min-width:58px}
+.gcl{margin-top:8px;border-top:1px solid var(--line)}.gcr{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:center;padding:7px 0;border-bottom:1px solid var(--line);font-size:.84rem}.gcr>b{min-width:96px}.gcr small{color:var(--muted)}.gcr>span:first-child{flex:1}.gcr select{max-width:150px}`;document.head.appendChild(st)}
+/* ===================== v4.04: 연동 이동 뒤로가기 · 월간 이상 보기에 프로젝트·버킷 · 몰입·루틴 통합 2단계 ===================== */
+/* 1) 연동 단추(탭 줄이 아닌 단추)로 다른 화면에 가면 ‘‹ 이전 화면’ 단추를 보여 준다 */
+document.addEventListener('click',e=>{if(!e.isTrusted)return;LBc={t:Date.now(),tab:!!(e.target.closest&&e.target.closest('#gnav,#subnav,#navbk'))}},true);
+{const _osb=openSection;openSection=function(v){const from=curSection,bk=navBacking;const r=_osb.apply(this,arguments);try{if(bk){while(LBS.length&&LBS[LBS.length-1].to===from)LBS.pop()}else if(from!==curSection){if(LBc&&!LBc.tab&&Date.now()-LBc.t<1500&&NAVH[NAVH.length-1]===from)LBS.push({from,to:curSection});else LBS.length=0}if(LBS.length>20)LBS.shift();LB=LBS[LBS.length-1]||null;setTimeout(navBtnSync,60)}catch(e){console.warn('lb',e)}return r}}
+{const st=document.createElement('style');st.textContent='.navbk{bottom:calc(128px + env(safe-area-inset-bottom,0px))!important;z-index:60!important;box-shadow:0 2px 10px rgba(0,0,0,.25)!important}';document.head.appendChild(st)}
+/* 2) 몰입의 ‘저장한 세트’는 루틴과 같은 목록으로 합친다 */
+const fcRts=()=>(SET.routines||[]).filter(r=>(r.items||[]).some(x=>+x.min>0));
+function fcSetsMigrate(){const L=Array.isArray(SET.fcSets)?SET.fcSets:[];if(!L.length)return;SET.routines=Array.isArray(SET.routines)?SET.routines:[];
+  L.forEach(x=>{if(!x||!Array.isArray(x.seg))return;let nm=String(x.name||'몰입 세트').slice(0,20);if(SET.routines.some(r=>r.name===nm))nm=nm.slice(0,16)+' (세트)';const r=newRoutine(nm);r.items=[];
+    for(let k=0;k<Math.min(10,Math.max(1,+x.rounds||1));k++)x.seg.forEach(g=>{if(+g.m>0)r.items.push(g.k==='f'?{id:uid(),name:g.n||'몰입',min:Math.round(+g.m),fz:1}:{id:uid(),name:g.n||'쉬는 시간',min:Math.round(+g.m)})});
+    if(r.items.length)SET.routines.push(r)});
+  SET.fcSets=[];saveSet().catch(()=>{})}
 /* ---- 2) 짜투리 앱 바로가기: 누르면 그 앱(예: 밀리의 서재)이 바로 열림 ---- */
 const QLK=()=>{SET.qlinks=Array.isArray(SET.qlinks)?SET.qlinks:[];return SET.qlinks};
 /* 기본 바로가기: 밀리의 서재 · TED · 듀오링고 (처음 한 번만 넣음, 지우면 다시 안 넣음) */
@@ -10630,7 +10768,7 @@ function xrUnits(r,d,o){o=o||xrDoc(d);switch(r.m){
     n+=(XR_NT.get(d)||[]).filter(t=>t.includes(a)).length;try{n+=TASKS.items.filter(t=>t.done&&t.doneAt===d&&(t.title||'').includes(a)).length}catch(e){}return n}
   case'manual':return o&&o.cnt?(+o.cnt[r.id]||0):0}return 0}
 let XR_PR=null,XR_NT=new Map();const XR_SC=new Map();
-function xrScore(d,o,k){const sig=JSON.stringify(o.score||{})+'|'+JSON.stringify(o.time||[]).length+'|'+JSON.stringify(o.scUser||{})+'|'+JSON.stringify(o.habits||{})+(o.grat||[]).join();let c=XR_SC.get(d);if(!c||c.sig!==sig){let v={};try{v=xpPil(o)||{}}catch(e){}c={sig,v};XR_SC.set(d,c)}return +(c.v[k]||0)}
+const XR_SCW=new WeakMap();function xrScore(d,o,k){if(o!==D&&d<today()){const q=(o._sv||'')+'|'+(o.time||[]).length+'|'+(o.plan||[]).length+'|'+Object.keys(o.score||{}).length+'|'+Object.keys(o.scUser||{}).length+'|'+Object.keys(o.habits||{}).length;let w=XR_SCW.get(o);if(!w||w.q!==q){let v={};try{v=xpPil(o)||{}}catch(e){}w={q,v};XR_SCW.set(o,w)}return +(w.v[k]||0)}const sig=JSON.stringify(o.score||{})+'|'+(o.time||[]).length+':'+(o.time||[]).reduce((a,b)=>a+(b.s||'')+(b.e||'')+(b.cat||'')+String((b.act||'').length),'')+'|'+JSON.stringify(o.scUser||{})+'|'+JSON.stringify(o.habits||{})+(o.grat||[]).join();let c=XR_SC.get(d);if(!c||c.sig!==sig){let v={};try{v=xpPil(o)||{}}catch(e){}c={sig,v};XR_SC.set(d,c)}return +(c.v[k]||0)}
 function xrDays(){const s=new Set();try{(cacheAll||new Map()).forEach((o,d)=>s.add(d))}catch(e){}if(D&&D.date)s.add(D.date);try{BOOKS.items.forEach(b=>{Object.keys(b.plog||{}).forEach(d=>s.add(d));if(b.end)s.add(b.end)})}catch(e){}try{Object.values((SET.bible||{}).read||{}).forEach(d=>s.add(d))}catch(e){}try{NOTES.forEach(n=>{if(n&&n.date)s.add(n.date)})}catch(e){}try{TASKS.items.forEach(t=>{if(t.doneAt)s.add(t.doneAt)})}catch(e){}
   const T=today();return[...s].filter(d=>/^\d{4}-\d{2}-\d{2}$/.test(d)&&d<=T).sort()}
 /* 기준·콤보 결과: 기둥별 XP와 레벨 보너스 */
@@ -10639,8 +10777,8 @@ function xrCalc(){XR_PR=wkPR().prs;XR_NT=new Map();try{NOTES.forEach(x=>{if(x&&x
     if(r.mode==='lv'){const n=Math.floor(tot/r.per)*r.amt;out.lv[k]=(out.lv[k]||0)+n;out.rows.push({r,tot,td,n,next:r.per-(tot%r.per)})}
     else{const x=Math.floor(tot/r.per)*r.amt,x0=Math.floor((tot-td)/r.per)*r.amt;out.pil[k]=(out.pil[k]||0)+x;if(x-x0>0)out.td[k]=(out.td[k]||0)+(x-x0);out.rows.push({r,tot,td,x,xt:x-x0})}});
   /* 점수 콤보: 기둥 점수가 기준 이상인 날이 이어지면 하루마다 보너스가 커짐 */
-  const C=xrCombo();if(C.on){SCORE.forEach(([k])=>{if(k==='habit')return;let run=0,prev='',sum=0,tdb=0;days.forEach(d=>{const o=xrDoc(d);if(!o)return;const s=xrScore(d,o,k);
-      if(s>=C.th){run=(prev&&addD(prev,1)===d)?run+1:1;prev=d;const b=Math.min(run,C.max)*C.per;sum+=b;if(d===T)tdb=b}else{run=0;prev=''}});
+  const C=xrCombo();const NXM=new Map(),NX1=x=>{let v=NXM.get(x);if(v===undefined){v=addD(x,1);NXM.set(x,v)}return v};if(C.on){SCORE.forEach(([k])=>{if(k==='habit')return;let run=0,prev='',sum=0,tdb=0;days.forEach(d=>{const o=xrDoc(d);if(!o)return;const s=xrScore(d,o,k);
+      if(s>=C.th){run=(prev&&NX1(prev)===d)?run+1:1;prev=d;const b=Math.min(run,C.max)*C.per;sum+=b;if(d===T)tdb=b}else{run=0;prev=''}});
     if(sum){out.pil[k]=(out.pil[k]||0)+sum;out.combo[k]=run;if(tdb)out.comboTd[k]=tdb;if(tdb)out.td[k]=(out.td[k]||0)+tdb}})}
   return out}
 {const _xa=xpAll;xpAll=function(){const v=_xa.apply(this,arguments);if(!v)return v;try{const key=XPC.k+'|'+JSON.stringify(SET.xpRules||'')+JSON.stringify(SET.xpCombo||'')+'|'+BOOKS.items.map(b=>JSON.stringify(b.plog||{})+b.st).join()+'|'+JSON.stringify(D&&D.wk||[])+JSON.stringify(D&&D.cnt||{});

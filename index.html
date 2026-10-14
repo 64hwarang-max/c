@@ -1,4 +1,4 @@
-<!-- 성장일지 v4.10 · 2026-10-14 · 1년 보기 목표가 보는 해를 따라감 · 밀기 영역 확대 · 월간 목표 접기 · 성경·기도 · 속도 개선 -->
+<!-- 성장일지 v4.13 · 2026-10-15 · 밀기 방향(오른쪽→왼쪽=다음) · 성경 장 밀어 넘기기 · 구절 누르면 바로 메뉴 · 시간표 두 손가락 확대 · 성경 구절 길게 누르기(느낀 점·묵상 노트) · 1년 보기 목표 해 따라감 · 월간 목표 접기 · 속도 개선 -->
 <!doctype html>
 <html lang="ko" class="simple">
 <head>
@@ -423,7 +423,7 @@ nav.main button,.subnav button,.favtile{-webkit-user-select:none;user-select:non
 .bbtxt p{margin:0 0 6px;padding:2px 4px;border-radius:4px;cursor:pointer}
 .bbtxt p sup{font-family:inherit;font-size:.68em;color:var(--acc);font-weight:700;margin-right:4px;vertical-align:.25em}
 .bbtxt p.sel{background:color-mix(in srgb,#ffd54f 40%,transparent)}
-.bbbar{position:sticky;bottom:calc(64px + env(safe-area-inset-bottom));z-index:20;display:flex;gap:6px;justify-content:center;flex-wrap:wrap;padding:8px;background:var(--paper);border:1px solid var(--line);border-radius:10px;box-shadow:0 4px 14px rgba(0,0,0,.12);margin-top:8px}
+.bbbar{position:fixed;left:8px;right:8px;bottom:calc(64px + env(safe-area-inset-bottom));z-index:60;display:flex;gap:6px;justify-content:flex-start;flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding:8px;background:var(--paper);border:1px solid var(--line);border-radius:10px;box-shadow:0 4px 14px rgba(0,0,0,.12);margin-top:8px}
 .bbhd{display:flex;align-items:center;justify-content:space-between;gap:6px;flex-wrap:wrap}
 .bbhd h3{margin:0}
 .bbnav{display:flex;justify-content:space-between;gap:8px;margin:6px 0}
@@ -4848,7 +4848,7 @@ function zmBarSync(){let B=$('#zmbar');if(!B){B=document.createElement('div');B.
 const ZOOMS=[['y','1년'],['h','6개월'],['q','3개월'],['m','1달'],['w','1주']];
 const CATC={'업무':'--pen','이동':'--muted','기도':'--c-grat','공부':'--c-grat','자기계발':'--c-time','운동':'--c-meet','가족·관계':'--c-mis','섬김·나눔':'--c-fin','봉사·나눔':'--c-fin','휴식':'--c-meet','흘려보냄':'--muted'};
 let pZoom='m',pAnchor=today(),pReview=false,sMode='plan',rMode='cmp',SCTX='plan',SM='plan';
-const HPX=31;
+let HPX=31;
 const SNAPM=()=>[5,10,15].includes(+SET.snapMin)?+SET.snapMin:5;
 function pRange(){const d=parseD(pAnchor),y=d.getFullYear(),m=d.getMonth();
   if(pZoom==='y')return{s:new Date(y,0,1),months:[...Array(12)].map((_,i)=>[y,i]),label:`${y}년`};
@@ -4942,7 +4942,7 @@ function openHrsMgr(done){const S=$('#sheet');S.hidden=false;let a=SET.tlS??0,z=
     const close=()=>{S.hidden=true;S.innerHTML=''};$('#hrx').onclick=close;S.onclick=e=>{if(e.target===S)close()};
     S.querySelectorAll('[data-hra]').forEach(b=>b.onclick=()=>{a=+b.dataset.hra;if(z<=a)z=24;draw()});S.querySelectorAll('[data-hrz]').forEach(b=>b.onclick=()=>{z=+b.dataset.hrz;draw()});
     $('#hr24').onclick=()=>{a=0;z=24;draw()};$('#hrok').onclick=async()=>{SET.tlS=a;SET.tlE=z;await saveSet().catch(()=>{});close();toast(`🕓 시간표를 ${pad(a)}시~${z}시로 보여 줍니다.`);done&&done();widgetSoon()}};draw()}
-function tlHTML(kind,editable){const arr=D[kind]||[];const[st,en]=tlRange(D);const H=[];for(let h=st;h<en;h++)H.push(h);
+function tlHTML(kind,editable){HPX=Math.max(16,Math.min(110,+SET.hpx||31));const arr=D[kind]||[];const[st,en]=tlRange(D);const H=[];for(let h=st;h<en;h++)H.push(h);
   let g=`<div class="tl" ${editable?`data-kind="${kind}" data-st="${st}"`:''} style="height:${H.length*HPX}px">${H.map((h,i)=>`<div class="hr" style="top:${i*HPX}px" ${editable?`data-hh="${kind}|${h}"`:''}><span>${pad(h)}</span></div>`).join('')}`;
   const LN=arr.map((b,i)=>{if(!b.s)return null;const s0=mins('00:00',b.s),e0=b.e?mins('00:00',b.e):s0+60;const e1=e0<=s0?1440:e0;return{i,s:s0,e:Math.max(e1,s0+24*60/HPX)}}).filter(Boolean).sort((a,b)=>a.s-b.s||b.e-a.e);
   {const lanes=[];LN.forEach(x=>{let k=lanes.findIndex(z=>z<=x.s);if(k<0){k=lanes.length;lanes.push(0)}lanes[k]=x.e;x.lane=k});LN.forEach(x=>{x.n=Math.max(1,...LN.filter(y=>y.s<x.e&&y.e>x.s).map(y=>y.lane+1))})}
@@ -9882,14 +9882,14 @@ function swGo(dir){try{
   else if(curSection==='plan'&&PLM!=='goal'){if(ZMP!=null)zmShift('plan',dir);else{pShift(dir);renderPlan()}}
   else return;
   const cls=dir<0?'swin-r':'swin-l';[80,300,700].forEach(t=>setTimeout(()=>{const v=document.querySelector(curSection==='day'?'#dayBody .zmv':'#pbody .zmv,#pbody .cal');if(v&&!v.dataset.sw){v.dataset.sw=1;v.classList.add(cls)}},t));
-  if(!SET.swHint){SET.swHint=1;saveSet().catch(()=>{});toast('👉 왼쪽에서 오른쪽으로 밀면 다음 기간 · 👈 오른쪽에서 왼쪽으로 밀면 지난 기간')}
+  if(!SET.swHint){SET.swHint=1;saveSet().catch(()=>{});toast('👈 오른쪽에서 왼쪽으로 밀면 다음 · 👉 왼쪽에서 오른쪽으로 밀면 이전')}
 }catch(e){console.warn('sw',e)}}
 (function(){let sx=0,sy=0,t0=0,on=false,sw=0,mx=null;
   document.addEventListener('touchstart',e=>{on=false;if(e.touches.length!==1)return;try{if(curSection==='day'&&ZMD>0&&e.target.closest&&e.target.closest('#dayBody'))SW=null}catch(x){}const z=e.target.closest&&e.target.closest(SWZ);if(!z)return;try{SW=null}catch(x){}const t=e.touches[0];sx=t.clientX;sy=t.clientY;t0=Date.now();on=true},{passive:true});
   document.addEventListener('touchmove',e=>{if(on&&e.touches.length>1)on=false},{passive:true});
-  document.addEventListener('touchend',e=>{if(!on)return;on=false;const t=e.changedTouches[0];const dx=t.clientX-sx,dy=t.clientY-sy;if(Math.abs(dx)<55||Math.abs(dx)<Math.abs(dy)*1.5||Date.now()-t0>1000)return;sw=Date.now();swGo(dx<0?-1:1)},{passive:true});
+  document.addEventListener('touchend',e=>{if(!on)return;on=false;const t=e.changedTouches[0];const dx=t.clientX-sx,dy=t.clientY-sy;if(Math.abs(dx)<55||Math.abs(dx)<Math.abs(dy)*1.5||Date.now()-t0>1000)return;sw=Date.now();swGo(dx<0?1:-1)},{passive:true});
   document.addEventListener('pointerdown',e=>{if(e.pointerType!=='mouse'){mx=null;return}const z=e.target.closest&&e.target.closest(SWZ);mx=z?{x:e.clientX,y:e.clientY,t:Date.now()}:null});
-  document.addEventListener('pointerup',e=>{if(!mx||e.pointerType!=='mouse')return;const dx=e.clientX-mx.x,dy=e.clientY-mx.y;const ok=Math.abs(dx)>=70&&Math.abs(dx)>=Math.abs(dy)*1.5&&Date.now()-mx.t<1200;mx=null;if(ok){sw=Date.now();swGo(dx<0?-1:1)}});
+  document.addEventListener('pointerup',e=>{if(!mx||e.pointerType!=='mouse')return;const dx=e.clientX-mx.x,dy=e.clientY-mx.y;const ok=Math.abs(dx)>=70&&Math.abs(dx)>=Math.abs(dy)*1.5&&Date.now()-mx.t<1200;mx=null;if(ok){sw=Date.now();swGo(dx<0?1:-1)}});
   document.addEventListener('click',e=>{if(Date.now()-sw<450&&e.target.closest&&e.target.closest(SWZ)){e.stopPropagation();e.preventDefault()}},true)})();
 
 /* ---- 3) 범위 막대(조그)와 계획 카드 연동: 보고 있는 주·달의 목표·중점 기둥 ---- */
@@ -10235,6 +10235,69 @@ document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest
   {const sb=$('#fcsub');if(sb)sb.onchange=async e=>{let v=e.target.value;if(v==='__add'||v==='__addsub'){const co2=catObj(d.cat);const n=((await uiPrompt(`‘${d.cat}’ 아래 새 소분류`,''))||'').trim();if(n&&co2){co2.subs=co2.subs||[];if(!co2.subs.includes(n))co2.subs.push(n);await pmSave()}v=n||''}d.sub=v;rdA();renderFocus()}}
 }catch(e){console.warn('fcpm',e)}return r}}
 {const _fs4=fcStart;fcStart=function(){const d=fcDraft;const sub=d&&d.sub;const r=_fs4.apply(this,arguments);try{if(FC&&sub&&!FC.sub){FC.sub=sub;fcSave()}}catch(e){}return r}}
+/* ===================== v4.11: 성경 구절 길게 누르기 → 느낀 점 · 묵상 노트 ===================== */
+/*BIBLE{*/
+(()=>{let T=null,st=null,fired=0;const SEL='.bbtxt p[data-bbv],.eotxt p[data-eov]';
+  const cancel=()=>{clearTimeout(T);T=null;st=null};
+  function lpOpen(p){try{let b,c,v,eo=false;if(p.dataset.eov){[b,c,v]=p.dataset.eov.split('-').map(Number);eo=true}else{b=bbB;c=bbC;v=+p.dataset.bbv}
+    const txt=((BIB&&BIB[b]&&BIB[b][c-1]&&BIB[b][c-1][v-1])||p.textContent.replace(/^\d+(-\d+)?/,'')).trim();const ref=`${BBN[b]} ${c}:${v}`;
+    try{navigator.vibrate&&navigator.vibrate(18)}catch(e){}
+    const items=[];
+    if(eo)items.push(['✍️ 느낀 점 쓰기 (오늘 느낀점에 담기)',()=>{const ta=$('#eontx');if(!ta)return;ta.value=(ta.value.trim()?ta.value.replace(/\s+$/,'')+'\n\n':'')+`「${ref}」 ${txt.length>40?txt.slice(0,40)+'…':txt}\n`;ta.dispatchEvent(new Event('input',{bubbles:true}));ta.scrollIntoView({block:'center',behavior:'smooth'});setTimeout(()=>{ta.focus();ta.setSelectionRange(ta.value.length,ta.value.length)},250)}]);
+    else items.push(['✍️ 이 절에 느낀 점 쓰기',()=>{bbSel.clear();document.querySelectorAll('.bbtxt p.sel').forEach(x=>x.classList.remove('sel'));const R=p.closest('#bbbody')||document;try{const sb=$('#bbsb');if(sb)sb.innerHTML=''}catch(e){}bbVNEdit(R,v)}]);
+    items.push(['📝 묵상 노트 쓰기',()=>{bbNote(ref,`${v} ${txt}\n— ${ref} (개역개정)\n\n`)}]);
+    ntSheet(`${ref}`,items)}catch(e){console.warn('bblp',e)}}
+  document.addEventListener('pointerdown',e=>{if(e.pointerType==='mouse'&&e.button!==0)return;const p=e.target.closest&&e.target.closest(SEL);if(!p)return;cancel();st={x:e.clientX,y:e.clientY};T=setTimeout(()=>{T=null;st=null;fired=Date.now();lpOpen(p)},550)},true);
+  document.addEventListener('pointermove',e=>{if(st&&Math.hypot(e.clientX-st.x,e.clientY-st.y)>10)cancel()},true);
+  ['pointerup','pointercancel','pointerleave'].forEach(t=>document.addEventListener(t,cancel,true));
+  document.addEventListener('scroll',cancel,true);
+  document.addEventListener('click',e=>{if(Date.now()-fired<700&&e.target.closest&&e.target.closest(SEL)){e.stopPropagation();e.preventDefault()}},true);
+  document.addEventListener('contextmenu',e=>{if(e.target.closest&&e.target.closest(SEL))e.preventDefault()},true);
+  const css=document.createElement('style');css.textContent='.bbtxt p[data-bbv],.eotxt p[data-eov]{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}';document.head.appendChild(css)})();
+/*}BIBLE*/
+/* ===================== v4.12: 구절 누르면 바로 메뉴(고정) · 시간표 두 손가락 확대 ===================== */
+(()=>{const css=document.createElement('style');css.textContent='.bbbar::-webkit-scrollbar{display:none}.bbbar>*{flex:0 0 auto;white-space:nowrap}#bbsb:has(.bbbar){padding-bottom:76px}.eobar{position:fixed;left:8px;right:8px;bottom:calc(64px + env(safe-area-inset-bottom));z-index:60;display:flex;gap:6px;align-items:center;overflow-x:auto;scrollbar-width:none;padding:8px;background:var(--paper);border:1px solid var(--line);border-radius:10px;box-shadow:0 4px 14px rgba(0,0,0,.12)}.eobar>*{flex:0 0 auto;white-space:nowrap}.eobar::-webkit-scrollbar{display:none}.tl{touch-action:pan-y}.pzl{position:fixed;top:calc(env(safe-area-inset-top,0px) + 70px);left:50%;transform:translateX(-50%);z-index:90;background:rgba(0,0,0,.75);color:#fff;border-radius:16px;padding:6px 14px;font-size:.85rem;pointer-events:none}';document.head.appendChild(css)})();
+/*BIBLE{*/
+(()=>{let bar=null;const sync=()=>{const R=document.querySelector('#bbbody')||document;const sel=[...document.querySelectorAll('.eotxt p[data-eov].sel')];
+  if(!sel.length||!document.querySelector('.eotxt')){if(bar){bar.remove();bar=null}return}
+  if(!bar){bar=document.createElement('div');bar.className='eobar';document.body.appendChild(bar)}
+  const refs=sel.map(p=>{const[b,c,v]=p.dataset.eov.split('-').map(Number);return`${BBN[b]} ${c}:${v}`});
+  bar.innerHTML=`<b style="font-size:.85rem">${esc(refs.length>2?refs[0]+' 외 '+(refs.length-1)+'절':refs.join(', '))}</b><button class="btn small" data-a="w">✍️ 느낀 점</button><button class="btn small" data-a="sh">📤 말씀+느낀점 공유</button><button class="del" data-a="x">✕</button>`;
+  bar.onclick=e=>{const a=e.target.closest('[data-a]');if(!a)return;const k=a.dataset.a;
+    if(k==='x'){sel.forEach(p=>p.classList.remove('sel'));sync()}
+    else if(k==='sh'){const b=document.querySelector('#eonsh');if(b)b.click()}
+    else if(k==='w'){const ta=document.querySelector('#eontx');if(!ta)return;const ln=sel.map(p=>{const[b,c,v]=p.dataset.eov.split('-').map(Number);const t=(p.textContent||'').replace(/^\d+/,'').trim();return`「${BBN[b]} ${c}:${v}」 ${t.length>40?t.slice(0,40)+'…':t}`}).join('\n');
+      ta.value=(ta.value.trim()?ta.value.replace(/\s+$/,'')+'\n\n':'')+ln+'\n';ta.dispatchEvent(new Event('input',{bubbles:true}));sel.forEach(p=>p.classList.remove('sel'));sync();ta.scrollIntoView({block:'center',behavior:'smooth'});setTimeout(()=>{ta.focus();ta.setSelectionRange(ta.value.length,ta.value.length)},250)}};};
+  document.addEventListener('click',e=>{if(e.target.closest&&e.target.closest('.eotxt p[data-eov]'))setTimeout(sync,0)},false);
+  new MutationObserver(()=>{if(bar&&!document.querySelector('.eotxt'))sync()}).observe(document.body,{childList:true,subtree:true})})();
+/*}BIBLE*/
+(()=>{let syn=0,on=false,d0=0,h0=0,cur=0,tl0=null,cy0=0,y0=0,lab=null,sc=0;
+  const clamp=v=>Math.max(16,Math.min(110,v));const dist=t=>Math.hypot(t[0].clientX-t[1].clientX,t[0].clientY-t[1].clientY);
+  const px=(el,k,r)=>{const v=parseFloat(el.style[k]);if(!isNaN(v))el.style[k]=(Math.round(v*r*10)/10)+'px'};
+  function scale(r){document.querySelectorAll('.tl').forEach(t=>{px(t,'height',r);t.querySelectorAll('.hr,.sblk,.now,.dsel').forEach(e=>{px(e,'top',r);if(e.classList.contains('sblk')||e.classList.contains('dsel'))px(e,'height',r)})})}
+  window.addEventListener('touchstart',e=>{if(e.touches.length!==2){return}const t=e.target.closest&&e.target.closest('.tl');if(!t||document.querySelector('#sheet:not([hidden])'))return;
+    on=true;tl0=t;d0=dist(e.touches);h0=cur=HPX;cy0=(e.touches[0].clientY+e.touches[1].clientY)/2;y0=window.scrollY;
+    syn=1;try{e.target.dispatchEvent(new Event('touchcancel',{bubbles:true}))}catch(x){}syn=0;
+    document.querySelectorAll('.dsel').forEach(x=>x.remove());e.stopPropagation()},true);
+  window.addEventListener('touchmove',e=>{if(!on)return;e.stopPropagation();if(e.touches.length<2)return;e.preventDefault();
+    const nh=clamp(h0*dist(e.touches)/d0);if(Math.abs(nh-cur)<.4)return;const r=nh/cur;const cy=(e.touches[0].clientY+e.touches[1].clientY)/2;const p=cy-tl0.getBoundingClientRect().top;
+    scale(r);window.scrollBy(0,p*(r-1));cur=nh;
+    if(!lab){lab=document.createElement('div');lab.className='pzl';document.body.appendChild(lab)}lab.textContent=`🔍 1시간 ${Math.round(cur)}px (×${(cur/31).toFixed(1)})`},{capture:true,passive:false});
+  const fin=e=>{if(!on||syn)return;e.stopPropagation();if(e.touches&&e.touches.length>0)return;on=false;if(lab){lab.remove();lab=null}
+    if(Math.abs(cur-HPX)>=1){SET.hpx=Math.round(cur);HPX=SET.hpx;saveSet().catch(()=>{});const y=window.scrollY;try{if(!$('#v-plan').hidden)renderPlan();else renderDay()}catch(x){}requestAnimationFrame(()=>window.scrollTo(0,y))}};
+  window.addEventListener('touchend',fin,true);window.addEventListener('touchcancel',fin,true)})();
+/* ===================== v4.13: 성경 장·어성경 Day 밀어서 넘기기 ===================== */
+(()=>{const c=document.createElement('style');c.textContent='html,body{overscroll-behavior-x:none}';document.head.appendChild(c)})();
+/*BIBLE{*/
+(()=>{let g=null;const Z='.bbtxt,.eotxt';
+  window.addEventListener('touchstart',e=>{g=null;if(e.touches.length!==1)return;const t=e.touches[0];if(t.clientX<=26)return;const z=e.target.closest&&e.target.closest(Z);if(!z)return;g={x:t.clientX,y:t.clientY,t:Date.now(),eo:!!z.closest('.eotxt')||z.classList.contains('eotxt')}},{capture:true,passive:true});
+  window.addEventListener('touchmove',e=>{if(g&&e.touches.length>1)g=null},{capture:true,passive:true});
+  window.addEventListener('touchend',e=>{if(!g)return;const o=g;g=null;try{SW=null}catch(x){}const t=e.changedTouches[0];const dx=t.clientX-o.x,dy=t.clientY-o.y;
+    if(Date.now()-o.t>800||Math.abs(dx)<80||Math.abs(dx)<Math.abs(dy)*1.8)return;
+    if(document.querySelector('.bbvned textarea:focus')||[...document.querySelectorAll('.sheet,.taskedit,.lockov')].some(x=>!x.hidden))return;
+    const sel=o.eo?'[data-eoopen]':'[data-bbgo]';const bs=[...document.querySelectorAll(sel)];if(bs.length<2)return;const b=dx<0?bs[bs.length-1]:bs[0];
+    if(b&&!b.disabled){b.click();window.scrollTo(0,0)}},{capture:true,passive:true})})();
+/*}BIBLE*/
 /* ===================== v4.08: 몰입 시작 화면 — 무엇에 › 목표 › 분류(한 줄 3칸) ===================== */
 {const _rf11=renderFocus;renderFocus=function(){const r=_rf11.apply(this,arguments);try{if(FC||!fcDraft)return r;const B=$('#fcBody');if(!B||B.querySelector('.fcc3'))return r;const dk=$('#fcdk'),ct=$('#fccat'),sb=$('#fcsub'),g=$('#fcgoal');if(!dk||!ct||!sb||!g)return r;
   const L=e=>e.closest('label');const lg=L(g),ld=L(dk),lc=L(ct),ls=L(sb);if(!lg||!ld||!lc||!ls)return r;
