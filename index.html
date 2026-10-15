@@ -1,4 +1,4 @@
-<!-- 성장일지 v4.17 · 2026-10-15 · 쉬는 시간에도 음악 · 쉬는 시간에 짜투리 앱 바로가기 · 위젯: 주간 지난 날 실제/오늘부터 계획 · 3일·일정목록·할 일·습관 위젯 · 사람 카드: 태그 선택 표시·만남 일지 중심 · 밀기 방향(오른쪽→왼쪽=다음) · 성경 장 밀어 넘기기 · 구절 누르면 바로 메뉴 · 시간표 두 손가락 확대 · 성경 구절 길게 누르기(느낀 점·묵상 노트) · 1년 보기 목표 해 따라감 · 월간 목표 접기 · 속도 개선 -->
+<!-- 성장일지 v4.18 · 2026-10-15 · 블록 편집: 반복 카드를 접힌 칸 밖으로 · 쉬는 시간에도 음악 · 쉬는 시간에 짜투리 앱 바로가기 · 위젯: 주간 지난 날 실제/오늘부터 계획 · 3일·일정목록·할 일·습관 위젯 · 사람 카드: 태그 선택 표시·만남 일지 중심 · 밀기 방향(오른쪽→왼쪽=다음) · 성경 장 밀어 넘기기 · 구절 누르면 바로 메뉴 · 시간표 두 손가락 확대 · 성경 구절 길게 누르기(느낀 점·묵상 노트) · 1년 보기 목표 해 따라감 · 월간 목표 접기 · 속도 개선 -->
 <!doctype html>
 <html lang="ko" class="simple">
 <head>
@@ -11436,7 +11436,7 @@ setTimeout(diarySeed,2600);
 (function(){const st=document.createElement('style');st.textContent=`.tegrp{margin:10px 0;border:1px solid var(--line);border-radius:12px;background:var(--paper)}.tegrp>summary{list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;font-weight:600}.tegrp>summary::-webkit-details-marker{display:none}.tegrp>summary::after{content:'▾';color:var(--muted);margin-left:auto;padding-left:8px}.tegrp[open]>summary::after{content:'▴'}.tegrp>summary small{color:var(--muted);font-weight:400;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:55%}.tegrp>.tegb{padding:0 10px 10px}.tegrp .tecard{border:0;background:none;padding:8px 4px;margin:0;border-top:1px dashed var(--line);border-radius:0}.tegrp .tegb>.tecard:first-child{border-top:0}.tnote .jbtns[hidden]{display:none!important}`;document.head.appendChild(st)})();
 function beGroup(){const O=$('#blockedit'),T=O&&O.querySelector('.tebody');if(!T||T.querySelector('.tegrp'))return;const b=bES&&bES.b;const foc=T.querySelector('#bfoc');if(!b||!foc)return;
   const A=[],B=[],C=[];
-  [...T.children].forEach(el=>{if(el===foc||el.id==='bdel'||el.classList.contains('terow')||el.classList.contains('durrow')||el.classList.contains('tegrp')||el.querySelector('#bcat,#bmemo,.tnote'))return;
+  [...T.children].forEach(el=>{if(el===foc||el.id==='bdel'||el.classList.contains('terow')||el.classList.contains('durrow')||el.classList.contains('tegrp')||el.querySelector('#bcat,#bmemo,.tnote,#repcard'))return;
     if(el.querySelector('[data-bpha],#bloc,#bwho,#bamt'))A.push(el);else if(el.querySelector('#bgoal,#bev,[data-bf],[data-brtd]'))B.push(el);else C.push(el)});
   const mk=(key,title,els,sum)=>{if(!els.length)return;const d=document.createElement('details');d.className='tegrp';d.dataset.k=key;d.open=!!(SET.beOpen||{})[key];d.innerHTML=`<summary><span>${title}</span><small>${esc(sum)}</small></summary><div class="tegb"></div>`;const g=d.querySelector('.tegb');els.forEach(e=>g.appendChild(e));foc.before(d);
     d.addEventListener('toggle',()=>{if(d.open===!!(SET.beOpen||{})[key])return;SET.beOpen=SET.beOpen||{};SET.beOpen[key]=d.open;saveSet().catch(()=>{})})};
