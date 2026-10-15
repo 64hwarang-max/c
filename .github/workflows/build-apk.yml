@@ -270,7 +270,7 @@ jobs:
                   CalWidget.saveAll(getContext());
                   SharedPreferences p = CalWidget.prefs(getContext());
                   JSObject r = new JSObject();
-                  for (String k : new String[] { "day", "week", "month" }) {
+                  for (String k : new String[] { "day", "week", "month", "three", "list", "todo" }) {
                       JSObject o = new JSObject();
                       o.put("w", p.getInt(k + "_w", 0));
                       o.put("h", p.getInt(k + "_h", 0));
@@ -311,6 +311,9 @@ jobs:
               static Class<?> cls(String k) {
                   if ("week".equals(k)) return WeekCalWidget.class;
                   if ("month".equals(k)) return MonthCalWidget.class;
+                  if ("three".equals(k)) return ThreeCalWidget.class;
+                  if ("list".equals(k)) return ListCalWidget.class;
+                  if ("todo".equals(k)) return TodoCalWidget.class;
                   return DayCalWidget.class;
               }
 
@@ -371,7 +374,7 @@ jobs:
                   static void saveAll(Context c) {
                       try {
                           AppWidgetManager m = AppWidgetManager.getInstance(c);
-                          for (String k : new String[] { "day", "week", "month" }) {
+                          for (String k : new String[] { "day", "week", "month", "three", "list", "todo" }) {
                               int[] ids = m.getAppWidgetIds(new ComponentName(c, cls(k)));
                               if (ids != null && ids.length > 0) saveSize(c, k, m.getAppWidgetOptions(ids[0]));
                           }
@@ -472,7 +475,7 @@ jobs:
                           }
                       }
                   } else {
-                      v.setTextViewText(R.id.cw_title, "week".equals(k) ? "주간" : "month".equals(k) ? "월간" : "일간");
+                      v.setTextViewText(R.id.cw_title, "week".equals(k) ? "주간" : "month".equals(k) ? "월간" : "three".equals(k) ? "3일" : "list".equals(k) ? "일정 목록" : "todo".equals(k) ? "할 일·습관" : "일간");
                   }
                   v.setViewVisibility(R.id.cw_img, shown ? View.VISIBLE : View.GONE);
                   v.setViewVisibility(R.id.cw_empty, shown ? View.GONE : View.VISIBLE);
@@ -488,7 +491,7 @@ jobs:
               }
           }
           `);
-          for(const [c,k] of [['DayCalWidget','day'],['WeekCalWidget','week'],['MonthCalWidget','month']])W(c+'.java',`package __PKG__;
+          for(const [c,k] of [['DayCalWidget','day'],['WeekCalWidget','week'],['MonthCalWidget','month'],['ThreeCalWidget','three'],['ListCalWidget','list'],['TodoCalWidget','todo']])W(c+'.java',`package __PKG__;
 
           public class ${c} extends CalWidget {
               @Override
@@ -589,7 +592,7 @@ jobs:
               android:resizeMode="horizontal|vertical"
               android:widgetCategory="home_screen" />
           `;
-          R('xml/cal_day_info.xml',info(320,4));R('xml/cal_week_info.xml',info(320,4));R('xml/cal_month_info.xml',info(250,3));
+          R('xml/cal_day_info.xml',info(320,4));R('xml/cal_week_info.xml',info(320,4));R('xml/cal_month_info.xml',info(250,3));R('xml/cal_three_info.xml',info(320,4));R('xml/cal_list_info.xml',info(320,4));R('xml/cal_todo_info.xml',info(250,3));
           // MainActivity: register CalBridge
           const ma=path.join(javaDir,'MainActivity.java');let m=fs.readFileSync(ma,'utf8');
           if(!m.includes('CalBridge')){m=m.replace('registerPlugin(WidgetBridge.class);','registerPlugin(WidgetBridge.class);\n        registerPlugin(CalBridge.class);');fs.writeFileSync(ma,m)}
@@ -603,7 +606,7 @@ jobs:
                       <meta-data android:name="android.appwidget.provider" android:resource="@xml/${inf}" />
                   </receiver>
           `;
-            x=x.replace('</application>',rcv('DayCalWidget','일간','cal_day_info')+rcv('WeekCalWidget','주간','cal_week_info')+rcv('MonthCalWidget','월간','cal_month_info')+`        <provider android:name=".CalFileProvider" android:authorities="${pkg}.calwidget" android:exported="false" android:grantUriPermissions="true">
+            x=x.replace('</application>',rcv('DayCalWidget','일간','cal_day_info')+rcv('WeekCalWidget','주간','cal_week_info')+rcv('MonthCalWidget','월간','cal_month_info')+rcv('ThreeCalWidget','3일','cal_three_info')+rcv('ListCalWidget','일정 목록','cal_list_info')+rcv('TodoCalWidget','할 일·습관','cal_todo_info')+`        <provider android:name=".CalFileProvider" android:authorities="${pkg}.calwidget" android:exported="false" android:grantUriPermissions="true">
                       <meta-data android:name="android.support.FILE_PROVIDER_PATHS" android:resource="@xml/cal_widget_paths" />
                   </provider>
               </application>`);
