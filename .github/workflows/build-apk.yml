@@ -1159,13 +1159,29 @@ jobs:
                   } catch (Exception e) { /* 무시 */ }
               }
 
+              private void markPlan(JSONObject m, JSONObject x, JSONObject pb) {
+                  try {
+                      m.remove("pa");
+                      m.remove("ps");
+                      m.remove("pe");
+                      if (pb == null || x == null) return;
+                      String pa = pb.optString("t", "");
+                      if (pa.length() == 0 || pa.equals(x.optString("t", ""))) return;
+                      m.put("pa", pa);
+                      m.put("ps", pb.optString("s", ""));
+                      m.put("pe", pb.optString("e", ""));
+                  } catch (Exception e) { /* 무시 */ }
+              }
+
               private TextView pickRow(String label, final JSONObject x) {
                   TextView t = mbtn(label, new View.OnClickListener() {
                       @Override
                       public void onClick(View v) {
                           JSONObject m = curMemo();
                           if (m != null) {
+                              JSONObject pb = curBlock();
                               setBlock(m, x);
+                              markPlan(m, x, pb);
                               saveMemos();
                           }
                           if (pickSv != null) pickSv.setVisibility(View.GONE);
