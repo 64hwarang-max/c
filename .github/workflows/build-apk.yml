@@ -1204,6 +1204,29 @@ jobs:
                   x.setText(val);
                   x.setTextSize(15);
                   x.setGravity(Gravity.CENTER);
+                  x.addTextChangedListener(new TextWatcher() {
+                      private boolean busy = false;
+
+                      @Override
+                      public void beforeTextChanged(CharSequence q, int a, int b, int c) { }
+
+                      @Override
+                      public void onTextChanged(CharSequence q, int a, int b, int c) { }
+
+                      @Override
+                      public void afterTextChanged(Editable e) {
+                          if (busy) return;
+                          String t = e.toString();
+                          if (t.length() != 4) return;
+                          for (int i = 0; i < 4; i++) {
+                              char ch = t.charAt(i);
+                              if (ch < '0' || ch > '9') return;
+                          }
+                          busy = true;
+                          e.replace(0, e.length(), t.substring(0, 2) + ":" + t.substring(2));
+                          busy = false;
+                      }
+                  });
                   return x;
               }
 
@@ -1242,9 +1265,17 @@ jobs:
               private void applyManual(EditText ea, EditText es, EditText ee, JSONObject pb) {
                   String a = ea.getText().toString().trim();
                   if (a.length() == 0) { say("한 일을 적어 주세요"); return; }
-                  String s = normHm(es.getText().toString());
-                  String e = normHm(ee.getText().toString());
-                  boolean typed = es.getText().toString().trim().length() > 0 || ee.getText().toString().trim().length() > 0;
+                  String rs = es.getText().toString().trim();
+                  String re = ee.getText().toString().trim();
+                  int tl = rs.indexOf('~');
+                  if (tl < 0) tl = rs.indexOf('-');
+                  if (tl > 0) {
+                      re = rs.substring(tl + 1);
+                      rs = rs.substring(0, tl);
+                  }
+                  String s = normHm(rs);
+                  String e = normHm(re);
+                  boolean typed = rs.length() > 0 || re.length() > 0;
                   boolean ok = s.length() > 0 && e.length() > 0 && hmOf(s) < hmOf(e);
                   if (typed && !ok) { say("시간은 09:00 ~ 11:00 처럼 시작이 끝보다 빨라야 합니다"); return; }
                   JSONObject m = curMemo();
@@ -1460,7 +1491,7 @@ jobs:
                   et.setSelection(et.getText().length());
                   binding = false;
                   String d = o == null ? "" : new SimpleDateFormat("M월 d일 HH:mm", Locale.KOREA).format(new Date(o.optLong("c", 0)));
-                  info.setText((idx + 1) + " / " + memos.length() + "  ·  " + d);
+                  info.setText((idx + 1) + " / " + memos.length() + "  ·  " + d + "  ·  자동 저장");
                   if (chip != null) {
                       String a = o == null ? "" : o.optString("a", "");
                       String bs = o == null ? "" : o.optString("bs", "");
