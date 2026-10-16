@@ -1,4 +1,4 @@
-<!-- 성장일지 v4.25 · 2026-10-16 · 1주 보기는 이번 주 목표만 · 1년 보기는 연간 목표만(중복 제거) · 넓게 보는 중에도 시작·스케줄·평가 버튼 작동 · 2026-10-16 · 활동 기록 카드·요약·양식·음성·사진·분류함·활동 전 알림·시간표 💭 · 둥둥 메모: 지금 하는 일 표시·활동별 노트 하나에 모아 적기·다시 분류 · 3분 돌아보기 · 아침 우선순위·저녁 빈칸 알림 · 지난 7일 요약·패턴 · 둥둥 메모 #감사·#할일·#운동 · 앱 백업 알림 · 글꼴: 본문 IBM Plex Sans KR · 제목 고운바탕(둘 다 OFL 무료) · 떠 있는 버튼 1초 메모창(둥둥 메모)·두 번 누르면 앱 · 위젯: 열매·노트(7일 추세·저녁 알림)·지금/다음·목표·몸·생활비·말씀 · 일간·오늘 위젯에 열매·노트 · 계획 기간 버튼 1주→1년 순서 · 3개월·6개월 목표 카드 · 1년은 연간 목표만(이번 주·168시간 카드도 숨김) · 삼성헬스 수면·운동 → 실제 시간표 · 대중소분류 한 줄 · 운동일지=운동 기록 양식 · 실제로 한 일에도 반복 설정 · 연간 목표 위·월간 목표 아래, 접기 · 블록 편집: 반복 카드를 접힌 칸 밖으로 · 쉬는 시간에도 음악 · 쉬는 시간에 짜투리 앱 바로가기 · 위젯: 주간 지난 날 실제/오늘부터 계획 · 3일·일정목록·할 일·습관 위젯 · 사람 카드: 태그 선택 표시·만남 일지 중심 · 밀기 방향(오른쪽→왼쪽=다음) · 성경 장 밀어 넘기기 · 구절 누르면 바로 메뉴 · 시간표 두 손가락 확대 · 성경 구절 길게 누르기(느낀 점·묵상 노트) · 1년 보기 목표 해 따라감 · 월간 목표 접기 · 속도 개선 -->
+<!-- 성장일지 v4.28 · 2026-10-16 · 둥둥 메모에서 한 일·시간 직접 입력 · 2026-10-16 · 위젯 하루: 오늘·내일 계획(반복 포함)·어제는 실행 · 나 탭: 지나온 해를 돌아보기로 통합 · 2026-10-16 · 분류 범례는 대분류만 · 단어 규칙은 분류 아래로 · 성취 직접 적기 접기 · 2026-10-16 · 1주 보기는 이번 주 목표만 · 1년 보기는 연간 목표만(중복 제거) · 넓게 보는 중에도 시작·스케줄·평가 버튼 작동 · 2026-10-16 · 활동 기록 카드·요약·양식·음성·사진·분류함·활동 전 알림·시간표 💭 · 둥둥 메모: 지금 하는 일 표시·활동별 노트 하나에 모아 적기·다시 분류 · 3분 돌아보기 · 아침 우선순위·저녁 빈칸 알림 · 지난 7일 요약·패턴 · 둥둥 메모 #감사·#할일·#운동 · 앱 백업 알림 · 글꼴: 본문 IBM Plex Sans KR · 제목 고운바탕(둘 다 OFL 무료) · 떠 있는 버튼 1초 메모창(둥둥 메모)·두 번 누르면 앱 · 위젯: 열매·노트(7일 추세·저녁 알림)·지금/다음·목표·몸·생활비·말씀 · 일간·오늘 위젯에 열매·노트 · 계획 기간 버튼 1주→1년 순서 · 3개월·6개월 목표 카드 · 1년은 연간 목표만(이번 주·168시간 카드도 숨김) · 삼성헬스 수면·운동 → 실제 시간표 · 대중소분류 한 줄 · 운동일지=운동 기록 양식 · 실제로 한 일에도 반복 설정 · 연간 목표 위·월간 목표 아래, 접기 · 블록 편집: 반복 카드를 접힌 칸 밖으로 · 쉬는 시간에도 음악 · 쉬는 시간에 짜투리 앱 바로가기 · 위젯: 주간 지난 날 실제/오늘부터 계획 · 3일·일정목록·할 일·습관 위젯 · 사람 카드: 태그 선택 표시·만남 일지 중심 · 밀기 방향(오른쪽→왼쪽=다음) · 성경 장 밀어 넘기기 · 구절 누르면 바로 메뉴 · 시간표 두 손가락 확대 · 성경 구절 길게 누르기(느낀 점·묵상 노트) · 1년 보기 목표 해 따라감 · 월간 목표 접기 · 속도 개선 -->
 <!doctype html>
 <html lang="ko" class="simple">
 <head>
@@ -4687,8 +4687,8 @@ function cwAllDay(d){const a=[];const hn=holName(d);if(hn)a.push({t:hn,c:'#e5737
 function cwTimed(d){return(GEV[d]||[]).filter(e=>!e.all).map(e=>({s:e.s,e:e.e,act:e.title,cat:'',gc:1}))}
 function cwTasks(d){return TASKS.items.filter(t=>t.due===d||(d===today()&&!t.done&&t.due&&t.due<d)).sort(tSort)}
 let CWH0=4,CWH1=24;
-function cwTimeline(ctx,x,y,w,h,days,m,S,real){const T=today(),now=new Date(),nm=now.getHours()*60+now.getMinutes();
-  const per=days.map(d=>{const o=m.get(d);if(real&&d<T)return cwBlocks({plan:repVis((o&&o.time)||[]).filter(b=>b.s&&b.e)});return cwBlocks({plan:[...repVis((o&&o.plan)||[]).filter(b=>!b.gext),...cwTimed(d)]})});
+function cwTimeline(ctx,x,y,w,h,days,m,S,real){const T=today(),now=new Date(),nm=now.getHours()*60+now.getMinutes();const rv=days.length===1?(a=>a||[]):repVis;
+  const per=days.map(d=>{const o=m.get(d);if(real&&d<T)return cwBlocks({plan:rv((o&&o.time)||[]).filter(b=>b.s&&b.e)});return cwBlocks({plan:[...rv((o&&o.plan)||[]).filter(b=>!b.gext),...cwTimed(d)]})});
   let a=1e9,z=-1;per.forEach(L=>L.forEach(b=>{a=Math.min(a,b.s);z=Math.max(z,b.e)}));
   let H0=CWH0,H1=CWH1;
   if(H1-H0>=24){if(z>=0){if(a<H0*60)H0=Math.floor(a/60);if(z>(H0+24)*60)H0=Math.min(Math.floor(a/60),Math.ceil(z/60)-24)}H0=Math.max(0,H0);H1=H0+24}
@@ -4713,7 +4713,7 @@ function cwTimeline(ctx,x,y,w,h,days,m,S,real){const T=today(),now=new Date(),nm
 function cwCanvas(w,h){const c=document.createElement('canvas');c.width=w;c.height=h;const ctx=c.getContext('2d');ctx.fillStyle='#1c1c1e';ctx.fillRect(0,0,w,h);return[c,ctx]}
 function cwDay(d,m,W,H,S){const[c,ctx]=cwCanvas(W,H);const lw=Math.round(W*.6);const ad=cwAllDay(d);let top=0;
   if(ad.length){ctx.font=`${11*S}px sans-serif`;ctx.textBaseline='middle';ad.slice(0,2).forEach((a,i)=>{ctx.fillStyle=cwMix(a.c,.3);ctx.fillRect(22*S,i*18*S+2*S,lw-22*S-2*S,16*S);ctx.fillStyle='#111';ctx.fillText(cwFit(ctx,a.t,lw-34*S),30*S,i*18*S+10*S)});top=Math.min(2,ad.length)*18*S+4*S}
-  cwTimeline(ctx,0,top,lw,H-top,[d],m,S);
+  cwTimeline(ctx,0,top,lw,H-top,[d],m,S,SET.cwReal!==false);
   const px=lw+8*S,pw=W-px-6*S;let py=8*S;ctx.textBaseline='top';
   const sec=(t)=>{ctx.fillStyle='#8e8e93';ctx.font=`bold ${11*S}px sans-serif`;ctx.fillText(t,px,py);py+=17*S};
   const row=(t,col)=>{ctx.fillStyle=col||'#e5e5ea';ctx.font=`${12*S}px sans-serif`;cwWrap(ctx,t,pw,2).forEach(l=>{if(py<H-14*S){ctx.fillText(l,px,py);py+=15*S}});py+=3*S};
@@ -6861,10 +6861,11 @@ async function fmPhotos(m){const out=[];const FS=NP('Filesystem');if(!FS||!Array
 async function fmLogPut(m,t){const key=String(m.a||'').trim()||'기타';const cat=m.k||((SET.cats||[]).find(c=>c.name===key)||{}).name||'';
   const e={id:m.id,c:+m.c||Date.now(),t,s:m.bs||'',e:m.be||''};const ph=await fmPhotos(m);if(ph.length)e.ph=ph;
   const n=await fmPutEntry(key,cat,e);
-  /* 계획은 다른 일이었는데 실제로는 이 활동을 한 경우 → 그 시간대 ‘실제’ 시간표에도 기록 */
-  try{if(m.pa&&m.ps&&m.pe&&m.pa!==key&&m.ps<m.pe){const d=ymd(new Date(+m.c||Date.now()));
-    await wcEdit(d,o=>{o.time=Array.isArray(o.time)?o.time:[];if(o.time.some(b=>b.fmx===m.id))return;if(o.time.some(b=>b.s&&b.e&&b.s<m.pe&&b.e>m.ps))return;
-      o.time.push({id:uid(),s:m.ps,e:m.pe,cat:cat,act:key,area:(typeof guessArea==='function'?guessArea(key):''),fmx:m.id,memo:'계획: '+m.pa});o.time.sort((a,z)=>(a.s||'').localeCompare(z.s||''))})}}catch(x){console.warn('fmx',x)}
+  /* 직접 입력한 시간, 또는 계획과 다른 활동 → 그 시간대 ‘실제’ 시간표에도 기록 */
+  try{const man=!!(+m.man&&m.bs&&m.be&&m.bs<m.be);const pl=!!(m.pa&&m.ps&&m.pe&&m.pa!==key&&m.ps<m.pe);if(man||pl){const S=man?m.bs:m.ps,E=man?m.be:m.pe;const d=ymd(new Date(+m.c||Date.now()));
+    await wcEdit(d,o=>{o.time=Array.isArray(o.time)?o.time:[];if(o.time.some(b=>b.fmx===m.id))return;if(o.time.some(b=>b.s&&b.e&&b.s<E&&b.e>S))return;
+      const ct=cat||((typeof guessBlock==='function'?(guessBlock(key)||{}).cat:'')||'');
+      o.time.push({id:uid(),s:S,e:E,cat:ct,act:key,area:(typeof guessArea==='function'?guessArea(key):''),fmx:m.id,memo:m.pa?'계획: '+m.pa:'⌚ 직접 입력'});o.time.sort((a,z)=>(a.s||'').localeCompare(z.s||''))})}}catch(x){console.warn('fmx',x)}
   return n.title}
 /* 양식: 활동별(없으면 기본) */
 const FM_TDEF='잘된 점: \n고칠 점: \n다음에 해볼 것: ';
@@ -7626,7 +7627,7 @@ function openFav(){const S=$('#sheet');S.hidden=false;let edit=false;
 const GROUPS0=JSON.parse(JSON.stringify(GROUPS));
 const MAPG=[['plan','🗓️ 계획'],['pillar','🏛️ 기둥'],['note','📒 기록'],['goal','🧬 나']];
 const BUNDLE={'@td':'🧩 프로젝트·📋 할 일','@rp':'🔁 반복','@rt':'🔁 반복','@rv':'🪞 돌아보기'};const BUNDLES={'@td':'프로젝트·할 일','@rp':'루틴·습관·주기 할 일','@rt':'루틴','@rv':'돌아보기(기록 분석·한 줄 포함)'};
-function navMapDef(){const d={plan:['vision','plan','@td','gap'],pillar:[...GROUPS0.pillar.filter(x=>x!=='export'&&!SUB2.rp.includes(x)&&x!=='stuff'),'@rp'],note:GROUPS0.note.slice(),goal:['mine','pmd','rv2','wins','rfx','years','stuff']};MAPG.forEach(([g])=>d[g]=ordBy(d[g],(SET.subOrd||{})[g]));return d}
+function navMapDef(){const d={plan:['vision','plan','@td','gap'],pillar:[...GROUPS0.pillar.filter(x=>x!=='export'&&!SUB2.rp.includes(x)&&x!=='stuff'),'@rp'],note:GROUPS0.note.slice(),goal:['mine','pmd','rv2','wins','rfx','stuff']};MAPG.forEach(([g])=>d[g]=ordBy(d[g],(SET.subOrd||{})[g]));return d}
 function navMap(){const D0=navMapDef();const M=SET.navMap;if(!M||typeof M!=='object')return D0;const all=new Set(MAPG.flatMap(([g])=>D0[g]));const seen=new Set();const out={};
   MAPG.forEach(([g])=>{out[g]=(Array.isArray(M[g])?M[g]:[]).filter(k=>all.has(k)&&!seen.has(k)&&seen.add(k))});
   MAPG.forEach(([g])=>D0[g].forEach(k=>{if(!seen.has(k)){out[g].push(k);seen.add(k)}}));MAPG.forEach(([g])=>{if(!out[g].length)out[g]=D0[g].filter(k=>!MAPG.some(([h])=>h!==g&&out[h].includes(k))).slice(0,1)});return out}
@@ -8787,12 +8788,13 @@ function achvAdd(o){const a=Object.assign({id:uid(),d:today(),t:'',n:0,u:'',link
 {const _rw=renderWins;renderWins=function(){_rw();const W=$('#winbody');if(!W)return;const hero=W.querySelector('.wnhero');if(!hero)return;const[A,B]=wnRange();const L=achv().filter(a=>wnIn(a.d,A,B)).sort((a,b)=>(b.d||'').localeCompare(a.d||''));
   const k=hero.querySelector('.wnk');if(k&&L.length)k.insertAdjacentHTML('afterbegin',`<div><i>✍️</i><b>${L.length}</b><small>적은 성취</small></div>`);
   const sel=WN.af&&WN.af.link||'';
-  const form=`<div class="card nocol" style="--k:#e0a106;margin-top:12px"><h3>✍️ 성취 직접 적기</h3><p class="hint" style="margin:0 0 6px">체크 항목에 없는 성취를 바로 적습니다. 예) 논문 2편 작성. 버킷리스트·프로젝트·목표와 연결하면 그쪽에도 쌓입니다.</p>
+  const form=`<details class="card nocol" id="avform" style="--k:#e0a106;margin-top:12px" ${(yrgOpen().ach)?'open':''}><summary style="cursor:pointer;list-style:none;font-weight:700;font-size:1.02rem;display:flex;align-items:center;gap:6px">✍️ 성취 직접 적기 <small class="hint" style="margin-left:auto;font-weight:400">펼치기 ▾</small></summary><p class="hint" style="margin:8px 0 6px"> style="margin:0 0 6px">체크 항목에 없는 성취를 바로 적습니다. 예) 논문 2편 작성. 버킷리스트·프로젝트·목표와 연결하면 그쪽에도 쌓입니다.</p>
     <div class="g2"><label class="f">이룬 일<input type="text" id="avt" placeholder="논문 작성" maxlength="80"></label><label class="f">날짜<input type="date" id="avd" value="${today()}"></label></div>
     <div class="g2"><label class="f">수량<input type="number" id="avn" min="0" step="any" placeholder="2" inputmode="decimal"></label><label class="f">단위<input type="text" id="avu" placeholder="편" maxlength="6"></label></div>
-    <label class="f">🔗 연결<select id="avl">${achvOpts(sel)}</select></label><div class="row" style="margin-top:8px"><button class="btn small" id="avadd">＋ 성취 기록</button></div></div>`;
+    <label class="f">🔗 연결<select id="avl">${achvOpts(sel)}</select></label><div class="row" style="margin-top:8px"><button class="btn small" id="avadd">＋ 성취 기록</button></div></details>`;
   const list=L.length?`<div class="card nocol" style="--k:#e0a106"><h3>✍️ 내가 적은 성취 <small class="hint">${L.length}</small></h3><ul class="list wnl">${L.map(a=>`<li><small>${wnDot(a.d)}</small>${esc(a.t)}<b>${achvAmt(a)}</b>${achvLink(a.link)?` <span class="hint">· ${achvLink(a.link)}</span>`:''} <button class="del" data-avdel="${a.id}" aria-label="삭제" style="float:right;padding:0 6px">✕</button></li>`).join('')}</ul></div>`:'';
   hero.insertAdjacentHTML('afterend',form+list);
+  {const fd=$('#avform');if(fd)fd.addEventListener('toggle',()=>{yrgOpen().ach=fd.open;saveSet().catch(()=>{})})}
   const go=()=>{const t=$('#avt').value;if(!tx(t)){toast('이룬 일을 적으십시오.');$('#avt').focus();return}achvAdd({t,d:$('#avd').value||today(),n:+$('#avn').value||0,u:$('#avu').value.trim(),link:$('#avl').value});toast('✍️ 성취를 기록했습니다.');renderWins()};
   $('#avadd').onclick=go;$('#avt').onkeydown=e=>{if(e.key==='Enter'&&!e.isComposing)go()};
   W.querySelectorAll('[data-avdel]').forEach(b=>b.onclick=async()=>{if(!await uiConfirm('이 성취 기록을 지웁니다.'))return;SET.achv=achv().filter(a=>a.id!==b.dataset.avdel);saveSet().catch(()=>{});renderWins()})}}
@@ -9712,6 +9714,14 @@ document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest
 {const _cl=catLegend;catLegend=function(){const h=_cl.apply(this,arguments);return h.replace('<button class="del" data-catmgr="1">🗂 분류 관리</button>','<button class="del" data-catmgr="1">🗂 분류 관리</button><button class="del" data-trman="1">🏷️ 단어 규칙</button>')}}
 /* 분류·규칙 줄 접기 */
 {const _c2=catLegend;catLegend=function(){const h=_c2.apply(this,arguments);if(isFold('clgrow',false))return'<div class="clg"><button class="del" data-fold="clgrow">🎨 분류·단어 규칙 ▾</button></div>';return h.replace(/<\/div>$/,'<button class="del" data-fold="clgrow">접기 ▴</button></div>')}}
+/* v4.26: 분류 범례는 대분류(기둥·대분류)만 — 안에 든 분류는 ‘분류 관리’에서 */
+function clgGroups(){const G=new Map();let etc=null;
+  SET.cats.forEach(c=>{const k=dkOf(c);if(!k){if(!etc)etc={n:'기타',color:'#9aa0a6',cnt:0};etc.cnt++;return}
+    let g=G.get(k);if(!g){let n='',e='';if(k.startsWith('m:')){const m=majOf(k);n=m?m.n:'';e=m&&m.e?m.e+' ':''}else{n=areaName(k)||'';e=AREA_E[k]?AREA_E[k]+' ':''}
+      g={n:e+n,color:c.color,cnt:0};G.set(k,g)}g.cnt++});
+  const L=[...G.values()].filter(g=>g.n.trim());if(etc)L.push(etc);return L}
+{const _cl3=catLegend;catLegend=function(){const h=_cl3.apply(this,arguments);try{const L=clgGroups();if(!L.length)return h;
+  return h.replace(/(<span><i style="background:[^"]*"><\/i>[^<]*<\/span>)+/,L.map(g=>`<span><i style="background:${g.color}"></i>${esc(g.n)}</span>`).join(''))}catch(e){return h}}}
 /* 블록 편집창: 규칙이 적용되면 한 줄로 알려 준다 */
 {const _bc=blkClassHTML;blkClassHTML=function(kind,b){let h=_bc.apply(this,arguments);try{const r=trFor(b&&b.act);h+=`<p class="hint" style="margin:4px 0 0">${r?`🏷️ ‘${esc(r.w)}’ 규칙 적용됨 · `:''}${b&&tx(b.who)?`👤 ${esc(b.who)} · 관계에도 셉니다 · `:''}<button type="button" class="xlink" data-trman="1" style="margin:0">🏷️ 단어 규칙</button></p>`}catch(e){}return h}}
 /* ===== 관계 그룹: 가족 · 업무관계 · 신앙 모임 … ===== */
@@ -10575,6 +10585,16 @@ function qhSwap(){try{if(curSection!=='plan'||PLM==='goal')return;const R=$('#pb
   if(k==='y'){if(m)m.remove();R.querySelectorAll('.pcc.pcw').forEach(e=>e.remove());if(w168){w168.classList.remove('pcjoin');w168.style.display='none';w168.dataset.qhh='1'}return}
   if(k==='q'||k==='h'){const h=qhCardHTML(k);if(m){m.insertAdjacentHTML('beforebegin',h);m.remove()}else{const w=R.querySelector('.pcc.pcw'),top=R.querySelector('.ptop');if(w)w.insertAdjacentHTML('beforebegin',h);else if(top)top.insertAdjacentHTML('afterend',h)}}}catch(e){console.warn('qh',e)}}
 {const _yp=yrgPaint;yrgPaint=function(){const r=_yp.apply(this,arguments);qhSwap();return r}}
+/* v4.27: 나 탭 — 지나온 해를 돌아보기 맨 아래로 합침 */
+let RVYB=null;
+function rvYears(){const R=$('#rv2body');if(!R)return;if(!RVYB)RVYB=$('#yrbody');if(!RVYB)return;R.querySelectorAll('details.rvyr').forEach(x=>x.remove());
+  const d=document.createElement('details');d.className='card nocol rvyr';d.style.cssText='--k:#8d6e63;margin-top:12px';d.open=!!yrgOpen().rvyr;
+  d.innerHTML='<summary style="cursor:pointer;list-style:none;font-weight:700;display:flex;align-items:center;gap:6px">📜 지나온 해 <small class="hint" style="margin-left:auto;font-weight:400">연도별 ▾</small></summary>';
+  d.appendChild(RVYB);R.appendChild(d);
+  d.addEventListener('toggle',()=>{yrgOpen().rvyr=d.open;saveSet().catch(()=>{});if(d.open)renderYears()});if(d.open)renderYears()}
+{const _r2=renderRv2;renderRv2=async function(){const r=await _r2.apply(this,arguments);try{rvYears()}catch(e){console.warn('rvYears',e)}return r}}
+{const _os6=openSection;openSection=function(v){if(v==='years'){yrgOpen().rvyr=true;v='rv2'}return _os6.call(this,v)}}
+{const _an=applyNavMap;applyNavMap=function(){const r=_an.apply(this,arguments);try{if(SET.navMap&&!SET.yrMv){const M=SET.navMap;if(Array.isArray(M.goal))M.goal=M.goal.filter(k=>k!=='years');SET.yrMv=1;saveSet().catch(()=>{})}}catch(e){}return r}}
 /* v4.25: 1년 보기 = 연간 목표 카드 하나만 (월 카드·중복 카드·프로젝트·버킷리스트 제외) */
 function yrTidy(){try{let k=null,R=null;
   if(curSection==='day'&&ZMD>0&&ZMS[ZMD]){k=ZMS[ZMD][0];R=$('#dayBody')}
@@ -11626,7 +11646,7 @@ setTimeout(diarySeed,2600);
 (function(){const st=document.createElement('style');st.textContent=`.tegrp{margin:10px 0;border:1px solid var(--line);border-radius:12px;background:var(--paper)}.tegrp>summary{list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;font-weight:600}.tegrp>summary::-webkit-details-marker{display:none}.tegrp>summary::after{content:'▾';color:var(--muted);margin-left:auto;padding-left:8px}.tegrp[open]>summary::after{content:'▴'}.tegrp>summary small{color:var(--muted);font-weight:400;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:55%}.tegrp>.tegb{padding:0 10px 10px}.tegrp .tecard{border:0;background:none;padding:8px 4px;margin:0;border-top:1px dashed var(--line);border-radius:0}.tegrp .tegb>.tecard:first-child{border-top:0}.tnote .jbtns[hidden]{display:none!important}`;document.head.appendChild(st)})();
 function beGroup(){const O=$('#blockedit'),T=O&&O.querySelector('.tebody');if(!T||T.querySelector('.tegrp'))return;const b=bES&&bES.b;const foc=T.querySelector('#bfoc');if(!b||!foc)return;
   const A=[],B=[],C=[];
-  [...T.children].forEach(el=>{if(el===foc||el.id==='bdel'||el.classList.contains('terow')||el.classList.contains('durrow')||el.classList.contains('tegrp')||el.querySelector('#bcat,#bmemo,.tnote,#repcard'))return;
+  [...T.children].forEach(el=>{if(el===foc||el.id==='bdel'||el.classList.contains('terow')||el.classList.contains('durrow')||el.classList.contains('tegrp')||el.querySelector('#bcat,#bmemo,.tnote,#repcard,[data-trman]'))return;
     if(el.querySelector('[data-bpha],#bloc,#bwho,#bamt'))A.push(el);else if(el.querySelector('#bgoal,#bev,[data-bf],[data-brtd]'))B.push(el);else C.push(el)});
   const mk=(key,title,els,sum)=>{if(!els.length)return;const d=document.createElement('details');d.className='tegrp';d.dataset.k=key;d.open=!!(SET.beOpen||{})[key];d.innerHTML=`<summary><span>${title}</span><small>${esc(sum)}</small></summary><div class="tegb"></div>`;const g=d.querySelector('.tegb');els.forEach(e=>g.appendChild(e));foc.before(d);
     d.addEventListener('toggle',()=>{if(d.open===!!(SET.beOpen||{})[key])return;SET.beOpen=SET.beOpen||{};SET.beOpen[key]=d.open;saveSet().catch(()=>{})})};

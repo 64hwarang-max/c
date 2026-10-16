@@ -1173,6 +1173,95 @@ jobs:
                   } catch (Exception e) { /* 무시 */ }
               }
 
+              private String normHm(String s) {
+                  try {
+                      String t = s.trim().replace(".", ":").replace("시", ":").replace("분", "");
+                      int h;
+                      int m;
+                      if (t.indexOf(':') >= 0) {
+                          String[] p = t.split(":");
+                          h = Integer.parseInt(p[0].trim());
+                          m = p.length > 1 && p[1].trim().length() > 0 ? Integer.parseInt(p[1].trim()) : 0;
+                      } else if (t.length() <= 2) {
+                          h = Integer.parseInt(t);
+                          m = 0;
+                      } else {
+                          h = Integer.parseInt(t.substring(0, t.length() - 2));
+                          m = Integer.parseInt(t.substring(t.length() - 2));
+                      }
+                      if (h < 0 || h > 24 || m < 0 || m > 59) return "";
+                      return String.format(Locale.KOREA, "%02d:%02d", h, m);
+                  } catch (Exception e) {
+                      return "";
+                  }
+              }
+
+              private EditText timeBox(String hint, String val) {
+                  EditText x = new EditText(this);
+                  x.setInputType(InputType.TYPE_CLASS_DATETIME | InputType.TYPE_DATETIME_VARIATION_TIME);
+                  x.setSingleLine(true);
+                  x.setHint(hint);
+                  x.setText(val);
+                  x.setTextSize(15);
+                  x.setGravity(Gravity.CENTER);
+                  return x;
+              }
+
+              private void showManual() {
+                  if (pick == null || pickSv == null) return;
+                  final JSONObject pb = curBlock();
+                  pick.removeAllViews();
+                  final EditText ea = new EditText(this);
+                  ea.setInputType(InputType.TYPE_CLASS_TEXT);
+                  ea.setSingleLine(true);
+                  ea.setHint("한 일 (예: 골프)");
+                  ea.setTextSize(15);
+                  ea.setPadding(dp(12), dp(8), dp(12), dp(8));
+                  pick.addView(ea, new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
+                  LinearLayout tr = new LinearLayout(this);
+                  tr.setOrientation(LinearLayout.HORIZONTAL);
+                  tr.setGravity(Gravity.CENTER_VERTICAL);
+                  tr.setPadding(dp(8), 0, dp(8), 0);
+                  final EditText es = timeBox("시작 09:00", pb == null ? "" : pb.optString("s", ""));
+                  final EditText ee = timeBox("끝 11:00", pb == null ? "" : pb.optString("e", ""));
+                  TextView dash = new TextView(this);
+                  dash.setText(" ~ ");
+                  dash.setTextSize(16);
+                  tr.addView(es, new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
+                  tr.addView(dash);
+                  tr.addView(ee, new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
+                  pick.addView(tr, new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
+                  pick.addView(mbtn("✔ 이렇게 기록", new View.OnClickListener() {
+                      @Override
+                      public void onClick(View v) { applyManual(ea, es, ee, pb); }
+                  }));
+                  pickSv.getLayoutParams().height = LinearLayout.LayoutParams.WRAP_CONTENT;
+                  pickSv.setVisibility(View.VISIBLE);
+              }
+
+              private void applyManual(EditText ea, EditText es, EditText ee, JSONObject pb) {
+                  String a = ea.getText().toString().trim();
+                  if (a.length() == 0) { say("한 일을 적어 주세요"); return; }
+                  String s = normHm(es.getText().toString());
+                  String e = normHm(ee.getText().toString());
+                  boolean typed = es.getText().toString().trim().length() > 0 || ee.getText().toString().trim().length() > 0;
+                  boolean ok = s.length() > 0 && e.length() > 0 && hmOf(s) < hmOf(e);
+                  if (typed && !ok) { say("시간은 09:00 ~ 11:00 처럼 시작이 끝보다 빨라야 합니다"); return; }
+                  JSONObject m = curMemo();
+                  if (m == null) return;
+                  try {
+                      JSONObject x = new JSONObject();
+                      x.put("t", a);
+                      if (ok) { x.put("s", s); x.put("e", e); }
+                      setBlock(m, x);
+                      markPlan(m, x, pb);
+                      if (ok) m.put("man", 1); else m.remove("man");
+                      saveMemos();
+                  } catch (Exception ex) { /* 무시 */ }
+                  if (pickSv != null) pickSv.setVisibility(View.GONE);
+                  bindMemo();
+              }
+
               private TextView pickRow(String label, final JSONObject x) {
                   TextView t = mbtn(label, new View.OnClickListener() {
                       @Override
@@ -1206,6 +1295,14 @@ jobs:
                   JSONArray acts = nd.optJSONArray("acts");
                   java.util.ArrayList<String> seen = new java.util.ArrayList<String>();
                   int cnt = 0;
+                  TextView mb = mbtn("✍️ 직접 입력 (한 일 · 시간)", new View.OnClickListener() {
+                      @Override
+                      public void onClick(View v) { showManual(); }
+                  });
+                  mb.setGravity(Gravity.START | Gravity.CENTER_VERTICAL);
+                  mb.setTextColor(0xFF1B5E20);
+                  pick.addView(mb);
+                  cnt++;
                   if (b != null) {
                       for (int i = 0; i < b.length(); i++) {
                           JSONObject x = b.optJSONObject(i);
