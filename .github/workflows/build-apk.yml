@@ -969,6 +969,12 @@ jobs:
               }
 
               @PluginMethod
+              public void setNow(PluginCall call) {
+                  getContext().getSharedPreferences("float_now", Context.MODE_PRIVATE).edit().putString("d", call.getString("data", "{}")).apply();
+                  call.resolve();
+              }
+
+              @PluginMethod
               public void memoList(PluginCall call) {
                   JSObject r = new JSObject();
                   r.put("list", getContext().getSharedPreferences("float_memo", Context.MODE_PRIVATE).getString("list", "[]"));
@@ -1098,6 +1104,242 @@ jobs:
                   } catch (Exception e) { /* 무시 */ }
               }
 
+              private TextView chip;
+              private LinearLayout pick;
+              private android.widget.ScrollView pickSv;
+
+              private JSONObject nowData() {
+                  try {
+                      JSONObject o = new JSONObject(getSharedPreferences("float_now", MODE_PRIVATE).getString("d", "{}"));
+                      String t = new SimpleDateFormat("yyyy-MM-dd", Locale.KOREA).format(new Date());
+                      if (!t.equals(o.optString("date", ""))) o.put("blocks", new JSONArray());
+                      return o;
+                  } catch (Exception e) {
+                      return new JSONObject();
+                  }
+              }
+
+              private static int hmOf(String s) {
+                  try {
+                      String[] p = s.split(":");
+                      return Integer.parseInt(p[0].trim()) * 60 + Integer.parseInt(p[1].trim());
+                  } catch (Exception e) {
+                      return -1;
+                  }
+              }
+
+              private JSONObject curBlock() {
+                  JSONArray b = nowData().optJSONArray("blocks");
+                  if (b == null) return null;
+                  java.util.Calendar c = java.util.Calendar.getInstance();
+                  int n = c.get(java.util.Calendar.HOUR_OF_DAY) * 60 + c.get(java.util.Calendar.MINUTE);
+                  JSONObject best = null;
+                  int bestS = -1;
+                  for (int i = 0; i < b.length(); i++) {
+                      JSONObject x = b.optJSONObject(i);
+                      if (x == null) continue;
+                      int s = hmOf(x.optString("s", "")), e = hmOf(x.optString("e", ""));
+                      if (s < 0 || e < 0) continue;
+                      if (e <= s) e += 1440;
+                      if (s <= n && n < e && s >= bestS) {
+                          best = x;
+                          bestS = s;
+                      }
+                  }
+                  return best;
+              }
+
+              private void setBlock(JSONObject m, JSONObject b) {
+                  try {
+                      m.put("a", b == null ? "" : b.optString("t", ""));
+                      m.put("k", b == null ? "" : b.optString("c", ""));
+                      m.put("bs", b == null ? "" : b.optString("s", ""));
+                      m.put("be", b == null ? "" : b.optString("e", ""));
+                      m.put("ts", System.currentTimeMillis());
+                  } catch (Exception e) { /* 무시 */ }
+              }
+
+              private TextView pickRow(String label, final JSONObject x) {
+                  TextView t = mbtn(label, new View.OnClickListener() {
+                      @Override
+                      public void onClick(View v) {
+                          JSONObject m = curMemo();
+                          if (m != null) {
+                              setBlock(m, x);
+                              saveMemos();
+                          }
+                          if (pickSv != null) pickSv.setVisibility(View.GONE);
+                          bindMemo();
+                      }
+                  });
+                  t.setGravity(Gravity.START | Gravity.CENTER_VERTICAL);
+                  t.setTypeface(null, Typeface.NORMAL);
+                  t.setTextColor(0xFF333333);
+                  return t;
+              }
+
+              private void togglePick() {
+                  if (pick == null || pickSv == null) return;
+                  if (pickSv.getVisibility() == View.VISIBLE) {
+                      pickSv.setVisibility(View.GONE);
+                      return;
+                  }
+                  pick.removeAllViews();
+                  JSONObject nd = nowData();
+                  JSONArray b = nd.optJSONArray("blocks");
+                  JSONArray acts = nd.optJSONArray("acts");
+                  java.util.ArrayList<String> seen = new java.util.ArrayList<String>();
+                  int cnt = 0;
+                  if (b != null) {
+                      for (int i = 0; i < b.length(); i++) {
+                          JSONObject x = b.optJSONObject(i);
+                          if (x == null) continue;
+                          seen.add(x.optString("t", ""));
+                          pick.addView(pickRow(x.optString("s", "") + "~" + x.optString("e", "") + "   " + x.optString("t", ""), x));
+                          cnt++;
+                      }
+                  }
+                  if (acts != null) {
+                      for (int i = 0; i < acts.length(); i++) {
+                          String a = acts.optString(i, "");
+                          if (a.length() == 0 || seen.contains(a)) continue;
+                          seen.add(a);
+                          JSONObject x = new JSONObject();
+                          try { x.put("t", a); } catch (Exception e) { /* 무시 */ }
+                          pick.addView(pickRow("· " + a, x));
+                          cnt++;
+                      }
+                  }
+                  pick.addView(pickRow("분류 없음 (기타 메모)", null));
+                  cnt++;
+                  pickSv.getLayoutParams().height = cnt > 6 ? dp(260) : LinearLayout.LayoutParams.WRAP_CONTENT;
+                  pickSv.setVisibility(View.VISIBLE);
+              }
+
+              private android.speech.SpeechRecognizer sr;
+
+              private void say(String t) {
+                  try { android.widget.Toast.makeText(this, t, android.widget.Toast.LENGTH_SHORT).show(); } catch (Exception e) { /* 무시 */ }
+              }
+
+              private String tplFor(String a) {
+                  JSONObject nd = nowData();
+                  JSONObject tp = nd.optJSONObject("tpl");
+                  String d = nd.optString("tdef", "");
+                  if (tp != null && a != null && a.length() > 0) return tp.optString(a, d);
+                  return d;
+              }
+
+              private void insertTpl() {
+                  if (et == null) return;
+                  JSONObject m = curMemo();
+                  String tp = tplFor(m == null ? "" : m.optString("a", ""));
+                  if (tp.length() == 0) { say("앱의 활동 노트에서 양식을 정할 수 있습니다"); return; }
+                  String cur = et.getText().toString();
+                  if (cur.trim().length() == 0) {
+                      et.setText(tp);
+                      int nl = tp.indexOf(10);
+                      et.setSelection(nl > 0 ? nl : tp.length());
+                  } else {
+                      et.append((cur.endsWith(String.valueOf((char) 10)) ? "" : String.valueOf((char) 10)) + tp);
+                      et.setSelection(et.getText().length());
+                  }
+              }
+
+              private void endVoice(TextView b) {
+                  try { if (sr != null) sr.destroy(); } catch (Exception e) { /* 무시 */ }
+                  sr = null;
+                  if (b != null) b.setText("🎙 말하기");
+              }
+
+              private void startVoice(final TextView b) {
+                  if (sr != null) { endVoice(b); return; }
+                  if (Build.VERSION.SDK_INT >= 23 && checkSelfPermission(android.Manifest.permission.RECORD_AUDIO) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                      say("앱에서 마이크 권한을 먼저 허용해 주십시오 (노트 녹음·받아쓰기)");
+                      return;
+                  }
+                  if (!android.speech.SpeechRecognizer.isRecognitionAvailable(this)) { say("이 폰에서 음성 인식을 쓸 수 없습니다"); return; }
+                  try {
+                      sr = android.speech.SpeechRecognizer.createSpeechRecognizer(this);
+                      sr.setRecognitionListener(new android.speech.RecognitionListener() {
+                          @Override
+                          public void onReadyForSpeech(android.os.Bundle p) { b.setText("● 듣는 중 (누르면 멈춤)"); }
+
+                          @Override
+                          public void onBeginningOfSpeech() { }
+
+                          @Override
+                          public void onRmsChanged(float v) { }
+
+                          @Override
+                          public void onBufferReceived(byte[] x) { }
+
+                          @Override
+                          public void onEndOfSpeech() { }
+
+                          @Override
+                          public void onError(int e) {
+                              say("잘 듣지 못했습니다. 다시 눌러 말씀해 주십시오");
+                              endVoice(b);
+                          }
+
+                          @Override
+                          public void onResults(android.os.Bundle r) {
+                              java.util.ArrayList<String> L = r.getStringArrayList(android.speech.SpeechRecognizer.RESULTS_RECOGNITION);
+                              if (L != null && !L.isEmpty() && et != null) {
+                                  String cur = et.getText().toString();
+                                  boolean sp = cur.length() > 0 && !cur.endsWith(" ") && !cur.endsWith(String.valueOf((char) 10)) && !cur.endsWith(": ");
+                                  et.append((sp ? " " : "") + L.get(0));
+                                  et.setSelection(et.getText().length());
+                              }
+                              endVoice(b);
+                          }
+
+                          @Override
+                          public void onPartialResults(android.os.Bundle r) { }
+
+                          @Override
+                          public void onEvent(int t, android.os.Bundle x) { }
+                      });
+                      Intent i = new Intent(android.speech.RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+                      i.putExtra(android.speech.RecognizerIntent.EXTRA_LANGUAGE_MODEL, android.speech.RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+                      i.putExtra(android.speech.RecognizerIntent.EXTRA_LANGUAGE, "ko-KR");
+                      sr.startListening(i);
+                  } catch (Exception e) {
+                      say("음성 인식을 시작하지 못했습니다");
+                      endVoice(b);
+                  }
+              }
+
+              private void takePhoto() {
+                  JSONObject m = curMemo();
+                  if (m == null) return;
+                  if (Build.VERSION.SDK_INT >= 23 && checkSelfPermission(android.Manifest.permission.CAMERA) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                      say("앱에서 카메라 권한을 먼저 허용해 주십시오 (설정 › 애플리케이션 › 권한)");
+                      return;
+                  }
+                  try {
+                      java.io.File dir = new java.io.File(getFilesDir(), "widget");
+                      if (!dir.exists()) dir.mkdirs();
+                      String nm = "memo_" + m.optString("id", "x") + "_" + System.currentTimeMillis() + ".jpg";
+                      java.io.File f = new java.io.File(dir, nm);
+                      Uri u = androidx.core.content.FileProvider.getUriForFile(this, getPackageName() + ".calwidget", f);
+                      Intent i = new Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
+                      i.putExtra(android.provider.MediaStore.EXTRA_OUTPUT, u);
+                      i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_GRANT_WRITE_URI_PERMISSION | Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                      JSONArray ph = m.optJSONArray("ph");
+                      if (ph == null) { ph = new JSONArray(); m.put("ph", ph); }
+                      ph.put(nm);
+                      if (isBlank(m)) m.put("t", "📷 사진");
+                      m.put("ts", System.currentTimeMillis());
+                      saveMemos();
+                      closePanel();
+                      startActivity(i);
+                  } catch (Exception e) {
+                      say("카메라를 열지 못했습니다");
+                  }
+              }
+
               private void bindMemo() {
                   JSONObject o = curMemo();
                   binding = true;
@@ -1106,6 +1348,13 @@ jobs:
                   binding = false;
                   String d = o == null ? "" : new SimpleDateFormat("M월 d일 HH:mm", Locale.KOREA).format(new Date(o.optLong("c", 0)));
                   info.setText((idx + 1) + " / " + memos.length() + "  ·  " + d);
+                  if (chip != null) {
+                      String a = o == null ? "" : o.optString("a", "");
+                      String bs = o == null ? "" : o.optString("bs", "");
+                      chip.setText(a.length() == 0 ? "📂 분류 없음 · 눌러서 고르기 ▾" : "▶ " + (bs.length() > 0 ? bs + "~" + o.optString("be", "") + "  " : "") + a + "   ▾");
+                      et.setHint(a.length() == 0 ? "떠오른 생각을 바로 적으세요" : a + " — 지금 느낀 점·피드백을 적으세요");
+                  }
+                  if (pickSv != null) pickSv.setVisibility(View.GONE);
               }
 
               private void goMemo(int d) {
@@ -1137,6 +1386,7 @@ jobs:
                   loadMemos();
                   if (memos.length() == 0 || !isBlank(memos.optJSONObject(memos.length() - 1))) addBlank();
                   idx = memos.length() - 1;
+                  { JSONObject last = memos.optJSONObject(idx); if (last != null && isBlank(last)) setBlock(last, curBlock()); }
                   panel = new LinearLayout(this) {
                       @Override
                       public boolean dispatchKeyEvent(KeyEvent e) {
@@ -1201,6 +1451,25 @@ jobs:
                       }
                   });
                   panel.addView(head);
+                  chip = mbtn("", new View.OnClickListener() {
+                      @Override
+                      public void onClick(View v) { togglePick(); }
+                  });
+                  chip.setGravity(Gravity.START | Gravity.CENTER_VERTICAL);
+                  chip.setTextColor(0xFF1B5E20);
+                  GradientDrawable cb = new GradientDrawable();
+                  cb.setColor(0xFFE8F5E9);
+                  cb.setCornerRadius(dp(10));
+                  chip.setBackground(cb);
+                  LinearLayout.LayoutParams clp = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+                  clp.setMargins(dp(10), 0, dp(10), dp(4));
+                  panel.addView(chip, clp);
+                  pick = new LinearLayout(this);
+                  pick.setOrientation(LinearLayout.VERTICAL);
+                  pickSv = new android.widget.ScrollView(this);
+                  pickSv.addView(pick);
+                  pickSv.setVisibility(View.GONE);
+                  panel.addView(pickSv, new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
 
                   et = new EditText(this);
                   et.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_MULTI_LINE | InputType.TYPE_TEXT_FLAG_CAP_SENTENCES);
@@ -1239,6 +1508,25 @@ jobs:
                       }
                   });
                   panel.addView(et, new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
+
+                  LinearLayout tools = new LinearLayout(this);
+                  tools.setOrientation(LinearLayout.HORIZONTAL);
+                  tools.setGravity(Gravity.CENTER);
+                  tools.addView(mbtn("📋 양식", new View.OnClickListener() {
+                      @Override
+                      public void onClick(View v) { insertTpl(); }
+                  }));
+                  final TextView vb = mbtn("🎙 말하기", null);
+                  vb.setOnClickListener(new View.OnClickListener() {
+                      @Override
+                      public void onClick(View v) { startVoice(vb); }
+                  });
+                  tools.addView(vb);
+                  tools.addView(mbtn("📷 사진", new View.OnClickListener() {
+                      @Override
+                      public void onClick(View v) { takePhoto(); }
+                  }));
+                  panel.addView(tools);
 
                   LinearLayout foot = new LinearLayout(this);
                   foot.setOrientation(LinearLayout.HORIZONTAL);
@@ -1314,8 +1602,12 @@ jobs:
                   while (memos.length() > 200) memos.remove(0);
                   saveMemos();
                   try { wm.removeView(panel); } catch (Exception e) { /* 무시 */ }
+                  endVoice(null);
                   panel = null;
                   et = null;
+                  chip = null;
+                  pick = null;
+                  pickSv = null;
                   if (bubble != null) bubble.setVisibility(View.VISIBLE);
                   if (temp) {
                       temp = false;
@@ -1481,6 +1773,7 @@ jobs:
                       <property android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE" android:value="Floating shortcut button that opens the app's today screen" />
                   </service>
               </application>`);
+            if(!x.includes('android.speech.RecognitionService'))x=x.replace('</manifest>','    <queries><intent><action android:name="android.speech.RecognitionService" /></intent><intent><action android:name="android.media.action.IMAGE_CAPTURE" /></intent></queries>\n</manifest>');
             for(const n of ['SYSTEM_ALERT_WINDOW','FOREGROUND_SERVICE','FOREGROUND_SERVICE_SPECIAL_USE']){const f='android.permission.'+n;if(!x.includes('"'+f+'"'))x=x.replace('</manifest>',`    <uses-permission android:name="${f}" />\n</manifest>`)}
             fs.writeFileSync(mp,x)}
           console.log('떠 있는 버튼 추가 완료:',pkg);
