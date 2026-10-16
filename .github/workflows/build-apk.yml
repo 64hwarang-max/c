@@ -2309,6 +2309,64 @@ jobs:
                   }
                   return r;
               }
+
+              private static void putSess(org.json.JSONArray out, String p, Long s, long e) {
+                  try {
+                      if (s == null || e <= s.longValue()) return;
+                      JSONObject o = new JSONObject();
+                      o.put("p", p);
+                      o.put("s", s.longValue());
+                      o.put("e", e);
+                      out.put(o);
+                  } catch (Exception ex) { /* 무시 */ }
+              }
+
+              // from부터 지금까지 앱별로 화면 앞에 있던 구간 목록 (패키지 p, 시작 s, 끝 e)
+              public static org.json.JSONArray sessions(Context c, Set<String> want, long from) {
+                  org.json.JSONArray out = new org.json.JSONArray();
+                  try {
+                      UsageStatsManager u = (UsageStatsManager) c.getSystemService(Context.USAGE_STATS_SERVICE);
+                      if (u == null || want == null || want.isEmpty()) return out;
+                      long now = System.currentTimeMillis();
+                      UsageEvents ev = u.queryEvents(from, now);
+                      UsageEvents.Event e = new UsageEvents.Event();
+                      Map<String, Integer> depth = new HashMap<String, Integer>();
+                      Map<String, Long> since = new HashMap<String, Long>();
+                      while (ev != null && ev.hasNextEvent()) {
+                          ev.getNextEvent(e);
+                          int t = e.getEventType();
+                          long ts = e.getTimeStamp();
+                          if (t == 16 || t == 26) {
+                              for (Map.Entry<String, Integer> en : depth.entrySet()) {
+                                  if (en.getValue().intValue() > 0) putSess(out, en.getKey(), since.get(en.getKey()), ts);
+                              }
+                              depth.clear();
+                              since.clear();
+                              continue;
+                          }
+                          String p = e.getPackageName();
+                          if (p == null || !want.contains(p)) continue;
+                          Integer d0 = depth.get(p);
+                          int d = d0 == null ? 0 : d0.intValue();
+                          if (t == 1) {
+                              if (d == 0) since.put(p, Long.valueOf(ts));
+                              depth.put(p, Integer.valueOf(d + 1));
+                          } else if (t == 2) {
+                              if (d > 0) {
+                                  d--;
+                                  depth.put(p, Integer.valueOf(d));
+                                  if (d == 0) putSess(out, p, since.get(p), ts);
+                              }
+                          }
+                      }
+                      for (Map.Entry<String, Integer> en : depth.entrySet()) {
+                          if (en.getValue().intValue() > 0) putSess(out, en.getKey(), since.get(en.getKey()), now);
+                      }
+                  } catch (Exception ex) {
+                      // 사용 기록을 읽지 못함
+                  }
+                  return out;
+              }
           }
           `);
           W('BlockBridge.java',`package __PKG__;
@@ -2515,6 +2573,26 @@ jobs:
                   r.put("ms", ms);
                   r.put("fg", fg);
                   r.put("now", System.currentTimeMillis());
+                  call.resolve(r);
+              }
+
+              @PluginMethod
+              public void sessions(PluginCall call) {
+                  Context c = getContext();
+                  Set<String> want = new HashSet<String>();
+                  JSArray arr = call.getArray("pkgs");
+                  if (arr != null) {
+                      for (int i = 0; i < arr.length(); i++) {
+                          String s = arr.optString(i, "");
+                          if (s.length() > 0) want.add(s);
+                      }
+                  }
+                  long from = UsageCalc.dayStart();
+                  try { from = call.getData().getLong("from"); } catch (Exception e) { /* 오늘 0시부터 */ }
+                  boolean ok = UsageCalc.access(c);
+                  JSObject r = new JSObject();
+                  r.put("usage", ok);
+                  r.put("list", ok ? UsageCalc.sessions(c, want, from) : new JSArray());
                   call.resolve(r);
               }
 
