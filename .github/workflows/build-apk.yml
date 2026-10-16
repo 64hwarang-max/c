@@ -270,7 +270,7 @@ jobs:
                   CalWidget.saveAll(getContext());
                   SharedPreferences p = CalWidget.prefs(getContext());
                   JSObject r = new JSObject();
-                  for (String k : new String[] { "day", "week", "month", "three", "list", "todo" }) {
+                  for (String k : new String[] { "day", "week", "month", "three", "list", "todo", "rev" }) {
                       JSObject o = new JSObject();
                       o.put("w", p.getInt(k + "_w", 0));
                       o.put("h", p.getInt(k + "_h", 0));
@@ -314,6 +314,7 @@ jobs:
                   if ("three".equals(k)) return ThreeCalWidget.class;
                   if ("list".equals(k)) return ListCalWidget.class;
                   if ("todo".equals(k)) return TodoCalWidget.class;
+                  if ("rev".equals(k)) return RevCalWidget.class;
                   return DayCalWidget.class;
               }
 
@@ -374,7 +375,7 @@ jobs:
                   static void saveAll(Context c) {
                       try {
                           AppWidgetManager m = AppWidgetManager.getInstance(c);
-                          for (String k : new String[] { "day", "week", "month", "three", "list", "todo" }) {
+                          for (String k : new String[] { "day", "week", "month", "three", "list", "todo", "rev" }) {
                               int[] ids = m.getAppWidgetIds(new ComponentName(c, cls(k)));
                               if (ids != null && ids.length > 0) saveSize(c, k, m.getAppWidgetOptions(ids[0]));
                           }
@@ -475,7 +476,7 @@ jobs:
                           }
                       }
                   } else {
-                      v.setTextViewText(R.id.cw_title, "week".equals(k) ? "주간" : "month".equals(k) ? "월간" : "three".equals(k) ? "3일" : "list".equals(k) ? "일정 목록" : "todo".equals(k) ? "할 일·습관" : "일간");
+                      v.setTextViewText(R.id.cw_title, "week".equals(k) ? "주간" : "month".equals(k) ? "월간" : "three".equals(k) ? "3일" : "list".equals(k) ? "일정 목록" : "todo".equals(k) ? "할 일·습관" : "rev".equals(k) ? "열매·노트" : "일간");
                   }
                   v.setViewVisibility(R.id.cw_img, shown ? View.VISIBLE : View.GONE);
                   v.setViewVisibility(R.id.cw_empty, shown ? View.GONE : View.VISIBLE);
@@ -485,13 +486,19 @@ jobs:
                   v.setOnClickPendingIntent(R.id.cw_title, nav(c, k, 0, id));
                   v.setOnClickPendingIntent(R.id.cw_img, open(c, k, date, id * 100 + 1));
                   v.setOnClickPendingIntent(R.id.cw_empty, open(c, k, date, id * 100 + 2));
-                  v.setOnClickPendingIntent(R.id.cw_add, open(c, "add", date, id * 100 + 3));
+                  PendingIntent addPi = open(c, "rev".equals(k) ? "note" : "add", date, id * 100 + 3);
+                  if ("rev".equals(k) && FloatBridge.granted(c)) {
+                      Intent fi = new Intent(c, FloatService.class).setAction("memo");
+                      int fl = PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE;
+                      addPi = android.os.Build.VERSION.SDK_INT >= 26 ? PendingIntent.getForegroundService(c, id * 100 + 6, fi, fl) : PendingIntent.getService(c, id * 100 + 6, fi, fl);
+                  }
+                  v.setOnClickPendingIntent(R.id.cw_add, addPi);
                   v.setOnClickPendingIntent(R.id.cw_open, open(c, k, today(), id * 100 + 4));
                   m.updateAppWidget(id, v);
               }
           }
           `);
-          for(const [c,k] of [['DayCalWidget','day'],['WeekCalWidget','week'],['MonthCalWidget','month'],['ThreeCalWidget','three'],['ListCalWidget','list'],['TodoCalWidget','todo']])W(c+'.java',`package __PKG__;
+          for(const [c,k] of [['DayCalWidget','day'],['WeekCalWidget','week'],['MonthCalWidget','month'],['ThreeCalWidget','three'],['ListCalWidget','list'],['TodoCalWidget','todo'],['RevCalWidget','rev']])W(c+'.java',`package __PKG__;
 
           public class ${c} extends CalWidget {
               @Override
@@ -592,7 +599,7 @@ jobs:
               android:resizeMode="horizontal|vertical"
               android:widgetCategory="home_screen" />
           `;
-          R('xml/cal_day_info.xml',info(320,4));R('xml/cal_week_info.xml',info(320,4));R('xml/cal_month_info.xml',info(250,3));R('xml/cal_three_info.xml',info(320,4));R('xml/cal_list_info.xml',info(320,4));R('xml/cal_todo_info.xml',info(250,3));
+          R('xml/cal_day_info.xml',info(320,4));R('xml/cal_week_info.xml',info(320,4));R('xml/cal_month_info.xml',info(250,3));R('xml/cal_three_info.xml',info(320,4));R('xml/cal_list_info.xml',info(320,4));R('xml/cal_todo_info.xml',info(250,3));R('xml/cal_rev_info.xml',info(320,4));
           // MainActivity: register CalBridge
           const ma=path.join(javaDir,'MainActivity.java');let m=fs.readFileSync(ma,'utf8');
           if(!m.includes('CalBridge')){m=m.replace('registerPlugin(WidgetBridge.class);','registerPlugin(WidgetBridge.class);\n        registerPlugin(CalBridge.class);');fs.writeFileSync(ma,m)}
@@ -606,7 +613,7 @@ jobs:
                       <meta-data android:name="android.appwidget.provider" android:resource="@xml/${inf}" />
                   </receiver>
           `;
-            x=x.replace('</application>',rcv('DayCalWidget','일간','cal_day_info')+rcv('WeekCalWidget','주간','cal_week_info')+rcv('MonthCalWidget','월간','cal_month_info')+rcv('ThreeCalWidget','3일','cal_three_info')+rcv('ListCalWidget','일정 목록','cal_list_info')+rcv('TodoCalWidget','할 일·습관','cal_todo_info')+`        <provider android:name=".CalFileProvider" android:authorities="${pkg}.calwidget" android:exported="false" android:grantUriPermissions="true">
+            x=x.replace('</application>',rcv('DayCalWidget','일간','cal_day_info')+rcv('WeekCalWidget','주간','cal_week_info')+rcv('MonthCalWidget','월간','cal_month_info')+rcv('ThreeCalWidget','3일','cal_three_info')+rcv('ListCalWidget','일정 목록','cal_list_info')+rcv('TodoCalWidget','할 일·습관','cal_todo_info')+rcv('RevCalWidget','열매·노트','cal_rev_info')+`        <provider android:name=".CalFileProvider" android:authorities="${pkg}.calwidget" android:exported="false" android:grantUriPermissions="true">
                       <meta-data android:name="android.support.FILE_PROVIDER_PATHS" android:resource="@xml/cal_widget_paths" />
                   </provider>
               </application>`);
@@ -615,6 +622,271 @@ jobs:
           console.log('달력 위젯 추가 완료:',pkg);
           CJS
           node add-calwidget.js
+      - name: 글자형 위젯 추가 (지금·목표·몸·생활비·말씀)
+        run: |
+          cat > add-txtwidget.js <<'TJS'
+          // 글자형 홈 위젯 5종 (지금·다음 / 목표 진행 / 몸 상태 / 생활비 / 말씀·다짐)
+          const fs=require('fs'),path=require('path');
+          const cfg=JSON.parse(fs.readFileSync('capacitor.config.json','utf8'));
+          const pkg=cfg.appId,name=cfg.appName||'앱';
+          const javaDir=path.join('android/app/src/main/java',...pkg.split('.'));
+          const res='android/app/src/main/res';
+          ['layout','xml','drawable'].forEach(d=>fs.mkdirSync(path.join(res,d),{recursive:true}));
+          const W=(f,s)=>fs.writeFileSync(path.join(javaDir,f),s.replace(/__PKG__/g,pkg));
+          const R=(f,s)=>fs.writeFileSync(path.join(res,f),s);
+          W('TxtBridge.java',`package __PKG__;
+
+          import android.content.Context;
+          import android.util.Base64;
+          import com.getcapacitor.Plugin;
+          import com.getcapacitor.PluginCall;
+          import com.getcapacitor.PluginMethod;
+          import com.getcapacitor.annotation.CapacitorPlugin;
+          import java.io.File;
+          import java.io.FileOutputStream;
+
+          @CapacitorPlugin(name = "TxtBridge")
+          public class TxtBridge extends Plugin {
+              @PluginMethod
+              public void save(PluginCall call) {
+                  String kind = call.getString("kind", "now");
+                  String data = call.getString("data", "{}");
+                  String img = call.getString("img", "");
+                  try {
+                      Context ctx = getContext();
+                      if (img != null && img.length() > 0) {
+                          File dir = new File(ctx.getFilesDir(), "widget");
+                          if (!dir.exists()) dir.mkdirs();
+                          byte[] b = Base64.decode(img, Base64.DEFAULT);
+                          FileOutputStream fo = new FileOutputStream(new File(dir, "txt_" + kind + ".png"));
+                          fo.write(b);
+                          fo.close();
+                      }
+                      ctx.getSharedPreferences("txtw", Context.MODE_PRIVATE).edit().putString(kind, data).apply();
+                      TxtWidget.refreshAll(ctx, kind);
+                      call.resolve();
+                  } catch (Exception ex) {
+                      call.reject("위젯 저장 실패: " + ex.getMessage());
+                  }
+              }
+          }
+          `);
+          W('TxtWidget.java',`package __PKG__;
+
+          import android.app.PendingIntent;
+          import android.appwidget.AppWidgetManager;
+          import android.appwidget.AppWidgetProvider;
+          import android.content.ComponentName;
+          import android.content.Context;
+          import android.net.Uri;
+          import android.view.View;
+          import android.widget.RemoteViews;
+          import androidx.core.content.FileProvider;
+          import java.io.File;
+          import java.text.SimpleDateFormat;
+          import java.util.Date;
+          import java.util.Locale;
+          import org.json.JSONObject;
+
+          public abstract class TxtWidget extends AppWidgetProvider {
+              protected abstract String kind();
+
+              static Class<?> cls(String k) {
+                  if ("goal".equals(k)) return GoalTxtWidget.class;
+                  if ("body".equals(k)) return BodyTxtWidget.class;
+                  if ("budget".equals(k)) return BudgetTxtWidget.class;
+                  if ("verse".equals(k)) return VerseTxtWidget.class;
+                  return NowTxtWidget.class;
+              }
+
+              static String openV(String k) {
+                  if ("goal".equals(k)) return "goal";
+                  if ("body".equals(k)) return "body";
+                  if ("budget".equals(k)) return "fin";
+                  if ("verse".equals(k)) return "verse";
+                  return "today";
+              }
+
+              static String defTitle(String k) {
+                  if ("goal".equals(k)) return "🎯 목표 진행";
+                  if ("body".equals(k)) return "🩺 몸 상태";
+                  if ("budget".equals(k)) return "💰 이번 달 생활비";
+                  if ("verse".equals(k)) return "📖 오늘의 말씀";
+                  return "▶ 지금·다음";
+              }
+
+              static void refreshAll(Context c, String k) {
+                  AppWidgetManager m = AppWidgetManager.getInstance(c);
+                  int[] ids = m.getAppWidgetIds(new ComponentName(c, cls(k)));
+                  for (int id : ids) render(c, m, id, k);
+              }
+
+              @Override
+              public void onUpdate(Context c, AppWidgetManager m, int[] ids) {
+                  for (int id : ids) render(c, m, id, kind());
+              }
+
+              static void render(Context c, AppWidgetManager m, int id, String k) {
+                  RemoteViews v = new RemoteViews(c.getPackageName(), R.layout.widget_txt);
+                  String title = defTitle(k);
+                  String body = "앱을 한 번 열면 여기에 표시됩니다.";
+                  String foot = "";
+                  boolean img = false;
+                  String today = new SimpleDateFormat("yyyy-MM-dd", Locale.KOREA).format(new Date());
+                  try {
+                      JSONObject o = new JSONObject(c.getSharedPreferences("txtw", Context.MODE_PRIVATE).getString(k, "{}"));
+                      if (o.has("title")) {
+                          if (!today.equals(o.optString("date"))) {
+                              body = "눌러서 오늘 내용으로 갱신하십시오.";
+                          } else {
+                              title = o.optString("title", title);
+                              body = o.optString("body", "");
+                              foot = o.optString("foot", "");
+                              img = o.optBoolean("img", false);
+                          }
+                      }
+                  } catch (Exception e) {
+                      // 기본 문구 유지
+                  }
+                  boolean shown = false;
+                  if (img) {
+                      File f = new File(new File(c.getFilesDir(), "widget"), "txt_" + k + ".png");
+                      if (f.exists()) {
+                          try {
+                              Uri u = FileProvider.getUriForFile(c, c.getPackageName() + ".calwidget", f).buildUpon()
+                                  .appendQueryParameter("v", String.valueOf(f.lastModified())).build();
+                              CalWidget.grant(c, u);
+                              v.setImageViewUri(R.id.tw_img, u);
+                              shown = true;
+                          } catch (Exception e) {
+                              shown = false;
+                          }
+                      }
+                  }
+                  v.setTextViewText(R.id.tw_title, title);
+                  v.setTextViewText(R.id.tw_body, body);
+                  v.setTextViewText(R.id.tw_foot, foot);
+                  v.setViewVisibility(R.id.tw_img, shown ? View.VISIBLE : View.GONE);
+                  v.setViewVisibility(R.id.tw_body, (shown || body.length() == 0) ? View.GONE : View.VISIBLE);
+                  v.setViewVisibility(R.id.tw_foot, foot.length() == 0 ? View.GONE : View.VISIBLE);
+                  v.setViewVisibility(R.id.tw_add, "budget".equals(k) ? View.VISIBLE : View.GONE);
+                  PendingIntent main = CalWidget.open(c, openV(k), today, id * 100 + 11);
+                  v.setOnClickPendingIntent(R.id.tw_root, main);
+                  v.setOnClickPendingIntent(R.id.tw_title, main);
+                  v.setOnClickPendingIntent(R.id.tw_body, main);
+                  v.setOnClickPendingIntent(R.id.tw_foot, main);
+                  v.setOnClickPendingIntent(R.id.tw_img, main);
+                  v.setOnClickPendingIntent(R.id.tw_add, CalWidget.open(c, "finadd", today, id * 100 + 12));
+                  m.updateAppWidget(id, v);
+              }
+          }
+          `);
+          for(const [c,k] of [['NowTxtWidget','now'],['GoalTxtWidget','goal'],['BodyTxtWidget','body'],['BudgetTxtWidget','budget'],['VerseTxtWidget','verse']])W(c+'.java',`package __PKG__;
+
+          public class ${c} extends TxtWidget {
+              @Override
+              protected String kind() {
+                  return "${k}";
+              }
+          }
+          `);
+          R('drawable/txt_bg.xml',`<?xml version="1.0" encoding="utf-8"?>
+          <shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+              <solid android:color="#FF1C1C1E" />
+              <corners android:radius="18dp" />
+          </shape>
+          `);
+          R('layout/widget_txt.xml',`<?xml version="1.0" encoding="utf-8"?>
+          <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:id="@+id/tw_root"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"
+              android:orientation="vertical"
+              android:padding="10dp"
+              android:background="@drawable/txt_bg">
+              <LinearLayout
+                  android:layout_width="match_parent"
+                  android:layout_height="wrap_content"
+                  android:orientation="horizontal"
+                  android:gravity="center_vertical">
+                  <TextView
+                      android:id="@+id/tw_title"
+                      android:layout_width="0dp"
+                      android:layout_height="wrap_content"
+                      android:layout_weight="1"
+                      android:maxLines="1"
+                      android:ellipsize="end"
+                      android:textColor="#FFFFFFFF"
+                      android:textSize="16sp"
+                      android:textStyle="bold" />
+                  <TextView
+                      android:id="@+id/tw_add"
+                      android:layout_width="40dp"
+                      android:layout_height="32dp"
+                      android:gravity="center"
+                      android:text="＋"
+                      android:textColor="#FFFFFFFF"
+                      android:textSize="22sp"
+                      android:visibility="gone" />
+              </LinearLayout>
+              <ImageView
+                  android:id="@+id/tw_img"
+                  android:layout_width="match_parent"
+                  android:layout_height="0dp"
+                  android:layout_weight="1"
+                  android:scaleType="fitCenter"
+                  android:contentDescription="${name} 위젯"
+                  android:visibility="gone" />
+              <TextView
+                  android:id="@+id/tw_body"
+                  android:layout_width="match_parent"
+                  android:layout_height="0dp"
+                  android:layout_weight="1"
+                  android:layout_marginTop="4dp"
+                  android:textColor="#FFE5E5EA"
+                  android:textSize="15sp"
+                  android:lineSpacingExtra="3dp" />
+              <TextView
+                  android:id="@+id/tw_foot"
+                  android:layout_width="match_parent"
+                  android:layout_height="wrap_content"
+                  android:layout_marginTop="2dp"
+                  android:maxLines="3"
+                  android:ellipsize="end"
+                  android:textColor="#FFAEAEB2"
+                  android:textSize="12sp" />
+          </LinearLayout>
+          `);
+          const info=(w,h,cw,ch)=>`<?xml version="1.0" encoding="utf-8"?>
+          <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+              android:minWidth="${w}dp"
+              android:minHeight="${h}dp"
+              android:minResizeWidth="110dp"
+              android:minResizeHeight="40dp"
+              android:targetCellWidth="${cw}"
+              android:targetCellHeight="${ch}"
+              android:updatePeriodMillis="1800000"
+              android:initialLayout="@layout/widget_txt"
+              android:resizeMode="horizontal|vertical"
+              android:widgetCategory="home_screen" />
+          `;
+          R('xml/txt_now_info.xml',info(110,40,2,1));R('xml/txt_goal_info.xml',info(250,110,4,2));R('xml/txt_body_info.xml',info(250,110,4,2));R('xml/txt_budget_info.xml',info(180,110,3,2));R('xml/txt_verse_info.xml',info(250,110,4,2));
+          const ma=path.join(javaDir,'MainActivity.java');let m=fs.readFileSync(ma,'utf8');
+          if(!m.includes('TxtBridge')){m=m.replace('registerPlugin(WidgetBridge.class);','registerPlugin(WidgetBridge.class);\n        registerPlugin(TxtBridge.class);');fs.writeFileSync(ma,m)}
+          const mp='android/app/src/main/AndroidManifest.xml';let x=fs.readFileSync(mp,'utf8');
+          if(!x.includes('.NowTxtWidget')){
+            const rcv=(c,lab,inf)=>`        <receiver android:name=".${c}" android:exported="false" android:label="${name} ${lab}">
+                      <intent-filter>
+                          <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                      </intent-filter>
+                      <meta-data android:name="android.appwidget.provider" android:resource="@xml/${inf}" />
+                  </receiver>
+          `;
+            x=x.replace('</application>',rcv('NowTxtWidget','지금·다음','txt_now_info')+rcv('GoalTxtWidget','목표 진행','txt_goal_info')+rcv('BodyTxtWidget','몸 상태','txt_body_info')+rcv('BudgetTxtWidget','생활비','txt_budget_info')+rcv('VerseTxtWidget','말씀·다짐','txt_verse_info')+'    </application>');
+            fs.writeFileSync(mp,x)}
+          console.log('글자형 위젯 추가 완료:',pkg);
+          TJS
+          node add-txtwidget.js
       - name: 떠 있는 오늘 버튼 추가
         run: |
           cat > add-float.js <<'FJS'
@@ -628,9 +900,12 @@ jobs:
 
           import android.content.Context;
           import android.content.Intent;
+          import android.content.SharedPreferences;
           import android.net.Uri;
           import android.os.Build;
           import android.provider.Settings;
+          import org.json.JSONArray;
+          import org.json.JSONObject;
           import com.getcapacitor.JSObject;
           import com.getcapacitor.Plugin;
           import com.getcapacitor.PluginCall;
@@ -694,6 +969,30 @@ jobs:
               }
 
               @PluginMethod
+              public void memoList(PluginCall call) {
+                  JSObject r = new JSObject();
+                  r.put("list", getContext().getSharedPreferences("float_memo", Context.MODE_PRIVATE).getString("list", "[]"));
+                  call.resolve(r);
+              }
+
+              @PluginMethod
+              public void memoDone(PluginCall call) {
+                  String ids = "," + call.getString("ids", "") + ",";
+                  SharedPreferences p = getContext().getSharedPreferences("float_memo", Context.MODE_PRIVATE);
+                  try {
+                      JSONArray a = new JSONArray(p.getString("list", "[]"));
+                      for (int i = 0; i < a.length(); i++) {
+                          JSONObject o = a.getJSONObject(i);
+                          if (ids.contains("," + o.optString("id", "") + ",")) o.put("imp", o.optLong("ts", 0));
+                      }
+                      p.edit().putString("list", a.toString()).apply();
+                  } catch (Exception e) {
+                      // 무시
+                  }
+                  call.resolve();
+              }
+
+              @PluginMethod
               public void setVisible(PluginCall call) {
                   Boolean v = call.getBoolean("v", true);
                   if (FloatService.running) {
@@ -728,6 +1027,20 @@ jobs:
           import android.view.MotionEvent;
           import android.view.View;
           import android.view.WindowManager;
+          import android.content.Context;
+          import android.text.Editable;
+          import android.text.InputType;
+          import android.text.TextWatcher;
+          import android.view.GestureDetector;
+          import android.view.KeyEvent;
+          import android.view.inputmethod.InputMethodManager;
+          import android.widget.EditText;
+          import android.widget.LinearLayout;
+          import java.text.SimpleDateFormat;
+          import java.util.Date;
+          import java.util.Locale;
+          import org.json.JSONArray;
+          import org.json.JSONObject;
           import android.widget.TextView;
 
           public class FloatService extends Service {
@@ -735,6 +1048,280 @@ jobs:
               private WindowManager wm;
               private TextView bubble;
               private WindowManager.LayoutParams lp;
+
+              private LinearLayout panel;
+              private EditText et;
+              private TextView info;
+              private JSONArray memos = new JSONArray();
+              private int idx = 0;
+              private boolean binding = false;
+              private long lastTap = 0;
+              private boolean temp = false;
+              private final Runnable singleTap = new Runnable() {
+                  @Override
+                  public void run() {
+                      lastTap = 0;
+                      openPanel();
+                  }
+              };
+
+              private SharedPreferences mp() {
+                  return getSharedPreferences("float_memo", MODE_PRIVATE);
+              }
+
+              private void loadMemos() {
+                  try { memos = new JSONArray(mp().getString("list", "[]")); } catch (Exception e) { memos = new JSONArray(); }
+              }
+
+              private void saveMemos() {
+                  mp().edit().putString("list", memos.toString()).apply();
+              }
+
+              private JSONObject curMemo() {
+                  return memos.optJSONObject(idx);
+              }
+
+              private boolean isBlank(JSONObject o) {
+                  return o == null || o.optString("t", "").trim().length() == 0;
+              }
+
+              private void addBlank() {
+                  try {
+                      long now = System.currentTimeMillis();
+                      JSONObject o = new JSONObject();
+                      o.put("id", "m" + now);
+                      o.put("t", "");
+                      o.put("c", now);
+                      o.put("ts", now);
+                      o.put("imp", 0);
+                      memos.put(o);
+                  } catch (Exception e) { /* 무시 */ }
+              }
+
+              private void bindMemo() {
+                  JSONObject o = curMemo();
+                  binding = true;
+                  et.setText(o == null ? "" : o.optString("t", ""));
+                  et.setSelection(et.getText().length());
+                  binding = false;
+                  String d = o == null ? "" : new SimpleDateFormat("M월 d일 HH:mm", Locale.KOREA).format(new Date(o.optLong("c", 0)));
+                  info.setText((idx + 1) + " / " + memos.length() + "  ·  " + d);
+              }
+
+              private void goMemo(int d) {
+                  int n = idx + d;
+                  if (n < 0) return;
+                  if (n >= memos.length()) {
+                      if (isBlank(curMemo())) return;
+                      addBlank();
+                      n = memos.length() - 1;
+                  }
+                  idx = n;
+                  bindMemo();
+              }
+
+              private TextView mbtn(String s, View.OnClickListener l) {
+                  TextView t = new TextView(this);
+                  t.setText(s);
+                  t.setTextSize(14);
+                  t.setTextColor(0xFF23397A);
+                  t.setTypeface(null, Typeface.BOLD);
+                  t.setPadding(dp(12), dp(10), dp(12), dp(10));
+                  t.setGravity(Gravity.CENTER);
+                  t.setOnClickListener(l);
+                  return t;
+              }
+
+              private void openPanel() {
+                  if (panel != null || wm == null) return;
+                  loadMemos();
+                  if (memos.length() == 0 || !isBlank(memos.optJSONObject(memos.length() - 1))) addBlank();
+                  idx = memos.length() - 1;
+                  panel = new LinearLayout(this) {
+                      @Override
+                      public boolean dispatchKeyEvent(KeyEvent e) {
+                          if (e.getKeyCode() == KeyEvent.KEYCODE_BACK) {
+                              if (e.getAction() == KeyEvent.ACTION_UP) closePanel();
+                              return true;
+                          }
+                          return super.dispatchKeyEvent(e);
+                      }
+
+                      @Override
+                      public boolean onTouchEvent(MotionEvent e) {
+                          if (e.getAction() == MotionEvent.ACTION_OUTSIDE) {
+                              closePanel();
+                              return true;
+                          }
+                          return super.onTouchEvent(e);
+                      }
+                  };
+                  panel.setOrientation(LinearLayout.VERTICAL);
+                  GradientDrawable bg = new GradientDrawable();
+                  bg.setColor(0xFFFFFDF5);
+                  bg.setCornerRadius(dp(16));
+                  bg.setStroke(dp(2), 0xFF23397A);
+                  panel.setBackground(bg);
+                  if (Build.VERSION.SDK_INT >= 21) panel.setElevation(dp(10));
+
+                  final GestureDetector gd = new GestureDetector(this, new GestureDetector.SimpleOnGestureListener() {
+                      @Override
+                      public boolean onFling(MotionEvent a, MotionEvent b, float vx, float vy) {
+                          if (a == null || b == null) return false;
+                          float dx = b.getX() - a.getX(), dy = b.getY() - a.getY();
+                          if (Math.abs(dx) > dp(70) && Math.abs(dx) > Math.abs(dy) * 2) {
+                              goMemo(dx > 0 ? -1 : 1);
+                              return true;
+                          }
+                          return false;
+                      }
+                  });
+
+                  LinearLayout head = new LinearLayout(this);
+                  head.setOrientation(LinearLayout.HORIZONTAL);
+                  head.setGravity(Gravity.CENTER_VERTICAL);
+                  head.addView(mbtn("◀", new View.OnClickListener() {
+                      @Override
+                      public void onClick(View v) { goMemo(-1); }
+                  }));
+                  info = new TextView(this);
+                  info.setTextSize(13);
+                  info.setTextColor(0xFF555555);
+                  info.setGravity(Gravity.CENTER);
+                  head.addView(info, new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
+                  head.addView(mbtn("▶", new View.OnClickListener() {
+                      @Override
+                      public void onClick(View v) { goMemo(1); }
+                  }));
+                  head.setOnTouchListener(new View.OnTouchListener() {
+                      @Override
+                      public boolean onTouch(View v, MotionEvent e) {
+                          gd.onTouchEvent(e);
+                          return false;
+                      }
+                  });
+                  panel.addView(head);
+
+                  et = new EditText(this);
+                  et.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_MULTI_LINE | InputType.TYPE_TEXT_FLAG_CAP_SENTENCES);
+                  et.setGravity(Gravity.TOP | Gravity.START);
+                  et.setMinLines(4);
+                  et.setMaxLines(12);
+                  et.setTextSize(16);
+                  et.setTextColor(0xFF222222);
+                  et.setHint("떠오른 생각을 바로 적으세요");
+                  et.setBackground(null);
+                  et.setPadding(dp(14), dp(6), dp(14), dp(6));
+                  et.addTextChangedListener(new TextWatcher() {
+                      @Override
+                      public void beforeTextChanged(CharSequence s, int a, int b, int c) { }
+
+                      @Override
+                      public void onTextChanged(CharSequence s, int a, int b, int c) { }
+
+                      @Override
+                      public void afterTextChanged(Editable s) {
+                          if (binding) return;
+                          JSONObject o = curMemo();
+                          if (o == null) return;
+                          try {
+                              o.put("t", s.toString());
+                              o.put("ts", System.currentTimeMillis());
+                          } catch (Exception e) { /* 무시 */ }
+                          saveMemos();
+                      }
+                  });
+                  et.setOnTouchListener(new View.OnTouchListener() {
+                      @Override
+                      public boolean onTouch(View v, MotionEvent e) {
+                          gd.onTouchEvent(e);
+                          return false;
+                      }
+                  });
+                  panel.addView(et, new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
+
+                  LinearLayout foot = new LinearLayout(this);
+                  foot.setOrientation(LinearLayout.HORIZONTAL);
+                  foot.setGravity(Gravity.CENTER);
+                  foot.addView(mbtn("앱으로", new View.OnClickListener() {
+                      @Override
+                      public void onClick(View v) {
+                          closePanel();
+                          try { openIntent(4).send(); } catch (Exception ex) { /* 무시 */ }
+                      }
+                  }));
+                  foot.addView(mbtn("보내기", new View.OnClickListener() {
+                      @Override
+                      public void onClick(View v) {
+                          JSONObject o = curMemo();
+                          String t = o == null ? "" : o.optString("t", "");
+                          if (t.trim().length() == 0) return;
+                          closePanel();
+                          try {
+                              Intent s = new Intent(Intent.ACTION_SEND);
+                              s.setType("text/plain");
+                              s.putExtra(Intent.EXTRA_TEXT, t);
+                              Intent c = Intent.createChooser(s, "메모 보내기");
+                              c.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                              startActivity(c);
+                          } catch (Exception ex) { /* 무시 */ }
+                      }
+                  }));
+                  foot.addView(mbtn("삭제", new View.OnClickListener() {
+                      @Override
+                      public void onClick(View v) {
+                          if (memos.length() > 0 && idx < memos.length()) memos.remove(idx);
+                          if (memos.length() == 0) addBlank();
+                          if (idx >= memos.length()) idx = memos.length() - 1;
+                          saveMemos();
+                          bindMemo();
+                      }
+                  }));
+                  foot.addView(mbtn("닫기", new View.OnClickListener() {
+                      @Override
+                      public void onClick(View v) { closePanel(); }
+                  }));
+                  panel.addView(foot);
+
+                  int sw = getResources().getDisplayMetrics().widthPixels;
+                  int pw = Math.min(sw - dp(24), dp(380));
+                  int type = Build.VERSION.SDK_INT >= 26 ? WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY : WindowManager.LayoutParams.TYPE_PHONE;
+                  WindowManager.LayoutParams pl = new WindowManager.LayoutParams(pw, WindowManager.LayoutParams.WRAP_CONTENT, type,
+                      WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL | WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH, PixelFormat.TRANSLUCENT);
+                  pl.gravity = Gravity.TOP | Gravity.CENTER_HORIZONTAL;
+                  pl.y = dp(56);
+                  pl.softInputMode = WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE | WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE;
+                  try {
+                      wm.addView(panel, pl);
+                  } catch (Exception e) {
+                      panel = null;
+                      return;
+                  }
+                  if (bubble != null) bubble.setVisibility(View.GONE);
+                  bindMemo();
+                  et.requestFocus();
+              }
+
+              private void closePanel() {
+                  if (panel == null) return;
+                  try {
+                      InputMethodManager im = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                      if (im != null && et != null) im.hideSoftInputFromWindow(et.getWindowToken(), 0);
+                  } catch (Exception e) { /* 무시 */ }
+                  for (int i = memos.length() - 1; i >= 0; i--) {
+                      if (isBlank(memos.optJSONObject(i))) memos.remove(i);
+                  }
+                  while (memos.length() > 200) memos.remove(0);
+                  saveMemos();
+                  try { wm.removeView(panel); } catch (Exception e) { /* 무시 */ }
+                  panel = null;
+                  et = null;
+                  if (bubble != null) bubble.setVisibility(View.VISIBLE);
+                  if (temp) {
+                      temp = false;
+                      stopSelf();
+                  }
+              }
 
               @Override
               public IBinder onBind(Intent i) {
@@ -767,7 +1354,7 @@ jobs:
                   PendingIntent ps = PendingIntent.getService(this, 2, stop, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
                   b.setSmallIcon(getApplicationInfo().icon)
                       .setContentTitle("__NAME__ 오늘 열매 버튼이 떠 있습니다")
-                      .setContentText("누르면 오늘 화면이 열립니다")
+                      .setContentText("한 번 누르면 메모, 두 번 누르면 앱이 열립니다")
                       .setContentIntent(openIntent(1))
                       .setOngoing(true)
                       .addAction(new Notification.Action.Builder(null, "버튼 끄기", ps).build());
@@ -791,7 +1378,7 @@ jobs:
               }
 
               private void show() {
-                  if (bubble != null) { applyText(bubble); bubble.setVisibility(View.VISIBLE); return; }
+                  if (bubble != null) { applyText(bubble); if (panel == null) bubble.setVisibility(View.VISIBLE); return; }
                   if (Build.VERSION.SDK_INT >= 23 && !android.provider.Settings.canDrawOverlays(this)) return;
                   wm = (WindowManager) getSystemService(WINDOW_SERVICE);
                   final TextView t = new TextView(this);
@@ -825,7 +1412,15 @@ jobs:
                                   return true;
                               case MotionEvent.ACTION_UP:
                                   if (!moved) {
-                                      try { openIntent(3).send(); } catch (Exception ex) { /* 무시 */ }
+                                      long now = System.currentTimeMillis();
+                                      if (now - lastTap < 320) {
+                                          lastTap = 0;
+                                          v.removeCallbacks(singleTap);
+                                          try { openIntent(3).send(); } catch (Exception ex) { /* 무시 */ }
+                                      } else {
+                                          lastTap = now;
+                                          v.postDelayed(singleTap, 300);
+                                      }
                                   } else {
                                       int w = getResources().getDisplayMetrics().widthPixels;
                                       lp.x = (lp.x + size / 2 < w / 2) ? dp(4) : w - size - dp(4);
@@ -848,9 +1443,15 @@ jobs:
                       stopSelf();
                       return START_NOT_STICKY;
                   }
+                  boolean was = running;
                   startFg();
                   running = true;
-                  if ("hide".equals(a)) {
+                  if ("memo".equals(a)) {
+                      if (!was) temp = true;
+                      show();
+                      openPanel();
+                  } else if ("hide".equals(a)) {
+                      closePanel();
                       if (bubble != null) bubble.setVisibility(View.GONE);
                   } else if ("text".equals(a)) {
                       if (bubble != null) applyText(bubble);
@@ -863,6 +1464,7 @@ jobs:
               @Override
               public void onDestroy() {
                   running = false;
+                  closePanel();
                   if (bubble != null && wm != null) {
                       try { wm.removeView(bubble); } catch (Exception e) { /* 무시 */ }
                   }
@@ -3748,7 +4350,7 @@ jobs:
           const jd=path.join('android/app/src/main/java',...cfg.appId.split('.'));
           const has=f=>fs.existsSync(path.join(jd,f))?'✅':'❌ 빠짐';
           const ma=fs.readFileSync(path.join(jd,'MainActivity.java'),'utf8');
-          const rows=[['오늘 위젯','WidgetBridge'],['음악 계속 듣기','MusicBridge'],['달력 위젯','CalBridge'],['떠 있는 버튼','FloatBridge'],['몰입 잠금','FocusBridge'],['앱 차단','BlockBridge'],['노트 녹음(화면 꺼도)','RecBridge'],['워치 알림','WatchBridge'],['헬스 커넥트','HealthBridge'],['결제 문자 읽기','SmsBridge'],['통화·문자 → 관계','CommBridge'],['구글 캘린더 (앱 내장)','GCalBridge'],['워치 단독 앱 연동','WearLink']];
+          const rows=[['오늘 위젯','WidgetBridge'],['음악 계속 듣기','MusicBridge'],['달력 위젯','CalBridge'],['글자형 위젯(지금·목표·몸·생활비·말씀)','TxtBridge'],['떠 있는 버튼','FloatBridge'],['몰입 잠금','FocusBridge'],['앱 차단','BlockBridge'],['노트 녹음(화면 꺼도)','RecBridge'],['워치 알림','WatchBridge'],['헬스 커넥트','HealthBridge'],['결제 문자 읽기','SmsBridge'],['통화·문자 → 관계','CommBridge'],['구글 캘린더 (앱 내장)','GCalBridge'],['워치 단독 앱 연동','WearLink']];
           let out='## '+cfg.appName+' APK 부품 확인\n\n| 부품 | 파일 | 등록 |\n|---|---|---|\n';
           for(const [n,c] of rows)out+=`| ${n} | ${has(c+'.java')} | ${ma.includes('registerPlugin('+c+'.class)')?'✅':'❌'} |\n`;
           const sg=fs.existsSync('android/capacitor.settings.gradle')?fs.readFileSync('android/capacitor.settings.gradle','utf8'):'';

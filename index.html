@@ -1,4 +1,4 @@
-<!-- 성장일지 v4.22 · 2026-10-16 · 계획 기간 버튼 1주→1년 순서 · 3개월·6개월 목표 카드 · 1년은 연간 목표만(이번 주·168시간 카드도 숨김) · 삼성헬스 수면·운동 → 실제 시간표 · 대중소분류 한 줄 · 운동일지=운동 기록 양식 · 실제로 한 일에도 반복 설정 · 연간 목표 위·월간 목표 아래, 접기 · 블록 편집: 반복 카드를 접힌 칸 밖으로 · 쉬는 시간에도 음악 · 쉬는 시간에 짜투리 앱 바로가기 · 위젯: 주간 지난 날 실제/오늘부터 계획 · 3일·일정목록·할 일·습관 위젯 · 사람 카드: 태그 선택 표시·만남 일지 중심 · 밀기 방향(오른쪽→왼쪽=다음) · 성경 장 밀어 넘기기 · 구절 누르면 바로 메뉴 · 시간표 두 손가락 확대 · 성경 구절 길게 누르기(느낀 점·묵상 노트) · 1년 보기 목표 해 따라감 · 월간 목표 접기 · 속도 개선 -->
+<!-- 성장일지 v4.23 · 2026-10-16 · 떠 있는 버튼 1초 메모창(둥둥 메모)·두 번 누르면 앱 · 위젯: 열매·노트(7일 추세·저녁 알림)·지금/다음·목표·몸·생활비·말씀 · 일간·오늘 위젯에 열매·노트 · 계획 기간 버튼 1주→1년 순서 · 3개월·6개월 목표 카드 · 1년은 연간 목표만(이번 주·168시간 카드도 숨김) · 삼성헬스 수면·운동 → 실제 시간표 · 대중소분류 한 줄 · 운동일지=운동 기록 양식 · 실제로 한 일에도 반복 설정 · 연간 목표 위·월간 목표 아래, 접기 · 블록 편집: 반복 카드를 접힌 칸 밖으로 · 쉬는 시간에도 음악 · 쉬는 시간에 짜투리 앱 바로가기 · 위젯: 주간 지난 날 실제/오늘부터 계획 · 3일·일정목록·할 일·습관 위젯 · 사람 카드: 태그 선택 표시·만남 일지 중심 · 밀기 방향(오른쪽→왼쪽=다음) · 성경 장 밀어 넘기기 · 구절 누르면 바로 메뉴 · 시간표 두 손가락 확대 · 성경 구절 길게 누르기(느낀 점·묵상 노트) · 1년 보기 목표 해 따라감 · 월간 목표 접기 · 속도 개선 -->
 <!doctype html>
 <html lang="ko" class="simple">
 <head>
@@ -4674,7 +4674,7 @@ async function nativeMic(btn,el){const SRp=NP('SpeechRecognition');if(!SRp){toas
 
 
 /* ---------- 홈 화면 달력 위젯 (일간·주간·월간) ---------- */
-const CW_DEF={day:[320,420],week:[320,420],month:[320,340],three:[320,420],list:[320,420],todo:[320,340]};
+const CW_DEF={day:[320,420],week:[320,420],month:[320,340],three:[320,420],list:[320,420],todo:[320,340],rev:[320,420]};
 let cwTimer=null,cwBusy=false;
 function cwSoon(){if(!IS_NATIVE)return;const CB=NP('CalBridge');if(!CB)return;clearTimeout(cwTimer);cwTimer=setTimeout(()=>cwRender().catch(e=>console.warn('calw',e)),2500)}
 const cwMix=(hex,a)=>{const h=(hex||'#3949ab').replace('#','');const n=parseInt(h.length===3?h.split('').map(x=>x+x).join(''):h,16);const r=n>>16&255,g=n>>8&255,b=n&255;const m=v=>Math.round(v+(255-v)*a);return`rgb(${m(r)},${m(g)},${m(b)})`};
@@ -4720,6 +4720,7 @@ function cwDay(d,m,W,H,S){const[c,ctx]=cwCanvas(W,H);const lw=Math.round(W*.6);c
   const tk=cwTasks(d);sec(`할 일 ${tk.filter(t=>!t.done).length}`);if(tk.length)tk.slice(0,8).forEach(t=>row(`${t.done?'☑':'☐'} ${t.time?t.time+' ':''}${t.title}`,t.done?'#8e8e93':(t.due<d?'#ff8a80':null)));else row('할 일이 없습니다','#8e8e93');
   const cy=cycDue().filter(x=>d===today()?x.left<=0:x.next===d);if(cy.length){py+=4*S;sec('주기 할 일');cy.slice(0,4).forEach(x=>row(`🔁 ${cyName(x.c)}`))}
   if(d===today()&&SET.habits.length){const o=m.get(d)||{};const n=SET.habits.filter(h=>(o.habits||{})[h.id]).length;py+=4*S;sec('습관');row(`✅ ${n}/${SET.habits.length}`)}
+  if(d<=today()){const sc=cwSc(d,m.get(d)),ns=cwNotes(d);if(sc!=null||ns.length){py+=4*S;sec('열매·노트');if(sc!=null)row(`🍎 열매 ${sc}점`);ns.slice(0,3).forEach(n=>row(`${n.fmId?'💭':'📝'} ${cwPlain(n.title)||cwPlain(n.body)}`))}}
   ctx.strokeStyle='#2c2c2e';ctx.beginPath();ctx.moveTo(lw+2,0);ctx.lineTo(lw+2,H);ctx.stroke();return c}
 function cwWeek(d0,m,W,H,S,n,real){n=n||7;const[c,ctx]=cwCanvas(W,H);const days=[...Array(n)].map((_,i)=>addD(d0,i));const gw=22*S,cw=(W-gw)/n,hh=21*S;
   ctx.textBaseline='middle';ctx.textAlign='center';days.forEach((d,j)=>{const x=gw+j*cw,dt=parseD(d),wd=dt.getDay();if(d===today()){ctx.fillStyle='#ff5252';const pw=Math.min(cw-4*S,40*S);ctx.beginPath();ctx.roundRect?ctx.roundRect(x+(cw-pw)/2,2*S,pw,hh-4*S,8*S):ctx.rect(x+(cw-pw)/2,2*S,pw,hh-4*S);ctx.fill()}ctx.font=`${d===today()?'bold ':''}${12*S}px sans-serif`;ctx.fillStyle=d===today()?'#fff':holName(d)||wd===0?'#ff6b6b':wd===6?'#64b5f6':'#e5e5ea';ctx.fillText(`${WD[wd]} ${dt.getDate()}`,x+cw/2,hh/2)});ctx.textAlign='left';
@@ -4756,6 +4757,40 @@ function cwMonth(y,mo,m,W,H,S){const[c,ctx]=cwCanvas(W,H);const first=new Date(y
     if(uniq.length>cap&&cap>0){ctx.fillStyle='#8e8e93';ctx.font=`${9*S}px sans-serif`;ctx.textAlign='right';ctx.fillText(`+${uniq.length-cap}`,x+cw-2*S,yy+2*S);ctx.textAlign='left'}
     ctx.globalAlpha=1}
   return c}
+/* v4.23: 열매·노트 위젯 — 하루 열매 점수·영역별 점수·돌아보기·감사·한 걸음·노트(둥둥 메모 포함) */
+function cwNotes(d){try{return[...NOTES.values()].filter(n=>n&&n.kind==='note'&&n.date===d&&(tx(n.title)||tx(n.body))).sort((a,b)=>(b.updated||0)-(a.updated||0))}catch(e){return[]}}
+const cwPlain=s=>String(s||'').replace(/<[^>]+>/g,' ').replace(/&nbsp;/g,' ').replace(/&amp;/g,'&').replace(/\s+/g,' ').trim();
+function cwSc(d,o){try{o=o||{};return scoreOf(o.date?o:{...o,date:d})}catch(e){return null}}
+function cwRev(d,m,W,H,S){const[c,ctx]=cwCanvas(W,H);const o=m.get(d)||{};const T=today();const px=8*S;const sc=cwSc(d,o);
+  const col=sc==null?'#48484a':sc>=80?'#43a047':sc>=60?'#f29900':'#e65100';const R=24*S,cx=px+R,cy=8*S+R;
+  ctx.fillStyle=col;ctx.beginPath();ctx.arc(cx,cy,R,0,7);ctx.fill();ctx.fillStyle='#fff';ctx.textAlign='center';ctx.textBaseline='middle';
+  if(sc==null){ctx.font=`${10.5*S}px sans-serif`;ctx.fillText(d>T?'예정':'미평가',cx,cy)}else{ctx.font=`bold ${19*S}px sans-serif`;ctx.fillText(String(sc),cx,cy-4*S);ctx.font=`${8.5*S}px sans-serif`;ctx.fillText('열매',cx,cy+12*S)}
+  ctx.textAlign='left';ctx.textBaseline='top';
+  const bx=px+2*R+10*S,cw2=(W-bx-px)/2,lw=34*S;
+  SCORE.forEach(([k,nm],i)=>{const v=+((o.score||{})[k])||0;const x=bx+(i%2)*cw2,y=8*S+Math.floor(i/2)*13*S;ctx.font=`${9.5*S}px sans-serif`;ctx.fillStyle=v?'#e5e5ea':'#6e6e73';ctx.fillText(cwFit(ctx,nm,lw-2*S),x,y+1*S);
+    const gx=x+lw,gw=Math.max(10*S,cw2-lw-6*S);ctx.fillStyle='#2c2c2e';ctx.fillRect(gx,y+3*S,gw,7*S);if(v){ctx.fillStyle=v>=8?'#66bb6a':v>=5?'#fbc02d':'#ef6c00';ctx.fillRect(gx,y+3*S,gw*Math.min(10,v)/10,7*S)}});
+  let ty=2*R+14*S;
+  {const days=[...Array(7)].map((_,i)=>addD(d,i-6));const bw=(W-px*2)/7,bh=26*S;
+   days.forEach((x,i)=>{const v=cwSc(x,m.get(x));const bx=px+i*bw+bw*.18,w=bw*.64;ctx.fillStyle='#2c2c2e';ctx.fillRect(bx,ty,w,bh);if(v!=null){const hh=bh*Math.max(.06,v/100);ctx.fillStyle=v>=80?'#43a047':v>=60?'#f29900':'#e65100';ctx.fillRect(bx,ty+bh-hh,w,hh)}
+     ctx.fillStyle=x===d?'#fff':'#8e8e93';ctx.font=`${(x===d?'bold ':'')+8.5*S}px sans-serif`;ctx.textAlign='center';ctx.fillText(String(parseD(x).getDate()),bx+w/2,ty+bh+2*S);ctx.textAlign='left'});
+   ty+=bh+14*S;
+   const ag={};SCORE.forEach(([k,nm])=>{const vs=days.map(x=>+((m.get(x)||{}).score||{})[k]||0).filter(v=>v>0);if(vs.length)ag[nm]=vs.reduce((a,b)=>a+b,0)/vs.length});
+   const lo=Object.entries(ag).sort((a,b)=>a[1]-b[1])[0];if(lo){ctx.fillStyle='#ffb74d';ctx.font=`${10.5*S}px sans-serif`;ctx.fillText(cwFit(ctx,`최근 7일 가장 낮은 영역 · ${lo[0]} (평균 ${lo[1].toFixed(1)}/10)`,W-px*2),px,ty);ty+=16*S}}
+  {const has=sc!=null||(o.mis||[]).some(x=>x&&tx(x.what))||(o.refl||[]).some(r=>r&&tx(r.what))||[...(o.grat||[]),...(o.mgrat||[])].some(tx);
+   if(d===T&&new Date().getHours()>=20&&!has){const bh=26*S;ctx.fillStyle='#ff7043';if(ctx.roundRect){ctx.beginPath();ctx.roundRect(px,ty,W-px*2,bh,8*S);ctx.fill()}else ctx.fillRect(px,ty,W-px*2,bh);ctx.fillStyle='#fff';ctx.font=`bold ${12*S}px sans-serif`;ctx.textBaseline='middle';ctx.fillText('🌙 오늘 돌아보기 쓰기 ›',px+10*S,ty+bh/2);ctx.textBaseline='top';ty+=bh+6*S}}
+  const top=ty+2*S,lim=H-8*S,two=W/S>=400;let X=px,TW=two?W/2-px-6*S:W-px*2,py=top;
+  const sec=t=>{if(py>lim-28*S)return false;ctx.fillStyle='#8e8e93';ctx.font=`bold ${11*S}px sans-serif`;ctx.fillText(t,X,py);py+=16*S;return true};
+  const row=(t,cl,ml)=>{ctx.fillStyle=cl||'#e5e5ea';ctx.font=`${12*S}px sans-serif`;cwWrap(ctx,t,TW,ml||2).forEach(l=>{if(py<lim-12*S){ctx.fillText(l,X,py);py+=15*S}});py+=2*S};
+  const mis=(o.mis||[]).filter(x=>x&&tx(x.what)),rf=(o.refl||[]).filter(r=>r&&tx(r.what)),gr=[...(o.grat||[]),...(o.mgrat||[])].filter(tx);
+  const evalPart=()=>{let any=false;
+    if(mis.length||rf.length){any=true;if(sec('🌱 돌아보기')){mis.slice(0,3).forEach(x=>row(`${x.what}${tx(x.next)?' → '+x.next:''}`));rf.slice(0,3).forEach(r=>row(`${r.what}${tx(r.fix)?' → '+r.fix:''}`))}py+=3*S}
+    if(gr.length){any=true;if(sec(`🙏 감사 ${gr.length}`))gr.slice(0,3).forEach(g=>row('· '+g,null,1));py+=3*S}
+    if(tx(o.step)){any=true;if(sec('👣 한 걸음'))row(o.step);py+=3*S}
+    if(tx(o.affirm)){any=true;if(sec('💪 다짐'))row(o.affirm,null,1);py+=3*S}
+    if(!any&&d<=T){if(sec('🌱 돌아보기'))row(d===T?'저녁에 하루를 돌아보면 여기에 나옵니다':'돌아본 기록이 없습니다','#8e8e93');py+=3*S}};
+  const notePart=()=>{const ns=cwNotes(d);if(sec(`📝 노트 ${ns.length}`)){if(ns.length)ns.slice(0,10).forEach(n=>row(`${n.fmId?'💭 ':'· '}${cwPlain(n.title)||cwPlain(n.body)}`,null,1));else row(d===T?'오늘 쓴 노트가 없습니다':'노트가 없습니다','#8e8e93')}};
+  if(two){evalPart();X=W/2+6*S;py=top;notePart();ctx.strokeStyle='#2c2c2e';ctx.beginPath();ctx.moveTo(W/2,top-4*S);ctx.lineTo(W/2,H);ctx.stroke()}else{const ns=cwNotes(d);if(ns.length&&(mis.length+rf.length+gr.length)>4){notePart();py+=3*S;evalPart()}else{evalPart();notePart()}}
+  return c}
 function cwSize(sz,k){const[w,h]=(sz&&sz[k]&&sz[k].w>50)?[sz[k].w,sz[k].h]:CW_DEF[k];const bw=w,bh=Math.max(120,h-72);const S=Math.min(3,Math.max(1.5,1000/bw));const F=+SET.cwFont||1.25;return[Math.round(bw*S),Math.round(bh*S),S*(k==='month'?Math.min(1.3,F):F)]}
 let cwAgain=false;
 async function cwRender(){const CB=NP('CalBridge');if(!CB)return;if(cwBusy){cwAgain=true;return}cwBusy=true;try{CWH0=Math.max(0,Math.min(12,SET.tlS??0));CWH1=Math.max(CWH0+1,Math.min(24,SET.tlE??24));await flush();const m=await allMap();let sz={};try{sz=await CB.sizes()}catch(e){}
@@ -4768,13 +4803,49 @@ async function cwRender(){const CB=NP('CalBridge');if(!CB)return;if(cwBusy){cwAg
   try{await dayItems('three',(d,m_,W,H,S)=>cwWeek(d,m_,W,H,S,3,SET.cwReal!==false),d=>`${md2(d)} ~ ${md2(addD(d,2))} · 3일${SET.cwReal!==false?' · 지난 날 실제':''}`)}catch(e){console.warn('cw3',e)}
   try{await dayItems('list',cwList,d=>`${md2(d)}부터 · 일정 목록`)}catch(e){console.warn('cwl',e)}
   try{await dayItems('todo',cwTodo,d=>`${md2(d)}${d===T?' · 오늘':''} · 할 일·습관`)}catch(e){console.warn('cwt',e)}
+  try{const[W,H,S]=cwSize(sz,'rev');const items=[];for(let i=-6;i<=1;i++){const d=addD(T,i),sc=cwSc(d,m.get(d)),nn=cwNotes(d).length;items.push({title:`${md2(d)}${d===T?' · 오늘':''}${sc!=null?' · 열매 '+sc+'점':''}${nn?' · 노트 '+nn:''}`,date:d,start:d,end:d,img:png(cwRev(d,m,W,H,S))})}await CB.save({kind:'rev',base:6,items})}catch(e){console.warn('cwr',e)}
 }finally{cwBusy=false;if(cwAgain){cwAgain=false;cwSoon()}}}
 function cwOpenUrl(u){try{const q=new URL(u);const v=q.searchParams.get('v'),d=q.searchParams.get('d')||today();if(!v)return;
-  (async()=>{if(v==='today'){$('#sheet').hidden=true;await openDay(today());go('day');renderDay();return}if(v==='week'||v==='month'){pZoom=v==='week'?'w':'m';pAnchor=d;go('plan');renderPlan()}else{await openDay(d);mode='sched';go('day');renderDay();if(v==='add')setTimeout(()=>openBlockEditor('plan',null,{s:'09:00',e:'10:00'}),300)}})()}catch(e){}}
+  (async()=>{if(v==='note'){const id='note-'+uid();const n={kind:'note',id,date:d,topic:'',title:'',body:'',photos:[],tags:[],created:Date.now(),updated:Date.now()};NOTES.set(id,n);nEdit=id;go('note');return}if(v==='rev'){await openDay(d);mode='pm';go('day');renderDay();return}if(v==='goal'){pZoom='m';pAnchor=today();go('plan');renderPlan();return}if(v==='fin'||v==='finadd'){go('budget');return}if(v==='verse'){await openDay(today());mode='start';go('day');renderDay();return}if(v==='body'){await openDay(today());mode='run';go('day');renderDay();return}if(v==='today'){$('#sheet').hidden=true;await openDay(today());go('day');renderDay();return}if(v==='week'||v==='month'){pZoom=v==='week'?'w':'m';pAnchor=d;go('plan');renderPlan()}else{await openDay(d);mode='sched';go('day');renderDay();if(v==='add')setTimeout(()=>openBlockEditor('plan',null,{s:'09:00',e:'10:00'}),300)}})()}catch(e){}}
 
+/* v4.23: 홈 위젯(글자형) — 지금·다음 / 목표 진행 / 몸 상태 / 생활비 / 말씀·다짐 */
+let twT=null,twBusy=false;
+function txtwSoon(){if(!IS_NATIVE)return;clearTimeout(twT);twT=setTimeout(()=>txtwUpdate().catch(e=>console.warn('tw',e)),1500)}
+function twPie(A,W,H){const[c,ctx]=cwCanvas(W,H);const tot=Object.values(A).reduce((a,b)=>a+b,0);if(!tot)return null;const E=Object.entries(A).sort((a,b)=>b[1]-a[1]);const R=Math.min(H/2-8,W*.22),cx=R+12,cy=H/2;let a0=-Math.PI/2;
+  E.forEach(([k,v])=>{const a1=a0+v/tot*Math.PI*2;ctx.fillStyle=catColor(k);ctx.beginPath();ctx.moveTo(cx,cy);ctx.arc(cx,cy,R,a0,a1);ctx.closePath();ctx.fill();a0=a1});
+  ctx.fillStyle='#1c1c1e';ctx.beginPath();ctx.arc(cx,cy,R*.5,0,7);ctx.fill();ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle='#e5e5ea';ctx.font=`bold ${R*.3}px sans-serif`;ctx.fillText(Math.round(tot/60)+'h',cx,cy);
+  ctx.textAlign='left';const lh=Math.min(H/6,R*.42),x0=cx+R+16;E.slice(0,6).forEach(([k,v],i)=>{const y=cy-E.slice(0,6).length*lh/2+i*lh+lh/2;ctx.fillStyle=catColor(k);ctx.fillRect(x0,y-lh*.28,lh*.5,lh*.5);ctx.fillStyle='#e5e5ea';ctx.font=`${lh*.62}px sans-serif`;ctx.fillText(cwFit(ctx,`${k} ${Math.round(v/60*10)/10}h · ${Math.round(v/tot*100)}%`,W-x0-lh*.8-6),x0+lh*.8,y)});
+  return c.toDataURL('image/png').split(',')[1]}
+async function txtwUpdate(){const TB=NP('TxtBridge');if(!TB||!TB.save||twBusy)return;twBusy=true;try{
+  const T=today(),dt=parseD(T);let o=D&&D.date===T?D:null;if(!o){const r=await store.load(T);o=norm(r||{date:T})}
+  const nowM=new Date().getHours()*60+new Date().getMinutes();
+  const put=(kind,obj,img)=>TB.save({kind,data:JSON.stringify({date:T,...obj}),img:img||''}).catch(()=>{});
+  const hm2=m=>{m=Math.max(0,Math.round(m));return m>=60?`${Math.floor(m/60)}시간${m%60?' '+m%60+'분':''}`:`${m}분`};
+  /* 4) 지금·다음 */
+  {const B=(o.plan||[]).filter(b=>b.s&&b.e&&!b.gext).map(b=>{const s=mins('00:00',b.s);let e=s+mins(b.s,b.e);if(e<=s)e=s+1440;return{s,e,t:b.act||b.cat||'',a:b}});
+   const cur=B.filter(b=>b.s<=nowM&&nowM<b.e).sort((a,b)=>b.s-a.s)[0],nx=B.filter(b=>b.s>nowM).sort((a,b)=>a.s-b.s)[0];
+   const hh=m=>`${String(Math.floor(m/60)%24).padStart(2,'0')}:${String(m%60).padStart(2,'0')}`;
+   await put('now',{title:cur?`▶ ${cur.t}`:(nx?'지금은 비어 있음':'오늘 시간표가 비어 있음'),body:cur?`${hh(cur.s)}~${hh(cur.e)} · ${hm2(cur.e-nowM)} 남음`:(nx?`${hh(nx.s)}까지 ${hm2(nx.s-nowM)}`:'눌러서 시간표 만들기'),foot:nx?`다음 ${hh(nx.s)} ${nx.t}`:''})}
+  /* 5) 목표 진행 */
+  {const y=dt.getFullYear(),mo=dt.getMonth();const END={m:new Date(y,mo+1,0),q:new Date(y,(Math.floor(mo/3)+1)*3,0),h:new Date(y,mo<6?6:12,0),y:new Date(y,11,31)};
+   const L=[];let nextG='';[['m','1달'],['q','3개월'],['h','6개월'],['y','1년']].forEach(([lv,nm])=>{const gs=goalsAt(lv,perKey(lv,T)),dn=gs.filter(g=>g.done).length,dl=Math.max(0,Math.round((END[lv]-dt)/864e5));
+     if(!gs.length)L.push(`${nm}  목표 없음 · D-${dl}`);else{const f=Math.round(dn/gs.length*10);L.push(`${nm}  ${'▰'.repeat(f)}${'▱'.repeat(10-f)}  ${dn}/${gs.length} · D-${dl}`);if(!nextG){const g=gs.find(x=>!x.done);if(g)nextG=g.title}}});
+   await put('goal',{title:'🎯 목표 진행',body:L.join('\n'),foot:nextG?`다음 목표 · ${nextG}`:''})}
+  /* 6) 몸 상태 */
+  {let m=null;try{m=await allMap()}catch(e){}const A={};if(m)for(let i=-6;i<=0;i++){const x=m.get(addD(T,i));if(x)(x.time||[]).forEach(b=>{if(b.cat&&b.s&&b.e)A[b.cat]=(A[b.cat]||0)+mins(b.s,b.e)||0})}
+   const sl=o.sleep||{},ex=(o.ex||[]);const exm=ex.reduce((a,x)=>a+(+x.min||0),0);const F=[];
+   F.push(sl.bed||sl.wake?`😴 수면 ${sl.bed||'?'}~${sl.wake||'?'}${sl.q?` (질 ${sl.q}/10)`:''}`:'😴 수면 기록 없음');F.push(ex.length?`🏃 운동 ${ex.length}건 · ${exm}분`:'🏃 오늘 운동 기록 없음');
+   const img=Object.keys(A).length?twPie(A,640,300):null;await put('body',{title:'🩺 몸 상태 · 최근 7일 시간 분포',body:img?'':F.join('\n'),foot:img?F.join('  ·  '):'',img:!!img},img)}
+  /* 7) 생활비 */
+  {let ttl='💰 이번 달 생활비',body='재정 기능을 켜면 여기에 나옵니다',foot='';try{if(BUD&&cacheAll){const mo=T.slice(0,7);const P=plan();const b=P.accounts.reduce((s,a)=>s+accMon(a),0);const sp=spendList(cacheAll,d=>d.startsWith(mo)).filter(x=>{const f=findItem(x.acc,x.bi);return x.acc!=='unexp'&&!(f.i&&isAnnual(f.i))}).reduce((s,x)=>s+x.amt,0);
+     const left=new Date(dt.getFullYear(),dt.getMonth()+1,0).getDate()-dt.getDate()+1;if(!b){body='예산을 정하면 남은 생활비가 나옵니다';foot=''}else{body=b-sp>=0?`남은 ${won(b-sp)}`:`초과 ${won(sp-b)}`;foot=`예산 ${won(b)} · 지출 ${won(sp)}${b-sp>0?' · 하루 '+won((b-sp)/left):''}`}}}catch(e){}
+   await put('budget',{title:ttl,body,foot})}
+  /* 8) 말씀·다짐 */
+  await put('verse',{title:'📖 오늘의 말씀',body:tx(o.word)?o.word.trim():'아침 기록에 오늘의 말씀을 적으면 여기에 나옵니다',foot:tx(o.affirm)?`💪 ${o.affirm.trim()}`:''})
+}finally{twBusy=false}}
 /* ---------- home widget ---------- */
 let wTimer=null;
-function widgetSoon(){if(!IS_NATIVE)return;cwSoon();clearTimeout(wTimer);wTimer=setTimeout(updateWidget,800)}
+function widgetSoon(){if(!IS_NATIVE)return;cwSoon();txtwSoon();clearTimeout(wTimer);wTimer=setTimeout(updateWidget,800)}
 async function updateWidget(){const WB=NP('WidgetBridge');if(!WB)return;try{
   const T=today();let o=D&&D.date===T?D:null;if(!o){const r=await store.load(T);o=norm(r||{date:T})}
   const dt=parseD(T);const L=[];
@@ -4787,6 +4858,7 @@ async function updateWidget(){const WB=NP('WidgetBridge');if(!WB)return;try{
   const F=[];const hb=SET.habits.filter(h=>o.habits[h.id]).length;F.push(`습관 ${hb}/${SET.habits.length}`);
   const nx=[];SET.routines.forEach(r=>{if(r.alarm&&r.alarm.on&&r.alarm.days.includes(dt.getDay())&&mins('00:00',r.alarm.time)>nowM&&!recsOf(o).some(x=>x.rid===r.id))nx.push([r.alarm.time,r.name])});nx.sort();if(nx.length)F.push(`⏰ ${nx[0][0]} ${nx[0][1]}`);
   try{if(BUD&&cacheAll){const mo=T.slice(0,7);const P=plan();const b=P.accounts.reduce((s,a)=>s+accMon(a),0);const sp=spendList(cacheAll,d=>d.startsWith(mo)).filter(x=>{const f=findItem(x.acc,x.bi);return x.acc!=='unexp'&&!(f.i&&isAnnual(f.i))}).reduce((s,x)=>s+x.amt,0);if(b)F.push(`생활비 ${b-sp>=0?'남은 '+won(b-sp):'초과 '+won(sp-b)}`)}}catch(e){}
+  try{const sc=cwSc(T,o);if(sc!=null)F.unshift(`🍎 열매 ${sc}점`);const ns=cwNotes(T);if(ns.length){L.push('');ns.slice(0,2).forEach(n=>L.push(`${n.fmId?'💭':'📝'} ${(cwPlain(n.title)||cwPlain(n.body)).slice(0,40)}`));F.push(`노트 ${ns.length}`)}if(tx(o.step))F.push(`👣 ${o.step.slice(0,20)}`)}catch(e){}
   const left=TASKS.items.filter(t=>!t.done&&t.due&&t.due<=T).length;
   await WB.update({data:JSON.stringify({date:T,title:`${dt.getMonth()+1}월 ${dt.getDate()}일 (${WD[dt.getDay()]})${left?` · 할 일 ${left}`:''}`,body:L.join('\n'),foot:F.join(' · ')})})}catch(e){}}
 
@@ -4979,7 +5051,7 @@ function schedHTML(ctx){SCTX=ctx;SM=ctx==='day'?'plan':({plan:'plan',time:'time'
   if(ctx==='plan')h+=`<div class="shead"><button class="iconbtn" id="sdprev" aria-label="전날">‹</button><b>${cd.getMonth()+1}월 ${cd.getDate()}일 (${WD[cd.getDay()]})${cur===today()?' · 오늘':''}${holName(cur)?` <span class="holt">${esc(holName(cur))}</span>`:''}</b><button class="iconbtn" id="sdnext" aria-label="다음날">›</button></div>`;
   h+=gcBox(cur)+(ctx==='run'?(SET.rcStick&&!(typeof rcSlim==='function'&&simOn())?'':(typeof rcSlim==='function'&&simOn()?rcSlim():foldWrap('rcore','🏃 루틴 · 몰입',runCoreHTML(),false)))+(typeof simOn==='function'&&simOn()?'':(()=>{try{return gxRunHTML()}catch(e){return''}})()+foldWrap('rnow','⏺ 지금 · 방금 한 일',runNowHTML(),false)):'')+`<div class="stool">${ctx==='day'||ctx==='run'?'':`<button class="btn small" id="srun">▶ 루틴</button><button class="btn small" id="sfoc" style="background:#e53935;border-color:#e53935">🎯 ${FC&&FC.ph!=='rate'?'몰입 중':'몰입'}</button>`}<span class="dleft">${dayLeftTxt()}</span><button class="del zzz" id="szzz" aria-label="잘 시간 정하기">💤${sleepAt()?sleepAt():''}</button><button class="del shrs" id="shrs" aria-label="표시 시간 조절">🕓${(()=>{const[a,z]=tlRange(D);return pad(a)+'~'+z})()}</button><button class="del shrs2" id="sclgt" data-clgt="1" aria-expanded="${SET.clgOn?'true':'false'}" aria-label="분류 색·관리·단어 규칙">🎨${SET.clgOn?'▴':'▾'}</button></div>${SET.clgOn?clgOpenHTML():''}${SM==='plan'?reflBanHTML()+apBanHTML()+carryBanHTML():''}`;
   if(SM!=='cmp'){const K=SM==='time'?'time':'plan';const T=cur===today();const list=TASKS.items.filter(t=>t.due===cur||(cur>=today()&&!t.done&&t.due&&t.due<cur)||(t.done&&t.doneAt===cur&&t.due!==cur)).sort(tSort);const repDone=TASKS.items.filter(t=>t.rep&&(t.log||[]).includes(cur)&&t.due!==cur);
-    const fC=isFold('ck'+K,false),fT=fC;h+=`<div class="scols${fT||fC?' fd':''}"><div class="scl"><div class="sch">${K==='time'?'실제 한 일':'시간 계획'} <button class="del" id="padd2">＋ 블록</button><button class="del" id="pyes">↩️ 어제 가져오기</button>${K==='time'&&!D.time.length&&D.plan.length?'<button class="del" id="pcopy">계획 복사</button>':''}${K==='time'&&shMissing(D).length?`<button class="del" data-shrest="1" style="color:#d84315;font-weight:700">🛟 사라진 기록 ${shMissing(D).length}</button>`:''}</div>${fT?'':`<p class="dhint">빈 곳 길게 눌러 끌기: 새 블록 · 블록 길게 눌러 끌기: 옮기기 · 아래 끝 끌기: 늘리기 <select id="ssnap" class="snapsel" aria-label="끌기 간격">${[5,10,15].map(v=>`<option value="${v}" ${SNAPM()===v?'selected':''}>${v}분 단위</option>`).join('')}</select></p>${tlHTML(K,true)}`}</div>
+    const fC=isFold('ck'+K,false),fT=false;h+=`<div class="scols${fT||fC?' fd':''}"><div class="scl"><div class="sch">${K==='time'?'실제 한 일':'시간 계획'} <button class="del" id="padd2">＋ 블록</button><button class="del" id="pyes">↩️ 어제 가져오기</button>${K==='time'&&!D.time.length&&D.plan.length?'<button class="del" id="pcopy">계획 복사</button>':''}${K==='time'&&shMissing(D).length?`<button class="del" data-shrest="1" style="color:#d84315;font-weight:700">🛟 사라진 기록 ${shMissing(D).length}</button>`:''}</div>${fT?'':`<p class="dhint">빈 곳 길게 눌러 끌기: 새 블록 · 블록 길게 눌러 끌기: 옮기기 · 아래 끝 끌기: 늘리기 <select id="ssnap" class="snapsel" aria-label="끌기 간격">${[5,10,15].map(v=>`<option value="${v}" ${SNAPM()===v?'selected':''}>${v}분 단위</option>`).join('')}</select></p>${tlHTML(K,true)}`}</div>
       <div class="scr"><div class="sch">체크리스트 <span class="hint">${list.filter(t=>!t.done).length}</span><button class="del" data-fold="ck${K}">${fC?'펼치기 ▾':'접기 ▴'}</button></div>${fC?'':`${ctx==='day'?'':D.pri.map((p,i)=>tx(p.text)?`<label class="pstar ${p.done?'done':''}"><input type="checkbox" data-pdone2="${i}" ${p.done?'checked':''}>⭐ <span>${esc(p.text)}</span></label>`:'').join('')}<div id="pck">${list.map(t=>tRow(t,!t.done&&!!t.due&&t.due<cur)).join('')}${repDone.map(t=>`<div class="trow done"><span class="tchk">✓</span><button class="tbody" data-to="${t.id}"><span class="tt">${esc(t.title||'')}</span><span class="tmeta"><span>🔁 다음 ${md(t.due)}</span></span></button></div>`).join('')}${cyRowsDay(cur)}${!list.length&&!repDone.length&&!cyRowsDay(cur)?'<p class="hint">할 일 없음</p>':''}</div>
       <input type="text" id="pcknew" placeholder="＋ 할 일 (반복: 매일 운동, 매주 월 보고)" enterkeyhint="done" style="margin-top:6px"><button class="del" id="pckall" style="margin-top:4px">전체 할 일 ›</button>`}</div></div>`}
   else{h+=`<p class="hint" style="margin:0 0 6px">왼쪽은 계획, 오른쪽은 실제로 한 일입니다. 양쪽 모두 빈 시간을 누르거나 길게 끌어 블록을 넣고, 블록을 눌러 고칩니다.</p><div class="scols rv"><div class="scl"><div class="sch">계획 <button class="del" data-addblk="plan">＋ 계획</button></div>${tlHTML('plan',true)}</div><div class="scl"><div class="sch">실제 <button class="del" data-addblk="time">＋ 실제</button>${!D.time.length&&D.plan.length?'<button class="del" id="pcopy">계획 복사</button>':''}</div>${tlHTML('time',true)}</div></div>`;
@@ -6766,8 +6838,25 @@ const FLB=()=>plugOK('FloatBridge')?NP('FloatBridge'):null;
 async function floatStart(){const F=FLB();if(!F||!SET.float)return false;try{const st=await F.status();if(!st.granted)return false;await F.start();floatScore(true);return true}catch(e){return false}}
 let flT=null,flLast='';function floatScore(now){if(!IS_NATIVE||!SET.float)return;clearTimeout(flT);flT=setTimeout(async()=>{const F=FLB();if(!F||!F.setText)return;try{let o=D&&D.date===today()?D:null;if(!o){const r=await store.load(today());o=norm(r||{date:today()})}const sc=scoreOf(o);const t=sc==null?'오늘':String(sc);const c=sc==null?'#E623397A':sc>=80?'#E62E7D32':sc>=60?'#E6F29900':'#E6D84315';if(t+c===flLast)return;flLast=t+c;await F.setText({t,c})}catch(e){}},now?50:1500)}
 function floatVis(v){const F=FLB();if(F&&SET.float)F.setVisible({v}).catch(()=>{})}
+
+/* v4.23: 둥둥 메모(떠 있는 버튼의 1초 메모창)로 적은 글을 노트 ‘둥둥 메모’ 주제로 가져옵니다 */
+let fmBusy=false;
+async function fmSync(){if(fmBusy||!IS_NATIVE)return;const F=FLB();if(!F||!F.memoList)return;fmBusy=true;try{
+  const r=await F.memoList();const L=JSON.parse(r.list||'[]');const done=[];let k=0;
+  for(const m of L){const t=String(m.t||'').trim();if(!t||(+m.imp||0)>=(+m.ts||0))continue;
+    let nid='';try{nid=localStorage.getItem('gj-fm:'+m.id)||''}catch(e){}
+    let n=(nid&&NOTES.get(nid))||[...NOTES.values()].find(x=>x.fmId===m.id);
+    const ln=t.split('\n');const ttl=ln[0].slice(0,40);
+    if(n){n.body=t;n.title=n.title&&n.fmT!==1?n.title:ttl;n.fmT=n.title===ttl?1:n.fmT;n.updated=Date.now()}
+    else{const id='note-'+uid();n={kind:'note',id,date:ymd(new Date(+m.c||Date.now())),topic:ensureTopic('둥둥 메모'),title:ttl,body:t,photos:[],tags:[],fmId:m.id,fmT:1,created:+m.c||Date.now(),updated:Date.now()};NOTES.set(id,n);try{localStorage.setItem('gj-fm:'+m.id,id)}catch(e){}}
+    await saveNote(n,true);done.push(m.id);k++}
+  if(done.length)await F.memoDone({ids:done.join(',')});
+  if(k){toast(`📝 둥둥 메모 ${k}개를 노트에 넣었습니다`);try{widgetSoon()}catch(e){}try{if(curSection==='notes')renderNotes()}catch(e){}}
+}catch(e){console.warn('fm',e)}finally{fmBusy=false}}
+if(IS_NATIVE){setTimeout(fmSync,4000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)setTimeout(fmSync,1200)});{const AP=NP('App');if(AP&&AP.addListener)AP.addListener('resume',()=>setTimeout(fmSync,1500))}}
+{const _sn=saveNote;saveNote=function(){const r=_sn.apply(this,arguments);try{cwSoon()}catch(e){}return r}}
 function renderFloatCard(){const C=$('#floatcard');if(!C)return;const ok=!!FLB();
-  C.innerHTML=`<h3>🍎 떠 있는 오늘 열매 버튼</h3><p class="hint" style="margin:0 0 8px">다른 앱을 쓰는 중에도 화면 가장자리에 오늘의 하루 열매 점수가 적힌 동그란 버튼이 떠 있습니다(점수가 없으면 ‘오늘’). 누르면 이 앱의 오늘 화면이 바로 열리고, 끌어서 위치를 옮길 수 있습니다. 이 앱을 보고 있을 때는 숨습니다.</p>
+  C.innerHTML=`<h3>🍎 떠 있는 오늘 열매 버튼</h3><p class="hint" style="margin:0 0 8px">다른 앱을 쓰는 중에도 화면 가장자리에 오늘의 하루 열매 점수가 적힌 동그란 버튼이 떠 있습니다(점수가 없으면 ‘오늘’). <b>두 번 누르면 이 앱이 열리고</b>, 한 번 누르면 다른 앱 위에 <b>1초 메모창</b>이 열립니다 — 바로 적고, 창 밖을 누르면 저장되며 작은 버튼으로 돌아갑니다. 메모창에서 좌우로 밀면 이전·다음 메모, 마지막에서 한 번 더 밀면 새 메모입니다. ‘보내기’는 노션·드라이브 등 공유 앱으로, ‘앱으로’는 이 앱을 엽니다. 적은 메모는 이 앱을 열 때 노트의 ‘둥둥 메모’로 들어옵니다. 끌어서 위치를 옮길 수 있고, 이 앱을 보고 있을 때는 숨습니다.</p>
     ${ok?`<label class="chk"><input type="checkbox" id="flon" ${SET.float?'checked':''}>떠 있는 버튼 켜기</label><p class="hint" id="flmsg" style="margin:6px 0 0"></p>`:`<p class="hint">${IS_NATIVE?(NA_MSG?NA_MSG:'이 APK에는 떠 있는 버튼 부품이 없습니다. 새 build-apk.yml로 APK를 다시 만드십시오.'):'안드로이드 앱에서만 됩니다.'}</p>`}`;
   const on=$('#flon');if(on)on.onchange=async()=>{const F=FLB();const m=$('#flmsg');if(on.checked){const st=await F.status().catch(()=>({granted:false}));SET.float=true;await saveSet().catch(()=>{});
       if(!st.granted){m.innerHTML='‘다른 앱 위에 표시’ 권한이 필요합니다. 설정 화면에서 <b>'+esc(APPN)+'</b>를 찾아 허용한 뒤 돌아오십시오.';await F.ask().catch(()=>{});return}
