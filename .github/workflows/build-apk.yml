@@ -250,6 +250,10 @@ jobs:
                           m.put("date", it.optString("date"));
                           m.put("start", it.optString("start"));
                           m.put("end", it.optString("end"));
+                          m.put("cols", it.optInt("cols", 0));
+                          m.put("rows", it.optInt("rows", 0));
+                          m.put("gw", it.optDouble("gw", 0));
+                          m.put("hh", it.optDouble("hh", 0));
                           meta.put(m);
                       }
                       SharedPreferences p = CalWidget.prefs(ctx);
@@ -432,6 +436,86 @@ jobs:
                   return PendingIntent.getBroadcast(c, id * 10 + d + 5, i, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
               }
 
+              static String addDays(String d, int n) {
+                  try {
+                      SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd", Locale.KOREA);
+                      java.util.Calendar cal = java.util.Calendar.getInstance();
+                      cal.setTime(f.parse(d));
+                      cal.add(java.util.Calendar.DATE, n);
+                      return f.format(cal.getTime());
+                  } catch (Exception e) {
+                      return d;
+                  }
+              }
+
+              static int dow0(String d) {
+                  try {
+                      SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd", Locale.KOREA);
+                      java.util.Calendar cal = java.util.Calendar.getInstance();
+                      cal.setTime(f.parse(d));
+                      return cal.get(java.util.Calendar.DAY_OF_WEEK) - 1;
+                  } catch (Exception e) {
+                      return 0;
+                  }
+              }
+
+              static int ccell(int i) {
+                  int[] t = { R.id.cw_c0, R.id.cw_c1, R.id.cw_c2, R.id.cw_c3, R.id.cw_c4, R.id.cw_c5, R.id.cw_c6 };
+                  return t[i];
+              }
+
+              static int mcell(int r, int c) {
+                  int[][] t = {
+                      { R.id.cw_m00, R.id.cw_m01, R.id.cw_m02, R.id.cw_m03, R.id.cw_m04, R.id.cw_m05, R.id.cw_m06 },
+                      { R.id.cw_m10, R.id.cw_m11, R.id.cw_m12, R.id.cw_m13, R.id.cw_m14, R.id.cw_m15, R.id.cw_m16 },
+                      { R.id.cw_m20, R.id.cw_m21, R.id.cw_m22, R.id.cw_m23, R.id.cw_m24, R.id.cw_m25, R.id.cw_m26 },
+                      { R.id.cw_m30, R.id.cw_m31, R.id.cw_m32, R.id.cw_m33, R.id.cw_m34, R.id.cw_m35, R.id.cw_m36 },
+                      { R.id.cw_m40, R.id.cw_m41, R.id.cw_m42, R.id.cw_m43, R.id.cw_m44, R.id.cw_m45, R.id.cw_m46 },
+                      { R.id.cw_m50, R.id.cw_m51, R.id.cw_m52, R.id.cw_m53, R.id.cw_m54, R.id.cw_m55, R.id.cw_m56 }
+                  };
+                  return t[r][c];
+              }
+
+              static int mrow(int r) {
+                  int[] t = { R.id.cw_mr0, R.id.cw_mr1, R.id.cw_mr2, R.id.cw_mr3, R.id.cw_mr4, R.id.cw_mr5 };
+                  return t[r];
+              }
+
+              // 날짜 칸마다 눌림 영역을 얹어, 누른 날의 시간표가 바로 열리게 한다
+              static void dayTaps(Context c, RemoteViews v, int id, String k, boolean shown, JSONObject mo) {
+                  v.setViewVisibility(R.id.cw_cols, View.GONE);
+                  v.setViewVisibility(R.id.cw_mg, View.GONE);
+                  if (!shown || mo == null) return;
+                  int cols = mo.optInt("cols", 0);
+                  if (cols <= 0) return;
+                  float dn = c.getResources().getDisplayMetrics().density;
+                  String st = mo.optString("start");
+                  if ("week".equals(k) || "three".equals(k)) {
+                      v.setViewVisibility(R.id.cw_cols, View.VISIBLE);
+                      v.setViewPadding(R.id.cw_cols, Math.round((float) mo.optDouble("gw", 0) * dn), 0, 0, 0);
+                      for (int i = 0; i < 7; i++) {
+                          if (i < cols) {
+                              v.setViewVisibility(ccell(i), View.VISIBLE);
+                              v.setOnClickPendingIntent(ccell(i), open(c, "day", addDays(st, i), id * 100 + 20 + i));
+                          } else {
+                              v.setViewVisibility(ccell(i), View.GONE);
+                          }
+                      }
+                  } else if ("month".equals(k)) {
+                      int rows = Math.max(4, Math.min(6, mo.optInt("rows", 5)));
+                      String g0 = addDays(st, -dow0(st));
+                      v.setViewVisibility(R.id.cw_mg, View.VISIBLE);
+                      v.setViewPadding(R.id.cw_mg, 0, Math.round((float) mo.optDouble("hh", 0) * dn), 0, 0);
+                      for (int r = 0; r < 6; r++) {
+                          v.setViewVisibility(mrow(r), r < rows ? View.VISIBLE : View.GONE);
+                          if (r >= rows) continue;
+                          for (int q = 0; q < 7; q++) {
+                              v.setOnClickPendingIntent(mcell(r, q), open(c, "day", addDays(g0, r * 7 + q), id * 100 + 20 + r * 7 + q));
+                          }
+                      }
+                  }
+              }
+
               static PendingIntent open(Context c, String v, String date, int rc) {
                   Intent i = new Intent(Intent.ACTION_VIEW, Uri.parse("calw://open?v=" + v + "&d=" + date));
                   i.setClass(c, MainActivity.class);
@@ -456,12 +540,14 @@ jobs:
                   JSONArray meta = meta(p, k);
                   String date = today();
                   boolean shown = false;
+                  JSONObject curMo = null;
                   if (meta.length() > 0) {
                       int idx = Math.max(0, Math.min(meta.length() - 1, p.getInt(k + "_idx", 0)));
                       JSONObject mo = meta.optJSONObject(idx);
                       if (mo != null) {
-                          v.setTextViewText(R.id.cw_title, mo.optString("title"));
-                          date = mo.optString("date", date);
+                              v.setTextViewText(R.id.cw_title, mo.optString("title"));
+                              date = mo.optString("date", date);
+                              curMo = mo;
                       }
                       File f = new File(new File(c.getFilesDir(), "widget"), k + "_" + idx + ".png");
                       if (f.exists()) {
@@ -486,6 +572,7 @@ jobs:
                   v.setOnClickPendingIntent(R.id.cw_title, nav(c, k, 0, id));
                   v.setOnClickPendingIntent(R.id.cw_img, open(c, k, date, id * 100 + 1));
                   v.setOnClickPendingIntent(R.id.cw_empty, open(c, k, date, id * 100 + 2));
+                  dayTaps(c, v, id, k, shown, curMo);
                   PendingIntent addPi = open(c, "rev".equals(k) ? "note" : "add", date, id * 100 + 3);
                   if ("rev".equals(k) && FloatBridge.granted(c)) {
                       Intent fi = new Intent(c, FloatService.class).setAction("memo");
@@ -556,13 +643,33 @@ jobs:
                       android:textSize="15sp"
                       android:textStyle="bold" />
           ${btn('cw_add','＋')}${btn('cw_open','⟳')}    </LinearLayout>
+          <FrameLayout
+              android:layout_width="match_parent"
+              android:layout_height="0dp"
+              android:layout_weight="1">
               <ImageView
                   android:id="@+id/cw_img"
                   android:layout_width="match_parent"
-                  android:layout_height="0dp"
-                  android:layout_weight="1"
-                  android:scaleType="fitCenter"
+                  android:layout_height="match_parent"
+                  android:scaleType="fitXY"
                   android:contentDescription="${name} 달력" />
+              <LinearLayout
+                  android:id="@+id/cw_cols"
+                  android:layout_width="match_parent"
+                  android:layout_height="match_parent"
+                  android:orientation="horizontal"
+                  android:visibility="gone">
+          ${[0,1,2,3,4,5,6].map(i=>`        <TextView android:id="@+id/cw_c${i}" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" />`).join('\n')}
+              </LinearLayout>
+              <LinearLayout
+                  android:id="@+id/cw_mg"
+                  android:layout_width="match_parent"
+                  android:layout_height="match_parent"
+                  android:orientation="vertical"
+                  android:visibility="gone">
+          ${[0,1,2,3,4,5].map(r=>`        <LinearLayout android:id="@+id/cw_mr${r}" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:orientation="horizontal">${[0,1,2,3,4,5,6].map(q=>`<TextView android:id="@+id/cw_m${r}${q}" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" />`).join('')}</LinearLayout>`).join('\n')}
+              </LinearLayout>
+          </FrameLayout>
               <TextView
                   android:id="@+id/cw_empty"
                   android:layout_width="match_parent"
