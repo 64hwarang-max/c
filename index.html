@@ -13776,7 +13776,7 @@ document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-dqsr]');if(!b)return;e.preventDefault();e.stopPropagation();nDate=b.dataset.dqsr;nView='dq';DQV='day';DQF='';renderNotes();scrollTo({top:0})},true);
 (function(){const st=document.createElement('style');st.textContent=`.dnote .dq-a{border-left-color:var(--line);background:transparent;cursor:pointer}.dnote .dq-a .dq-t{color:var(--ink);opacity:.85;font-size:.92rem}.dnote .dq-src{color:var(--muted);font-size:.68rem;white-space:nowrap}
 .dnote .dq-tg{margin:6px 0 0;font-size:.82rem}.dq-mk{position:absolute;right:3px;bottom:2px;font-size:.62rem;background:var(--card);border-radius:8px;padding:0 4px;line-height:1.4;box-shadow:0 0 0 1px var(--line);pointer-events:auto;cursor:pointer;z-index:2}
-button.sblk{position:relative}.dq-tm{border:0;background:none;font-size:.72rem;color:var(--muted);padding:0 4px;cursor:pointer}`;document.head.appendChild(st)})();
+.dq-tm{border:0;background:none;font-size:.72rem;color:var(--muted);padding:0 4px;cursor:pointer}`;document.head.appendChild(st)})();
 
 /* v4.56i 실행 화면: 계획→실행 붙여오기 막대(알림 카드로 숨지 않게) · 계획별 ✓ 체크 */
 cpPaint=function(){try{if(curSection!=='day'||mode!=='run'||ZMD>0||!D)return;const B=$('#dayBody');if(!B)return;document.querySelectorAll('.cpyrow,.cpbar').forEach(e=>e.remove());
