@@ -20,6 +20,10 @@ jobs:
         run: |
           mkdir -p www && cp index.html www/index.html && cp bible-text.txt bible-meta.txt www/
           sed -i "s/__BUILD__/#${GITHUB_RUN_NUMBER} $(TZ=Asia/Seoul date +%m.%d_%H:%M)/" www/index.html
+          # 구형 안드로이드(낡은 웹뷰)에서도 열리도록 문법을 낮추고 빠진 기능을 채움 (실패해도 원본 그대로 진행)
+          mkdir -p /tmp/eb && (cd /tmp/eb && npm init -y >/dev/null 2>&1 && npm i esbuild@0.21.5 >/dev/null 2>&1) || echo "esbuild 설치 실패 - 기능 채우기만 적용"
+          cp www/index.html /tmp/index.orig.html
+          NODE_PATH=/tmp/eb/node_modules node compat.js www/index.html || cp /tmp/index.orig.html www/index.html
           cat > package.json <<'J'
           {"name":"growth-journal","version":"1.0.0","private":true,
            "dependencies":{"@capacitor/android":"^7.0.0","@capacitor/app":"^7.0.0","@capacitor/core":"^7.0.0","@capacitor-community/speech-recognition":"^7.0.1","@capacitor-community/media":"^8.0.1","@ebarooni/capacitor-calendar":"^7.2.0","@capacitor/filesystem":"^7.0.0","@capacitor/local-notifications":"^7.0.0","@capacitor/share":"^7.0.0"},
@@ -3225,6 +3229,7 @@ jobs:
 
 
               private int sdk() {
+                  if (android.os.Build.VERSION.SDK_INT < 26) return 1;
                   try {
                       return HealthConnectClient.Companion.getSdkStatus(getContext(), PROV);
                   } catch (Throwable t) {
@@ -3632,8 +3637,11 @@ jobs:
               implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.1" // HC-DEP
               implementation platform("org.jetbrains.kotlin:kotlin-bom:2.0.21") // HC-DEP`);fs.writeFileSync(bg,g)}
           // 헬스 커넥트 1.1.0은 compileSdk 36 + 안드로이드 빌드 도구(AGP) 8.9.1 이상이 필요 → 올려 둠(실패하면 strip.js가 원래대로 되돌림)
-          const vg='android/variables.gradle';if(fs.existsSync(vg)){let v=fs.readFileSync(vg,'utf8');if(!fs.existsSync(vg+'.hcbak'))fs.writeFileSync(vg+'.hcbak',v);v=v.replace(/minSdkVersion\s*=\s*\d+/,'minSdkVersion = 26').replace(/compileSdkVersion\s*=\s*\d+/,'compileSdkVersion = 36');fs.writeFileSync(vg,v)}
+          const vg='android/variables.gradle';if(fs.existsSync(vg)){let v=fs.readFileSync(vg,'utf8');if(!fs.existsSync(vg+'.hcbak'))fs.writeFileSync(vg+'.hcbak',v);v=v.replace(/minSdkVersion\s*=\s*\d+/,'minSdkVersion = 23').replace(/compileSdkVersion\s*=\s*\d+/,'compileSdkVersion = 36');fs.writeFileSync(vg,v)}
           const rg='android/build.gradle';if(fs.existsSync(rg)){let r=fs.readFileSync(rg,'utf8');if(!fs.existsSync(rg+'.hcbak'))fs.writeFileSync(rg+'.hcbak',r);r=r.replace(/com\.android\.tools\.build:gradle:8\.[0-8](\.\d+)?/,'com.android.tools.build:gradle:8.9.1');fs.writeFileSync(rg,r);console.log('AGP:',(r.match(/com\.android\.tools\.build:gradle:[\d.]+/)||[''])[0])}
+          // 구형 태블릿(안드로이드 6~7)에서도 설치되도록 최소 버전을 23으로 낮추고, 헬스 커넥트 라이브러리(8.0 이상용)는 구형에서 건너뜀
+          {let y=fs.readFileSync(mp,'utf8');if(!y.includes('xmlns:tools'))y=y.replace('<manifest ','<manifest xmlns:tools="http://schemas.android.com/tools" ');
+           if(!y.includes('overrideLibrary'))y=y.replace(/<application/,'<uses-sdk tools:overrideLibrary="androidx.health.connect.client" />\n    <application');fs.writeFileSync(mp,y)}
           console.log('워치 연동 추가 완료:',pkg);
           WXJ
           cat > strip.js <<'SXJ'
@@ -3644,7 +3652,7 @@ jobs:
           const ma=path.join(javaDir,'MainActivity.java');let m=fs.readFileSync(ma,'utf8');
           if(what==='health'||what==='watch'){rm('HealthBridge.java');m=m.replace(/\n\s*registerPlugin\(HealthBridge\.class\);/,'');
             const bg='android/app/build.gradle';fs.writeFileSync(bg,fs.readFileSync(bg,'utf8').split('\n').filter(l=>!l.includes('// HC-DEP')).join('\n'));
-            for(const f of ['android/variables.gradle','android/build.gradle'])if(fs.existsSync(f+'.hcbak')){let o=fs.readFileSync(f+'.hcbak','utf8');if(f.endsWith('variables.gradle'))o=o.replace(/minSdkVersion\s*=\s*\d+/,'minSdkVersion = 26');fs.writeFileSync(f,o)}}
+            for(const f of ['android/variables.gradle','android/build.gradle'])if(fs.existsSync(f+'.hcbak')){let o=fs.readFileSync(f+'.hcbak','utf8');if(f.endsWith('variables.gradle'))o=o.replace(/minSdkVersion\s*=\s*\d+/,'minSdkVersion = 23');fs.writeFileSync(f,o)}}
           if(what==='watch'){rm('WatchBridge.java');rm('WatchReceiver.java');m=m.replace(/\n\s*registerPlugin\(WatchBridge\.class\);/,'');
             const mp='android/app/src/main/AndroidManifest.xml';fs.writeFileSync(mp,fs.readFileSync(mp,'utf8').replace(/\s*<receiver android:name="\.WatchReceiver"[^>]*\/>/,''))}
           if(what==='guard'){rm('CrashGuard.java');m=m.replace(/\n\s*CrashGuard\.install\(this\);/,'')}
