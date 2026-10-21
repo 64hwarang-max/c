@@ -249,6 +249,12 @@ jobs:
                           FileOutputStream fo = new FileOutputStream(new File(dir, kind + "_" + i + ".png"));
                           fo.write(b);
                           fo.close();
+                          if (it.has("img2")) {
+                              byte[] b2 = Base64.decode(it.getString("img2"), Base64.DEFAULT);
+                              FileOutputStream fo2 = new FileOutputStream(new File(dir, kind + "2_" + i + ".png"));
+                              fo2.write(b2);
+                              fo2.close();
+                          }
                           JSONObject m = new JSONObject();
                           m.put("title", it.optString("title"));
                           m.put("date", it.optString("date"));
@@ -265,6 +271,8 @@ jobs:
                       int idx = p.getInt(kind + "_idx", -1);
                       SharedPreferences.Editor e = p.edit().putString(kind + "_meta", meta.toString()).putInt(kind + "_base", base);
                       if (follow || idx < 0 || idx >= items.length()) e.putInt(kind + "_idx", base);
+                      JSArray nts = call.getArray("notes");
+                      if (nts != null) e.putString(kind + "_notes", nts.toString()); else e.remove(kind + "_notes");
                       e.apply();
                       CalWidget.refreshAll(ctx, kind);
                       call.resolve();
@@ -278,7 +286,7 @@ jobs:
                   CalWidget.saveAll(getContext());
                   SharedPreferences p = CalWidget.prefs(getContext());
                   JSObject r = new JSObject();
-                  for (String k : new String[] { "day", "week", "month", "three", "list", "todo", "rev" }) {
+                  for (String k : new String[] { "day", "week", "month", "three", "list", "todo", "rev", "all" }) {
                       JSObject o = new JSObject();
                       o.put("w", p.getInt(k + "_w", 0));
                       o.put("h", p.getInt(k + "_h", 0));
@@ -317,6 +325,7 @@ jobs:
               protected abstract String kind();
 
               static Class<?> cls(String k) {
+                  if ("all".equals(k)) return AllCalWidget.class;
                   if ("week".equals(k)) return WeekCalWidget.class;
                   if ("month".equals(k)) return MonthCalWidget.class;
                   if ("three".equals(k)) return ThreeCalWidget.class;
@@ -346,11 +355,19 @@ jobs:
                   AppWidgetManager m = AppWidgetManager.getInstance(c);
                   int[] ids = m.getAppWidgetIds(new ComponentName(c, cls(k)));
                   for (int id : ids) render(c, m, id, k);
+                  if (!"all".equals(k) && k.equals(prefs(c).getString("all_tab", "day"))) {
+                      int[] ai = m.getAppWidgetIds(new ComponentName(c, AllCalWidget.class));
+                      for (int id : ai) render(c, m, id, "all");
+                  }
+              }
+
+              static String ck(Context c, String k) {
+                  return "all".equals(k) ? prefs(c).getString("all_tab", "day") : k;
               }
 
               @Override
               public void onUpdate(Context c, AppWidgetManager m, int[] ids) {
-                  followToday(c, kind());
+                  followToday(c, ck(c, kind()));
                   for (int id : ids) {
                       saveSize(c, kind(), m.getAppWidgetOptions(id));
                       render(c, m, id, kind());
@@ -367,15 +384,29 @@ jobs:
               public void onReceive(Context c, Intent i) {
                   super.onReceive(c, i);
                   if (!NAV.equals(i.getAction()) || !kind().equals(i.getStringExtra("kind"))) return;
+                  if (i.getBooleanExtra("mode", false)) {
+                      SharedPreferences p0 = prefs(c);
+                      p0.edit().putString("day_mode", "real".equals(p0.getString("day_mode", "plan")) ? "plan" : "real").apply();
+                      refreshAll(c, kind());
+                      return;
+                  }
+                  String tb = i.getStringExtra("tab");
+                  if (tb != null) {
+                      prefs(c).edit().putString("all_tab", tb).apply();
+                      followToday(c, tb);
+                      refreshAll(c, kind());
+                      return;
+                  }
                   int d = i.getIntExtra("d", 0);
                   SharedPreferences p = prefs(c);
-                  int n = meta(p, kind()).length();
+                  String kk = ck(c, kind());
+                  int n = meta(p, kk).length();
                   if (n == 0) return;
                   if (d == 0) {
-                      followToday(c, kind());
+                      followToday(c, kk);
                   } else {
-                      int idx = Math.max(0, Math.min(n - 1, p.getInt(kind() + "_idx", 0) + d));
-                      p.edit().putInt(kind() + "_idx", idx).putBoolean(kind() + "_follow", false).apply();
+                      int idx = Math.max(0, Math.min(n - 1, p.getInt(kk + "_idx", 0) + d));
+                      p.edit().putInt(kk + "_idx", idx).putBoolean(kk + "_follow", false).apply();
                   }
                   refreshAll(c, kind());
               }
@@ -383,7 +414,7 @@ jobs:
                   static void saveAll(Context c) {
                       try {
                           AppWidgetManager m = AppWidgetManager.getInstance(c);
-                          for (String k : new String[] { "day", "week", "month", "three", "list", "todo", "rev" }) {
+                          for (String k : new String[] { "day", "week", "month", "three", "list", "todo", "rev", "all" }) {
                               int[] ids = m.getAppWidgetIds(new ComponentName(c, cls(k)));
                               if (ids != null && ids.length > 0) saveSize(c, k, m.getAppWidgetOptions(ids[0]));
                           }
@@ -430,6 +461,22 @@ jobs:
                       }
                   }
                   p.edit().putInt(k + "_idx", idx).putBoolean(k + "_follow", true).apply();
+              }
+
+              static PendingIntent modePi(Context c, String k, int id) {
+                  Intent i = new Intent(c, cls(k));
+                  i.setAction(NAV);
+                  i.putExtra("kind", k);
+                  i.putExtra("mode", true);
+                  return PendingIntent.getBroadcast(c, id * 10 + 8, i, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+              }
+
+              static PendingIntent tabPi(Context c, int id, String tab, int q) {
+                  Intent i = new Intent(c, AllCalWidget.class);
+                  i.setAction(NAV);
+                  i.putExtra("kind", "all");
+                  i.putExtra("tab", tab);
+                  return PendingIntent.getBroadcast(c, id * 1000 + 500 + q, i, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
               }
 
               static PendingIntent nav(Context c, String k, int d, int id) {
@@ -538,7 +585,8 @@ jobs:
                   }
               }
 
-              static void render(Context c, AppWidgetManager m, int id, String k) {
+              static void render(Context c, AppWidgetManager m, int id, String wk) {
+                  String k = ck(c, wk);
                   RemoteViews v = new RemoteViews(c.getPackageName(), R.layout.widget_cal);
                   SharedPreferences p = prefs(c);
                   JSONArray meta = meta(p, k);
@@ -554,6 +602,10 @@ jobs:
                               curMo = mo;
                       }
                       File f = new File(new File(c.getFilesDir(), "widget"), k + "_" + idx + ".png");
+                      if ("day".equals(k) && "real".equals(p.getString("day_mode", "plan"))) {
+                          File f2 = new File(new File(c.getFilesDir(), "widget"), "day2_" + idx + ".png");
+                          if (f2.exists()) f = f2;
+                      }
                       if (f.exists()) {
                           try {
                               Uri u = FileProvider.getUriForFile(c, c.getPackageName() + ".calwidget", f).buildUpon()
@@ -570,10 +622,10 @@ jobs:
                   }
                   v.setViewVisibility(R.id.cw_img, shown ? View.VISIBLE : View.GONE);
                   v.setViewVisibility(R.id.cw_empty, shown ? View.GONE : View.VISIBLE);
-                  v.setOnClickPendingIntent(R.id.cw_prev, nav(c, k, -1, id));
-                  v.setOnClickPendingIntent(R.id.cw_next, nav(c, k, 1, id));
-                  v.setOnClickPendingIntent(R.id.cw_today, nav(c, k, 0, id));
-                  v.setOnClickPendingIntent(R.id.cw_title, nav(c, k, 0, id));
+                  v.setOnClickPendingIntent(R.id.cw_prev, nav(c, wk, -1, id));
+                  v.setOnClickPendingIntent(R.id.cw_next, nav(c, wk, 1, id));
+                  v.setOnClickPendingIntent(R.id.cw_today, nav(c, wk, 0, id));
+                  v.setOnClickPendingIntent(R.id.cw_title, nav(c, wk, 0, id));
                   v.setOnClickPendingIntent(R.id.cw_img, open(c, k, date, id * 100 + 1));
                   v.setOnClickPendingIntent(R.id.cw_empty, open(c, k, date, id * 100 + 2));
                   dayTaps(c, v, id, k, shown, curMo);
@@ -583,13 +635,44 @@ jobs:
                       int fl = PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE;
                       addPi = android.os.Build.VERSION.SDK_INT >= 26 ? PendingIntent.getForegroundService(c, id * 100 + 6, fi, fl) : PendingIntent.getService(c, id * 100 + 6, fi, fl);
                   }
+                  boolean isDay = "day".equals(k);
+                  boolean realMode = isDay && "real".equals(p.getString("day_mode", "plan"));
+                  if (isDay) {
+                      if (realMode) addPi = open(c, "add&m=real", date, id * 100 + 3);
+                      v.setViewVisibility(R.id.cw_mode, View.VISIBLE);
+                      v.setViewVisibility(R.id.cw_imm, View.VISIBLE);
+                      v.setTextViewText(R.id.cw_mode, realMode ? "✅" : "📋");
+                      v.setOnClickPendingIntent(R.id.cw_mode, modePi(c, wk, id));
+                      v.setOnClickPendingIntent(R.id.cw_imm, open(c, "focus", today(), id * 100 + 7));
+                      try {
+                          JSONArray nt = new JSONArray(p.getString("day_notes", "[]"));
+                          if (nt.length() > 0) {
+                              v.setViewVisibility(R.id.cw_flip, View.VISIBLE);
+                              int[] fid = { ${[...Array(12)].map((_,i)=>'R.id.cw_f'+i).join(', ')} };
+                              for (int q = 0; q < fid.length; q++) {
+                                  v.setTextViewText(fid[q], "🔔 " + nt.optString(q % nt.length()));
+                                  v.setOnClickPendingIntent(fid[q], open(c, "day", date, id * 100 + 9));
+                              }
+                          }
+                      } catch (Exception e) {
+                      }
+                  }
                   v.setOnClickPendingIntent(R.id.cw_add, addPi);
                   v.setOnClickPendingIntent(R.id.cw_open, open(c, k, today(), id * 100 + 4));
+                  if ("all".equals(wk)) {
+                      v.setViewVisibility(R.id.cw_tabs, View.VISIBLE);
+                      String[] tk = { "day", "week", "month", "three", "list", "todo", "rev" };
+                      int[] tid = { ${[...Array(7)].map((_,i)=>'R.id.cw_t'+i).join(', ')} };
+                      for (int q = 0; q < tk.length; q++) {
+                          v.setOnClickPendingIntent(tid[q], tabPi(c, id, tk[q], q));
+                          v.setTextColor(tid[q], tk[q].equals(k) ? 0xFFFFD54F : 0xFFAEAEB2);
+                      }
+                  }
                   m.updateAppWidget(id, v);
               }
           }
           `);
-          for(const [c,k] of [['DayCalWidget','day'],['WeekCalWidget','week'],['MonthCalWidget','month'],['ThreeCalWidget','three'],['ListCalWidget','list'],['TodoCalWidget','todo'],['RevCalWidget','rev']])W(c+'.java',`package __PKG__;
+          for(const [c,k] of [['DayCalWidget','day'],['WeekCalWidget','week'],['MonthCalWidget','month'],['ThreeCalWidget','three'],['ListCalWidget','list'],['TodoCalWidget','todo'],['RevCalWidget','rev'],['AllCalWidget','all']])W(c+'.java',`package __PKG__;
 
           public class ${c} extends CalWidget {
               @Override
@@ -646,7 +729,24 @@ jobs:
                       android:textColor="#FFFFFFFF"
                       android:textSize="15sp"
                       android:textStyle="bold" />
-          ${btn('cw_add','＋')}${btn('cw_open','⟳')}    </LinearLayout>
+          ${btn('cw_mode','📋','40dp').replace('android:textSize="20sp" />','android:textSize="17sp"\n            android:visibility="gone" />')}${btn('cw_imm','🎯','40dp').replace('android:textSize="20sp" />','android:textSize="17sp"\n            android:visibility="gone" />')}${btn('cw_add','＋')}${btn('cw_open','⟳')}    </LinearLayout>
+          <ViewFlipper
+              android:id="@+id/cw_flip"
+              android:layout_width="match_parent"
+              android:layout_height="26dp"
+              android:autoStart="true"
+              android:flipInterval="4000"
+              android:visibility="gone">
+          ${[...Array(12)].map((_,i)=>`    <TextView android:id="@+id/cw_f${i}" android:layout_width="match_parent" android:layout_height="match_parent" android:gravity="center_vertical" android:paddingLeft="12dp" android:paddingRight="12dp" android:maxLines="1" android:ellipsize="end" android:textColor="#FFFFD54F" android:textSize="12sp" />`).join('\n')}
+          </ViewFlipper>
+          <LinearLayout
+              android:id="@+id/cw_tabs"
+              android:layout_width="match_parent"
+              android:layout_height="28dp"
+              android:orientation="horizontal"
+              android:visibility="gone">
+          ${['일','주','월','3일','목록','할일','열매'].map((t,i)=>`    <TextView android:id="@+id/cw_t${i}" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:text="${t}" android:textColor="#FFAEAEB2" android:textSize="13sp" android:textStyle="bold" />`).join('\n')}
+          </LinearLayout>
           <FrameLayout
               android:layout_width="match_parent"
               android:layout_height="0dp"
@@ -710,7 +810,7 @@ jobs:
               android:resizeMode="horizontal|vertical"
               android:widgetCategory="home_screen" />
           `;
-          R('xml/cal_day_info.xml',info(320,4));R('xml/cal_week_info.xml',info(320,4));R('xml/cal_month_info.xml',info(250,3));R('xml/cal_three_info.xml',info(320,4));R('xml/cal_list_info.xml',info(320,4));R('xml/cal_todo_info.xml',info(250,3));R('xml/cal_rev_info.xml',info(320,4));
+          R('xml/cal_day_info.xml',info(320,4));R('xml/cal_week_info.xml',info(320,4));R('xml/cal_month_info.xml',info(250,3));R('xml/cal_three_info.xml',info(320,4));R('xml/cal_list_info.xml',info(320,4));R('xml/cal_todo_info.xml',info(250,3));R('xml/cal_rev_info.xml',info(320,4));R('xml/cal_all_info.xml',info(320,4));
           // MainActivity: register CalBridge
           const ma=path.join(javaDir,'MainActivity.java');let m=fs.readFileSync(ma,'utf8');
           if(!m.includes('CalBridge')){m=m.replace('registerPlugin(WidgetBridge.class);','registerPlugin(WidgetBridge.class);\n        registerPlugin(CalBridge.class);');fs.writeFileSync(ma,m)}
@@ -724,7 +824,7 @@ jobs:
                       <meta-data android:name="android.appwidget.provider" android:resource="@xml/${inf}" />
                   </receiver>
           `;
-            x=x.replace('</application>',rcv('DayCalWidget','일간','cal_day_info')+rcv('WeekCalWidget','주간','cal_week_info')+rcv('MonthCalWidget','월간','cal_month_info')+rcv('ThreeCalWidget','3일','cal_three_info')+rcv('ListCalWidget','일정 목록','cal_list_info')+rcv('TodoCalWidget','할 일·습관','cal_todo_info')+rcv('RevCalWidget','열매·노트','cal_rev_info')+`        <provider android:name=".CalFileProvider" android:authorities="${pkg}.calwidget" android:exported="false" android:grantUriPermissions="true">
+            x=x.replace('</application>',rcv('DayCalWidget','일간','cal_day_info')+rcv('WeekCalWidget','주간','cal_week_info')+rcv('MonthCalWidget','월간','cal_month_info')+rcv('ThreeCalWidget','3일','cal_three_info')+rcv('ListCalWidget','일정 목록','cal_list_info')+rcv('TodoCalWidget','할 일·습관','cal_todo_info')+rcv('RevCalWidget','열매·노트','cal_rev_info')+rcv('AllCalWidget','통합 달력','cal_all_info')+`        <provider android:name=".CalFileProvider" android:authorities="${pkg}.calwidget" android:exported="false" android:grantUriPermissions="true">
                       <meta-data android:name="android.support.FILE_PROVIDER_PATHS" android:resource="@xml/cal_widget_paths" />
                   </provider>
               </application>`);
