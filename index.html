@@ -3449,13 +3449,49 @@ function ntTreeHTML(all){let h='';ntKeys().forEach((k,i)=>{const subs=pilSubs(k)
       const rest=ns.filter(n=>!SL.includes(noteSub(n)));h+=ntPages(rest.sort(ntPgSort),2,ck);if(!ns.length&&!SL.length)h+=ntEmpty(2)});
     const dir=inK.filter(n=>!subs.some(e=>subHas(e,n)));h+=ntPages(dir.sort(ntPgSort),1,kk);if(!subs.length&&!dir.length)h+=ntEmpty(1)});
   return h}
+
+/* ---------- 🔲 노트 분류 만다라트 (대분류 › 중분류 › 소분류는 칸으로, 소분류 안은 목록으로) ---------- */
+let NMV={k:null,ek:null,sx:null};
+async function ntAddMaj(){const v=(await uiPrompt('새 대분류 이름 (예: 가족행사, 취미, 연구)')||'').trim();if(!v)return;const m={id:uid(),n:v,e:'📁'};majList().push(m);await saveSet().catch(()=>{});NMV={k:'m:'+m.id,ek:null,sx:null};renderNotes()}
+function nmRing(cells,ctr,addHTML,rn){rn=rn==null?8:rn;const c=cells.slice(0,rn);const ex=cells.slice(rn);let a=0;while(c.length<8&&a<addHTML.length)c.push(addHTML[a++]);while(c.length<8)c.push('<span class="mdc emp" style="opacity:.3;cursor:default"></span>');c.splice(4,0,ctr);
+  return`<div class="mdg nmg">${c.join('')}</div>`+((ex.length||a<addHTML.length)?`<p class="hint" style="margin:0 0 2px">8칸 밖</p><div class="mdmore">${[...ex.map(x=>x.chip||''),...addHTML.slice(a).map(x=>x.replace('class="mdc emp"','class="chip"').replace(/<br>/g,' '))].join('')}</div>`:'')}
+function nmHead(up,title,cnt,act){return`<div class="mdcr"><button class="del" data-nmup="1">‹ ${up}</button><b>${title}</b><small class="hint">${cnt}</small><span style="margin-left:auto;display:flex;gap:4px;flex-wrap:wrap"><button class="del" data-ntfeed="${esc(act)}">📅 날짜별</button><button class="del" data-ntadd="${esc(act)}">＋ 추가</button><button class="del" data-ntmenu="${esc(act)}">⋯</button></span></div>`}
+function ntMandHTML(all){const keys=ntKeys().filter(k=>!(k===''&&!pilSubs('').length&&!all.some(n=>noteDk(n)===''))),V=NMV;
+  if(V.k!=null&&!keys.includes(V.k))NMV=V=NMV={k:null,ek:null,sx:null};
+  const cat=k=>`<button class="mdc cat" style="--mk:${k===''?'#9aa3b2':pmCol(k)}" data-nmk="${esc(k)}" data-dropdk="${esc(k)}"><i>${esc(dkEmo(k))}</i>${esc(dkName(k))}<small>중분류 ${pilSubs(k).length} · 노트 ${all.filter(n=>noteDk(n)===k).length}</small></button>`;
+  if(V.k==null){const RS=ringSplit('nt',keys,k=>k,k=>dkEmo(k)+' '+dkName(k));const cells=RS.list.map(k=>({h:cat(k),chip:`<button class="chip" data-nmk="${esc(k)}">${esc(dkEmo(k))} ${esc(dkName(k))}</button>`}));
+    return`<div class="nmand"><p class="hint" style="margin:2px 2px 0">가운데 ‘나’는 비전으로, 둘레 칸은 대분류로 들어갑니다.</p>${ringBtn('nt')}`+nmRing(cells.map((c,i)=>i<RS.n?c.h:{chip:c.chip}),`<button class="mdc ctr" style="--mk:var(--acc)" data-nmme="1"><i>🧬</i>나<small>노트 ${all.filter(n=>!n.person).length} · 비전 ›</small></button>`,[`<button class="mdc emp" data-nmmaj="1"><i>＋</i>대분류</button>`],RS.n)+`</div>`}
+  const k=V.k,subs=pilSubs(k),ents=subs.map(e=>({e,ek:ntEk(e),ns:all.filter(n=>subHas(e,n))}));
+  if(V.ek&&!ents.some(x=>x.ek===V.ek)){V.ek=null;V.sx=null}
+  if(!V.ek){const ctr=`<button class="mdc ctr" style="--mk:${k===''?'#9aa3b2':pmCol(k)}" data-ntmenu="${esc('k|'+k)}"><i>${esc(dkEmo(k))}</i>${esc(dkName(k))}<small>노트 ${all.filter(n=>noteDk(n)===k).length} · ⋯</small></button>`;
+    const RS1=ringSplit('nt:'+k,ents,x=>x.ek,x=>x.e.name);const cells=RS1.list.map(x=>{const c=x.e.cat?catObj(x.e.cat):null;const sn=c?subList(c,x.ns).length:0;return x.e.cat?{h:`<button class="mdc cat" style="--mk:${x.e.color||'var(--line)'}" data-nmc="${esc(x.ek)}" data-dropcat="${esc(x.e.cat)}">${esc(x.e.name)}<small>소분류 ${sn} · 노트 ${x.ns.length}</small></button>`,chip:`<button class="chip" data-nmc="${esc(x.ek)}">${esc(x.e.name)}</button>`}:{h:`<button class="mdc cat" style="--mk:var(--line)" data-nmc="${esc(x.ek)}" data-nt="${esc(x.e.t.id)}">${esc(x.e.name)}<small>노트 ${x.ns.length}</small></button>`,chip:`<button class="chip" data-nmc="${esc(x.ek)}">${esc(x.e.name)}</button>`}});
+    const dir=all.filter(n=>noteDk(n)===k&&!subs.some(e=>subHas(e,n))).sort(ntPgSort);
+    return`<div class="nmand">${nmHead('대분류',`${esc(dkEmo(k))} ${esc(dkName(k))}`,`중분류 ${subs.length}`,'k|'+k)}`+ringBtn('nt:'+k)+nmRing(cells.map((c,i)=>i<RS1.n?c.h:{chip:c.chip}),ctr,[`<button class="mdc emp" data-nmnewc="1"><i>＋</i>중분류</button>`],RS1.n)+(dir.length?`<p class="mhead" style="margin:8px 0 2px">중분류 없는 페이지 <small class="hint">${dir.length}</small></p>`+ntPages(dir,0,'k:'+k):'')+`</div>`}
+  const X=ents.find(x=>x.ek===V.ek),e=X.e,c=e.cat?catObj(e.cat):null,SL=c?subList(c,X.ns):[];
+  if(V.sx&&!SL.includes(V.sx))V.sx=null;
+  if(!V.sx){const ctr=`<button class="mdc ctr" style="--mk:${e.color||'var(--acc)'}" data-ntmenu="${esc('c|'+V.ek)}">${esc(e.name)}<small>노트 ${X.ns.length} · ⋯</small></button>`;
+    const rest=X.ns.filter(n=>!SL.includes(noteSub(n))).sort(ntPgSort);
+    const RS2=c?ringSplit('nt:'+V.ek,SL):{list:[],n:8};const ring=c?ringBtn('nt:'+V.ek)+nmRing(RS2.list.map((x,i)=>{const sn=X.ns.filter(n=>noteSub(n)===x).length;return i<RS2.n?`<button class="mdc" data-nms="${esc(x)}" data-dropsub="${esc(e.cat+'|'+x)}">${esc(x)}<small>노트 ${sn}</small></button>`:{chip:`<button class="chip" data-nms="${esc(x)}">${esc(x)}</button>`}}),ctr,[`<button class="mdc emp" data-nmnews="1"><i>＋</i>소분류</button>`],RS2.n):'';
+    return`<div class="nmand">${nmHead(`${esc(dkEmo(k))} ${esc(dkName(k))}`,`📂 ${esc(e.name)}`,c?`소분류 ${SL.length}`:'',  'c|'+V.ek)}${ring}`+(rest.length?(c?`<p class="mhead" style="margin:8px 0 2px">소분류 없는 페이지 <small class="hint">${rest.length}</small></p>`:'')+ntPages(rest,0,'c:'+V.ek):(!c?ntEmpty(0):''))+`</div>`}
+  const sn=X.ns.filter(n=>noteSub(n)===V.sx).sort(ntPgSort),sk='s:'+V.ek+'|'+V.sx;
+  return`<div class="nmand">${nmHead(`📂 ${esc(e.name)}`,`🗂 ${esc(V.sx)}`,`노트 ${sn.length}`,'s|'+V.ek+'|'+V.sx)}${ntPages(sn,0,sk)||ntEmpty(0)}</div>`}
+function nmBind(A){const up=()=>{if(NMV.sx)NMV.sx=null;else if(NMV.ek)NMV.ek=null;else NMV.k=null;renderNotes();window.scrollTo(0,0)};
+  A.querySelectorAll('[data-nmk]').forEach(b=>b.onclick=()=>{NMV={k:b.dataset.nmk,ek:null,sx:null};renderNotes();window.scrollTo(0,0)});
+  A.querySelectorAll('[data-nmc]').forEach(b=>b.onclick=()=>{NMV.ek=b.dataset.nmc;NMV.sx=null;renderNotes();window.scrollTo(0,0)});
+  A.querySelectorAll('[data-nms]').forEach(b=>b.onclick=()=>{NMV.sx=b.dataset.nms;renderNotes();window.scrollTo(0,0)});
+  A.querySelectorAll('[data-nmup]').forEach(b=>b.onclick=up);
+  A.querySelectorAll('[data-nmme]').forEach(b=>b.onclick=()=>{openSection('vision');window.scrollTo(0,0)});
+  A.querySelectorAll('[data-nmmaj]').forEach(b=>b.onclick=ntAddMaj);
+  A.querySelectorAll('[data-nmnewc]').forEach(b=>b.onclick=()=>ntNewSec(NMV.k));
+  A.querySelectorAll('[data-nmnews]').forEach(b=>b.onclick=()=>{const e=ntSubOf(NMV.ek);if(e)ntNewSub(e)})}
+(function(){const st=document.createElement('style');st.textContent=`.nmand .mdg{margin:6px 0}.nmand .mdc small{white-space:normal}.nmand .mdcr{margin:4px 0}.nmand .ntpg{--lv:0}`;document.head.appendChild(st)})();
 function ntHeadHTML(all){const rec=all.filter(n=>!n.person).sort((a,b)=>(b.updated||0)-(a.updated||0)).slice(0,6);
   return`<div class="nthead"><input type="search" id="ntq" placeholder="🔍 노트 찾기" value="${esc(ntQ)}" aria-label="노트 찾기"><button class="btn small" id="ntnew">＋ 새 페이지</button></div>
   ${ntQ||!rec.length?'':`<div class="ntrec"><small>최근</small>${rec.map(n=>`<button data-no="${n.id}">${esc(nTitle(n))}</button>`).join('')}</div>`}
-  <div class="ntbar"><button class="del" id="ntall">모두 펼치기</button><button class="del" id="ntnone">모두 접기</button><button class="del" id="ntmaj">＋ 대분류</button></div>`}
-function ntFullHTML(all){return ntHeadHTML(all)+`<div class="ntlist">${ntQ.trim()?ntSearchHTML(all):ntTreeHTML(all)}</div>${NDND()?'<p class="hint" style="margin:8px 4px 0">🖱️ 페이지를 끌어 다른 대분류·중분류·소분류 위에 놓으면 옮겨집니다.</p>':''}`}
+  `}
+function ntFullHTML(all){return ntHeadHTML(all)+`<div class="ntlist">${ntQ.trim()?ntSearchHTML(all):ntMandHTML(all)}</div>${NDND()?'<p class="hint" style="margin:8px 4px 0">🖱️ 페이지를 끌어 다른 대분류·중분류·소분류 위에 놓으면 옮겨집니다.</p>':''}`}
 function ntOpenPage(id){if(nEdit&&nEdit!==id){const c=NOTES.get(nEdit);if(c&&!c.person&&!c.jt&&!(c.title||'').trim()&&!(c.body||'').trim()&&!(c.photos||[]).length&&!(c.recs||[]).length&&!c.map&&!(nrOn()&&NR.nid===c.id)){NOTES.delete(c.id)}}nEdit=id;renderNotes();if(!ntWide())window.scrollTo(0,0)}
-function ntBind(A){if(!A)return;A.querySelectorAll('[data-ntog]').forEach(b=>b.onclick=()=>{ntToggle(b.dataset.ntog);renderNotes()});
+function ntBind(A){if(!A)return;nmBind(A);A.querySelectorAll('[data-ntog]').forEach(b=>b.onclick=()=>{ntToggle(b.dataset.ntog);renderNotes()});
   A.querySelectorAll('[data-no]').forEach(b=>b.onclick=()=>ntOpenPage(b.dataset.no));
   A.querySelectorAll('[data-ntadd]').forEach(b=>b.onclick=()=>ntAdd(b.dataset.ntadd));A.querySelectorAll('[data-ntmenu]').forEach(b=>b.onclick=()=>ntMenu(b.dataset.ntmenu));
   const q=A.querySelector('#ntq');if(q)q.oninput=()=>{ntQ=q.value;clearTimeout(ntBind._t);ntBind._t=setTimeout(()=>{renderNotes();const x=document.querySelector('#ntq');if(x){x.focus();try{x.setSelectionRange(x.value.length,x.value.length)}catch(e){}}},300)};
@@ -3467,9 +3503,9 @@ function ntExpand(k){const S=ntOpenSet();S.add('k:'+k);const all=[...NOTES.value
 function ntSheet(title,items){const S=$('#sheet');S.hidden=false;S.innerHTML=`<div class="sheetbox" role="dialog" aria-label="${esc(title)}"><div class="shead"><b>${esc(title)}</b><button class="del" id="ntsx">닫기</button></div><div class="ntsheet">${items.map((x,i)=>`<button class="btn ghost" data-nts="${i}">${x[0]}</button>`).join('')}</div></div>`;
   const close=()=>{S.hidden=true;S.innerHTML=''};$('#ntsx').onclick=close;S.onclick=e=>{if(e.target===S)close()};S.querySelectorAll('[data-nts]').forEach(b=>b.onclick=()=>{close();items[+b.dataset.nts][1]()})}
 function ntNewPage(p){try{localStorage.setItem('gj-ntlast',p)}catch(e){}const[kd,...r]=p.split('|');
-  if(kd==='k'){const k=r.join('|');const id='note-'+uid();const n={kind:'note',id,date:today(),topic:'',dk:k,title:'',body:'',photos:[],tags:[],created:Date.now(),updated:Date.now()};if(SCORE.some(x=>x[0]===k))n.area=k;NOTES.set(id,n);ntToggle('k:'+k,true);nEdit=id;renderNotes();setTimeout(()=>{const t=$('#ntitle');t&&t.focus()},60);return}
+  if(kd==='k'){const k=r.join('|');NMV={k,ek:null,sx:null};const id='note-'+uid();const n={kind:'note',id,date:today(),topic:'',dk:k,title:'',body:'',photos:[],tags:[],created:Date.now(),updated:Date.now()};if(SCORE.some(x=>x[0]===k))n.area=k;NOTES.set(id,n);ntToggle('k:'+k,true);nEdit=id;renderNotes();setTimeout(()=>{const t=$('#ntitle');t&&t.focus()},60);return}
   const ek=kd==='c'?r.join('|'):r[0];const x=kd==='s'?r.slice(1).join('|'):'';const e=ntSubOf(ek);if(!e)return;const t=e.t||catTopic(e.cat,true);if(!t)return;
-  const k=e.cat?dkOf(catObj(e.cat)):(t.area&&SCORE.some(z=>z[0]===t.area)?t.area:'');ntToggle('k:'+k,true);ntToggle('c:'+ek,true);if(x)ntToggle('s:'+ek+'|'+x,true);newNote(t.id,today(),'',x)}
+  const k=e.cat?dkOf(catObj(e.cat)):(t.area&&SCORE.some(z=>z[0]===t.area)?t.area:'');ntToggle('k:'+k,true);ntToggle('c:'+ek,true);if(x)ntToggle('s:'+ek+'|'+x,true);NMV={k,ek,sx:x||null};newNote(t.id,today(),'',x)}
 async function ntNewSec(k){const v=(await uiPrompt(`${dkName(k)} 안에 만들 중분류 이름`)||'').trim();if(!v)return;if(pilSubs(k).some(e=>e.name===v)){toast('이미 있는 중분류입니다.');return}if(!addSubCat(k,v))return;await saveSet().catch(()=>{});ntToggle('k:'+k,true);ntToggle('c:'+v,true);renderNotes()}
 async function ntNewSub(e){const c=catObj(e.cat);if(!c)return;const v=(await uiPrompt(`‘${e.name}’ 안에 만들 소분류 이름`)||'').trim();if(!v)return;c.subs=c.subs||[];if(!c.subs.includes(v))c.subs.push(v);await saveSet().catch(()=>{});ntToggle('c:'+e.cat,true);ntToggle('s:'+e.cat+'|'+v,true);renderNotes()}
 function ntAdd(p){const[kd,...r]=p.split('|');if(kd==='s'){ntNewPage(p);return}
@@ -3884,7 +3920,7 @@ function renderNotes(){
     $('#nnew').onclick=()=>newNote($('#ntsel').value,nDate);$('#nocrset').onclick=()=>{openOcrSet()};$('#nmapnew').onclick=()=>{const id='note-'+uid();const n={kind:'note',id,date:nDate,topic:$('#ntsel').value,title:'마인드맵',body:'',photos:[],map:{nodes:[],view:'mind'},created:Date.now(),updated:Date.now()};NOTES.set(id,n);saveNote(n,true);nEdit=id;renderNotes()};$('#nocrnew').onclick=()=>{const tp=$('#ntsel').value;const id='note-'+uid();const n={kind:'note',id,date:nDate,topic:tp,title:'',body:'',photos:[],created:Date.now(),updated:Date.now()};NOTES.set(id,n);nEdit=id;ocrPick(n,()=>{if(nEdit===id)renderEditor()});renderNotes()};
     R.querySelectorAll('[data-nd]').forEach(b=>b.onclick=()=>{nDate=b.dataset.nd;renderNotes()});
   }else if(!nTopic){
-    if(nPil){const k=nPil==='etc'?'':nPil;ntToggle('k:'+k,true);nPil=null;setTimeout(()=>{const el=document.querySelector(`.ntr[data-dropdk="${CSS.escape(k)}"]`);el&&el.scrollIntoView({block:'start'})},80)}
+    if(nPil){const k=nPil==='etc'?'':nPil;ntToggle('k:'+k,true);NMV={k,ek:null,sx:null};nPil=null;setTimeout(()=>{const el=document.querySelector(`.ntr[data-dropdk="${CSS.escape(k)}"]`);el&&el.scrollIntoView({block:'start'})},80)}
     if(ntw){const rec=all.filter(n=>!n.person).sort((a,b)=>(b.updated||0)-(a.updated||0)).slice(0,8);R.innerHTML=`<div class="ntwel"><p style="font-size:1.05rem">왼쪽 목록에서 페이지를 고르거나 <b>＋</b>로 새 페이지를 만드십시오.</p></div>${rec.length?'<p class="fl">최근에 고친 페이지</p>'+rec.map(n=>noteCard(n,true)).join(''):''}`;R.querySelectorAll('[data-no]').forEach(b=>b.onclick=()=>ntOpenPage(b.dataset.no));hydrate(R);return}
     R.innerHTML=ntFullHTML(all);ntBind(R);hydrate(R);return;
     R.innerHTML=`${nPilHead(all)}<div class="shelf" ${nPil?'':'style="display:none"'}>${nPil?nPilShelf(all):''}<button class="book newbook" id="tnewbook"><b>＋</b><span>중분류 추가</span></button></div>${nPil?nDirectHTML(all):''}${nDragHint()}`;nDirectBind(R);
@@ -10554,6 +10590,30 @@ document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest
 .mdtiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:8px 0}.mdtiles .mdc{aspect-ratio:auto;min-height:84px}
 .mdcr{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:6px 0}.mdcr b{font-size:1rem}.mdmore{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 8px}`;document.head.appendChild(st)})();
 try{SUBL.pmd='🏛️ 나만의 기둥'}catch(e){}
+
+/* ---------- 🔲 만다라트 8칸에 넣을 항목 고르기 (나만의 기둥·노트 분류 공통) ---------- */
+const RINGS={};
+function ringSplit(id,items,gid,lab){gid=gid||(x=>x);RINGS[id]={items:items.map(x=>({id:gid(x),label:lab?lab(x):String(gid(x))}))};
+  const sel=(((SET.mdRing||{})[id])||[]).filter(k=>items.some(x=>gid(x)===k)).slice(0,8);
+  if(!sel.length)return{list:items,n:Math.min(8,items.length)};
+  return{list:[...sel.map(k=>items.find(x=>gid(x)===k)),...items.filter(x=>!sel.includes(gid(x)))],n:sel.length}}
+const ringBtn=id=>`<div style="text-align:right;margin:0 0 6px"><button class="del" data-ringpick="${esc(id)}">🔲 8칸 고르기</button></div>`;
+function openRingPick(id){const R=RINGS[id];if(!R)return;const S=$('#sheet');S.hidden=false;
+  let sel=(((SET.mdRing||{})[id])||[]).filter(k=>R.items.some(i=>i.id===k)).slice(0,8);if(!sel.length)sel=R.items.slice(0,8).map(i=>i.id);
+  const draw=()=>{const un=R.items.filter(i=>!sel.includes(i.id));
+    S.innerHTML=`<div class="sheetbox" role="dialog" aria-label="8칸 고르기"><div class="shead"><b>🔲 8칸에 넣을 것 고르기</b><button class="del" id="rgx">닫기</button></div>
+    <p class="hint" style="margin:0 0 8px">만다라트 둘레 <b>8칸</b>에 들어갈 항목과 순서를 정합니다. 칸에 없는 항목은 ‘8칸 밖’ 줄에 나옵니다. (지금 <b>${sel.length}</b>/8)</p>
+    ${sel.map((k,i)=>`<div class="ordrow"><span>${i+1}. ${esc(R.items.find(x=>x.id===k).label)}</span><button type="button" data-rgu="${i}" ${i===0?'disabled':''} aria-label="위로">▲</button><button type="button" data-rgd="${i}" ${i===sel.length-1?'disabled':''} aria-label="아래로">▼</button><label><input type="checkbox" data-rgc="${esc(k)}" checked>칸에 넣기</label></div>`).join('')}
+    ${un.length?`<p class="ordsec">8칸 밖</p>`+un.map(x=>`<div class="ordrow off"><span>${esc(x.label)}</span><label><input type="checkbox" data-rgc="${esc(x.id)}">칸에 넣기</label></div>`).join(''):''}
+    <div class="row" style="margin-top:10px;gap:8px"><button class="add" id="rgok">저장</button><button class="del" id="rgdef">기본값으로</button></div></div>`;
+    const close=()=>{S.hidden=true;S.innerHTML=''};$('#rgx').onclick=close;S.onclick=e=>{if(e.target===S)close()};
+    S.querySelectorAll('[data-rgu]').forEach(b=>b.onclick=()=>{const i=+b.dataset.rgu;[sel[i-1],sel[i]]=[sel[i],sel[i-1]];draw()});
+    S.querySelectorAll('[data-rgd]').forEach(b=>b.onclick=()=>{const i=+b.dataset.rgd;[sel[i+1],sel[i]]=[sel[i],sel[i+1]];draw()});
+    S.querySelectorAll('[data-rgc]').forEach(c=>c.onchange=()=>{const k=c.dataset.rgc;if(c.checked){if(sel.length>=8){toast('8칸까지입니다. 하나를 먼저 빼 주세요.');c.checked=false;return}sel.push(k)}else{if(sel.length<=1){toast('한 칸은 남겨 두어야 합니다.');c.checked=true;return}sel=sel.filter(x=>x!==k)}draw()});
+    const fin=async v=>{SET.mdRing=SET.mdRing||{};if(v)SET.mdRing[id]=v;else delete SET.mdRing[id];await saveSet().catch(()=>{});close();try{if(curSection==='pmd')renderPmd();else renderNotes()}catch(e){}};
+    $('#rgok').onclick=()=>fin(sel.length&&!(sel.length===Math.min(8,R.items.length)&&sel.every((k,i)=>R.items[i]&&R.items[i].id===k))?sel.slice():null);$('#rgdef').onclick=()=>fin(null)};
+  draw()}
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-ringpick]');if(!b)return;e.preventDefault();e.stopPropagation();openRingPick(b.dataset.ringpick)},true);
 let PMV={k:null,c:null};
 const pmCatOf=n=>noteCat(n)||((topicOf(n.topic)||{}).cat)||'';
 function pmCounts(){const C={dk:{},cat:{},sub:{}};try{for(const n of NOTES.values()){if(n.person)continue;const k=noteDk(n),c=pmCatOf(n),sb=noteSub(n);C.dk[k]=(C.dk[k]||0)+1;if(c){C.cat[c]=(C.cat[c]||0)+1;if(sb){const q=c+'|'+sb;C.sub[q]=(C.sub[q]||0)+1}}}}catch(e){}return C}
@@ -10587,25 +10647,31 @@ function pmSubMenu(k,name,sb){const c=catObj(name);if(!c)return;ntSheet(`${esc(n
   ['⬅️ 앞으로',async()=>{const L=c.subs||[];const i=L.indexOf(sb);if(i>0){[L[i-1],L[i]]=[L[i],L[i-1]];await pmSave();renderPmd()}}],
   ['🗑 지우기',async()=>{if(!await uiConfirm(`‘${sb}’ 소분류를 목록에서 지울까요? 지난 기록은 그대로입니다.`))return;c.subs=(c.subs||[]).filter(x=>x!==sb);await pmSave();renderPmd()}]])}
 function renderPmd(){const R=$('#pmdbody');if(!R)return;const C=pmCounts();let h='';const{k,c}=PMV;
-  const intro=`<p class="secintro">🏛️ <b>나만의 기둥</b> — <b>대분류(기둥) › 중분류 › 소분류</b>를 만다라트처럼 정리합니다. 일정·몰입·할 일·노트가 모두 이 분류를 함께 씁니다. 가운데를 누르면 이름·삭제, 둘레의 빈칸을 누르면 추가합니다.</p>`;
+  const intro=`<p class="secintro">🏛️ <b>나만의 기둥</b> — <b>대분류(기둥) › 중분류 › 소분류</b>를 만다라트처럼 정리합니다. 가운데 ‘나’를 누르면 비전으로 이어지고, 둘레 칸을 누르면 중분류로 들어갑니다. 일정·몰입·할 일·노트가 모두 이 분류를 함께 씁니다.</p>`;
   if(k==null||(k&&!pmKeys().includes(k)&&k!=='')){PMV={k:null,c:null};
     const keys=pmKeys();const off=(SET.areaOff||[]).filter(x=>!SCORE.some(y=>y[0]===x));
-    h=intro+`<div class="mdtiles">${keys.map(x=>{const n=SET.cats.filter(y=>dkOf(y)===x).length;return`<button class="mdc cat" style="--mk:${pmCol(x)}" data-pmk="${x}"><i>${esc(dkEmo(x))}</i>${esc(dkName(x))}<small>${x.startsWith('m:')?'대분류 · ':''}중분류 ${n} · 노트 ${C.dk[x]||0}</small></button>`}).join('')}<button class="mdc emp" data-pmadd="p"><i>＋</i>기둥 추가</button><button class="mdc emp" data-pmadd="m"><i>📁</i>기둥 아닌<br>대분류 추가</button></div>`;
+    const RS=ringSplit('pmd',keys,x=>x,x=>dkEmo(x)+' '+dkName(x)),rk=RS.list,rn=RS.n;
+    const ring=rk.slice(0,rn).map(x=>{const n=SET.cats.filter(y=>dkOf(y)===x).length;return`<button class="mdc cat" style="--mk:${pmCol(x)}" data-pmk="${x}"><i>${esc(dkEmo(x))}</i>${esc(dkName(x))}<small>${x.startsWith('m:')?'대분류 · ':''}중분류 ${n} · 노트 ${C.dk[x]||0}</small></button>`});
+    const adds=[`<button class="mdc emp" data-pmadd="p"><i>＋</i>기둥 추가</button>`,`<button class="mdc emp" data-pmadd="m"><i>📁</i>기둥 아닌<br>대분류</button>`];let ai=0;while(ring.length<8&&ai<adds.length)ring.push(adds[ai++]);while(ring.length<8)ring.push('<span class="mdc emp" style="opacity:.3;cursor:default"></span>');
+    ring.splice(4,0,`<button class="mdc ctr" style="--mk:var(--acc)" data-pmme="1"><i>🧬</i>나<small>비전 ›</small></button>`);
+    h=intro+ringBtn('pmd')+`<div class="mdg">${ring.join('')}</div>`;
+    {const more=[...rk.slice(rn).map(x=>`<button class="chip" data-pmk="${x}">${esc(dkEmo(x))} ${esc(dkName(x))}</button>`),...adds.slice(ai).map(a=>a.replace('class="mdc emp"','class="chip"').replace('<br>',' '))];if(more.length)h+=`<p class="hint" style="margin:0">8칸 밖</p><div class="mdmore">${more.join('')}</div>`}
     {const n0=SET.cats.filter(y=>dkOf(y)==='').length;if(n0)h+=`<button class="xlink" data-pmk="">🗂 기타 (기둥 밖) · 중분류 ${n0} ›</button>`}
     if(off.length)h+=`<div class="card nocol" style="--k:var(--muted);margin-top:10px"><h3>🙈 숨긴 기둥</h3><div class="mdmore">${off.map(x=>`<button class="chip" data-pmon="${x}">${esc(AREA_E[x]||'')} ${esc(areaName(x))} · 다시 켜기</button>`).join('')}</div></div>`;
     h+=`<p class="hint" style="margin:10px 2px">기둥은 하루 열매 점수를 매기는 큰 줄기입니다. 📁 기둥 아닌 대분류는 점수 없이 분류로만 씁니다. 자세한 설명·자동 분류 단어는 <button class="xlink" data-catmgr="1" style="margin:0">🗂 분류 관리</button>에서 고칩니다.</p>`}
-  else if(!c||!catObj(c)){PMV.c=null;const cs=SET.cats.filter(y=>dkOf(y)===k);const g=cs.slice(0,8);const cells=[];for(let i=0;i<8;i++)cells.push(g[i]?`<button class="mdc cat" style="--mk:${g[i].color}" data-pmc="${esc(g[i].name)}">${esc(g[i].name)}<small>소분류 ${(g[i].subs||[]).length} · 노트 ${C.cat[g[i].name]||0}</small></button>`:`<button class="mdc emp" data-pmaddc="1"><i>＋</i>중분류</button>`);
+  else if(!c||!catObj(c)){PMV.c=null;const cs0=SET.cats.filter(y=>dkOf(y)===k);const RS=ringSplit('pmd:'+k,cs0,c=>c.name),cs=RS.list,g=cs.slice(0,RS.n);const cells=[];for(let i=0;i<8;i++)cells.push(g[i]?`<button class="mdc cat" style="--mk:${g[i].color}" data-pmc="${esc(g[i].name)}">${esc(g[i].name)}<small>소분류 ${(g[i].subs||[]).length} · 노트 ${C.cat[g[i].name]||0}</small></button>`:`<button class="mdc emp" data-pmaddc="1"><i>＋</i>중분류</button>`);
     const ctr=`<button class="mdc ctr" style="--mk:${pmCol(k)}" data-pmctr="1"><i>${esc(dkEmo(k))}</i>${esc(dkName(k))}<small>노트 ${C.dk[k]||0} · ⋯</small></button>`;cells.splice(4,0,ctr);
-    h=`<div class="mdcr"><button class="del" data-pmback="0">‹ 기둥 목록</button><b>${esc(dkEmo(k))} ${esc(dkName(k))}</b><small class="hint">중분류 ${cs.length}</small><button class="del" data-pmnote="1" style="margin-left:auto">📒 노트 ›</button></div><div class="mdg">${cells.join('')}</div>`;
-    if(cs.length>8)h+=`<p class="hint" style="margin:0">8칸 밖 중분류</p><div class="mdmore">${cs.slice(8).map(x=>`<button class="chip" data-pmc="${esc(x.name)}"><i style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${x.color}"></i> ${esc(x.name)}</button>`).join('')}<button class="chip" data-pmaddc="1">＋ 중분류</button></div>`;
+    h=`<div class="mdcr"><button class="del" data-pmback="0">‹ 기둥 목록</button><b>${esc(dkEmo(k))} ${esc(dkName(k))}</b><small class="hint">중분류 ${cs.length}</small><button class="del" data-pmnote="1" style="margin-left:auto">📒 노트 ›</button></div>${ringBtn('pmd:'+k)}<div class="mdg">${cells.join('')}</div>`;
+    if(cs.length>RS.n)h+=`<p class="hint" style="margin:0">8칸 밖 중분류</p><div class="mdmore">${cs.slice(RS.n).map(x=>`<button class="chip" data-pmc="${esc(x.name)}"><i style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${x.color}"></i> ${esc(x.name)}</button>`).join('')}<button class="chip" data-pmaddc="1">＋ 중분류</button></div>`;
     h+=`<p class="hint" style="margin:6px 2px">중분류를 누르면 그 안의 소분류 만다라트로 들어갑니다.</p>`}
-  else{const co=catObj(c),ss=co.subs||[];const g=ss.slice(0,8);const cells=[];for(let i=0;i<8;i++)cells.push(g[i]!=null?`<button class="mdc" data-pms="${esc(g[i])}">${esc(g[i])}<small>노트 ${C.sub[c+'|'+g[i]]||0}</small></button>`:`<button class="mdc emp" data-pmadds="1"><i>＋</i>소분류</button>`);
+  else{const co=catObj(c),ss0=co.subs||[];const RS=ringSplit('pmd:'+k+'|'+c,ss0),ss=RS.list,g=ss.slice(0,RS.n);const cells=[];for(let i=0;i<8;i++)cells.push(g[i]!=null?`<button class="mdc" data-pms="${esc(g[i])}">${esc(g[i])}<small>노트 ${C.sub[c+'|'+g[i]]||0}</small></button>`:`<button class="mdc emp" data-pmadds="1"><i>＋</i>소분류</button>`);
     cells.splice(4,0,`<button class="mdc ctr" style="--mk:${co.color}" data-pmcctr="1">${esc(c)}<small>노트 ${C.cat[c]||0} · ⋯</small></button>`);
-    h=`<div class="mdcr"><button class="del" data-pmback="1">‹ ${esc(dkEmo(k))} ${esc(dkName(k))}</button><b>${esc(c)}</b><small class="hint">소분류 ${ss.length}</small><button class="del" data-pmnote="2" style="margin-left:auto">📒 노트 ›</button></div><div class="mdg">${cells.join('')}</div>`;
-    if(ss.length>8)h+=`<p class="hint" style="margin:0">8칸 밖 소분류</p><div class="mdmore">${ss.slice(8).map(x=>`<button class="chip" data-pms="${esc(x)}">${esc(x)}</button>`).join('')}<button class="chip" data-pmadds="1">＋ 소분류</button></div>`;
+    h=`<div class="mdcr"><button class="del" data-pmback="1">‹ ${esc(dkEmo(k))} ${esc(dkName(k))}</button><b>${esc(c)}</b><small class="hint">소분류 ${ss.length}</small><button class="del" data-pmnote="2" style="margin-left:auto">📒 노트 ›</button></div>${ringBtn('pmd:'+k+'|'+c)}<div class="mdg">${cells.join('')}</div>`;
+    if(ss.length>RS.n)h+=`<p class="hint" style="margin:0">8칸 밖 소분류</p><div class="mdmore">${ss.slice(RS.n).map(x=>`<button class="chip" data-pms="${esc(x)}">${esc(x)}</button>`).join('')}<button class="chip" data-pmadds="1">＋ 소분류</button></div>`;
     h+=`<p class="hint" style="margin:6px 2px">소분류는 일정을 적을 때와 노트에서 고릅니다.</p>`}
   R.innerHTML=h;
   R.querySelectorAll('[data-pmk]').forEach(b=>b.onclick=()=>{PMV={k:b.dataset.pmk,c:null};renderPmd();scrollTo({top:0})});
+  R.querySelectorAll('[data-pmme]').forEach(b=>b.onclick=()=>{openSection('vision');scrollTo({top:0})});
   R.querySelectorAll('[data-pmadd]').forEach(b=>b.onclick=()=>b.dataset.pmadd==='p'?pmAddPillar():pmAddMaj());
   R.querySelectorAll('[data-pmon]').forEach(b=>b.onclick=async()=>{SET.areaOff=(SET.areaOff||[]).filter(x=>x!==b.dataset.pmon);await pmSave();renderPmd()});
   R.querySelectorAll('[data-pmback]').forEach(b=>b.onclick=()=>{if(b.dataset.pmback==='1')PMV.c=null;else PMV={k:null,c:null};renderPmd()});
