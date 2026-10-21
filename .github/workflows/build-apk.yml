@@ -18,7 +18,7 @@ jobs:
           java-version: 21
       - name: 프로젝트 준비
         run: |
-          mkdir -p www && cp index.html www/index.html
+          mkdir -p www && cp index.html www/index.html && cp bible-text.txt bible-meta.txt www/
           sed -i "s/__BUILD__/#${GITHUB_RUN_NUMBER} $(TZ=Asia/Seoul date +%m.%d_%H:%M)/" www/index.html
           cat > package.json <<'J'
           {"name":"growth-journal","version":"1.0.0","private":true,
