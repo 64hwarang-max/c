@@ -3,6 +3,7 @@ on:
   push:
     paths:
       - 'bible-app/**'
+      - 'compat.js'
       - '.github/workflows/build-bible-apk.yml'
   workflow_dispatch:
 jobs:
@@ -21,8 +22,12 @@ jobs:
           java-version: 21
       - name: 프로젝트 준비
         run: |
-          mkdir -p www && cp bible-app/index.html www/index.html
+          mkdir -p www && cp bible-app/index.html www/index.html && cp bible-text.txt bible-meta.txt www/
           sed -i "s/__BUILD__/#${GITHUB_RUN_NUMBER} $(TZ=Asia/Seoul date +%m.%d_%H:%M)/" www/index.html
+          # 구형 안드로이드(낡은 웹뷰)에서도 열리도록 문법을 낮추고 빠진 기능을 채움 (실패해도 원본 그대로 진행)
+          mkdir -p /tmp/eb && (cd /tmp/eb && npm init -y >/dev/null 2>&1 && npm i esbuild@0.21.5 >/dev/null 2>&1) || echo "esbuild 설치 실패 - 기능 채우기만 적용"
+          cp www/index.html /tmp/index.orig.html
+          NODE_PATH=/tmp/eb/node_modules node compat.js www/index.html || cp /tmp/index.orig.html www/index.html
           cat > package.json <<'J'
           {"name":"bible-prayer","version":"1.0.0","private":true,
            "dependencies":{"@capacitor/android":"^7.0.0","@capacitor/app":"^7.0.0","@capacitor/core":"^7.0.0","@capacitor/filesystem":"^7.0.0","@capacitor/share":"^7.0.0"},
