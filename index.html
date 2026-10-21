@@ -1567,7 +1567,7 @@ span.prck{border:0;cursor:default;font-size:1.05rem;color:var(--ink)}
     <div class="card" style="--k:#3949ab" id="lockcard" data-sg="lock"></div>
     <div class="card" style="--k:#8a8f98" id="trashcard" data-sg="trash"></div>
     <div class="card" data-sg="backup" style="--k:var(--pen)"><h3>복원</h3>
-      <div class="row"><label class="btn ghost" style="display:inline-block">백업 파일 선택 (드라이브에서도)<input type="file" id="ex-file" accept=".txt,.json,text/plain,application/json" hidden></label><button class="btn ghost" id="ex-imp">붙여넣어 복원</button></div></div>
+      <div class="row"><label class="btn ghost" style="display:inline-block">백업 파일 선택 (드라이브에서도)<input type="file" id="ex-file" accept=".txt,.json,.zip,text/plain,application/json,application/zip" hidden></label><button class="btn ghost" id="ex-imp">붙여넣어 복원</button></div></div>
     <textarea id="out" readonly data-sg="backup"></textarea>
     <p class="hint" id="exmsg"></p>
     <p class="hint" id="appver" style="margin:14px 2px 0"></p><div class="row" style="margin:2px 0 6px"><button class="del" id="tourbtn">🧭 처음 둘러보기 다시 보기</button></div>
@@ -4198,7 +4198,7 @@ $('#ex-day').onclick=async()=>{await flush();const ns=[...NOTES.values()].filter
 $('#ex-read').onclick=async()=>{await flush();const days=[...(await allMap(true)).values()].filter(hasAny).sort((a,b)=>a.date<b.date?-1:1);const ns=[...NOTES.values()].sort((a,b)=>a.date<b.date?-1:1);
   const t=`성장일지 전체 기록 (${today()} 내보냄)\n\n`+days.map(dayText).join('\n══════════\n\n')+(ns.length?'\n\n══════════ 노트 ══════════\n\n'+notesText(ns):'');$('#exmsg').textContent=await saveFile(`성장일지_전체_${today()}.txt`,t)};
 $('#ex-all').onclick=async()=>{$('#exmsg').textContent='백업 파일을 만드는 중…';const b=await collectBackup(SET.bkPhotos!==false);if(b.empty&&!await uiConfirm('저장된 기록이 하나도 없습니다. 비어 있는 백업 파일이 만들어집니다. 그래도 저장할까요?')){$('#exmsg').textContent='저장하지 않았습니다.';return}const r=await saveFile(`성장일지_백업_${stamp()}.txt`,b.txt);if(!/취소|못/.test(r))await markBackup();$('#exmsg').textContent=r+` (${b.days}일, 노트 ${b.notes}편${b.photos?`, 사진 ${b.photos}장`:''}${b.miss?`, 사진 ${b.miss}장은 찾지 못해 빠짐`:''})`;renderBkCard()};
-$('#ex-file').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;const txt=await f.text();await importText(txt)};
+$('#ex-file').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;let txt;try{txt=(/\.zip$/i.test(f.name)||f.type==='application/zip'||f.type==='application/x-zip-compressed')?await zipRead(new Uint8Array(await f.arrayBuffer())):await f.text()}catch(er){$('#exmsg').textContent='백업 파일을 열지 못했습니다: '+(er&&er.message||er);return}await importText(txt)};
 $('#ex-imp').onclick=async()=>{const o=$('#out');if(!impMode){impMode=true;o.readOnly=false;o.value='';o.focus();$('#exmsg').textContent='백업 텍스트를 붙여 넣고 "붙여넣어 복원"을 한 번 더 누르십시오.';return}await importText(o.value)};
 let impMode=false;
 const mEmpty=v=>v==null||v===''||v===false||v===0||(Array.isArray(v)?v.every(mEmpty):(typeof v==='object'&&Object.values(v).every(mEmpty)));
@@ -4799,8 +4799,34 @@ function askSaveTo(name){return new Promise(res=>{const S=$('#sheet');S.hidden=f
     <div style="display:grid;gap:8px"><button class="btn" data-sv="folder">📁 휴대폰 폴더에 저장<br><small style="font-weight:400">내 파일 › Documents › ${esc(APPN)}</small></button><button class="btn ghost" data-sv="share">📤 카카오톡 등으로 보내기<br><small style="font-weight:400">카카오톡 나와의 채팅·드라이브·메일 등</small></button><button class="btn ghost" data-sv="both">📁＋📤 폴더에 저장하고 보내기<br><small style="font-weight:400">휴대폰에 남기고 다른 곳에도 한 부</small></button></div>
     <label class="chk" style="margin-top:10px"><input type="checkbox" id="svrem">다음부터 묻지 않고 이 방식으로 (⚙️ 설정·백업에서 바꿀 수 있음)</label></div>`;
   const done=v=>{if(v&&$('#svrem')&&$('#svrem').checked){SET.saveTo=v;saveSet().catch(()=>{})}S.hidden=true;S.innerHTML='';res(v)};$('#svx').onclick=()=>done(null);S.onclick=e=>{if(e.target===S)done(null)};S.querySelectorAll('[data-sv]').forEach(b=>b.onclick=()=>done(b.dataset.sv))})}
+
+/* ---------- 🗜 백업을 .zip으로 (카카오톡은 .txt 큰 파일을 글자로 다루어 보내지 못하는 경우가 있어, 압축 파일로 보냅니다) ---------- */
+const _crcT=(()=>{const t=new Uint32Array(256);for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;t[n]=c>>>0}return t})();
+const crc32=u=>{let c=0xFFFFFFFF;for(let i=0;i<u.length;i++)c=_crcT[(c^u[i])&255]^(c>>>8);return(c^0xFFFFFFFF)>>>0};
+async function zipMake(name,text){const raw=new TextEncoder().encode(text);let data=raw,method=0;
+  try{if(typeof CompressionStream==='function'){const cs=new Blob([raw]).stream().pipeThrough(new CompressionStream('deflate-raw'));const d=new Uint8Array(await new Response(cs).arrayBuffer());if(d.length&&d.length<raw.length){data=d;method=8}}}catch(e){data=raw;method=0}
+  const nm=new TextEncoder().encode(name),crc=crc32(raw),dt=new Date(),tm=(dt.getHours()<<11)|(dt.getMinutes()<<5)|(dt.getSeconds()>>1),dd=((dt.getFullYear()-1980)<<9)|((dt.getMonth()+1)<<5)|dt.getDate();
+  const lh=new Uint8Array(30+nm.length),lv=new DataView(lh.buffer);lv.setUint32(0,0x04034b50,true);lv.setUint16(4,20,true);lv.setUint16(6,0x0800,true);lv.setUint16(8,method,true);lv.setUint16(10,tm,true);lv.setUint16(12,dd,true);lv.setUint32(14,crc,true);lv.setUint32(18,data.length,true);lv.setUint32(22,raw.length,true);lv.setUint16(26,nm.length,true);lv.setUint16(28,0,true);lh.set(nm,30);
+  const ch=new Uint8Array(46+nm.length),cv=new DataView(ch.buffer);cv.setUint32(0,0x02014b50,true);cv.setUint16(4,20,true);cv.setUint16(6,20,true);cv.setUint16(8,0x0800,true);cv.setUint16(10,method,true);cv.setUint16(12,tm,true);cv.setUint16(14,dd,true);cv.setUint32(16,crc,true);cv.setUint32(20,data.length,true);cv.setUint32(24,raw.length,true);cv.setUint16(28,nm.length,true);cv.setUint32(42,0,true);ch.set(nm,46);
+  const ee=new Uint8Array(22),ev=new DataView(ee.buffer);ev.setUint32(0,0x06054b50,true);ev.setUint16(8,1,true);ev.setUint16(10,1,true);ev.setUint32(12,ch.length,true);ev.setUint32(16,lh.length+data.length,true);
+  const out=new Uint8Array(lh.length+data.length+ch.length+ee.length);out.set(lh,0);out.set(data,lh.length);out.set(ch,lh.length+data.length);out.set(ee,lh.length+data.length+ch.length);return out}
+async function zipRead(u8){const dv=new DataView(u8.buffer,u8.byteOffset,u8.byteLength);let e=-1;for(let i=u8.length-22;i>=Math.max(0,u8.length-70000);i--){if(dv.getUint32(i,true)===0x06054b50){e=i;break}}if(e<0)throw new Error('zip 아님');
+  const cdo=dv.getUint32(e+16,true);if(dv.getUint32(cdo,true)!==0x02014b50)throw new Error('zip 목록 오류');const method=dv.getUint16(cdo+10,true),cs=dv.getUint32(cdo+20,true),lo=dv.getUint32(cdo+42,true);
+  const nl=dv.getUint16(lo+26,true),el=dv.getUint16(lo+28,true),st=lo+30+nl+el;let data=u8.subarray(st,st+cs);
+  if(method===8){if(typeof DecompressionStream!=='function')throw new Error('이 기기에서는 압축을 풀 수 없습니다');data=new Uint8Array(await new Response(new Blob([data]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).arrayBuffer())}else if(method!==0)throw new Error('지원하지 않는 압축');
+  return new TextDecoder().decode(data)}
+const u8b64=u=>{let s='';for(let i=0;i<u.length;i+=0x8000)s+=String.fromCharCode.apply(null,u.subarray(i,i+0x8000));return btoa(s)};
+const isBkName=n=>/백업|backup/i.test(n)&&/\.(txt|json)$/i.test(n);
+async function sendZip(name,text,title){const FS=NP('Filesystem'),SH=NP('Share');const zn=name.replace(/\.(txt|json)$/i,'.zip');const z=await zipMake(name,text);
+  if(!FS){const f=new File([z],zn,{type:'application/zip'});if(navigator.canShare&&navigator.canShare({files:[f]})){try{await navigator.share({files:[f],title:zn});return'📤 보냈습니다.'}catch(e){if(e&&e.name==='AbortError')return'보내기를 취소했습니다.'}}return null}
+  const p='share/'+zn;try{await FS.mkdir({path:'share',directory:'CACHE',recursive:true})}catch(e){}await FS.writeFile({path:p,data:u8b64(z),directory:'CACHE'});
+  const note=` (${(text.length/1048576).toFixed(1)}MB → ${(z.length/1048576).toFixed(1)}MB, 카카오톡이 받도록 .zip으로 묶었습니다)`;
+  const fb=FOB();if(fb){try{await fb.shareFile({name:zn,mime:'application/zip',title});return'📤 보낼 앱(카카오톡 → 나와의 채팅, 드라이브, 메일 등)을 고르십시오.'+note}catch(e){}}
+  if(SH){const u=await FS.getUri({path:p,directory:'CACHE'});try{await SH.share({title:zn,files:[u.uri],dialogTitle:title});return'📤 보낼 앱을 고르십시오.'+note}catch(e){if(/cancel/i.test(String(e&&e.message||e)))return'보내기를 취소했습니다.'}}
+  return null}
 /* 파일 보내기: 카카오톡 등 (FileProvider 직접 공유 → Capacitor Share files → url) */
 async function sendFile(name,text,title){const FS=NP('Filesystem'),SH=NP('Share');title=title||'보내기';
+  if(isBkName(name)){try{const r=await sendZip(name,text,title);if(r)return r}catch(e){console.warn('zip 보내기 실패 → 글자 파일로',e)}}
   if(!FS){try{const f=new File([text],name,{type:'text/plain'});if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f],title:name});return'📤 보냈습니다.'}}catch(e){if(e&&e.name==='AbortError')return'보내기를 취소했습니다.'}return null}
   const p='share/'+name;try{try{await FS.mkdir({path:'share',directory:'CACHE',recursive:true})}catch(e){}await FS.writeFile({path:p,data:text,directory:'CACHE',encoding:'utf8'})}catch(e){return'파일을 만들지 못했습니다: '+(e&&e.message||e)}
   const fb=FOB();if(fb){try{await fb.shareFile({name,mime:'text/plain',title});return'📤 보낼 앱(카카오톡 → 나와의 채팅, 드라이브, 메일 등)을 고르십시오.'}catch(e){}}
