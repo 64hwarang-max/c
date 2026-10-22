@@ -1728,33 +1728,49 @@ function shKeep(o){if(!o||!o.date)return;const S=shGet();const e=S[o.date]||(S[o
 function shMerge(d,o,cur){const e=shGet()[d]||{};let n=0;SHKIND.forEach(([k,bk,dk])=>{o[k]=Array.isArray(o[k])?o[k]:[];const have=new Set(o[k].map(b=>b&&b.id));const del=e[dk]||[];
     [...((cur&&cur[k])||[]),...Object.values(e[bk]||{})].forEach(b=>{if(!shOk(k,b)||have.has(b.id)||del.includes(b.id))return;o[k].push(JSON.parse(JSON.stringify(b)));have.add(b.id);n++});
     if(n)o[k].sort((x,y)=>(x.s||'99')<(y.s||'99')?-1:1)});return n}
-async function shFindAll(){const S=shGet();const found=[];for(const d of Object.keys(S).sort().reverse()){let o=null;try{o=await store.load(d)}catch(e){}o=norm(o||{date:d});const before=JSON.stringify([o.time.map(b=>b.id),o.plan.map(b=>b.id)]);const n=shMerge(d,o,null);if(n)found.push([d,o,n])}
+async function shFindAll(){const S=shGet();const found=[];let SN={};try{const ks=(await store.keys()).filter(k=>/^snap:\d{4}-\d{2}-\d{2}:/.test(k));for(const k of ks){const x=await store.getDoc(k);if(x&&x.date)(SN[x.date]=SN[x.date]||[]).push(x)}}catch(e){}
+  for(const d of [...new Set([...Object.keys(S),...Object.keys(SN)])].sort().reverse()){let o=null;try{o=await store.load(d)}catch(e){}o=norm(o||{date:d});let n=shMerge(d,o,null);n+=shSnapMerge(d,o,SN[d]||[]);if(n)found.push([d,o,n])}
   if(!found.length){uiAlert('사라진 기록이 없습니다.\n\n(이 기능은 이번 판을 설치한 뒤에 저장한 계획·실제 한 일부터 지켜 줍니다. 그 전에 사라진 것은 남아 있지 않습니다.)');return}
   if(!await uiConfirm(`사라진 기록을 찾았습니다.\n\n${found.map(([d,,n])=>`${md(d)} · ${n}개`).join('\n')}\n\n모두 되살릴까요?`))return;
-  for(const[d,o]of found){if(D&&D.date===d){shMerge(d,D,null);schedule()}else{await store.save(d,o);if(cacheAll)cacheAll.set(d,o)}}try{renderDay()}catch(e){}toast(`🛟 ${found.reduce((a,x)=>a+x[2],0)}개를 되살렸습니다.`)}
+  for(const[d,o]of found){if(D&&D.date===d){shMerge(d,D,null);shSnapMerge(d,D,SN[d]||[]);schedule()}else{await store.save(d,o);if(cacheAll)cacheAll.set(d,o)}}try{renderDay()}catch(e){}toast(`🛟 ${found.reduce((a,x)=>a+x[2],0)}개를 되살렸습니다.`)}
 const SVK='gj-svlog';function svLog(x){try{const L=JSON.parse(localStorage.getItem(SVK)||'[]');L.push(x);while(L.length>120)L.shift();localStorage.setItem(SVK,JSON.stringify(L))}catch(e){}}
 const LDS={};
 /* 방금(15초 안) 읽어서 고친 사본이면 빠진 블록은 '지운 것'으로 본다 (예전에 읽어 둔 낡은 사본은 해당 없음) */
 function shInferDel(d,o){const L=LDS[d];if(!L||Date.now()-L.t>15000)return;const S=shGet();const e=S[d]||(S[d]={});let ch=false;SHKIND.forEach(([k,bk,dk])=>{e[dk]=e[dk]||[];const have=new Set((o[k]||[]).map(b=>b&&b.id));(L[k]||[]).forEach(id=>{if(!have.has(id)&&!e[dk].includes(id)){e[dk].push(id);ch=true}})});if(ch)shPut(S)}
 function shWrapStore(){if(!store||store._shg)return;const sv=store.save.bind(store),ld=store.load.bind(store);
   store.load=async d=>{const r=await ld(d);try{if(r&&/^\d{4}-\d{2}-\d{2}$/.test(d)){const x={t:Date.now()};SHKIND.forEach(([k])=>{x[k]=(r[k]||[]).filter(b=>shOk(k,b)).map(b=>b.id)});LDS[d]=x}}catch(e){}return r};
-  store.save=async(d,o)=>{try{if(o&&/^\d{4}-\d{2}-\d{2}$/.test(d)){if(o!==D)shInferDel(d,o);let cur=null;try{cur=await ld(d)}catch(e){}const n=shMerge(d,o,cur);
+  const SVQ={};const body=async(d,o)=>{try{if(o&&/^\d{4}-\d{2}-\d{2}$/.test(d)){if(o!==D)shInferDel(d,o);let cur=null;try{cur=await ld(d)}catch(e){}const n=shMerge(d,o,cur);
       const st=String(new Error().stack||'').split('\n').slice(2,6).map(l=>(l.match(/at (\S+)/)||[])[1]||'').filter(Boolean).join('<');
       svLog({t:new Date().toTimeString().slice(0,8),d,tm:(o.time||[]).length,pl:(o.plan||[]).length,live:o===D?1:0,add:n,src:st});
-      if(n&&o===D&&curSection==='day')setTimeout(()=>{try{renderDay()}catch(e){}},0)}}catch(e){}return sv(d,o)};store._shg=1}
+      try{if(cur){const a=(cur.time||[]).length,c1=(cur.plan||[]).length;if((o.time||[]).length<a||(o.plan||[]).length<c1){svLog({t:new Date().toTimeString().slice(0,8),d,ev:'shrink',tm0:a,tm1:(o.time||[]).length,pl0:c1,pl1:(o.plan||[]).length,live:o===D?1:0,src:st});shSnap(d,cur)}}}catch(e){}
+      if(n&&o===D&&curSection==='day')setTimeout(()=>{try{renderDay()}catch(e){}},0)}}catch(e){}return sv(d,o)};
+  store.save=(d,o)=>{const prev=SVQ[d]||Promise.resolve();const p=prev.then(()=>body(d,o),()=>body(d,o));SVQ[d]=p.catch(()=>{});return p};store._shg=1}
+/* 저장하면서 실제·계획 블록이 줄어들 때, 줄기 전 모습을 따로 보관(날짜마다 최근 8개). 🛟 사라진 기록 찾기에서 되살립니다 */
+const SNAPT={};
+async function shSnap(d,cur){try{const now=Date.now();if(SNAPT[d]&&now-SNAPT[d]<60000)return;SNAPT[d]=now;await store.putDoc('snap:'+d+':'+now,{kind:'snap',date:d,t:now,time:cur.time||[],plan:cur.plan||[]});const ks=(await store.keys()).filter(k=>k.startsWith('snap:'+d+':')).sort();while(ks.length>8)await store.delDoc(ks.shift())}catch(e){}}
+function shSnapMerge(d,o,L){const e=shGet()[d]||{};let n=0;SHKIND.forEach(([k,bk,dk])=>{o[k]=Array.isArray(o[k])?o[k]:[];const have=new Set(o[k].map(b=>b&&b.id));const del=e[dk]||[];L.forEach(x=>(x[k]||[]).forEach(b=>{if(!shOk(k,b)||have.has(b.id)||del.includes(b.id))return;o[k].push(JSON.parse(JSON.stringify(b)));have.add(b.id);n++}));o[k].sort((x,y)=>(x.s||'99')<(y.s||'99')?-1:1)});return n}
+/* 🛟 자동 되살리기: 앱을 열 때·날짜를 열 때, 최근 3일의 사라진 실제·계획 블록(지운 적 없는 것)을 조용히 되살리고 알려 줌 */
+let SHAUTO=false;
+async function shAuto(){if(SHAUTO)return;SHAUTO=true;try{const T=today(),ds=[T,addD(T,-1),addD(T,-2)];const SN={};
+    try{const ks=(await store.keys()).filter(k=>/^snap:\d{4}-\d{2}-\d{2}:/.test(k)&&ds.includes(k.slice(5,15)));for(const k of ks){const x=await store.getDoc(k);if(x&&x.date)(SN[x.date]=SN[x.date]||[]).push(x)}}catch(e){}
+    let tot=0;for(const d of ds){if(D&&D.date===d){const n=shMerge(d,D,null)+shSnapMerge(d,D,SN[d]||[]);if(n){tot+=n;svLog({t:new Date().toTimeString().slice(0,8),d,ev:'auto-restore',add:n});schedule()}continue}
+      let o=null;try{o=await store.load(d)}catch(e){}if(!o&&!(shGet()[d]||SN[d]))continue;o=norm(o||{date:d});const n=shMerge(d,o,null)+shSnapMerge(d,o,SN[d]||[]);if(n){tot+=n;svLog({t:new Date().toTimeString().slice(0,8),d,ev:'auto-restore',add:n});await store.save(d,o);if(cacheAll)cacheAll.set(d,o)}}
+    if(tot){try{if(curSection==='day')renderDay()}catch(e){}toast(`🛟 사라졌던 기록 ${tot}개를 자동으로 되살렸습니다.`)}}catch(e){}finally{SHAUTO=false}}
 function shDel(d,id){if(!id)return;const S=shGet();const e=S[d];if(!e)return;e.del=e.del||[];if(!e.del.includes(id))e.del.push(id);shPut(S)}
 function shMissing(o){const e=shGet()[o&&o.date];if(!e)return[];const have=new Set((o.time||[]).map(b=>b.id));const del=e.del||[];return Object.values(e.b||{}).filter(b=>!have.has(b.id)&&!del.includes(b.id))}
 document.addEventListener('click',async ev=>{const t=ev.target.closest&&ev.target.closest('[data-shrest]');if(!t)return;ev.preventDefault();const L=shMissing(D);if(!L.length)return;
   if(!await uiConfirm(`사라진 ‘실제 한 일’ ${L.length}개를 되살릴까요?\n\n${L.sort((a,b)=>a.s<b.s?-1:1).map(b=>`${b.s}${b.e?'~'+b.e:''} ${b.act||b.cat||''}`).join('\n')}\n\n(‘취소’를 누르면 이 목록을 비웁니다)`)){const S=shGet();const e=S[D.date];if(e){L.forEach(b=>e.del.push(b.id));shPut(S)}renderDay();return}
   L.forEach(b=>D.time.push(b));D.time.sort((x,y)=>(x.s||'99')<(y.s||'99')?-1:1);schedule();renderDay();toast(`🛟 ${L.length}개를 되살렸습니다.`)});
-async function flush(){if(!dirty)return;dirty=false;const o=D;const t0=Date.now();o._sv=t0;try{try{shKeep(o)}catch(e){}if(hasAny(o)||(o.rm&&o.rm.length)||await store.load(o.date))await store.save(o.date,o);if(cacheAll)cacheAll.set(o.date,o);try{const p=JSON.parse(localStorage.getItem('gj-pend')||'null');if(p&&p.d&&p.d.date===o.date&&p.t<=t0&&!dirty)localStorage.removeItem('gj-pend')}catch(e){}status(store.mode==='cloud'?'저장됨 · 동기화':'저장됨 · 이 기기');gcPushDaySoon(o)}catch(e){status(e&&e.code==='quota_exceeded'?'저장 공간이 가득 찼습니다. 백업 후 오래된 기록을 정리하십시오.':'저장하지 못했습니다. 잠시 후 다시 입력하십시오.');dirty=true}}
+let SAVP=Promise.resolve();
+function flush(){const p=SAVP.then(flush0,flush0);SAVP=p.catch(()=>{});return p}
+async function flush0(){if(!dirty)return;dirty=false;const o=D;const t0=Date.now();o._sv=t0;try{try{shKeep(o)}catch(e){}if(hasAny(o)||(o.rm&&o.rm.length)||await store.load(o.date))await store.save(o.date,o);if(cacheAll)cacheAll.set(o.date,o);try{const p=JSON.parse(localStorage.getItem('gj-pend')||'null');if(p&&p.d&&p.d.date===o.date&&p.t<=t0&&!dirty)localStorage.removeItem('gj-pend')}catch(e){}status(store.mode==='cloud'?'저장됨 · 동기화':'저장됨 · 이 기기');gcPushDaySoon(o)}catch(e){status(e&&e.code==='quota_exceeded'?'저장 공간이 가득 찼습니다. 백업 후 오래된 기록을 정리하십시오.':'저장하지 못했습니다. 잠시 후 다시 입력하십시오.');dirty=true}}
 function setP(path,val){const ks=path.split('.');let o=D;for(let i=0;i<ks.length-1;i++){if(o[ks[i]]==null)o[ks[i]]={};o=o[ks[i]]}o[ks[ks.length-1]]=val}
 function getP(path){return path.split('.').reduce((o,k)=>o==null?o:o[k],D)}
 
 async function openDay(d){
-  ZMD=0;{const v=$('#v-day');if(v)v.classList.remove('zmon')}LR={};await flush();cur=d;const o=await store.load(d);D=norm(o||{date:d});
+  ZMD=0;{const v=$('#v-day');if(v)v.classList.remove('zmon')}LR={};await flush();cur=d;let o=await store.load(d);for(let g=0;g<3&&dirty;g++){await flush();o=await store.load(d)}D=norm(o||{date:d});
   const dt=parseD(d);$('#dlabel').classList.toggle('notoday',d!==today());$('#dlabel').innerHTML=`${d!==today()?'⚠️ ':''}${dt.getMonth()+1}월 ${dt.getDate()}일 (${WD[dt.getDay()]})${d===today()?' · 오늘':' · <u data-totoday="1" role="button">오늘로</u>'}${holName(d)?` <span class="holt">${esc(holName(d))}</span>`:''}`;$('#dpick').value=d;
-  try{const n=shMerge(d,D,null);if(n){svLog({t:new Date().toTimeString().slice(0,8),d,ev:'open-restore',add:n});schedule();setTimeout(()=>toast(`🛟 사라졌던 기록 ${n}개를 되살렸습니다.`),300)}}catch(e){}shLast={};
+  try{const n=shMerge(d,D,null);if(n){svLog({t:new Date().toTimeString().slice(0,8),d,ev:'open-restore',add:n});schedule();setTimeout(()=>toast(`🛟 사라졌던 기록 ${n}개를 되살렸습니다.`),300)}}catch(e){}shLast={};try{SHKIND.forEach(([k])=>{shLast[k]={o:D,d,ids:new Set((D[k]||[]).filter(b=>shOk(k,b)).map(b=>b.id))}})}catch(e){}setTimeout(()=>{shAuto()},600);
   const p=await store.load(addD(d,-1));prevDay=p?norm(p):null;try{await allMap()}catch(e){}{const a=repApply(D),b=rtPlanApply(D);if(a||b)schedule()}apAutoRun();renderDay();
 }
 function renderDay(){if(ZMD>0&&curSection==='day'){zmDay();return}{const v=$('#v-day');if(v)v.classList.remove('zmon')}try{zmBarSync()}catch(e){}if(mode==='sched')mode='start';document.querySelectorAll('#mode button').forEach(b=>b.classList.toggle('on',b.dataset.m===mode));
@@ -3061,7 +3077,7 @@ function fcMergeT(arr){const L=arr.slice().sort((a,b)=>(a.s||'')<(b.s||'')?-1:1)
 const FM_DONE=new Set();
 async function fcRecord(q){const f=FC;const s=new Date(f.start),e=new Date(f.end||Date.now());const dt=ymd(s);const min=Math.max(1,Math.round((e-s-(f.acc||0))/60000));
   const rec={id:uid(),s:hhmm(s),e:addMin(hhmm(s),min),act:f.act,cat:f.cat,focus:q==null?undefined:q,fz:1,area:f.area,from:f.bid||'',who:'',ev:(f.memo||'').trim()};if(!rec.ev)delete rec.ev;{const pb=f.bid&&(D.plan||[]).find(x=>x.id===f.bid);if(pb){if(pb.goal)rec.goal=pb.goal;if(pb.sub)rec.sub=pb.sub}}if(!rec.goal&&f.goal)rec.goal=f.goal;if(!rec.sub&&f.sub)rec.sub=f.sub;
-  if(D.date===dt){D.time.push(rec);D.time.sort((a,b)=>(a.s||'99')<(b.s||'99')?-1:1);{const m=fcMergeT(D.time);D.time.splice(0,D.time.length,...m)}schedule()}else{try{const o=norm((await store.load(dt))||{date:dt});o.time.push(rec);{const m=fcMergeT(o.time);o.time.splice(0,o.time.length,...m)}await store.save(dt,o);if(cacheAll)cacheAll.set(dt,o)}catch(x){status('집중 기록을 저장하지 못했습니다.')}}
+  if(D.date===dt){D.time.push(rec);D.time.sort((a,b)=>(a.s||'99')<(b.s||'99')?-1:1);{const m=fcMergeT(D.time);D.time.splice(0,D.time.length,...m)}schedule()}else{try{await rmwLock(dt,async()=>{const o=norm((await store.load(dt))||{date:dt});o.time.push(rec);{const m=fcMergeT(o.time);o.time.splice(0,o.time.length,...m)}await store.save(dt,o);if(cacheAll)cacheAll.set(dt,o)})}catch(x){status('집중 기록을 저장하지 못했습니다.')}}
   toast(`🎯 ${rec.s}~${rec.e} ${f.act}${q!=null?` · 집중 ${q}%`:""}를 실제 기록에 넣었습니다.`);
   if(f.stopAfter){FC=null;fcSave();keepAwake(false);fcDraft=null;toast('⏹ 몰입을 여기서 마쳤습니다.');renderFocus();return}if(f.mode==='plan'){fcAfter(f);return}
   const more=f.mode==='pomo'?(f.round||1)<(f.rounds||1):!!f.brk;
@@ -6234,7 +6250,7 @@ function openOdSetup(){const S=$('#sheet');S.hidden=false;let msg='',dc=null,pol
     const ot=$('#odout');if(ot)ot.onclick=async()=>{if(!await uiConfirm('OneDrive 연결을 끊을까요? 이미 올린 백업은 OneDrive에 남습니다.'))return;OD.rt='';OD.at='';OD.who='';await saveOd();draw()}};
   draw()}
 /* ---------- 폰·태블릿 연동 (구글 Apps Script 웹 앱 경유) ---------- */
-const SYNCX=k=>/^(secret-|_sync$|fcsound$)/.test(k);
+const SYNCX=k=>/^(secret-|snap:|_sync$|fcsound$)/.test(k);
 let SY={mt:{},dirty:{}},syBusy=false,syTimer=null,syMsg='';
 const syCfg=()=>{try{return JSON.parse(localStorage.getItem('gj-sync')||'{}')}catch(e){return{}}};
 const syCfgSet=c=>{try{localStorage.setItem('gj-sync',JSON.stringify(c))}catch(e){}};
@@ -7587,7 +7603,7 @@ function aiSub(x){const d=v=>v&&/^\d{4}-\d{2}-\d{2}$/.test(v)?`${md(v)}(${WD[par
   if(x.type==='book')return[x.author,BKS[x.st]||BKS.want,x.reason].filter(Boolean).join(' · ');if(x.type==='task')return[d(x.due)||'날짜 없음',x.time].filter(Boolean).join(' ');
   if(x.type==='event')return`${d(x.date)} ${x.start||''}${x.end?'~'+x.end:''}`;if(x.type==='expense')return`${d(x.date)||'오늘'} · ${x.kind||'지출'} ${won(+x.amt||0)}`;
   if(x.type==='note')return String(x.body||'').slice(0,60);if(x.type==='stuff')return[x.place,x.furn,x.spot,x.memo].filter(Boolean).join(' › ');return d(x.date)||'오늘'}
-async function aiDay(date,fn){date=/^\d{4}-\d{2}-\d{2}$/.test(date||'')?date:today();if(date===D.date){fn(D);schedule();await flush();return}const o=norm((await store.load(date))||{date});fn(o);await store.save(date,o);if(cacheAll)cacheAll.set(date,o)}
+async function aiDay(date,fn){date=/^\d{4}-\d{2}-\d{2}$/.test(date||'')?date:today();if(date===D.date){fn(D);schedule();await flush();return}return rmwLock(date,async()=>{const o=norm((await store.load(date))||{date});fn(o);await store.save(date,o);if(cacheAll)cacheAll.set(date,o)})}
 const aiSlot=(arr,t)=>{const i=arr.findIndex(v=>!String(v||'').trim());if(i>=0)arr[i]=t;else arr.push(t)};
 async function aiApply(x){const now=Date.now();
   if(x.type==='book'){const st=BKS[x.st]?x.st:'want';BOOKS.items.push({id:'b'+uid(),title:String(x.title).trim(),author:String(x.author||'').trim(),st,reason:String(x.reason||''),start:st!=='want'?today():'',end:st==='done'?today():'',rate:0,feel:'',act:'',quote:'',sent:[],photos:[],created:now,updated:now});await saveBooks();return}
@@ -7957,7 +7973,7 @@ document.addEventListener('touchend',async e=>{
   if(curSection==='score'){await openDay(addD(cur,dir));renderScore();swAnim($('#scoreBody'),dir);return}},{passive:true});
 
 window.addEventListener('pagehide',flush);setTimeout(()=>{try{colWatch()}catch(e){}},1200);
-document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'){lockHid=Date.now();flush();if(IS_NATIVE)updateWidget()}else{if(lockHid&&Date.now()-lockHid>60000)showLock();if(lockHid&&Date.now()-lockHid>20000)sySoon(1500)}});
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'){lockHid=Date.now();flush();if(IS_NATIVE)updateWidget()}else{setTimeout(()=>{try{shAuto()}catch(e){}},1500);if(lockHid&&Date.now()-lockHid>60000)showLock();if(lockHid&&Date.now()-lockHid>20000)sySoon(1500)}});
 $('#gsearch').onclick=openSearch;$('#ghelp').onclick=openHelp;$('#gai').onclick=openAI;$('#gfav').onclick=openFav;
 (async()=>{showLock();await initStore();try{shWrapStore()}catch(e){}await Promise.all([loadSet(),loadGoals(),loadPeople(),loadNotes(),initCaps(),loadBudget(),loadAssets(),loadTasks(),loadProj(),loadStuff(),loadBooks(),loadGem(),loadAi(),loadOd()]);await loadTrash().catch(()=>{});syncAreas();syncJT();syncCats();rtRestore();fcRestore();migratePersonNotes().catch(()=>{});await migrateChecks();setGroupColor('day');initNative();try{uiInit()}catch(e){console.error(e)}try{pwaInit()}catch(e){}try{smsInit()}catch(e){}try{if(!SET.tl24m){SET.tl24m=1;if((SET.tlS??4)===4&&(SET.tlE??24)===24){SET.tlS=0;SET.tlE=24}saveSet().catch(()=>{})}}catch(e){}try{repInit()}catch(e){}try{wcInit()}catch(e){console.error(e)}setTimeout(()=>{gdAuto()},9000);setTimeout(()=>{odAuto()},15000);setTimeout(()=>{if((gdS().url&&gdS().iv!=='off')||(OD.rt&&OD.iv!=='off'))return;const d=cloudDue();if(d&&SET.cloudNag!==today()){SET.cloudNag=today();saveSet().catch(()=>{});toast(`☁️ 드라이브 백업${d>=9999?'을 아직 하지 않았습니다':`한 지 ${d}일 지났습니다`} · ⚙️ 설정·백업에서 한 번 눌러 두십시오.`)}},6000);try{await draftRecover()}catch(e){console.warn('draft',e)}await openDay(cur);try{scrRestore()}catch(e){}widgetSoon();liveInit();try{applyNavMap();applyNavOrd();segOrdAll()}catch(e){}setTimeout(()=>autoBackup(false),2500);setTimeout(()=>syncNow(false),3500);setInterval(()=>{if(document.visibilityState==='visible')syncNow(false)},300000)})();
 
@@ -8126,8 +8142,10 @@ function wcPri(force){if(!wcOn('pri')){if(wcLast.pri&&wcLast.pri!=='x')wcCancel(
   if(force)delete wcLast.pri;wcShow('pri',Object.assign(p,{silent:!force}))}
 function wcCap(){if(!wcOn('cap')){if(wcLast.cap&&wcLast.cap!=='x')wcCancel('cap');return}
   wcShow('cap',{title:'📝 말로 적기',text:'일정·지출·할 일·감사를 말하면 오늘 기록에 넣습니다',silent:true,actions:[{id:'say',label:'🎤 말하기',reply:true,hint:'예: 3시 회의, 점심 9000원'}]})}
-async function wcEdit(d,fn){if(D&&D.date===d){fn(D);schedule();if(curSection==='day')renderDay();return}
-  try{const o=norm((await store.load(d))||{date:d});fn(o);await store.save(d,o);if(typeof cacheAll!=='undefined'&&cacheAll)cacheAll.set(d,o)}catch(e){}}
+/* 같은 날짜를 동시에 읽고 고쳐 저장하면 나중 것이 먼저 것을 덮어씁니다 → 날짜마다 한 줄로 세워 차례대로 */
+const RMWQ={};function rmwLock(d,job){const prev=RMWQ[d]||Promise.resolve();const p=prev.then(job,job);RMWQ[d]=p.catch(()=>{});return p}
+async function wcEdit(d,fn){return rmwLock(d,async()=>{if(D&&D.date===d){fn(D);schedule();if(curSection==='day')renderDay();return}
+  try{const o=norm((await store.load(d))||{date:d});fn(o);await store.save(d,o);if(typeof cacheAll!=='undefined'&&cacheAll)cacheAll.set(d,o)}catch(e){}})}
 
 
 /* ---------- ⌚ 워치 앱: 휴대폰 없이 루틴·몰입 실행 (Wear OS 앱 ↔ 데이터 레이어) ---------- */
@@ -8239,6 +8257,11 @@ function hcTimeBlocks(o,d,sl,exs){let k=0;o.time=Array.isArray(o.time)?o.time:[]
 async function hcSleepEve(d,sl){const S=hcSleepSpan(sl);if(S.ed!==d||S.sd===d)return;const pd=addD(d,-1);if(S.sd!==pd)return;const key='e'+(sl.id||S.b+S.w);
   await wcEdit(pd,o=>{o.time=Array.isArray(o.time)?o.time:[];o.hcT=o.hcT&&typeof o.hcT==='object'?o.hcT:{};const ex=o.time.find(b=>b.hcs===key);
     if(ex){if(ex.s!==S.b){ex.s=S.b;ex.e='00:00'}}else if(!o.hcT[key]&&S.b!=='00:00'){o.hcT[key]=1;o.time.push({id:uid(),s:S.b,e:'00:00',cat:'수면',act:'수면',area:'body',hcs:key,memo:'⌚ →'+S.w});o.time.sort((a,z)=>(a.s||'').localeCompare(z.s||''))}})}
+/* 달리기 거리: 워치가 공유한 이동거리(DistanceRecord) 중 운동 시간 안의 것을 더함 */
+function hcRunKm(r,x){if(!/달리|러닝/.test(x.type||''))return 0;const a=((r&&r.more&&r.more.dist)||[]).filter(z=>z.t>=x.s-6e4&&z.t<=x.e+12e4);const m=a.reduce((t,z)=>t+(+z.v||0),0);return Math.round(m/10)/100}
+function hcExAdd(o,x,r){const km=hcRunKm(r,x);const e0=o.ex.find(e=>e.hc&&e.hc===x.id);
+  if(e0){if(km>0&&!(+e0.km>0)){e0.km=km;e0.detail=(e0.detail||'')+' · '+km+'km'}return 0}
+  o.ex.push(Object.assign({id:uid(),type:x.type||'기타',min:String(Math.max(1,Math.round((x.e-x.s)/60000))),detail:`⌚ ${hhmm(new Date(x.s))}~${hhmm(new Date(x.e))}${x.title?' · '+x.title:''}${km>0?' · '+km+'km':''}`,int:0,hc:x.id||uid()},km>0?{km}:{}));return 1}
 async function hcImport(manual){const H=HB();if(!H){if(manual)toast(IS_NATIVE?(NA_MSG?NA_MSG:'이 APK에는 헬스 커넥트 부품이 없습니다. 새 build-apk.yml로 다시 만드십시오.'):'안드로이드 앱에서만 됩니다.');return}
   let st={};try{st=await H.status()}catch(e){}
   if(!st.available){if(manual)toast(st.sdk===2?'헬스 커넥트를 설치하거나 업데이트해야 합니다 (Play 스토어).':'이 휴대폰에서는 헬스 커넥트를 쓸 수 없습니다.');return}
@@ -8253,7 +8276,7 @@ async function hcImport(manual){const H=HB();if(!H){if(manual)toast(IS_NATIVE?(N
     await wcEdit(d,o=>{o.sleep=o.sleep||{bed:'',wake:'',q:0,hours:''};o.ex=o.ex||[];o.meas=o.meas||{};
       if(hd){o.hc2=hd;n.m++}if(sl&&sl.stg&&(sl.stg.deep+sl.stg.light+sl.stg.rem+sl.stg.awake)>0&&(o.sleep.hc||(!o.sleep.bed&&!o.sleep.wake)||(o.sleep.bed===hhmm(new Date(sl.s))&&o.sleep.wake===hhmm(new Date(sl.e)))))o.sleep.stg=sl.stg;
       if(sl&&((!o.sleep.bed&&!o.sleep.wake)||o.sleep.hc)){const b=hhmm(new Date(sl.s)),w=hhmm(new Date(sl.e));if(o.sleep.bed!==b||o.sleep.wake!==w){o.sleep.bed=b;o.sleep.wake=w;o.sleep.hc=sl.id||1;n.sl++}}
-      exs.forEach(x=>{if(o.ex.some(e=>e.hc&&e.hc===x.id))return;o.ex.push({id:uid(),type:x.type||'기타',min:String(Math.max(1,Math.round((x.e-x.s)/60000))),detail:`⌚ ${hhmm(new Date(x.s))}~${hhmm(new Date(x.e))}${x.title?' · '+x.title:''}`,int:0,hc:x.id||uid()});n.ex++});
+      exs.forEach(x=>{if(hcExAdd(o,x,r))n.ex++});
       if(ws&&(o.meas.w===''||o.meas.w==null)){o.meas.w=String(Math.round(ws.kg*10)/10);n.w++}
       try{n.tb+=hcTimeBlocks(o,d,sl,exs)}catch(e){console.warn('hcTB',e)}})
     if(sl){try{await hcSleepEve(d,sl)}catch(e){}}}
@@ -11297,6 +11320,37 @@ const wkParts=up=>{const X=((SET.wkx||{})[up]||[]).filter(x=>!(WK_PART[up]||[]).
 const WK_CARDIO=['러닝','걷기','자전거','수영','등산','줄넘기','로잉'];
 const wkList=o=>(o&&Array.isArray(o.wk))?o.wk:[];
 const e1rm=(w,r)=>(+w||0)*(1+(+r||0)/30);
+/* 🏃 이번 달 달리기: 워치(헬스 커넥트) 달리기 기록 + 운동 기록의 유산소 중 달리기·러닝·조깅 */
+const RUNRE=/달리|러닝|조깅|뛰|\brun/i;
+function runStats(ym){const L=[];const days=[...(cacheAll||new Map()).entries()];if(D&&!days.some(([d])=>d===D.date))days.push([D.date,D]);
+  days.forEach(([d,o])=>{if(!d.startsWith(ym)||!o)return;let hk=0;(o.ex||[]).forEach(e=>{if(RUNRE.test(e.type||'')){L.push({d,km:+e.km||0,min:+e.min||0,src:'⌚'});if(+e.km>0)hk++}});
+    if(!hk)(o.wk||[]).forEach(x=>{if(x.t==='cardio'&&RUNRE.test(x.name||''))L.push({d,km:+x.km||0,min:+x.min||0,src:'✍️'})})});
+  L.sort((a,b)=>a.d<b.d?-1:1);const km=Math.round(L.reduce((t,x)=>t+x.km,0)*10)/10,min=L.reduce((t,x)=>t+x.min,0),mx=L.reduce((t,x)=>Math.max(t,x.km),0);
+  const pk=L.filter(x=>x.km>0&&x.min>0),pm=pk.length?pk.reduce((t,x)=>t+x.min,0)/pk.reduce((t,x)=>t+x.km,0):0;return{L,km,min,mx,pm,n:L.length}}
+function mvStats(ym){let steps=0,dist=0,walk=0,nd=0;const days=[...(cacheAll||new Map()).entries()];if(D&&!days.some(([d])=>d===D.date))days.push([D.date,D]);
+  days.forEach(([d,o])=>{if(!d.startsWith(ym)||!o||!o.hc2)return;const h=o.hc2;if(!(+h.steps>0)&&!(+h.dist>0))return;nd++;steps+=+h.steps||0;const dd=+h.dist||0;dist+=dd;const rk=(o.ex||[]).filter(e=>RUNRE.test(e.type||'')).reduce((t,e)=>t+(+e.km||0),0);walk+=Math.max(0,dd-rk)});
+  return{steps:Math.round(steps),dist:Math.round(dist*10)/10,walk:Math.round(walk*10)/10,nd,avg:nd?Math.round(steps/nd):0}}
+const runHM=m=>m>=60?`${Math.floor(m/60)}시간 ${m%60}분`:`${m}분`;
+function runCardHTML(){const T=today(),ym=T.slice(0,7),py=ymd(new Date(+T.slice(0,4),+T.slice(5,7)-2,1)).slice(0,7);const a=runStats(ym),b=runStats(py);const g=+SET.kmGoal||100;const pct=Math.min(100,Math.round(a.km/g*100));
+  const pace=a.pm?`${Math.floor(a.pm)}'${String(Math.round((a.pm%1)*60)).padStart(2,'0')}"/km`:'';
+  return`<div class="card nocol" id="runcard" style="--k:#ff7043;margin-top:12px"><h3>🏃 이번 달 달린 거리 · 걸음</h3>
+  <div style="font-size:2rem;font-weight:800;line-height:1.1;margin:4px 0">${a.km}<small style="font-size:1rem;font-weight:600"> km</small></div>
+  <i class="xpl"><i style="width:${pct}%"></i></i>
+  <p class="hint" style="margin:6px 0 0">${a.n?`${a.n}회 · 총 ${runHM(a.min)} · 가장 멀리 ${a.mx}km${pace?' · 평균 '+pace:''}`:'이번 달 달리기 기록이 아직 없습니다.'} · 목표 ${g}km ${pct}%${b.n?` · 지난달 ${b.km}km`:''}</p>
+  ${(()=>{const v=mvStats(ym),pv=mvStats(py);return v.nd?`<p style="margin:8px 0 0;font-size:.95rem">🚶 걷기 <b>${v.walk}km</b> · 👣 <b>${v.steps.toLocaleString()}</b>보 <small class="hint">(하루 평균 ${v.avg.toLocaleString()}보 · ${v.nd}일 · 총 이동 ${v.dist}km${pv.nd?` · 지난달 ${pv.steps.toLocaleString()}보`:''})</small></p>`:`<p class="hint" style="margin:8px 0 0">🚶 걸음·걸은 거리는 워치 기록을 가져오면 나옵니다.</p>`})()}
+  ${a.n?`<details style="margin-top:6px"><summary class="hint" style="cursor:pointer">달린 날 ${a.n}회 보기</summary>${a.L.map(x=>`<div class="hint" style="margin:3px 0">${md(x.d)} · ${x.km?x.km+'km':'거리 없음'} · ${runHM(x.min)} ${x.src}</div>`).join('')}</details>`:''}
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">${IS_NATIVE?`<button type="button" class="del" data-runbf="1">⌚ 워치에서 이번 달 다시 읽기 (달리기·걸음)</button>`:''}<button type="button" class="del" data-rungoal="1">🎯 목표 km</button></div>
+  <p class="hint" style="margin:6px 0 0">걷기 = 하루 총 이동거리 − 달린 거리. 달린 거리는 워치가 공유한 이동거리를 달리기 시간에 맞춰 더한 값이라 실제와 조금 다를 수 있습니다. 같은 날 직접 적은 것과 워치 기록이 같이 있으면 워치 기록만 셉니다.</p></div>`}
+async function runBackfill(){const H=HB();if(!H){toast('안드로이드 앱에서만 됩니다.');return}let st={};try{st=await H.status()}catch(e){}if(!st.available||!st.granted){toast('⌚ 설정 › 워치에서 헬스 커넥트 권한을 먼저 허용해 주세요.');return}
+  const ym=today().slice(0,7),start=parseD(ym+'-01').getTime()-6*3600e3,end=Date.now();let r;try{r=await H.read({start,end})}catch(e){toast('워치 기록을 읽지 못했습니다.');return}
+  const by={};(r.ex||[]).forEach(x=>{if(!/달리|러닝/.test(x.type||''))return;const d=ymd(new Date(x.s));if(d.startsWith(ym))(by[d]=by[d]||[]).push(x)});let n=0;
+  for(const d of Object.keys(by)){await wcEdit(d,o=>{o.ex=o.ex||[];by[d].forEach(x=>{if(hcExAdd(o,x,r))n++})})}
+  let nd=0;for(let d=ym+'-01';d<=today();d=addD(d,1)){const hd=hcDay(r.more,parseD(d).getTime());if(hd){nd++;await wcEdit(d,o=>{o.hc2=Object.assign({},o.hc2||{},hd)})}}
+  try{await allMap(true)}catch(e){}toast(`⌚ 이번 달 달리기 ${Object.values(by).reduce((t,a)=>t+a.length,0)}회 · 걸음 ${nd}일치를 읽었습니다.`);renderCare()}
+function runMount(){const R=$('#careBody');if(!R)return;const old=R.querySelector('#runcard');if(old)old.remove();R.insertAdjacentHTML('afterbegin',runCardHTML());
+  const bf=R.querySelector('[data-runbf]');if(bf)bf.onclick=()=>{bf.disabled=true;runBackfill().finally(()=>{bf.disabled=false})};
+  const gb=R.querySelector('[data-rungoal]');if(gb)gb.onclick=async()=>{const v=await uiPrompt('이번 달 달리기 목표 (km)',String(+SET.kmGoal||100));if(v==null)return;const n=+v;if(!(n>0)){toast('숫자로 적으십시오.');return}SET.kmGoal=n;saveSet().catch(()=>{});renderCare()}}
+{const _rc2=renderCare;renderCare=async function(){const r=await _rc2.apply(this,arguments);try{runMount()}catch(e){console.warn('run',e)}return r}}
 function wkAllDays(){const m=new Map();try{(cacheAll||new Map()).forEach((o,d)=>{if(wkList(o).length)m.set(d,o)})}catch(e){}if(D&&wkList(D).length)m.set(D.date,D);return[...m.entries()].sort((a,b)=>a[0]<b[0]?-1:1)}
 /* 종목별 최고 기록과 신기록 날짜 */
 function wkPR(){const best={},prs={},last={};wkAllDays().forEach(([d,o])=>{const today={};wkList(o).filter(x=>x.t==='weight').forEach(x=>{const k=(x.name||'').trim();if(!k)return;(x.sets||[]).forEach(s=>{const v=e1rm(s.w,s.r);if(!v)return;if(!today[k]||v>today[k].v)today[k]={v,w:+s.w||0,r:+s.r||0}});last[k]={d,x}});
@@ -11353,7 +11407,7 @@ function wkBind(R,re){const F=WKF;const rd=()=>{const g=id=>{const x=R.querySele
   R.querySelectorAll('[data-wkgoal]').forEach(b=>b.onclick=async()=>{const v=await uiPrompt('이번 달 유산소 목표 (km)',String(+SET.kmGoal||100));if(v==null)return;const n=+v;if(!(n>0)){toast('숫자로 적으십시오.');return}SET.kmGoal=n;saveSet().catch(()=>{});re()});
   {const s=R.querySelector('#wksave');if(s)s.onclick=()=>{rd();D.wk=Array.isArray(D.wk)?D.wk:[];let x=null;
     if(F.t==='cardio'){if(!(+F.km>0)&&!(+F.min>0)){toast('거리나 시간을 적으십시오.');return}x={id:uid(),t:'cardio',name:F.cname,km:+F.km||0,min:+F.min||0}}
-    else if(F.t==='weight'){const sets=F.sets.filter(s=>+s.r>0||+s.w>0).map(s=>({w:+s.w||0,r:+s.r||0}));if(!(F.name||'').trim()){toast('운동 종류를 적으십시오.');return}if(!sets.length){toast('무게와 횟수를 적으십시오.');return}x={id:uid(),t:'weight',part:F.up,name:F.name.trim(),sets};if(!wkParts(F.up).includes(x.name)){SET.wkx=SET.wkx||{};(SET.wkx[F.up]=SET.wkx[F.up]||[]).push(x.name);saveSet().catch(()=>{})}}
+    else if(F.t==='weight'){const sets=F.sets.filter(s=>+s.r>0||+s.w>0).map(s=>({w:+s.w||0,r:+s.r||0}));if(!(F.name||'').trim()){toast('운동 종류를 적으십시오.');return}if(!sets.length){toast('무게와 횟수를 적으십시오.');return}x={id:uid(),t:'weight',part:F.up,name:F.name.trim(),sets};if(F.sl){x.sl=F.sl;F.sl=''}if(!wkParts(F.up).includes(x.name)){SET.wkx=SET.wkx||{};(SET.wkx[F.up]=SET.wkx[F.up]||[]).push(x.name);saveSet().catch(()=>{})}}
     else{if(!(+F.min>0)){toast('시간을 적으십시오.');return}x={id:uid(),t:'stretch',min:+F.min||0,memo:F.memo}}
     const before=wkPR();D.wk.push(x);schedule();try{XPC.k=''}catch(e){}const after=wkPR();const np=(after.prs[D.date]||[]).filter(p=>p.k===(x.name||'')&&!((before.prs[D.date]||[]).some(q=>q.k===p.k&&q.w===p.w&&q.r===p.r)));
     if(np.length){const p=np[0];toast(`🏆 신기록! ${p.k} ${p.w}kg×${p.r} (이전 ${p.prev.w}kg×${p.prev.r})`)}else if(x.t==='cardio'){const ym=D.date.slice(0,7);toast(`🏃 ${x.km}km · 이번 달 ${wkMonthKm(ym)}/${+SET.kmGoal||100}km`)}else toast('💪 운동 기록을 넣었습니다.');
@@ -11361,6 +11415,142 @@ function wkBind(R,re){const F=WKF;const rd=()=>{const g=id=>{const x=R.querySele
 /* 몸관리 화면 맨 위에 운동 기록 */
 {const _rc=renderCare;renderCare=async function(){const r=await _rc.apply(this,arguments);try{const R=$('#careBody');if(!R)return r;R.querySelectorAll('.wkp').forEach(x=>x.remove());const first=R.querySelector('.pgridc,.tgrid,.panel,.card');const h=wkPanelHTML();if(first)first.insertAdjacentHTML('beforebegin',h);else R.insertAdjacentHTML('beforeend',h);const P=R.querySelector('.wkp');wkBind(P,()=>{const y=scrollY;renderCare().then(()=>scrollTo(0,y))})}catch(e){console.warn('wk',e)}return r}}
 try{const t=PMT.find(x=>x[0]==='care');if(t){t[1]='🏋️';t[2]='운동·몸'}}catch(e){}
+
+/* ===================== 💪 운동 계획: 분할(2·3·직접)·요일·순환·유산소 → 오늘 운동 제안 · 습관 연결 ===================== */
+(function(){const st=document.createElement('style');st.textContent=`
+.wpc{display:inline-block;border:1px solid var(--line);background:var(--paper);color:var(--ink);border-radius:14px;padding:4px 10px;margin:3px 3px 0 0;font:inherit;font-size:.82rem;cursor:pointer}
+.wpc.on{background:#13b5b1;border-color:#13b5b1;color:#fff;font-weight:700}
+.wpwk{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin:6px 0}.wpwk>div{text-align:center;font-size:.74rem}.wpwk b{display:block;font-size:.8rem;margin-bottom:2px}
+.wpwk select{width:100%;font-size:.74rem;padding:4px 0;text-align:center}.wpwk span{display:block;border:1px solid var(--line);border-radius:10px;padding:5px 0;min-height:1.6em;background:var(--paper)}
+.wpwk span.on{background:#13b5b122;border-color:#13b5b1;font-weight:700}.wpwk span.td{outline:2px solid #ff7043}
+.wpx{border:1px solid var(--line);border-radius:12px;padding:8px 10px;margin:6px 0;background:var(--paper)}.wpx b{font-size:.92rem}.wpx small{display:block;color:var(--muted);font-size:.78rem;line-height:1.5}
+.wpx.ok{border-color:#2fae75;background:#2fae7512}.wpx{display:flex;gap:6px;align-items:center;padding:6px 8px;margin:4px 0}.wpx>div{flex:1;min-width:0}.wpx .row2{display:flex;gap:4px;flex:none}.wpx .row2 button{font:inherit;font-size:.8rem;border:1px solid var(--line);background:var(--paper);border-radius:10px;padding:6px 8px;cursor:pointer}.wpx .row2 button.go{background:#13b5b1;border-color:#13b5b1;color:#fff;font-weight:700}
+.wpslot{border:1px dashed var(--line);border-radius:12px;padding:8px;margin:8px 0}.wpslot input[type=text]{width:100%;box-sizing:border-box}`;document.head.appendChild(st)})();
+const WP_PRE={
+  '2':{slots:[{id:'A',name:'상체',parts:['가슴','등','어깨','팔'],ex:['벤치프레스','랫풀다운','숄더프레스','바벨로우','덤벨컬','케이블 푸시다운']},{id:'B',name:'하체·코어',parts:['하체','코어'],ex:['스쿼트','레그프레스','레그컬','카프레이즈','플랭크']}],days:{1:'A',2:'B',4:'A',5:'B'}},
+  '3':{slots:[{id:'A',name:'가슴·삼두',parts:['가슴','팔'],ex:['벤치프레스','인클라인 벤치프레스','딥스','케이블 푸시다운','트라이셉스 익스텐션']},{id:'B',name:'등·이두',parts:['등','팔'],ex:['데드리프트','랫풀다운','바벨로우','시티드로우','바벨컬','해머컬']},{id:'C',name:'하체·어깨',parts:['하체','어깨'],ex:['스쿼트','레그프레스','레그컬','숄더프레스','사이드 레터럴 레이즈']}],days:{1:'A',3:'B',5:'C'}},
+  'c':{slots:[{id:'A',name:'분할 A',parts:['가슴'],ex:[]}],days:{1:'A'}}};
+const WP_IDS='ABCDE';
+const wpGet=()=>{const P=SET.wplan;return P&&Array.isArray(P.slots)&&P.slots.length?P:null};
+const wpDays=(a,b)=>Math.round((parseD(b)-parseD(a))/864e5);
+/* 내 기록에서 그 부위에 자주 한 운동(많이 한 순) */
+function wpMine(parts){const c={};wkAllDays().forEach(([,o])=>wkList(o).forEach(x=>{if(x.t==='weight'&&parts.includes(x.part)&&x.name){const k=x.name.trim();c[k]=(c[k]||0)+1}}));return Object.entries(c).sort((a,b)=>b[1]-a[1]).map(x=>x[0])}
+function wpPartOf(name){let p='';wkAllDays().forEach(([,o])=>wkList(o).forEach(x=>{if(x.t==='weight'&&(x.name||'').trim()===name&&x.part)p=x.part}));if(p)return p;
+  for(const k of Object.keys(WK_PART))if(wkParts(k).includes(name))return k;return'가슴'}
+function wpPreset(k){const B=JSON.parse(JSON.stringify(WP_PRE[k]));B.slots.forEach(s=>{const m=wpMine(s.parts);s.ex=[...new Set([...m,...s.ex])].slice(0,6)});return B}
+/* 그 날 할 분할: 요일 고정 또는 ‘운동한 날마다 다음 분할’(순환) */
+function wpLastSlot(d){const P=wpGet();if(!P)return null;const L=wkAllDays().filter(([x])=>x<d).reverse();
+  for(const[,o]of L){const W=wkList(o).filter(x=>x.t==='weight');if(!W.length)continue;const t=W.find(x=>x.sl);if(t&&P.slots.some(s=>s.id===t.sl))return t.sl;
+    let best=null,bn=0;P.slots.forEach(s=>{const n=W.filter(x=>(s.ex||[]).includes((x.name||'').trim())||(s.parts||[]).includes(x.part)).length;if(n>bn){bn=n;best=s.id}});if(best)return best}return null}
+function wpSlotFor(d){const P=wpGet();if(!P)return null;const k=(P.days||{})[parseD(d).getDay()];if(!k)return null;
+  if(P.rot){const T=wkList(d===D.date?D:(cacheAll&&cacheAll.get(d))).find(x=>x.t==='weight'&&x.sl);if(T){const s=P.slots.find(s=>s.id===T.sl);if(s)return s}
+    const l=wpLastSlot(d);if(!l)return P.slots[0];const i=P.slots.findIndex(s=>s.id===l);return P.slots[(i+1)%P.slots.length]}
+  return P.slots.find(s=>s.id===k)||null}
+const wpCardioOn=d=>{const P=wpGet()||SET.wplan;return!!(P&&P.cardio&&(P.cardio.days||[]).includes(parseD(d).getDay()))};
+/* 웨이트 제안: 이중 진행(횟수 범위 위쪽을 모든 세트에서 채우면 무게를 올림) */
+function wpHist(name){const L=[];wkAllDays().forEach(([d,o])=>wkList(o).forEach(x=>{if(x.t==='weight'&&(x.name||'').trim()===name&&(x.sets||[]).length)L.push({d,sets:x.sets})}));return L}
+function wpSuggest(name,part,d){const P=wpGet()||{};const lo=+P.lo||8,hi=Math.max(lo,+P.hi||12),ns=+P.sets||3;const H=wpHist(name).filter(h=>h.d<d);const last=H[H.length-1];
+  const inc=part==='하체'?(+P.incL||5):(+P.incU||2.5);const S=(w,r,n)=>Array.from({length:n},()=>({w,r}));
+  if(!last)return{txt:`처음 하는 운동 · 가벼운 무게로 ${lo}~${hi}회 × ${ns}세트에서 시작`,sets:S('',lo,ns),w:'',r:lo,n:ns};
+  const W=Math.max(...last.sets.map(s=>+s.w||0)),atW=last.sets.filter(s=>(+s.w||0)===W),minR=Math.min(...atW.map(s=>+s.r||0)),gap=wpDays(last.d,d),n=Math.max(ns,atW.length);
+  const lt=`지난번 ${md(last.d)} ${last.sets.map(s=>`${+s.w||0}×${+s.r||0}`).join(', ')}`;let w=W,r,why;
+  if(gap>=14){r=Math.max(lo,Math.min(hi,minR));why=`${gap}일 만 · 같은 무게로 몸 풀기`}
+  else if(minR>=hi){if(W>0){w=Math.round((W+inc)*10)/10;r=lo;why=`모든 세트 ${hi}회 채움 → ${inc}kg 올리기`}else{r=minR+2;why='맨몸 · 2회 더'}}
+  else{r=Math.min(hi,Math.max(lo,minR+1));why=minR<lo?`${lo}회부터 다시 채우기`:`같은 무게로 ${r}회 목표 (${hi}회 채우면 증량)`}
+  return{txt:`${lt} → 오늘 ${w?w+'kg':'맨몸'} × ${r}회 × ${n}세트 · ${why}`,sets:S(w,r,n),w,r,n,last}}
+/* 유산소 제안 */
+function wpCardioHist(name){const L=[];const re=RUNRE.test(name)?RUNRE:new RegExp(name.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'));const days=[...(cacheAll||new Map()).entries()];if(D&&!days.some(([d])=>d===D.date))days.push([D.date,D]);
+  days.forEach(([d,o])=>{if(!o)return;(o.ex||[]).forEach(e=>{if(re.test(e.type||''))L.push({d,km:+e.km||0,min:+e.min||0})});wkList(o).forEach(x=>{if(x.t==='cardio'&&re.test(x.name||''))L.push({d,km:+x.km||0,min:+x.min||0})})});return L.sort((a,b)=>a.d<b.d?-1:1)}
+function wpCardioSug(d){const P=wpGet()||SET.wplan;const C=P&&P.cardio;if(!C)return null;const H=wpCardioHist(C.name||'러닝').filter(h=>h.d<d);const last=H[H.length-1];const tk=+C.km||0,tm=+C.min||0;
+  let km=tk,why='';if(last&&tk&&last.km>=tk&&wpDays(last.d,d)<10){km=Math.round(Math.min(tk*1.1,last.km+0.5)*10)/10;why=` · 지난번 목표 달성 → 여유 있으면 ${km}km`}else if(last&&tk&&last.km&&last.km<tk*.8){km=Math.round((last.km+tk)/2*10)/10;why=` · 지난번 ${last.km}km → 오늘 ${km}km부터`}
+  const lt=last?`지난번 ${md(last.d)} ${last.km?last.km+'km ':''}${last.min?last.min+'분':''}`:'아직 기록 없음';return{txt:`${lt} → 오늘 ${tk?tk+'km':''}${tk&&tm?' · ':''}${tm?tm+'분':''}${why}`,km:km||tk,min:tm,name:C.name||'러닝'}}
+/* 오늘 한 것 */
+function wpDone(o,slot){const W=wkList(o).filter(x=>x.t==='weight');return slot?(slot.ex||[]).filter(n=>W.some(x=>(x.name||'').trim()===n)):[]}
+function wpCardioDone(o){const P=wpGet()||SET.wplan;const C=P&&P.cardio;if(!C||!o)return false;const nm=C.name||'러닝';const re=RUNRE.test(nm)?RUNRE:new RegExp(nm.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'));
+  return wkList(o).some(x=>x.t==='cardio'&&re.test(x.name||''))||(o.ex||[]).some(e=>re.test(e.type||''))}
+function wpWeek(d){const P=wpGet()||SET.wplan;if(!P)return null;const m0=addD(d,-((parseD(d).getDay()+6)%7));let wp=0,wd=0,cp=0,cd=0;
+  for(let i=0;i<7;i++){const x=addD(m0,i),wdy=parseD(x).getDay(),o=x===D.date?D:(cacheAll&&cacheAll.get(x));if(P.slots&&(P.days||{})[wdy]){wp++;if(o&&wkList(o).some(y=>y.t==='weight'))wd++}if(P.cardio&&(P.cardio.days||[]).includes(wdy)){cp++;if(wpCardioDone(o))cd++}}return{wp,wd,cp,cd}}
+/* 습관 연결: 했으면 그 날 습관 체크 */
+const wpHabAuto=(re)=>{const h=(SET.habits||[]).find(h=>re.test(h.name||''));return h?h.id:''};
+function wpSync(){try{const P=SET.wplan;if(!P||!D||D.date>today())return;let ch=false;D.habits=D.habits||{};
+  const hw=P.hw===undefined?wpHabAuto(/웨이트|헬스|근력|운동/):P.hw,hc=P.hc===undefined?wpHabAuto(/러닝|달리|유산소|걷기|조깅/):P.hc;
+  if(hw&&!D.habits[hw]&&wkList(D).some(x=>x.t==='weight')){D.habits[hw]=true;ch=true}
+  if(hc&&!D.habits[hc]&&wpCardioDone(D)){D.habits[hc]=true;ch=true}if(ch)schedule()}catch(e){console.warn('wpSync',e)}}
+/* 오늘 화면 카드 */
+function wpTodayHTML(){const d=D.date;if(d!==today()||!SET.wplan)return'';const slot=wpSlotFor(d),cOn=wpCardioOn(d);if(!slot&&!cOn)return'';
+  let h=`<div class="card nocol" id="wptoday" style="--k:#13b5b1;margin-bottom:12px"><h3>💪 오늘의 운동${slot?` · ${esc(slot.name)}`:''}</h3>`;
+  if(slot){const done=wpDone(D,slot);h+=`<p class="hint" style="margin:0 0 4px">${(SET.wplan.rot?'순환 · ':'')}${done.length}/${(slot.ex||[]).length}개 함 · ✅는 제안대로 넣기, ✏️는 고쳐서 적기</p>`;
+    (slot.ex||[]).forEach((n,i)=>{const part=wpPartOf(n),S=wpSuggest(n,part,d),ok=done.includes(n);
+      h+=`<div class="wpx ${ok?'ok':''}"><div><b>${ok?'✅ ':''}${esc(n)}</b><small>${esc(S.txt)}</small></div>${ok?'':`<div class="row2"><button type="button" class="go" data-wpgo="${i}" aria-label="제안대로 했음">✅ 했음</button><button type="button" data-wped="${i}" aria-label="고쳐서 적기">✏️</button></div>`}</div>`})}
+  if(cOn){const C=wpCardioSug(d),ok=wpCardioDone(D);if(C)h+=`<div class="wpx ${ok?'ok':''}"><div><b>${ok?'✅ ':''}🏃 ${esc(C.name)}</b><small>${esc(C.txt)}</small></div>${ok?'':`<div class="row2"><button type="button" class="go" data-wpcgo="1" aria-label="했음">✅ 했음</button><button type="button" data-wped2="1" data-wpced="1" aria-label="고쳐서 적기">✏️</button></div>`}</div>`}
+  const w=wpWeek(d);if(w)h+=`<p class="hint" style="margin:6px 0 0">이번 주 ${w.wp?`웨이트 ${w.wd}/${w.wp}`:''}${w.wp&&w.cp?' · ':''}${w.cp?`유산소 ${w.cd}/${w.cp}`:''} · <button type="button" class="xlink" data-wpset="1" style="margin:0">⚙️ 운동 계획</button></p>`;
+  return h+'</div>'}
+function wpEditForm(o){Object.assign(WKF,o);go('care');setTimeout(()=>{const p=document.querySelector('#careBody .wkp');if(p)p.scrollIntoView({block:'start',behavior:'smooth'})},400)}
+function wpBindToday(R){const slot=wpSlotFor(D.date);const re=()=>{try{renderDay()}catch(e){}};
+  R.querySelectorAll('[data-wpgo]').forEach(b=>b.onclick=()=>{const n=slot.ex[+b.dataset.wpgo],part=wpPartOf(n),S=wpSuggest(n,part,D.date);if(S.w===''){toast('처음 하는 운동은 무게를 적어 주십시오.');wpEditForm({t:'weight',up:part,name:n,sets:S.sets.map(s=>({w:'',r:String(s.r)})),sl:slot.id});return}
+    D.wk=Array.isArray(D.wk)?D.wk:[];D.wk.push({id:uid(),t:'weight',part,name:n,sets:S.sets.map(s=>({w:+s.w||0,r:+s.r||0})),sl:slot.id});schedule();try{XPC.k=''}catch(e){}wpSync();toast(`💪 ${n} ${S.w}kg × ${S.r}회 × ${S.n}세트를 넣었습니다.`);re()});
+  R.querySelectorAll('[data-wped]').forEach(b=>b.onclick=()=>{const n=slot.ex[+b.dataset.wped],part=wpPartOf(n),S=wpSuggest(n,part,D.date);wpEditForm({t:'weight',up:part,name:n,sets:S.sets.map(s=>({w:String(s.w),r:String(s.r)})),sl:slot.id})});
+  R.querySelectorAll('[data-wpcgo]').forEach(b=>b.onclick=()=>{const C=wpCardioSug(D.date);if(!C)return;D.wk=Array.isArray(D.wk)?D.wk:[];D.wk.push({id:uid(),t:'cardio',name:C.name,km:+C.km||0,min:+C.min||0});schedule();try{XPC.k=''}catch(e){}wpSync();toast(`🏃 ${C.name} ${C.km?C.km+'km ':''}${C.min?C.min+'분':''}을 넣었습니다.`);re()});
+  R.querySelectorAll('[data-wpced]').forEach(b=>b.onclick=()=>{const C=wpCardioSug(D.date);if(!C)return;wpEditForm({t:'cardio',cname:C.name,km:String(C.km||''),min:String(C.min||'')})});
+  R.querySelectorAll('[data-wpset]').forEach(b=>b.onclick=()=>wpOpen())}
+function wpDayMount(){const B=$('#dayBody');if(!B||curSection!=='day')return;const old=B.querySelector('#wptoday');if(old)old.remove();if(!['start','run'].includes(mode))return;const h=wpTodayHTML();if(!h)return;B.insertAdjacentHTML('afterbegin',h);wpBindToday(B.querySelector('#wptoday'))}
+{renderDay=HK.w('renderDay','30:운동계획카드',renderDay,_rdW=>async function(){const r=await _rdW.apply(this,arguments);try{wpSync();wpDayMount()}catch(e){console.warn('wp',e)}return r});}
+/* 관리(운동·몸) 카드 */
+const WPDK=['일','월','화','수','목','금','토'];
+function wpCareHTML(){const P=SET.wplan;const T=today(),wd=parseD(T).getDay();
+  if(!P)return`<div class="card nocol" id="wpcare" style="--k:#13b5b1;margin-top:12px"><h3>🗓️ 운동 계획</h3><p class="hint" style="margin:0 0 6px">분할과 요일을 정하면 오늘 화면에 그날 할 운동과 지난 기록에 맞춘 무게·횟수 제안이 뜨고, 하면 습관이 체크됩니다.</p><div style="display:flex;gap:6px;flex-wrap:wrap"><button type="button" class="btn small" data-wpnew="2">2분할로 시작</button><button type="button" class="btn small" data-wpnew="3">3분할로 시작</button><button type="button" class="del" data-wpnew="c">직접 정하기</button><button type="button" class="del" data-wpnew="r">유산소만</button></div></div>`;
+  const sl=id=>(P.slots||[]).find(s=>s.id===id);const w=wpWeek(T);const ts=wpSlotFor(T);
+  return`<div class="card nocol" id="wpcare" style="--k:#13b5b1;margin-top:12px"><h3>🗓️ 운동 계획</h3>
+  <p class="hint" style="margin:0">${P.slots&&P.slots.length?`${P.mode==='2'?'2분할':P.mode==='3'?'3분할':P.slots.length+'개 분할'} · ${P.rot?'운동한 날마다 다음 분할(순환)':'요일 고정'}`:'웨이트 계획 없음'}${P.cardio?` · 유산소 ${esc(P.cardio.name||'러닝')} 주 ${(P.cardio.days||[]).length}회`:''}</p>
+  <div class="wpwk">${WPDK.map((n,i)=>{const k=(P.days||{})[i],s=k&&sl(k),c=P.cardio&&(P.cardio.days||[]).includes(i);return`<div><b>${n}</b><span class="${s||c?'on':''} ${i===wd?'td':''}">${s?esc(P.rot?'💪':s.id):''}${c?'🏃':''}${!s&&!c?'·':''}</span></div>`}).join('')}</div>
+  ${(P.slots||[]).length?`<p class="hint" style="margin:2px 0">${P.slots.map(s=>`<b>${s.id}</b> ${esc(s.name)}: ${esc((s.ex||[]).join(', ')||'운동 없음')}`).join('<br>')}</p>`:''}
+  <p class="hint" style="margin:6px 0 0">오늘 ${ts?`💪 ${esc(ts.name)}`:'웨이트 쉼'}${wpCardioOn(T)?' · 🏃 유산소':''}${w?` · 이번 주 ${w.wp?`웨이트 ${w.wd}/${w.wp}`:''}${w.wp&&w.cp?' · ':''}${w.cp?`유산소 ${w.cd}/${w.cp}`:''}`:''}</p>
+  <div style="margin-top:8px"><button type="button" class="btn small" data-wpset="1">⚙️ 계획 고치기</button></div></div>`}
+function wpCareMount(){const R=$('#careBody');if(!R)return;const old=R.querySelector('#wpcare');if(old)old.remove();const rc=R.querySelector('#runcard');const h=wpCareHTML();if(rc)rc.insertAdjacentHTML('afterend',h);else R.insertAdjacentHTML('afterbegin',h);
+  const C=R.querySelector('#wpcare');C.querySelectorAll('[data-wpset]').forEach(b=>b.onclick=()=>wpOpen());
+  C.querySelectorAll('[data-wpnew]').forEach(b=>b.onclick=()=>{const k=b.dataset.wpnew;if(k==='r')wpOpen({mode:'c',slots:[],days:{},rot:false,cardio:{days:[2,4,6],name:'러닝',km:5,min:30}});else{const B=wpPreset(k);wpOpen({mode:k,slots:B.slots,days:B.days,rot:false,cardio:null})}})}
+{const _rc3=renderCare;renderCare=async function(){const r=await _rc3.apply(this,arguments);try{wpSync();wpCareMount()}catch(e){console.warn('wpc',e)}return r}}
+/* 계획 정하기 창 */
+function wpOpen(init){const E=JSON.parse(JSON.stringify(init||SET.wplan||{mode:'3',...wpPreset('3'),rot:false,cardio:null}));E.days=E.days||{};E.slots=E.slots||[];const S=$('#sheet');S.hidden=false;
+  const habOpt=(cur,re)=>{const auto=cur===undefined?wpHabAuto(re):cur;return`<option value="">연결 안 함</option>${(SET.habits||[]).map(h=>`<option value="${esc(h.id)}" ${auto===h.id?'selected':''}>${esc(h.name)}</option>`).join('')}`};
+  const draw=()=>{const C=E.cardio;S.innerHTML=`<div class="sheetbox" role="dialog" aria-label="운동 계획"><div class="shead"><b>🗓️ 운동 계획</b><button class="del" id="wpx">닫기</button></div>
+    <p class="wkhint">분할</p><div>${[['2','2분할'],['3','3분할'],['c','직접']].map(([k,l])=>`<button type="button" class="wpc ${E.mode===k?'on':''}" data-wpm="${k}">${l}</button>`).join('')}</div>
+    ${E.slots.length?`<p class="wkhint" style="margin-top:8px">순서</p><div><button type="button" class="wpc ${!E.rot?'on':''}" data-wpr="0">요일 고정</button><button type="button" class="wpc ${E.rot?'on':''}" data-wpr="1">운동한 날마다 다음 분할 (순환)</button></div>
+    <p class="wkhint" style="margin-top:8px">${E.rot?'웨이트 하는 요일 (분할은 순서대로 돌아감)':'요일마다 할 분할'}</p>
+    <div class="wpwk">${WPDK.map((n,i)=>`<div><b>${n}</b><select data-wpd="${i}"><option value="">쉼</option>${E.slots.map(s=>`<option value="${s.id}" ${E.days[i]===s.id?'selected':''}>${E.rot?'💪':s.id}</option>`).join('')}</select></div>`).join('')}</div>
+    ${E.slots.map((s,si)=>{const pool=[...new Set([...(s.ex||[]),...wpMine(s.parts||[]),...(s.parts||[]).flatMap(p=>wkParts(p))])];return`<div class="wpslot"><div style="display:flex;gap:6px;align-items:center"><b>${s.id}</b><input type="text" data-wpn="${si}" value="${esc(s.name)}" placeholder="이름 (예: 가슴·삼두)">${E.mode==='c'&&E.slots.length>1?`<button type="button" class="del" data-wpdel="${si}">✕</button>`:''}</div>
+      <div style="margin-top:4px">${Object.keys(WK_PART).map(p=>`<button type="button" class="wpc ${(s.parts||[]).includes(p)?'on':''}" data-wpp="${si}|${p}">${p}</button>`).join('')}</div>
+      <p class="wkhint" style="margin:6px 0 0">할 운동 (누른 순서대로) · ${(s.ex||[]).length}개</p><div>${pool.map(n=>`<button type="button" class="wpc ${(s.ex||[]).includes(n)?'on':''}" data-wpe="${si}|${esc(n)}">${(s.ex||[]).includes(n)?(s.ex.indexOf(n)+1)+'. ':''}${esc(n)}</button>`).join('')}</div></div>`}).join('')}
+    ${E.mode==='c'&&E.slots.length<5?`<button type="button" class="btn small ghost" id="wpadd">＋ 분할 추가</button>`:''}
+    <div class="wkg2" style="margin-top:8px"><label class="f">목표 횟수 (최소~최대)<span style="display:flex;gap:4px"><input type="number" min="1" id="wplo" value="${+E.lo||8}"><input type="number" min="1" id="wphi" value="${+E.hi||12}"></span></label><label class="f">세트 수<input type="number" min="1" id="wpsets" value="${+E.sets||3}"></label>
+    <label class="f">증량 상체 kg<input type="number" step="0.5" min="0" id="wpiu" value="${+E.incU||2.5}"></label><label class="f">증량 하체 kg<input type="number" step="0.5" min="0" id="wpil" value="${+E.incL||5}"></label></div>
+    <label class="f" style="margin-top:6px">웨이트 하면 체크할 습관<select id="wphw">${habOpt(E.hw,/웨이트|헬스|근력|운동/)}</select></label>`:''}
+    <p class="wkhint" style="margin-top:12px">🏃 유산소 ${C?'':'<button type="button" class="wpc" id="wpcon">＋ 유산소 계획 넣기</button>'}</p>
+    ${C?`<div class="wpwk">${WPDK.map((n,i)=>`<div><b>${n}</b><button type="button" class="wpc ${(C.days||[]).includes(i)?'on':''}" style="margin:0;width:100%;padding:4px 0" data-wpcd="${i}">${(C.days||[]).includes(i)?'🏃':'·'}</button></div>`).join('')}</div>
+      <div>${wkCardio().map(x=>`<button type="button" class="wpc ${C.name===x?'on':''}" data-wpcn="${esc(x)}">${esc(x)}</button>`).join('')}</div>
+      <div class="wkg2" style="margin-top:6px"><label class="f">목표 거리 km<input type="number" step="0.1" min="0" id="wpck" value="${esc(C.km||'')}"></label><label class="f">목표 시간 분<input type="number" min="0" id="wpcm" value="${esc(C.min||'')}"></label></div>
+      <label class="f" style="margin-top:6px">유산소 하면 체크할 습관<select id="wphc">${habOpt(E.hc,/러닝|달리|유산소|걷기|조깅/)}</select></label><button type="button" class="del" id="wpcoff" style="margin-top:6px">유산소 계획 빼기</button>`:''}
+    <div class="row" style="margin-top:14px;justify-content:space-between"><button class="del" id="wpclr">계획 지우기</button><button class="btn" id="wpok">저장</button></div></div>`;
+    const v=id=>{const x=S.querySelector('#'+id);return x?x.value:undefined};
+    const rd=()=>{S.querySelectorAll('[data-wpn]').forEach(i=>{E.slots[+i.dataset.wpn].name=i.value});S.querySelectorAll('[data-wpd]').forEach(s=>{const i=+s.dataset.wpd;if(s.value)E.days[i]=s.value;else delete E.days[i]});
+      if(v('wplo')!==undefined){E.lo=+v('wplo')||8;E.hi=Math.max(E.lo,+v('wphi')||12);E.sets=+v('wpsets')||3;E.incU=+v('wpiu')||2.5;E.incL=+v('wpil')||5;E.hw=v('wphw')}
+      if(E.cardio&&v('wpck')!==undefined){E.cardio.km=+v('wpck')||0;E.cardio.min=+v('wpcm')||0;E.hc=v('wphc')}};
+    const close=()=>{S.hidden=true;S.innerHTML=''};$('#wpx').onclick=close;S.onclick=e=>{if(e.target===S)close()};
+    S.querySelectorAll('[data-wpm]').forEach(b=>b.onclick=async()=>{rd();const k=b.dataset.wpm;if(k===E.mode)return;if(E.slots.length&&!await uiConfirm('분할을 바꾸면 요일·운동 목록이 새로 채워집니다. 바꿀까요?'))return;const B=wpPreset(k);E.mode=k;E.slots=B.slots;E.days=B.days;draw()});
+    S.querySelectorAll('[data-wpr]').forEach(b=>b.onclick=()=>{rd();E.rot=b.dataset.wpr==='1';draw()});
+    S.querySelectorAll('[data-wpp]').forEach(b=>b.onclick=()=>{rd();const[si,p]=b.dataset.wpp.split('|');const s=E.slots[+si];s.parts=s.parts||[];s.parts=s.parts.includes(p)?s.parts.filter(x=>x!==p):[...s.parts,p];draw()});
+    S.querySelectorAll('[data-wpe]').forEach(b=>b.onclick=()=>{rd();const i=b.dataset.wpe.indexOf('|');const s=E.slots[+b.dataset.wpe.slice(0,i)],n=b.dataset.wpe.slice(i+1);s.ex=s.ex||[];s.ex=s.ex.includes(n)?s.ex.filter(x=>x!==n):[...s.ex,n];draw()});
+    S.querySelectorAll('[data-wpdel]').forEach(b=>b.onclick=()=>{rd();const s=E.slots.splice(+b.dataset.wpdel,1)[0];Object.keys(E.days).forEach(k=>{if(E.days[k]===s.id)delete E.days[k]});draw()});
+    {const a=S.querySelector('#wpadd');if(a)a.onclick=()=>{rd();const id=[...WP_IDS].find(c=>!E.slots.some(s=>s.id===c));if(!id)return;E.slots.push({id,name:'분할 '+id,parts:['가슴'],ex:[]});draw()}}
+    {const a=S.querySelector('#wpcon');if(a)a.onclick=()=>{rd();E.cardio={days:[2,4,6],name:'러닝',km:5,min:30};draw()}}
+    {const a=S.querySelector('#wpcoff');if(a)a.onclick=()=>{rd();E.cardio=null;draw()}}
+    S.querySelectorAll('[data-wpcd]').forEach(b=>b.onclick=()=>{rd();const i=+b.dataset.wpcd;const L=E.cardio.days||[];E.cardio.days=L.includes(i)?L.filter(x=>x!==i):[...L,i].sort();draw()});
+    S.querySelectorAll('[data-wpcn]').forEach(b=>b.onclick=()=>{rd();E.cardio.name=b.dataset.wpcn;draw()});
+    $('#wpclr').onclick=async()=>{if(!await uiConfirm('운동 계획을 지울까요? (지난 운동 기록은 그대로 남습니다)'))return;delete SET.wplan;saveSet().catch(()=>{});close();try{renderCare()}catch(e){}try{if(curSection==='day')renderDay()}catch(e){}};
+    $('#wpok').onclick=()=>{rd();if(E.slots.some(s=>!(s.ex||[]).length)){toast('분할마다 할 운동을 하나 이상 고르십시오.');return}if(!E.slots.length&&!E.cardio){toast('웨이트 분할이나 유산소 계획을 넣으십시오.');return}
+      SET.wplan=E;saveSet().catch(()=>{});close();toast('🗓️ 운동 계획을 저장했습니다. 오늘 화면에 그날 운동이 뜹니다.');try{if(curSection==='care')renderCare()}catch(e){}try{if(curSection==='day')renderDay()}catch(e){}}};
+  draw()}
+
 
 /* ---------- 3) 독서: 책마다 쪽수 · 읽은 쪽 기록 ---------- */
 function bkLogSum(b,d){const L=b.plog||{};return d?(+L[d]||0):Object.values(L).reduce((a,x)=>a+(+x||0),0)}
@@ -14375,6 +14565,7 @@ HK.ORDER={
   '27:한주마무리배너', // A · 원래 13523줄
   '28:연락주기배너', // A · 원래 13567줄
   '29:기둥관리배너', // A · 원래 13623줄
+  '30:운동계획카드', // A · v4.57 운동 계획
  ],
  hasAny:[
   '1:덧대기', // S · 원래 8699줄
