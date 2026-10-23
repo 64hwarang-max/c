@@ -6476,7 +6476,7 @@ async function hyEdit(h){const n=await uiPrompt('찬송가 번호 (없으면 비
   if(h){h.n=+n||0;h.t=t.trim();h.x=x}else{const o={id:'hy-'+uid(),n:+n||0,t:t.trim(),x};hyL().push(o);hyOpen=o.id}await saveSet().catch(()=>{});renderBible()}
 
 async function renderBible(){const R=$('#bbbody');if(!R)return;const S=bbS();if(bbTab==='mem')return renderMem(R);if(bbTab==='hymn')return renderHymn(R);if(bbTab==='eo'&&typeof renderEo==='function')return renderEo(R);if(bbTab==='qt'&&typeof renderQt==='function')return renderQt(R);if(bbTab==='pray'&&typeof renderPrayer==='function')return renderPrayer(R);
-  if(bbView==='home'){setTimeout(()=>{if(bbTab==='read'&&!$('#bbtab')){R.insertAdjacentHTML('afterbegin',memTabsHTML());memTabsBind(R)}},0);const tot=Object.keys(S.read).length,td=Object.values(S.read).filter(d=>d===today()).length;const ot=BBC.slice(0,39).reduce((a,_,i)=>a+bbCnt(i),0),nt=BBC.slice(39).reduce((a,_,i)=>a+bbCnt(39+i),0);
+  if(bbView==='home'){setTimeout(()=>{if(bbTab==='read'&&!$('#bbtab')){R.insertAdjacentHTML('afterbegin',memTabsHTML());memTabsBind(R)}},0);setTimeout(()=>{try{bbPlanMount(R)}catch(e){console.warn('plan',e)}},0);const tot=Object.keys(S.read).length,td=Object.values(S.read).filter(d=>d===today()).length;const ot=BBC.slice(0,39).reduce((a,_,i)=>a+bbCnt(i),0),nt=BBC.slice(39).reduce((a,_,i)=>a+bbCnt(39+i),0);
     const L=S.last;R.innerHTML=`<div class="card nocol" style="--k:var(--acc)"><div class="bbhd"><h3>📖 성경 읽기</h3><span class="hint">개역개정판</span></div>
       <div class="gl" style="margin:8px 0"><input type="search" id="bbq" placeholder="바로 가기 · 예: 요 3:16, 시편 23, 창1" enterkeyhint="go"><button class="btn small" id="bbgo">가기</button></div>
       ${Object.keys(bbVN()).length?`<button class="btn ghost small" id="bbvnl" style="width:100%;margin-bottom:8px">✍️ 절마다 남긴 느낀 점 ${Object.keys(bbVN()).length}개 모아 보기</button>`:''}${L?`<button class="btn" id="bblast" style="width:100%;margin-bottom:8px">▶ 이어 읽기 · ${BBN[L[0]]} ${L[1]}장</button>`:''}
@@ -6770,6 +6770,47 @@ function bbVNList(R,B){const V=bbVN();const ks=Object.keys(V).map(k=>k.split('-'
   $('#vnback').onclick=()=>{bbView='home';renderBible()};const qi=$('#vnq');qi.oninput=()=>{bbVNList.q=qi.value;clearTimeout(qi._t);qi._t=setTimeout(()=>{bbVNList(R,B);const x=$('#vnq');x.focus();x.setSelectionRange(x.value.length,x.value.length)},300)};
   R.querySelectorAll('[data-vngo]').forEach(d=>d.onclick=()=>{const[b,c,v]=d.dataset.vngo.split(',').map(Number);bbOpen(b,c,v)});
   const nb=$('#vnnote');if(nb)nb.onclick=()=>bbNote('성경 묵상 모음 '+md(today()),rows.map(([b,c,v])=>{const o=V[b+'-'+c+'-'+v];const vt=((B[b]||[])[c-1]||[])[v-1]||'';return`■ ${BBN[b]} ${c}:${v}\n${vt}\n✍️ ${o.t}`}).join('\n\n')+'\n')}
+
+/* ---------- 📅 성경 읽기 일정 (1독·2독·3독·4독 · 기간 안에 고르게 나눔) ---------- */
+let BBFL=null;const bbFlat=()=>{if(!BBFL){BBFL=[];BBC.forEach((n,b)=>{for(let c=1;c<=n;c++)BBFL.push([b,c])})}return BBFL};
+const bbPlan=()=>{const P=bbS().plan;return P&&P.n&&P.start&&P.days?P:null};
+const bbCum=(P,i)=>Math.ceil(BBTOT*P.n*Math.max(0,Math.min(i,P.days))/P.days);
+const bbDayRange=(P,i)=>{const F=bbFlat(),L=[];for(let k=bbCum(P,i);k<bbCum(P,i+1);k++)L.push(F[k%BBTOT]);return L};
+function bbRangeLab(L){if(!L.length)return'';const out=[];let g=null;L.forEach(([b,c])=>{if(g&&g.b===b&&c===g.z+1)g.z=c;else{g={b,a:c,z:c};out.push(g)}});return out.map(g=>`${BBN[g.b]} ${g.a===g.z?g.a:g.a+'–'+g.z}장`).join(', ')}
+const bbPlanIdx=P=>Math.floor((parseD(today())-parseD(P.start))/864e5);
+const bbPlanEnd=P=>addD(P.start,P.days-1);
+function bbPlanState(P){const idx=bbPlanIdx(P);P.d=P.d||{};let behind=0,bch=0,first=-1;const top=Math.min(idx,P.days-1);
+  for(let i=0;i<=top;i++)if(!P.d[i]){if(i<idx){behind++;bch+=bbDayRange(P,i).length}if(first<0)first=i}
+  let doneCh=0,doneD=0;Object.keys(P.d).forEach(k=>{if(P.d[k]){doneD++;doneCh+=bbDayRange(P,+k).length}});
+  const next=first>=0?first:(idx<P.days-1?Math.max(0,idx+1):-1);
+  return{idx,behind,bch,first,doneCh,doneD,next,total:BBTOT*P.n}}
+function bbPlanNext(){const P=bbPlan();if(!P)return null;const st=bbPlanState(P);if(st.idx<0||st.next<0)return null;const i=st.first>=0?st.first:st.idx;if(i>=P.days)return null;if(st.first<0&&P.d[i])return null;const L=bbDayRange(P,i);if(!L.length)return null;return{i,L,lab:bbRangeLab(L),late:st.first>=0&&st.first<st.idx}}
+let BBPS={n:1,days:365,start:'',open:false};
+function bbPlanHTML(){const P=bbPlan();if(!BBPS.start)BBPS.start=today();
+  const form=`<div class="bbpf"><div class="seg" style="--k:var(--acc);margin:6px 0">${[1,2,3,4].map(n=>`<button data-bppn="${n}" class="${BBPS.n===n?'on':''}">${n}독</button>`).join('')}</div>
+    <div class="qtsr"><label class="hint" style="margin:0">시작 <input type="date" id="bppst" value="${esc(BBPS.start)}" style="width:auto"></label><select id="bppd" aria-label="기간">${[[91,'3개월'],[182,'6개월'],[365,'1년'],[730,'2년'],[1095,'3년']].map(([d,l])=>`<option value="${d}" ${BBPS.days===d?'selected':''}>${l} 안에</option>`).join('')}</select></div>
+    <p class="hint" style="margin:2px 0 8px">하루 평균 <b>${(BBTOT*BBPS.n/BBPS.days).toFixed(1)}장</b> · 끝나는 날 ${addD(BBPS.start,BBPS.days-1).slice(2).replace(/-/g,'.')}</p>
+    <div class="row" style="gap:6px"><button class="btn" id="bppgo">📅 일정 만들기</button>${P?'<button class="del" id="bppcx">취소</button>':''}</div></div>`;
+  if(!P||BBPS.open)return`<div class="card nocol" id="bbplan" style="--k:#2e7d6b"><div class="bbhd"><h3>📅 성경 읽기 일정</h3><span class="hint">1~4독 선택</span></div>${P?'':'<p class="hint" style="margin:4px 0">몇 독을 읽을지 고르면 기간에 맞춰 하루 분량을 정해 드립니다.</p>'}${form}</div>`;
+  const st=bbPlanState(P),nx=bbPlanNext(),idx=st.idx;const pct=Math.round(st.doneCh/st.total*100);
+  const todayL=idx>=0&&idx<P.days?bbDayRange(P,idx):[];const tdone=idx>=0&&idx<P.days&&!!P.d[idx];
+  let body='';
+  if(idx<0)body=`<p class="hint" style="margin:6px 0">${P.start.slice(5).replace('-','.')}부터 시작합니다. 첫날 분량: <b>${esc(bbRangeLab(bbDayRange(P,0)))}</b></p>`;
+  else if(idx>=P.days&&st.behind===0)body=`<p style="margin:6px 0">🎉 ${P.n}독 일정을 마쳤습니다.</p>`;
+  else{const dn=nx&&nx.i;body=`<p class="hint" style="margin:6px 0 2px">${Math.min(idx+1,P.days)}일차 / ${P.days}일 · 오늘 분량 ${todayL.length}장${st.behind?` · <b style="color:var(--c-mis)">밀린 ${st.behind}일 (${st.bch}장)</b>`:' · 밀린 것 없음'}</p>
+    ${nx?`<div class="rr" style="display:flex;gap:8px;align-items:center;border-top:1px solid var(--line);padding:8px 0"><span style="flex:1;min-width:0"><b>${nx.late?'밀린 분량 · '+(nx.i+1)+'일차':'오늘 분량'}</b><br><small class="hint">${esc(nx.lab)}</small></span><button class="btn small" data-bppr="${nx.i}">▶ 읽기</button><button class="btn small ghost" data-bppd="${nx.i}">✓ 읽음</button></div>`:`<p style="margin:6px 0">✓ 오늘 분량을 읽었습니다.</p>${idx<P.days-1?`<p class="hint" style="margin:0">내일: ${esc(bbRangeLab(bbDayRange(P,idx+1)))}</p>`:''}`}`}
+  return`<div class="card nocol" id="bbplan" style="--k:#2e7d6b"><div class="bbhd"><h3>📅 성경 ${P.n}독 일정</h3><span class="hint">~ ${bbPlanEnd(P).slice(2).replace(/-/g,'.')}</span></div><div class="pilbar"><i style="width:${pct}%;background:#2e7d6b"></i></div><p class="hint" style="margin:4px 0 0">${st.doneCh}장 / ${st.total}장 (${pct}%)</p>${body}<div class="row" style="gap:6px;margin-top:6px"><button class="del" id="bppedit">일정 바꾸기</button>${tdone&&idx>=0?`<button class="del" data-bppu="${idx}">오늘 읽음 취소</button>`:''}<button class="del" id="bppclr" style="color:var(--c-mis)">일정 해제</button></div></div>`}
+function bbPlanMount(R){if(bbTab!=='read'||bbView!=='home'||R.querySelector('#bbplan'))return;const c=R.querySelector('.card');if(!c)return;c.insertAdjacentHTML('afterend',bbPlanHTML());bbPlanBind(R)}
+function bbPlanBind(R){const rd=()=>{try{renderBible()}catch(e){}};const B=R.querySelector('#bbplan');if(!B)return;
+  B.querySelectorAll('[data-bppn]').forEach(b=>b.onclick=()=>{BBPS.n=+b.dataset.bppn;const st=B.querySelector('#bppst');if(st&&st.value)BBPS.start=st.value;BBPS.days=+B.querySelector('#bppd').value;B.outerHTML=bbPlanHTML();bbPlanBind(R)});
+  {const d=B.querySelector('#bppd'),st=B.querySelector('#bppst');if(d)d.onchange=()=>{BBPS.days=+d.value;BBPS.start=st.value||BBPS.start;B.outerHTML=bbPlanHTML();bbPlanBind(R)};if(st)st.onchange=()=>{if(st.value){BBPS.start=st.value;BBPS.days=+d.value;B.outerHTML=bbPlanHTML();bbPlanBind(R)}}}
+  const go=B.querySelector('#bppgo');if(go)go.onclick=()=>{const st=B.querySelector('#bppst').value||today();const S=bbS();S.plan={n:BBPS.n,start:st,days:+B.querySelector('#bppd').value,d:{}};BBPS.open=false;saveSet().catch(()=>{});toast(`📅 성경 ${BBPS.n}독 일정을 만들었습니다.`);rd()};
+  const cx=B.querySelector('#bppcx');if(cx)cx.onclick=()=>{BBPS.open=false;rd()};
+  const ed=B.querySelector('#bppedit');if(ed)ed.onclick=()=>{const P=bbPlan();BBPS.n=P.n;BBPS.start=P.start;BBPS.days=P.days;BBPS.open=true;rd()};
+  const cl=B.querySelector('#bppclr');if(cl)cl.onclick=async()=>{if(!(await uiConfirm('성경 읽기 일정을 해제할까요? 읽은 장 기록은 남습니다.')))return;delete bbS().plan;saveSet().catch(()=>{});rd()};
+  B.querySelectorAll('[data-bppr]').forEach(b=>b.onclick=()=>{const P=bbPlan();const L=bbDayRange(P,+b.dataset.bppr);if(L[0])bbOpen(L[0][0],L[0][1])});
+  B.querySelectorAll('[data-bppd]').forEach(b=>b.onclick=()=>{const P=bbPlan(),i=+b.dataset.bppd;P.d=P.d||{};P.d[i]=today();const S=bbS();bbDayRange(P,i).forEach(([bk,c])=>{S.read[bk+'-'+c]=today()});saveSet().catch(()=>{});toast('✓ '+bbRangeLab(bbDayRange(P,i))+' 읽음');rd()});
+  B.querySelectorAll('[data-bppu]').forEach(b=>b.onclick=()=>{const P=bbPlan();delete P.d[+b.dataset.bppu];saveSet().catch(()=>{});rd()})}
 function bbOpen(b,c,v){bbTab='read';const S=bbS();bbB=b;bbC=c;bbView='read';bbSel.clear();if(v)bbSel.add(v);S.last=[b,c];saveSet().catch(()=>{});if(curSection!=='bible')openSection('bible');renderBible().then(()=>{if(v){const p=document.querySelector(`[data-bbv="${v}"]`);p&&p.scrollIntoView({block:'center'})}else window.scrollTo(0,0)})}
 function bbNote(title,body){const tp=(SET.topics.find(t=>t.name==='신앙')||{}).id||ensureTopic('성경 묵상');const id='note-'+uid();const n={kind:'note',id,date:today(),topic:tp,title,body,photos:[],area:SCORE.some(x=>x[0]==='spirit')?'spirit':'',created:Date.now(),updated:Date.now()};NOTES.set(id,n);saveNote(n,true);nEdit=id;nReturn='bible';go('note',true)}
 function bbDayList(date){const RD=(SET.bible&&SET.bible.read)||{};return Object.entries(RD).filter(([,d])=>d===date).map(([k])=>k.split('-').map(Number)).sort((a,b)=>a[0]-b[0]||a[1]-b[1])}
@@ -8932,13 +8973,13 @@ try{JSHORT['오늘 짜투리 시간에 할 것']='짜투리'}catch(e){}
 const gxChLab=(b,c)=>`${BBN[b]} ${c}장`;
 function gxNextCh(from){try{const L=bbS().last;let b=0,c=1;if(from==='psa'){b=18;c=1}else if(L){b=L[0];c=L[1]+1;if(c>BBC[b]){b++;c=1}}
   for(let n=0;n<BBTOT+2;n++){if(b>=BBC.length){b=0;c=1}if(!bbRead(b,c))return[b,c];c++;if(c>BBC[b]){b++;c=1}}}catch(e){}return[42,1]}
-function gxQtSug(){const Lg=gxLog();let rd=gxNextCh(),qt=null;
+function gxQtSug(){const Lg=gxLog();let rd=gxNextCh(),qt=null,plN=null;try{plN=bbPlanNext()}catch(e){}if(plN)rd=[plN.L[0][0],plN.L[0][1]];
   let Qs=null;try{Qs=qtS()}catch(e){}
   if(Lg.qtPick)qt=Lg.qtPick;
   else if(Qs&&Qs.fromDate&&Qs.fromDate>today())qt={src:Qs.fromDate.slice(5).replace('-','.')+' 시작 전',ref:gxChLab(rd[0],rd[1]),b:rd[0],c:rd[1]};
   else{try{const F=qtFlat(),Q=qtS(),nx=F.find(x=>x.i>=(+Q.from||0)&&!Q.d[x.i]);if(nx)qt={src:'어성경 큐티',ref:qtRefs(nx),i:nx.i}}catch(e){}
     if(!qt)qt={src:'성경 읽기',ref:gxChLab(rd[0],rd[1]),b:rd[0],c:rd[1]}}
-  return{qt,rd:{b:rd[0],c:rd[1],ref:gxChLab(rd[0],rd[1])}}}
+  return{qt,rd:{b:rd[0],c:rd[1],ref:plN?plN.lab+(plN.late?' (밀린 분량)':' (일정)'):gxChLab(rd[0],rd[1])}}}
 function gxQtGo(q){if(q.i!=null){bbTab='qt';qtView='day';qtIdx=q.i;qtOpenW=qtFlat()[q.i].w;openSection('bible');try{renderBible()}catch(e){}}else bbOpen(q.b,q.c,q.v||0)}
 function gxQtPickHTML(){const d=new Date().getDate(),pn=gxNextCh('psa');const ch=[['어성경 큐티 순서',null],[`잠언 ${Math.min(31,d)}장 (오늘 날짜)`,{src:'잠언',b:19,c:Math.min(31,d)}],[`시편 ${pn[0]===18?pn[1]:1}편 (이어서)`,{src:'시편',b:18,c:pn[0]===18?pn[1]:1}],['성경 이어 읽기',{src:'성경 읽기',...(()=>{const r=gxNextCh();return{b:r[0],c:r[1]}})()}]];
   GX.qpk=ch.map(x=>x[1]);return`<div class="gxqp"><div class="rcs">${ch.map((x,i)=>`<button class="rb" data-gxqpc="${i}">${esc(x[0])}</button>`).join('')}</div><div class="gl" style="margin:6px 0 0"><input type="text" id="gxqpt" placeholder="직접 입력 (예: 요 3:16, 시편 23, 롬 8)" enterkeyhint="go"><button class="rb pri" data-gxqpg="1">정하기</button></div></div>`}
