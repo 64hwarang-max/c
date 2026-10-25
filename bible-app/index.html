@@ -3556,7 +3556,7 @@ function ntHeadHTML(all){const rec=all.filter(n=>!n.person).sort((a,b)=>(b.updat
   return`<div class="nthead"><input type="search" id="ntq" placeholder="🔍 노트 찾기" value="${esc(ntQ)}" aria-label="노트 찾기"><button class="btn small" id="ntnew">＋ 새 페이지</button></div>
   ${ntQ||!rec.length?'':`<div class="ntrec"><small>최근</small>${rec.map(n=>`<button data-no="${n.id}">${esc(nTitle(n))}</button>`).join('')}</div>`}
   `}
-function ntFullHTML(all){return ntHeadHTML(all)+`<div class="ntlist">${ntQ.trim()?ntSearchHTML(all):ntMandHTML(all)}</div>${NDND()?'<p class="hint" style="margin:8px 4px 0">🖱️ 페이지를 끌어 다른 대분류·중분류·소분류 위에 놓으면 옮겨집니다.</p>':''}`}
+function ntFullHTML(all){return ntHeadHTML(all)+`<div class="ntlist">${ntQ.trim()?ntSearchHTML(all):ntTreeHTML(all)}</div>${NDND()?'<p class="hint" style="margin:8px 4px 0">🖱️ 페이지를 끌어 다른 대분류·중분류·소분류 위에 놓으면 옮겨집니다.</p>':''}`}
 function ntOpenPage(id){if(nEdit&&nEdit!==id){const c=NOTES.get(nEdit);if(c&&!c.person&&!c.jt&&!(c.title||'').trim()&&!(c.body||'').trim()&&!(c.photos||[]).length&&!(c.recs||[]).length&&!c.map&&!(nrOn()&&NR.nid===c.id)){NOTES.delete(c.id)}}nEdit=id;renderNotes();if(!ntWide())window.scrollTo(0,0)}
 function ntBind(A){if(!A)return;nmBind(A);A.querySelectorAll('[data-ntog]').forEach(b=>b.onclick=()=>{ntToggle(b.dataset.ntog);renderNotes()});
   A.querySelectorAll('[data-no]').forEach(b=>b.onclick=()=>ntOpenPage(b.dataset.no));
