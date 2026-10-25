@@ -6513,7 +6513,7 @@ async function renderBible(){const R=$('#bbbody');if(!R)return;const S=bbS();if(
     $('#bbcp').onclick=async()=>{const t=`${selTxt()}\n— ${ref()} (개역개정)`;try{await navigator.clipboard.writeText(t);toast('📋 복사했습니다.')}catch(e){toast('복사하지 못했습니다.')}};
     $('#bbwd').onclick=async()=>{const t=`${selTxt().replace(/^\d+ /gm,'')} (${ref()})`;await bbToday(o=>{o.word=tx(o.word)?o.word.trim()+'\n'+t:t});toast('☀️ 오늘 ‘아침의 한 문장’에 담았습니다.')};
     $('#bbnt').onclick=()=>bbNote(ref(),selTxt()+`\n— ${ref()} (개역개정)\n\n`);$('#bbx').onclick=()=>{bbSel.clear();R.querySelectorAll('.bbtxt p.sel').forEach(p=>p.classList.remove('sel'));bar()}};
-  R.querySelectorAll('[data-bbv]').forEach(p=>p.onclick=()=>{const n=+p.dataset.bbv;if(S.vnMode){bbVNEdit(R,n);return}bbSel.has(n)?bbSel.delete(n):bbSel.add(n);p.classList.toggle('sel',bbSel.has(n));bar()});bar();
+  R.querySelectorAll('[data-bbv]').forEach(p=>p.onclick=()=>{const n=+p.dataset.bbv;if(S.vnMode){bbVNEdit(R,n);return}if(!bbSel.size&&!window.__bbMulti){bbVNEdit(R,n);return}window.__bbMulti=false;bbSel.has(n)?bbSel.delete(n):bbSel.add(n);p.classList.toggle('sel',bbSel.has(n));bar()});bar();
   R.querySelectorAll('.bbvn[data-vnk]').forEach(d=>d.onclick=e=>{e.stopPropagation();bbVNEdit(R,+d.dataset.vnk)});bbVNCount(R);
   $('#bbvnm').onclick=()=>{R.querySelectorAll('.bbvned').forEach(e=>e._close&&e._close());S.vnMode=!S.vnMode;saveSet().catch(()=>{});toast(S.vnMode?'✍️ 이제 절을 누르면 바로 아래에 느낀 점을 쓸 수 있습니다.':'✍️ 느낀 점 쓰기를 껐습니다. 절을 누르면 선택됩니다.');const y=window.scrollY;renderBible().then(()=>window.scrollTo(0,y))};
   $('#bbdoc').onclick=async()=>{const ex=bdDocsFor(bbB,bbC);if(ex.length&&await uiConfirm(`이 장으로 쓴 말씀 문서가 있습니다. 이어서 쓸까요?\n(‘취소’를 누르면 새 문서를 만듭니다)`)){bdOpen(ex[0]);return}bdOpen(bdNew(bbB,bbC,null))};
@@ -10905,6 +10905,7 @@ document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest
     const items=[];
     if(eo)items.push(['✍️ 이 절에 느낀 점 쓰기',()=>{try{const R=document.querySelector('#bbbody');R.querySelectorAll('.eotxt p.sel').forEach(x=>x.classList.remove('sel'));try{evBar(R)}catch(e){}evEdit(R,p)}catch(e){console.warn('lp-eo',e)}}]);
     else items.push(['✍️ 이 절에 느낀 점 쓰기',()=>{bbSel.clear();document.querySelectorAll('.bbtxt p.sel').forEach(x=>x.classList.remove('sel'));const R=p.closest('#bbbody')||document;try{const sb=$('#bbsb');if(sb)sb.innerHTML=''}catch(e){}bbVNEdit(R,v)}]);
+    items.push(['☑️ 여러 절 골라 복사·공유',()=>{window.__bbMulti=true;setTimeout(()=>{try{p.click()}catch(e){}window.__bbMulti=false},Math.max(30,720-(Date.now()-fired)))}]);
     items.push(['📝 묵상 노트 쓰기',()=>{bbNote(ref,`${v} ${txt}\n— ${ref} (개역개정)\n\n`)}]);
     ntSheet(`${ref}`,items)}catch(e){console.warn('bblp',e)}}
   document.addEventListener('pointerdown',e=>{if(e.pointerType==='mouse'&&e.button!==0)return;const p=e.target.closest&&e.target.closest(SEL);if(!p)return;cancel();st={x:e.clientX,y:e.clientY};T=setTimeout(()=>{T=null;st=null;fired=Date.now();lpOpen(p)},550)},true);
@@ -13647,7 +13648,7 @@ function evBar(R){let sb=R.querySelector('#bbsb');if(!sb){sb=document.createElem
   sb.querySelector('#evsh').onclick=()=>{const V=bbVN();const ns=P.filter(p=>V[p.dataset.eov]&&V[p.dataset.eov].t).map(p=>`${P.length>1?p.dataset.eov.split('-')[2]+'절 · ':''}${V[p.dataset.eov].t}`);bbShareWord(`📖 ${ref} (개역개정)\n${txt()}${ns.length?'\n\n✍️ 느낀 점\n'+ns.join('\n'):''}`)}}
 function evEnhance(R){try{if(!R||!R.querySelector('.eotxt'))return;
   R.querySelectorAll('.eotxt p[data-eov]').forEach(p=>{if(p.dataset.evx)return;p.dataset.evx='1';const k=p.dataset.eov;const h=evVNHTML(k);if(h){p.insertAdjacentHTML('afterend',h);const nb=p.nextElementSibling;if(nb)nb.onclick=e=>{e.stopPropagation();evEdit(R,p)}}
-    p.addEventListener('click',()=>{evBar(R)})});
+    p.addEventListener('click',()=>{p._pre=R.querySelectorAll('.eotxt p.sel').length},true);p.addEventListener('click',()=>{if(p._pre===0&&!window.__bbMulti&&p.classList.contains('sel')){p.classList.remove('sel');evBar(R);evEdit(R,p);return}window.__bbMulti=false;evBar(R)})});
   evBar(R)}catch(e){console.warn('ev',e)}}
 {const _re=renderEo;renderEo=async function(R){const r=await _re.apply(this,arguments);evEnhance(R);return r}}
 {const _rq=renderQt;renderQt=async function(R){const r=await _rq.apply(this,arguments);evEnhance(R);return r}}
