@@ -3173,7 +3173,7 @@ let fired={};try{fired=JSON.parse(localStorage.getItem('gj-fired')||'{}')}catch(
 function rtPlanApply(o){if(!o||!o.date||o.date<today()||!Array.isArray(o.plan))return false;const wd=parseD(o.date).getDay();let ch=false;
   /* 같은 루틴 블록이 겹겹이 쌓인 경우(동기화·복원·되돌리기 중 중복 생성) 한 개만 남긴다 */
   (SET.routines||[]).forEach(r=>{const L=o.plan.filter(b=>b.rt===r.id);if(L.length<2)return;const sc=b=>(b.noteId?4:0)+(b.rtEdited?2:0)+(b.done||b.ok?1:0);const keep=L.slice().sort((x,y)=>sc(y)-sc(x))[0];o.plan=o.plan.filter(b=>b.rt!==r.id||b===keep);ch=true});
-  (SET.routines||[]).forEach(r=>{const want=r.toPlan&&r.alarm&&r.alarm.time&&(r.alarm.days||[]).includes(wd);const tot=r.items.reduce((a,b)=>a+(+b.min||0),0);const e=addMin(r.alarm.time,Math.max(5,tot));const ex=o.plan.find(b=>b.rt===r.id);
+  (SET.routines||[]).forEach(r=>{const want=r.toPlan&&r.alarm&&r.alarm.time&&(r.alarm.days||[]).includes(wd)&&!(o.rtOff||[]).includes(r.id);const tot=r.items.reduce((a,b)=>a+(+b.min||0),0);const e=addMin(r.alarm.time,Math.max(5,tot));const ex=o.plan.find(b=>b.rt===r.id);
     if(want){if(!ex){const cat=(SET.cats.find(c=>/루틴|생활|휴식|자기/.test(c.name))||SET.cats[0]).name;o.plan.push({id:uid(),s:r.alarm.time,e,act:'🔁 '+r.name,cat,who:'',rt:r.id,goal:r.goal||''});ch=true}else if(!ex.rtEdited&&(ex.s!==r.alarm.time||ex.e!==e||ex.act!=='🔁 '+r.name)){ex.s=r.alarm.time;ex.e=e;ex.act='🔁 '+r.name;ch=true}}
     else if(ex){o.plan.splice(o.plan.indexOf(ex),1);ch=true}});
   if(ch)o.plan.sort((a,b)=>(a.s||'99')<(b.s||'99')?-1:1);return ch}
@@ -4195,7 +4195,9 @@ function stopMic(){try{REC&&REC.stop()}catch(e){}}
 function toast(msg){const t=$('#toast');t.textContent=msg;t.hidden=false;clearTimeout(t._h);t._h=setTimeout(()=>t.hidden=true,6000)}
 function toastAct(msg,label,fn){const t=$('#toast');t.innerHTML='';t.append(document.createTextNode(msg));const b=document.createElement('button');b.className='tact';b.textContent=label;b.onclick=e=>{e.stopPropagation();t.hidden=true;fn()};t.append(b);t.hidden=false;clearTimeout(t._h);t._h=setTimeout(()=>t.hidden=true,7000)}
 /* 반복 일정을 지울 때: 이 날만 / 이 날부터 앞으로 모두 */
-function delBlock(kind,i,after){const rm=D[kind]&&D[kind][i];if(kind==='plan'&&rm&&rm.rid&&repRules().some(r=>r.id===rm.rid)){
+function delBlock(kind,i,after){const rm=D[kind]&&D[kind][i];if(kind==='plan'&&rm&&rm.rt&&(SET.routines||[]).some(r=>r.id===rm.rt&&r.toPlan)){const r=SET.routines.find(x=>x.id===rm.rt);
+    ntSheet(`🔁 루틴 블록 지우기 · ${rm.act||''}`,[['🗑 이 날만 지우기',()=>{D.rtOff=[...new Set([...(D.rtOff||[]),rm.rt])];delBlock0(kind,D[kind].indexOf(rm),after)}],[`📅 앞으로 ‘${r.name}’은 계획표에 넣지 않기`,async()=>{r.toPlan=false;await saveSet().catch(()=>{});const ix=D.plan.indexOf(rm);if(ix>=0)D.plan.splice(ix,1);schedule();after&&after();try{renderPlan()}catch(e){}toast(`📅 ‘${r.name}’은 이제 계획표에 자동으로 넣지 않습니다. (알람은 그대로)`)}],['✖ 지우지 않기',()=>{}]]);return}
+  if(kind==='plan'&&rm&&rm.rid&&repRules().some(r=>r.id===rm.rid)){
     ntSheet(`🔁 반복 일정 지우기 · ${rm.act||rm.cat||''}`,[['🗑 이 날 일정만 지우기',()=>delBlock0(kind,D[kind].indexOf(rm),after)],['🔁 이 날부터 앞으로의 반복 모두 지우기',()=>repDelFuture(rm,after)],['✖ 지우지 않기',()=>{}]]);return}
   delBlock0(kind,i,after)}
 async function repDelFuture(rm,after){const id=rm.rid,R=repRules(),k=R.findIndex(x=>x.id===id),from=D.date;if(k>=0){if(from<=R[k].start)R.splice(k,1);else{R[k].end=addD(from,-1);R[k].cnt=0}}await saveSet().catch(()=>{});
@@ -15261,6 +15263,50 @@ dySwipeSecs=function(){const A=dyNotes();const Y=A.filter(n=>n.date.slice(0,4)==
 
 /* v350 노트: 🌳 노트 목록 / 📚 원노트 둘 다 사용 — 마지막에 쓴 방식을 기억 */
 {const _rn=renderNotes;renderNotes=function(){if(!window.__nvInit){window.__nvInit=1;try{if(localStorage.getItem('gj-nv')==='dy'&&nView==='topic'&&!nTopic&&!nEdit&&nPil==null)nView='dy'}catch(e){}}return _rn.apply(this,arguments)}}
+/* ===== v352 글씨체 고르기 (모두 SIL OFL 자유 글꼴 · Google Fonts) ===== */
+const FONTS=[['','기본','','앱 기본(고운바탕 + 산스)'],['gd','고운돋움','Gowun Dodum','부드러운 고딕','family=Gowun+Dodum'],['nm','나눔명조','Nanum Myeongjo','단정한 명조','family=Nanum+Myeongjo:wght@400;700'],['ns','노토 산스','Noto Sans KR','깔끔한 고딕','family=Noto+Sans+KR:wght@400;500;700'],['nf','노토 세리프','Noto Serif KR','공문서 같은 명조','family=Noto+Serif+KR:wght@400;600;700'],['np','나눔 펜','Nanum Pen Script','손글씨 · 가는 펜','family=Nanum+Pen+Script'],['gg','개구','Gaegu','손글씨 · 둥글둥글','family=Gaegu:wght@400;700']];
+const FONT_ALL='body,button,input,textarea,select,h1,h2,h3,h4,.datebar .d,.panel h2,.card h3,.big,.quote,.reflect label,.gl .num';
+const FONT_NOTE='textarea,.ntitle,.nrted,#bded,.paper,.dq-t,.dypc,.bbtxt,.eotxt,.bbvn,.bbvned textarea';
+function fontLoad(ids){ids.forEach(id=>{const f=FONTS.find(x=>x[0]===id);if(!f||!f[4]||document.getElementById('gjfl-'+id))return;const l=document.createElement('link');l.id='gjfl-'+id;l.rel='stylesheet';l.href='https://fonts.googleapis.com/css2?'+f[4]+'&display=swap';document.head.appendChild(l)})}
+function fontApply(){let st=document.getElementById('gjfont');const f=FONTS.find(x=>x[0]===(SET.font||''));if(!f||!f[0]){if(st)st.remove();return}
+  fontLoad([f[0]]);if(!st){st=document.createElement('style');st.id='gjfont';document.head.appendChild(st)}
+  const sel=SET.fontScope==='note'?FONT_NOTE:FONT_ALL;const hand=f[0]==='np'||f[0]==='gg';const fam=`"${f[2]}","Gowun Batang","Apple SD Gothic Neo","Malgun Gothic",sans-serif`;
+  st.textContent=`${sel}{font-family:${fam}!important}${hand?`${SET.fontScope==='note'?'':'body'}{font-size-adjust:.56}`:''}`}
+{const _av=applyView;applyView=function(){const r=_av.apply(this,arguments);try{fontApply()}catch(e){}return r}}
+{const _rv=renderViewCard;renderViewCard=function(){const r=_rv.apply(this,arguments);try{const C=$('#viewcard');if(!C||C.querySelector('#vfont'))return r;fontLoad(FONTS.map(x=>x[0]).filter(Boolean));
+  const cur=SET.font||'',sc=SET.fontScope==='note'?'note':'all';
+  const box=document.createElement('div');box.id='vfont';box.className='vset';box.style.marginTop='10px';
+  box.innerHTML=`<div><div class="hint" style="margin:0 0 4px">글씨체 <small>(모두 저작권 걱정 없는 무료 글꼴 · 처음 쓸 때 인터넷 필요)</small></div>
+   <div class="fontlist">${FONTS.map(f=>`<button type="button" class="fontbtn ${f[0]===cur?'on':''}" data-vfont="${f[0]}" style="${f[2]?`font-family:'${f[2]}',sans-serif!important`:''}"><b>${f[1]}</b><span>가나다라 마바사 · 오늘도 한 걸음</span><small>${f[3]}</small></button>`).join('')}</div></div>
+   <div><div class="hint" style="margin:0 0 4px">적용 범위</div><div class="seg" style="--k:#ff8a3d"><button data-vfsc="all" class="${sc==='all'?'on':''}">앱 전체</button><button data-vfsc="note" class="${sc==='note'?'on':''}">노트·일기·성경 본문만</button></div></div>`;
+  const h3=C.querySelector('.vset');(h3||C).after(box);
+  box.querySelectorAll('[data-vfont]').forEach(b=>b.onclick=()=>{SET.font=b.dataset.vfont;saveSet().catch(()=>{});fontApply();box.querySelectorAll('[data-vfont]').forEach(x=>x.classList.toggle('on',x===b))});
+  box.querySelectorAll('[data-vfsc]').forEach(b=>b.onclick=()=>{SET.fontScope=b.dataset.vfsc;saveSet().catch(()=>{});fontApply();box.querySelectorAll('[data-vfsc]').forEach(x=>x.classList.toggle('on',x===b))})}catch(e){console.warn('font',e)}return r}}
+(function(){const st=document.createElement('style');st.textContent=`.fontlist{display:grid;gap:6px}.fontbtn{display:grid;grid-template-columns:auto 1fr;gap:2px 10px;align-items:baseline;text-align:left;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:10px;padding:8px 10px}.fontbtn b{font-size:1rem}.fontbtn span{font-size:.95rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.fontbtn small{grid-column:1/-1;color:var(--muted);font-size:.72rem;font-family:inherit}.fontbtn.on{border-color:var(--acc);box-shadow:0 0 0 2px var(--acc) inset}`;document.head.appendChild(st)})();
+try{setTimeout(fontApply,0)}catch(e){}
+
+/* ===== v353 🌤 계획 화면 1주일 날씨 (Open-Meteo · 무료·키 없음) ===== */
+const WX_CITIES=[['서울',37.5665,126.978],['인천',37.4563,126.7052],['수원',37.2636,127.0286],['의정부',37.7381,127.0337],['파주',37.76,126.78],['춘천',37.8813,127.7298],['철원',38.1467,127.3133],['강릉',37.7519,128.8761],['대전',36.3504,127.3845],['계룡',36.2747,127.2486],['청주',36.6424,127.489],['세종',36.48,127.289],['전주',35.8242,127.148],['광주',35.1595,126.8526],['대구',35.8714,128.6014],['포항',36.019,129.3435],['울산',35.5384,129.3114],['부산',35.1796,129.0756],['제주',33.4996,126.5312]];
+const wxIc=c=>c===0?'☀️':c<=2?'🌤️':c===3?'☁️':c<=48?'🌫️':c<=57?'🌦️':c<=67?'🌧️':c<=77?'❄️':c<=82?'🌦️':c<=86?'🌨️':'⛈️';
+const wxLoc=()=>SET.wx&&SET.wx.lat?SET.wx:{n:'서울',lat:37.5665,lon:126.978};
+let WXD=null,WXERR=false,WXBUSY=false;
+async function wxLoad(force){const L=wxLoc();const key=L.lat.toFixed(2)+','+L.lon.toFixed(2)+'|'+today();
+  try{const c=JSON.parse(localStorage.getItem('gj-wx')||'null');if(!force&&c&&c.k===key&&Date.now()-c.t<3*3600e3){WXD=c.d;return true}}catch(e){}
+  if(WXBUSY)return false;WXBUSY=true;
+  try{const u=`https://api.open-meteo.com/v1/forecast?latitude=${L.lat}&longitude=${L.lon}&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&forecast_days=8&timezone=Asia%2FSeoul`;
+    const r=await fetch(u);if(!r.ok)throw new Error(r.status);const j=await r.json();const d=j.daily;WXD=d.time.map((t,i)=>({d:t,c:d.weather_code[i],hi:Math.round(d.temperature_2m_max[i]),lo:Math.round(d.temperature_2m_min[i]),p:d.precipitation_probability_max[i]}));WXERR=false;
+    try{localStorage.setItem('gj-wx',JSON.stringify({k:key,t:Date.now(),d:WXD}))}catch(e){}return true}catch(e){WXERR=true;return false}finally{WXBUSY=false}}
+function wxHTML(){const L=wxLoc();const T=today();let body;
+  if(WXD&&WXD.length){const D7=WXD.filter(x=>x.d>=T).slice(0,7);body=`<div class="wxrow">${D7.map(x=>`<div class="wxd ${x.d===T?'td':''}"><small>${x.d===T?'오늘':WD[parseD(x.d).getDay()]}</small><i>${wxIc(x.c)}</i><b>${x.hi}°</b><span>${x.lo}°</span><em class="${x.p>=60?'hi':''}">${x.p==null?'':'💧'+x.p+'%'}</em></div>`).join('')}</div>`}
+  else body=`<p class="hint" style="margin:6px 0">${WXERR?'날씨를 불러오지 못했습니다. 인터넷 연결을 확인하고 다시 눌러 보세요.':'날씨를 불러오는 중…'}</p>`;
+  return`<div class="card nocol wxc" style="--k:#3aa6e0"><div class="w168h"><h3>🌤 이번 주 날씨</h3><span><button type="button" class="xlink" data-wxcity="1" style="margin:0">📍 ${esc(L.n)} ▾</button> <button type="button" class="xlink" data-wxre="1" style="margin:0" aria-label="새로고침">↻</button></span></div>${body}</div>`}
+function wxPaint(){const R=$('#pbody');if(!R||curSection!=='plan'||(typeof ZMP!=='undefined'&&ZMP!=null))return;let c=R.querySelector('.wxc');const h=wxHTML();if(c)c.outerHTML=h;else R.insertAdjacentHTML('afterbegin',h)}
+{const _rp=renderPlan;renderPlan=async function(){const r=await _rp.apply(this,arguments);try{wxPaint();if(!WXD||WXERR)wxLoad().then(()=>wxPaint());else wxLoad().then(()=>{})}catch(e){}return r}}
+document.addEventListener('click',async e=>{const b=e.target.closest&&e.target.closest('[data-wxcity],[data-wxre]');if(!b||!b.closest('.wxc'))return;e.preventDefault();
+  if(b.dataset.wxre){WXERR=false;WXD=null;wxPaint();await wxLoad(true);wxPaint();return}
+  ntSheet('📍 날씨 지역',[['📡 현재 위치로',()=>{if(!navigator.geolocation){toast('이 기기에서는 위치를 쓸 수 없습니다. 아래 도시를 골라 주세요.');return}navigator.geolocation.getCurrentPosition(async p=>{SET.wx={n:'현재 위치',lat:+p.coords.latitude.toFixed(3),lon:+p.coords.longitude.toFixed(3)};await saveSet().catch(()=>{});WXD=null;wxPaint();await wxLoad(true);wxPaint()},()=>toast('위치를 가져오지 못했습니다. 아래 도시를 골라 주세요.'),{timeout:8000})}],...WX_CITIES.map(([n,la,lo])=>[`${n}`,async()=>{SET.wx={n,lat:la,lon:lo};await saveSet().catch(()=>{});WXD=null;wxPaint();await wxLoad(true);wxPaint()}])])},true);
+(function(){const st=document.createElement('style');st.textContent=`.wxrow{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-top:6px;text-align:center}.wxd{display:grid;gap:1px;padding:6px 0;border-radius:10px;background:var(--bg2,rgba(127,127,127,.08))}.wxd.td{box-shadow:0 0 0 2px #3aa6e0 inset}.wxd small{color:var(--muted);font-size:.7rem}.wxd i{font-style:normal;font-size:1.25rem}.wxd b{font-size:.85rem}.wxd span{font-size:.75rem;color:var(--muted)}.wxd em{font-style:normal;font-size:.62rem;color:var(--muted)}.wxd em.hi{color:#1c7ed6;font-weight:700}`;document.head.appendChild(st)})();
+
 </script>
 <!--BIBLE{--><!--}BIBLE-->
 <div id="miniov" class="miniov" hidden></div>
