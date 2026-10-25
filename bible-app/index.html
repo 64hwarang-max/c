@@ -15067,9 +15067,9 @@ function dyEditSel(){const n=nEdit&&NOTES.get(nEdit);const R=$('#nbody');if(!n||
 
 /* ---- 🚫 하지 않기 · 3일 감쇠 · 🎁 상·벌 ---- */
 const RW_DEF={avoid:[{id:'av1',name:'유튜브 쇼츠·릴스 습관 시청',lim:'하루 30분 이내'},{id:'av2',name:'밤 11시 이후 휴대폰'},{id:'av3',name:'과음'}],
- rewards:[{id:'rw1',name:'아내와 둘만의 외식·데이트',need:'7일 연속 기록'},{id:'rw2',name:'혼자 카페·산책 반나절 (쉼)',need:'레벨 업'},{id:'rw3',name:'아이들과 하루 특별 나들이',need:'한 달 기록 25일'},{id:'rw4',name:'오래 못 본 사람 만나 식사 대접',need:'기둥 하나 레벨 업'},{id:'rw5',name:'좋은 숙면: 낮잠·늦잠 하루 허락',need:'14일 연속'}],
+ rewards:[{id:'rw1',name:'혼자 카페·산책 반나절',need:'레벨 업'},{id:'rw2',name:'좋아하는 음식 한 끼 (혼밥 또는 마음 가는 대로)',need:'7일 연속 기록'},{id:'rw3',name:'축구 경기·영화 등 순수한 취미 시간',need:'한 달 기록 25일'},{id:'rw4',name:'낮잠·늦잠 하루 허락',need:'14일 연속'},{id:'rw5',name:'아무 의무 없는 반나절 (할 일 목록 열지 않기)',need:'기둥 하나 레벨 업'}],
  pens:[{id:'pn1',name:'어긴 날 밤: 스마트폰 없이 30분 걷기 + 이유 한 줄 적기'},{id:'pn2',name:'3일 이상 끊긴 뒤 복귀: 가장 미룬 일 하나를 먼저 끝내기'},{id:'pn3',name:'주 3회 이상 어기면: 그 주 말 가족에게 고백하고 하루 쉬운 집안일 맡기'},{id:'pn4',name:'(선택) 신념과 반대 방향의 기부 — 월 한도 안에서, 스스로 켠 경우만',off:1,amt:10000}]};
-function rwSet(){if(!SET.rw)SET.rw=JSON.parse(JSON.stringify(RW_DEF));SET.rw.log=SET.rw.log||[];SET.rw.rest=SET.rw.rest||[];if(!SET.rw.since)SET.rw.since=today();return SET.rw}
+function rwSet(){if(!SET.rw)SET.rw=JSON.parse(JSON.stringify(RW_DEF));if(SET.rw.rewards&&SET.rw.rewards.some(x=>/아내와 둘만|아이들과 하루|식사 대접/.test(x.name))){SET.rw.rewards=SET.rw.rewards.filter(x=>!/아내와 둘만|아이들과 하루|식사 대접/.test(x.name));RW_DEF.rewards.forEach(d=>{if(!SET.rw.rewards.some(x=>x.name===d.name))SET.rw.rewards.push(JSON.parse(JSON.stringify(d)))})}SET.rw.log=SET.rw.log||[];SET.rw.rest=SET.rw.rest||[];if(!SET.rw.since)SET.rw.since=today();return SET.rw}
 function rwAv(o){return(o&&o.avoid)||{}}
 /* XP: 하지 않기 지킨 날 +4 / 감쇠 */
 {const _xd=xpDay;xpDay=function(o,d){const r=_xd.apply(this,arguments);try{const A=SET.rw&&SET.rw.avoid;if(A&&o){const a=rwAv(o);const ok=A.filter(x=>a[x.id]==='ok').length;if(ok){const v=Math.min(12,ok*4);r.parts.push(['🚫 하지 않기 지킴',v,ok+'개']);r.xp+=v}}}catch(e){}return r}}
