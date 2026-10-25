@@ -15194,10 +15194,69 @@ document.addEventListener('touchend',async e=>{const g=GW;GW=null;if(!g)return;c
   if(curSection==='note'){
     if(nEdit){await dyFlip(dir);return}
     if(nView==='dq'&&DQV==='day'){DQE=null;nDate=addD(nDate,dir);renderNotes();swAnim($('#nbody'),dir);return}
-    if(nView==='dy'){const A=dyNotes();const Y=A.filter(n=>n.date.slice(0,4)===DYY);const all=[...new Set(Y.map(dySec).filter(Boolean))];const S=dySecs();const secs=[...S.filter(s=>all.includes(s)),...all.filter(s=>!S.includes(s)).sort()];const ring=['',...secs];const i=Math.max(0,ring.indexOf(DYC==='__n'?'':DYC));const j=i+dir;if(j<0||j>=ring.length){const yrs=[...new Set(A.map(n=>n.date.slice(0,4)))].sort();const k=yrs.indexOf(DYY)-dir;if(k>=0&&k<yrs.length){DYY=yrs[k];DYC='';DYM='';dyRender();swAnim($('#nbody'),dir);toast(`📕 ${DYY}권`)}return}DYC=ring[j];dyRender();swAnim($('#nbody'),dir);return}
+    if(nView==='dy'){const A=dyNotes();const ring=dySwipeSecs();const i=Math.max(0,ring.indexOf(DYC));const j=i+dir;if(j<0||j>=ring.length){const yrs=[...new Set(A.map(n=>n.date.slice(0,4)))].sort();const k=yrs.indexOf(DYY)-dir;if(k>=0&&k<yrs.length){DYY=yrs[k];DYC='';DYM='';dyRender();swAnim($('#nbody'),dir);toast(`📕 ${DYY}권`)}return}DYC=ring[j];DYF='';DYM='';dyRender();swAnim($('#nbody'),dir);return}
     return}
   if(['day','plan','care','score'].includes(curSection))return;
   const bs=[...document.querySelectorAll('#subnav .snp button[data-sv]')];if(bs.length<2)return;let i=bs.findIndex(b=>b.classList.contains('on'));if(i<0)return;const t=bs[i+dir];if(!t)return;t.click();swAnim(document.querySelector('#v-'+curSection),dir)},{passive:true,capture:true});
+
+/* ===== v349 원노트 방식: 노트북(연도) › 섹션 탭(📔 일기 · 분류·주제) › 쪽 목록 › 쪽(좌우 밀기) ===== */
+const dyIsDia=n=>n.topic==='t-diarium'||/^note-dia-/.test(n.id);
+const dyCls=n=>{if(n.dc)return n.dc;const t=n.topic&&SET.topics.find(x=>x.id===n.topic);return t?t.name:''};
+dySec=function(n){return dyIsDia(n)?'📔 일기':dyCls(n)};
+const DYD='📔 일기';let DYF='';
+dyEditSel=function(){const n=nEdit&&NOTES.get(nEdit);const R=$('#nbody');if(!n||n.person||!R||R.querySelector('#dycsel'))return;const S=dySecs();const cur=n.dc?'':(dyIsDia(n)?'':dyCls(n));
+  const h=document.createElement('div');h.className='dycs';h.innerHTML=`📁 분류 <select id="dycsel"><option value="">(없음)</option>${S.map(c=>`<option ${n.dc===c?'selected':''}>${esc(c)}</option>`).join('')}${cur?`<option value="__t" selected>${esc(cur)} (주제)</option>`:''}<option value="__add">＋ 새 분류…</option></select>${dyIsDia(n)?' <small class="hint">일기 섹션 안에서 분류로 걸러 볼 수 있습니다</small>':''}`;R.prepend(h);
+  h.querySelector('select').onchange=async e=>{let v=e.target.value;if(v==='__t')return;if(v==='__add'){const t=((await uiPrompt('새 분류 이름',''))||'').trim();if(!t){e.target.value=n.dc||(cur?'__t':'');return}SET.dcx=SET.dcx||[];if(!dySecs().includes(t)){SET.dcx.push(t);saveSet().catch(()=>{})}v=t;h.remove();n.dc=v;saveNote(n,true);dyEditSel();return}
+    if(v)n.dc=v;else delete n.dc;saveNote(n,true)}};
+const dyHue=s=>{let h=0;for(const c of s)h=(h*31+c.charCodeAt(0))%360;return h};
+function dySecList(Y){const all=[...new Set(Y.map(dySec).filter(Boolean))];const S=dySecs();return[...(all.includes(DYD)?[DYD]:[]),...S.filter(s=>all.includes(s)),...all.filter(s=>s!==DYD&&!S.includes(s)).sort()]}
+dyRender=function(){const R=$('#nbody');document.querySelectorAll('#nmode button').forEach(b=>b.classList.toggle('on',b.dataset.nm==='dy'));$('#nmode').hidden=false;
+  const A=dyNotes();const cy=String(new Date().getFullYear());const yrs=[...new Set(A.map(n=>n.date.slice(0,4)))].sort().reverse();if(!yrs.includes(cy))yrs.unshift(cy);if(!DYY||!yrs.includes(DYY))DYY=cy;
+  const q=nLow(DYQ.trim());const Y=q?A:A.filter(n=>n.date.slice(0,4)===DYY);const secs=dySecList(Y);
+  if(DYC==='__n'||DYC===''||(DYC&&!secs.includes(DYC)&&!dySecs().includes(DYC))){if(!q)DYC=secs[0]||''}if(DYC&&!secs.includes(DYC)&&!q)secs.push(DYC);
+  let L=q?Y:Y.filter(n=>dySec(n)===DYC);const isD=!q&&DYC===DYD;
+  if(q)L=L.filter(n=>nLow(nTitle(n)+' '+dyPlain(n)+' '+(n.tags||[]).join(' ')).includes(q));
+  const dcs=isD?DCATS.filter(c=>L.some(n=>n.dc===c)):[];const un=isD?L.filter(n=>!n.dc).length:0;if(isD&&DYF&&DYF!=='__n'&&!dcs.includes(DYF))DYF='';
+  if(isD&&DYF)L=L.filter(n=>DYF==='__n'?!n.dc:n.dc===DYF);
+  const ms=[...Array(12)].map((_,i)=>{const m=DYY+'-'+String(i+1).padStart(2,'0');return[m,L.filter(n=>n.date.slice(0,7)===m).length]});
+  if(!q&&!DYM){const lm=ms.filter(x=>x[1]).map(x=>x[0]).pop();DYM=lm||''}
+  const nAll=L.length;if(DYM&&DYM!=='*'&&!q)L=L.filter(n=>n.date.slice(0,7)===DYM);L.sort((a,b)=>a.date<b.date?1:a.date>b.date?-1:(b.created||0)-(a.created||0));
+  const lim=DYM&&DYM!=='*'||q?200:40;const sh=L.slice(0,lim);let lastM='';
+  R.innerHTML=`<div class="dyv on1"><div class="dyq"><input type="search" id="dyq" value="${esc(DYQ)}" placeholder="🔍 모든 노트에서 찾기"><button class="btn small" id="dynew">＋ 새 쪽</button></div>
+   ${q?`<p class="hint" style="margin:6px 0">‘${esc(DYQ.trim())}’ 전체 권에서 ${L.length}쪽</p>`:`<div class="dybk"><label>📕 노트북</label><select id="dyby">${yrs.map(y=>`<option value="${y}" ${y===DYY?'selected':''}>${y}년 · ${A.filter(n=>n.date.slice(0,4)===y).length}쪽</option>`).join('')}</select></div>
+   <div class="dytabs">${secs.map(c=>{const k=c===DYD?'📔':(DCEMO[c]||'');return`<button class="${DYC===c?'on':''}" data-dyc="${esc(c)}" style="--h:${c===DYD?30:dyHue(c)}">${k?k+' ':''}${esc(c.replace(/^📔 /,''))} <i>${Y.filter(n=>dySec(n)===c).length}</i></button>`}).join('')}<button data-dyadd="1" class="dyplus" aria-label="섹션 추가">＋</button></div>`}
+   ${isD?`<div class="chips" style="margin:6px 0"><button class="chip fbtn ${!DYF?'on':''}" data-dyf="">전체</button>${dcs.map(c=>`<button class="chip fbtn ${DYF===c?'on':''}" data-dyf="${esc(c)}">${DCEMO[c]||''} ${esc(c)}</button>`).join('')}${un?`<button class="chip fbtn ${DYF==='__n'?'on':''}" data-dyf="__n">❔ 분류 안 함 ${un}</button>`:''}</div>`:''}
+   ${q?'':`<div class="dymo">${ms.map(([m,c])=>`<button class="${DYM===m?'on':''} ${c?'':'z'}" data-dym="${m}"><b>${+m.slice(5)}월</b><i>${c||''}</i></button>`).join('')}</div>`}
+   <div class="row" style="margin:8px 0">${isD?'<button class="btn small" id="dydia">✍️ 오늘 일기 쓰기</button>':'<button class="btn small ghost" id="dytd">📓 오늘 하루노트</button>'}<button class="btn small ghost" id="dyimp">📥 일기 분류 가져오기</button></div>
+   <p class="hint">${DYM&&DYM!=='*'&&!q?`${+DYM.slice(5)}월 ${L.length}쪽 (이 섹션 ${nAll}쪽) · <button class="del" id="dyall" style="padding:0">전체 월 보기</button>`:`${L.length}쪽${L.length>lim?` 중 최근 ${lim}쪽 · 위 월을 눌러 좁히세요`:''}`} · 좌우로 밀면 다음 섹션</p>
+   <div class="dypg">${sh.map(n=>{const m=n.date.slice(0,7);const dh=(!q&&DYM==='*'&&m!==lastM)?`<div class="dyd">${+m.slice(5)}월</div>`:'';lastM=m;const b=dyPlain(n);const sc=q?dySec(n):(isD?(n.dc||''):(n.dc&&n.dc!==DYC?n.dc:''));return dh+`<button class="dypc" data-dyo="${esc(n.id)}"><span class="dyday"><b>${+n.date.slice(8)}</b><small>${WD[parseD(n.date).getDay()]}</small></span><span class="dybd"><b>${esc(nTitle(n))}</b><span>${esc(b.slice(0,60))}</span></span>${sc?`<small class="dyk">${dyIc(sc)} ${esc(sc.replace(/^📔 /,''))}</small>`:''}</button>`}).join('')||'<p class="empty">이 섹션에 쪽이 없습니다.</p>'}</div></div>`;
+  const qi=$('#dyq');qi.oninput=()=>{DYQ=qi.value;clearTimeout(dyRender._t);dyRender._t=setTimeout(()=>{dyRender();const x=$('#dyq');if(x){x.focus();try{x.setSelectionRange(x.value.length,x.value.length)}catch(e){}}},250)};
+  const by=$('#dyby');if(by)by.onchange=()=>{DYY=by.value;DYC='';DYM='';DYF='';dyRender()};
+  R.querySelectorAll('[data-dyc]').forEach(b=>b.onclick=()=>{DYC=b.dataset.dyc;DYF='';DYM='';dyRender();$('#nbody .dytabs .on')?.scrollIntoView({inline:'center',block:'nearest'})});
+  R.querySelectorAll('[data-dyf]').forEach(b=>b.onclick=()=>{DYF=b.dataset.dyf;DYM='';dyRender()});
+  R.querySelectorAll('[data-dym]').forEach(b=>b.onclick=()=>{DYM=b.dataset.dym;dyRender()});const da=$('#dyall');if(da)da.onclick=()=>{DYM='*';dyRender()};
+  R.querySelectorAll('[data-dyo]').forEach(b=>b.onclick=()=>ntOpenPage(b.dataset.dyo));
+  const ad=R.querySelector('[data-dyadd]');if(ad)ad.onclick=async()=>{const t=((await uiPrompt('새 섹션 이름',''))||'').trim();if(!t)return;SET.dcx=SET.dcx||[];if(!dySecs().includes(t)&&t!==DYD){SET.dcx.push(t);saveSet().catch(()=>{})}DYC=t;DYM='';dyRender()};
+  const dd=$('#dydia');if(dd)dd.onclick=()=>{try{diaryToday()}catch(e){console.warn(e)}};const tdb=$('#dytd');if(tdb)tdb.onclick=()=>{nView='dq';DQV='day';nDate=today();nTopic=null;renderNotes()};$('#dyimp').onclick=dyImport;
+  $('#dynew').onclick=()=>dyNewPage();
+  const tab=R.querySelector('.dytabs .on');if(tab&&tab.scrollIntoView)tab.scrollIntoView({inline:'center',block:'nearest'})};
+/* 새 쪽: 일기 섹션이면 분류 없이 일기 쪽, 아니면 지금 섹션 */
+dyNewPage=function(){const S=$('#sheet');S.hidden=false;const L=tplList();
+  S.innerHTML=`<div class="sheetbox" role="dialog" aria-label="새 쪽"><div class="shead"><b>＋ 새 쪽 · 양식 고르기</b><button class="del" id="dnx">닫기</button></div><div class="ntsheet"><button class="btn" data-dnp="-1">📄 빈 쪽</button>${L.map((x,i)=>`<button class="btn ghost" data-dnp="${i}">${x.b?'':'⭐ '}${esc(x.n)}</button>`).join('')}</div></div>`;
+  const close=()=>{S.hidden=true;S.innerHTML=''};$('#dnx').onclick=close;S.onclick=e=>{if(e.target===S)close()};
+  S.querySelectorAll('[data-dnp]').forEach(b=>b.onclick=()=>{close();const k=+b.dataset.dnp;const id=(DYC===DYD?'note-dia-':'note-')+uid();const isDia=DYC===DYD;const t=!isDia&&DYC&&!dySecs().includes(DYC)?SET.topics.find(x=>x.name===DYC):null;
+    const n={kind:'note',id,date:today(),topic:isDia?'t-diarium':(t?t.id:''),title:'',body:'',photos:[],tags:[],created:Date.now(),updated:Date.now()};if(!isDia&&DYC&&dySecs().includes(DYC))n.dc=DYC;NOTES.set(id,n);saveNote(n,true);ntOpenPage(id);
+    if(k>=0)setTimeout(()=>tplApply(n,L[k]),200)})};
+/* 좌우 밀기: 섹션 탭 순서대로 */
+dySwipeSecs=function(){const A=dyNotes();const Y=A.filter(n=>n.date.slice(0,4)===DYY);return dySecList(Y)};
+(function(){const st=document.createElement('style');st.textContent=`.dybk{display:flex;align-items:center;gap:8px;margin:8px 0 4px}.dybk label{font-weight:700;white-space:nowrap}.dybk select{flex:1;min-width:0}
+.dytabs{display:flex;gap:4px;overflow-x:auto;padding:4px 0 0;border-bottom:2px solid var(--line);scrollbar-width:none}.dytabs::-webkit-scrollbar{display:none}
+.dytabs button{flex:0 0 auto;border:1px solid var(--line);border-bottom:0;border-radius:10px 10px 0 0;padding:7px 11px 6px;background:hsl(var(--h) 55% 92%);color:#222;font-size:.86rem;white-space:nowrap;position:relative;top:2px}
+.dytabs button i{font-style:normal;font-size:.7rem;opacity:.65}.dytabs button.on{background:var(--card);border-color:hsl(var(--h) 50% 55%);border-top:3px solid hsl(var(--h) 60% 50%);font-weight:700;top:2px;padding-bottom:8px}
+.dytabs .dyplus{background:none;border-style:dashed;color:var(--muted)}
+:root[data-theme=dark] .dytabs button:not(.on){background:hsl(var(--h) 25% 22%);color:#eee}@media (prefers-color-scheme:dark){:root:not([data-theme=light]) .dytabs button:not(.on){background:hsl(var(--h) 25% 22%);color:#eee}}
+.dypc{display:flex!important;align-items:center;gap:10px;padding:6px 10px!important}.dypg{gap:4px!important}.dyday{display:flex;flex-direction:column;align-items:center;width:34px;flex:0 0 auto;line-height:1.1}.dyday b{font-size:1.15rem}.dyday small{font-size:.66rem;color:var(--muted)}
+.dybd{flex:1;min-width:0;display:grid;gap:2px}.dybd>b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.dyk{flex:0 0 auto;max-width:34%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.dyd{font-weight:700;font-size:.82rem;margin-top:8px}`;document.head.appendChild(st)})();
 
 </script>
 
