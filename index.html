@@ -1757,10 +1757,11 @@ function shSnapMerge(d,o,L){const e=shGet()[d]||{};let n=0;SHKIND.forEach(([k,bk
 let SHAUTO=false;
 async function shAuto(){if(SHAUTO)return;SHAUTO=true;try{const T=today(),ds=[T,addD(T,-1),addD(T,-2)];const SN={};
     try{const ks=(await store.keys()).filter(k=>/^snap:\d{4}-\d{2}-\d{2}:/.test(k)&&ds.includes(k.slice(5,15)));for(const k of ks){const x=await store.getDoc(k);if(x&&x.date)(SN[x.date]=SN[x.date]||[]).push(x)}}catch(e){}
-    let tot=0;for(const d of ds){if(D&&D.date===d){const n=shMerge(d,D,null)+shSnapMerge(d,D,SN[d]||[]);if(n){tot+=n;svLog({t:new Date().toTimeString().slice(0,8),d,ev:'auto-restore',add:n});schedule()}continue}
+    let tot=0;for(const d of ds){if(D&&D.date===d){try{shKeep(D)}catch(e){}const n=shMerge(d,D,null)+shSnapMerge(d,D,SN[d]||[]);if(n){tot+=n;svLog({t:new Date().toTimeString().slice(0,8),d,ev:'auto-restore',add:n});schedule()}continue}
       let o=null;try{o=await store.load(d)}catch(e){}if(!o&&!(shGet()[d]||SN[d]))continue;o=norm(o||{date:d});const n=shMerge(d,o,null)+shSnapMerge(d,o,SN[d]||[]);if(n){tot+=n;svLog({t:new Date().toTimeString().slice(0,8),d,ev:'auto-restore',add:n});await store.save(d,o);if(cacheAll)cacheAll.set(d,o)}}
     if(tot){try{if(curSection==='day')renderDay()}catch(e){}toast(`🛟 사라졌던 기록 ${tot}개를 자동으로 되살렸습니다.`)}}catch(e){}finally{SHAUTO=false}}
-function shDel(d,id){if(!id)return;const S=shGet();const e=S[d];if(!e)return;e.del=e.del||[];if(!e.del.includes(id))e.del.push(id);shPut(S)}
+function shDel(d,id,kind){if(!id)return;const S=shGet();const e=S[d]||(S[d]={});const k=kind==='plan'?'pdel':'del';e[k]=e[k]||[];if(!e[k].includes(id))e[k].push(id);shPut(S)}
+function shUndel(d,id,kind){if(!id)return;const S=shGet();const e=S[d];if(!e)return;const k=kind==='plan'?'pdel':'del';if(e[k]){e[k]=e[k].filter(x=>x!==id);shPut(S)}}
 function shMissing(o){const e=shGet()[o&&o.date];if(!e)return[];const have=new Set((o.time||[]).map(b=>b.id));const del=e.del||[];return Object.values(e.b||{}).filter(b=>!have.has(b.id)&&!del.includes(b.id))}
 document.addEventListener('click',async ev=>{const t=ev.target.closest&&ev.target.closest('[data-shrest]');if(!t)return;ev.preventDefault();const L=shMissing(D);if(!L.length)return;
   if(!await uiConfirm(`사라진 ‘실제 한 일’ ${L.length}개를 되살릴까요?\n\n${L.sort((a,b)=>a.s<b.s?-1:1).map(b=>`${b.s}${b.e?'~'+b.e:''} ${b.act||b.cat||''}`).join('\n')}\n\n(‘취소’를 누르면 이 목록을 비웁니다)`)){const S=shGet();const e=S[D.date];if(e){L.forEach(b=>e.del.push(b.id));shPut(S)}renderDay();return}
@@ -4202,8 +4203,8 @@ function delBlock(kind,i,after){const rm=D[kind]&&D[kind][i];if(kind==='plan'&&r
   delBlock0(kind,i,after)}
 async function repDelFuture(rm,after){const id=rm.rid,R=repRules(),k=R.findIndex(x=>x.id===id),from=D.date;if(k>=0){if(from<=R[k].start)R.splice(k,1);else{R[k].end=addD(from,-1);R[k].cnt=0}}await saveSet().catch(()=>{});
   const ix=D.plan.indexOf(rm);if(ix>=0)D.plan.splice(ix,1);schedule();after&&after();await repReset(id,from);try{if(!$('#v-plan').hidden)renderPlan();else if(!$('#v-day').hidden)renderDay()}catch(e){}widgetSoon();toast(`🔁 ‘${rm.act||rm.cat||'반복 일정'}’을(를) ${md(from)}부터 앞으로 모두 지웠습니다.`)}
-function delBlock0(kind,i,after){const arr=D[kind];const rm=arr&&arr[i];if(!rm)return;arr.splice(i,1);if(kind==='time')try{shDel(D.date,rm.id)}catch(e){}let f=null;if(kind==='time'){f=linkedFin(rm.id);if(f)D.fin.splice(D.fin.indexOf(f),1)}schedule();after&&after();
-  toastAct(`🗑 ‘${rm.act||rm.cat||'블록'}’ 블록을 지웠습니다.`,'되돌리기',()=>{arr.splice(Math.min(i,arr.length),0,rm);if(f)D.fin.push(f);schedule();after&&after()})}
+function delBlock0(kind,i,after){const arr=D[kind];const rm=arr&&arr[i];if(!rm)return;arr.splice(i,1);try{shDel(D.date,rm.id,kind)}catch(e){}let f=null;if(kind==='time'){f=linkedFin(rm.id);if(f)D.fin.splice(D.fin.indexOf(f),1)}schedule();after&&after();
+  toastAct(`🗑 ‘${rm.act||rm.cat||'블록'}’ 블록을 지웠습니다.`,'되돌리기',()=>{try{shUndel(D.date,rm.id,kind)}catch(e){}arr.splice(Math.min(i,arr.length),0,rm);if(f)D.fin.push(f);schedule();after&&after()})}
 const MIC_HELP='이 화면에서는 앱 자체 받아쓰기가 막혀 있습니다. 입력칸을 누른 뒤 휴대폰 키보드의 🎤 버튼을 누르면 말로 입력할 수 있습니다.';
 function bindMic(root){root.querySelectorAll('[data-mic]').forEach(btn=>btn.onclick=()=>{
   let el=document.querySelector(btn.dataset.mic);if(!el)return;if(el.isContentEditable)el=micCE(el);if(IS_NATIVE){nativeMic(btn,el);return}if(REC){stopMic();return}
