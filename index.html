@@ -15308,6 +15308,26 @@ document.addEventListener('click',async e=>{const b=e.target.closest&&e.target.c
   ntSheet('📍 날씨 지역',[['📡 현재 위치로',()=>{if(!navigator.geolocation){toast('이 기기에서는 위치를 쓸 수 없습니다. 아래 도시를 골라 주세요.');return}navigator.geolocation.getCurrentPosition(async p=>{SET.wx={n:'현재 위치',lat:+p.coords.latitude.toFixed(3),lon:+p.coords.longitude.toFixed(3)};await saveSet().catch(()=>{});WXD=null;wxPaint();await wxLoad(true);wxPaint()},()=>toast('위치를 가져오지 못했습니다. 아래 도시를 골라 주세요.'),{timeout:8000})}],...WX_CITIES.map(([n,la,lo])=>[`${n}`,async()=>{SET.wx={n,lat:la,lon:lo};await saveSet().catch(()=>{});WXD=null;wxPaint();await wxLoad(true);wxPaint()}])])},true);
 (function(){const st=document.createElement('style');st.textContent=`.wxrow{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-top:6px;text-align:center}.wxd{display:grid;gap:1px;padding:6px 0;border-radius:10px;background:var(--bg2,rgba(127,127,127,.08))}.wxd.td{box-shadow:0 0 0 2px #3aa6e0 inset}.wxd small{color:var(--muted);font-size:.7rem}.wxd i{font-style:normal;font-size:1.25rem}.wxd b{font-size:.85rem}.wxd span{font-size:.75rem;color:var(--muted)}.wxd em{font-style:normal;font-size:.62rem;color:var(--muted)}.wxd em.hi{color:#1c7ed6;font-weight:700}`;document.head.appendChild(st)})();
 
+
+/* ===== v355: 노트 = 대·중·소 분류가 기본, 보기 방식만 바꾸는 아이콘 (🌳 목록 · 🔲 만다라트 · 📚 연 노트) ===== */
+let NTVM=(()=>{try{const a=localStorage.getItem('gj-nv'),b=localStorage.getItem('gj-ntv');return a==='dy'?'dy':(b==='mand'?'mand':'tree')}catch(e){return'tree'}})(),NTVO=false;
+const NTVMS=[['tree','🌳','목록 (대·중·소)'],['mand','🔲','만다라트'],['dy','📚','연 노트 (권·쪽)']];
+function ntvRow(){return NTVO?`<div class="ntvrow seg" style="--k:var(--pen);margin:6px 0">${NTVMS.map(([k,i,l])=>`<button data-ntvset="${k}" class="${NTVM===k?'on':''}">${i} ${l}</button>`).join('')}</div>`:''}
+function ntvBtn(){const c=NTVMS.find(x=>x[0]===NTVM)||NTVMS[0];return`<button class="btn small" data-ntvw="1" id="ntvw" aria-label="보기 방식 바꾸기" title="보기 방식 바꾸기">${c[1]} 보기</button>`}
+{const _h=ntHeadHTML;ntHeadHTML=function(all){let h=_h.apply(this,arguments);h=h.replace('<button class="btn small" id="ntnew">',ntvBtn()+'<button class="btn small" id="ntnew">');return h+ntvRow()}}
+{const _f=ntFullHTML;ntFullHTML=function(all){if(NTVM==='mand'&&!ntQ.trim()){return ntHeadHTML(all)+`<div class="nmand">${ntMandHTML(all)}</div>`}return _f.apply(this,arguments)}}
+function ntvSet(m){NTVM=m;NTVO=false;try{localStorage.setItem('gj-ntv',m==='mand'?'mand':'tree');localStorage.setItem('gj-nv',m==='dy'?'dy':'topic')}catch(e){}
+  nEdit=null;nTopic=null;nPil=null;try{NFD=null}catch(e){}
+  if(m==='dy'){nView='dy';DYC='';DYM=''}else{nView='topic';if(m==='mand')NMV={k:null,ek:null,sx:null}}
+  renderNotes();window.scrollTo(0,0)}
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-ntvw],[data-ntvset]');if(!b)return;e.preventDefault();e.stopPropagation();
+  if(b.dataset.ntvset){ntvSet(b.dataset.ntvset);return}NTVO=!NTVO;renderNotes()},true);
+(function(){const m=document.querySelector('#nmode');if(!m)return;const db=m.querySelector('[data-nm="dy"]');if(db)db.hidden=true;const tb=m.querySelector('[data-nm="topic"]');if(tb){tb.textContent='🌳 노트';tb.addEventListener('click',()=>{NTVM=(NTVM==='dy')?'tree':NTVM;try{localStorage.setItem('gj-nv','topic')}catch(e){}})}})();
+{const _rn=renderNotes;renderNotes=function(){
+  const r=_rn.apply(this,arguments);try{if(nView==='dy')NTVM='dy';else if(nView==='topic'&&NTVM==='dy')NTVM='tree';
+    document.querySelectorAll('#nmode button').forEach(b=>{if(b.dataset.nm==='topic')b.classList.toggle('on',nView==='topic'||nView==='dy')});
+    if(nView==='dy'&&!nEdit){const R=$('#nbody');if(R&&!R.querySelector(':scope>.ntvbar')){R.insertAdjacentHTML('afterbegin',`<div class="ntvbar nthead" style="display:flex;gap:6px;justify-content:flex-end;margin:0 0 6px">${ntvBtn()}</div>${ntvRow()}`)}}
+  }catch(e){console.warn('ntv',e)}return r}}
 </script>
 <!--BIBLE{--><!--}BIBLE-->
 <div id="miniov" class="miniov" hidden></div>
