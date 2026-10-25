@@ -1627,7 +1627,7 @@ const pad=n=>String(n).padStart(2,'0');
 const ymd=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
 const parseD=s=>{const[y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d)};
 const addD=(s,n)=>{const d=parseD(s);d.setDate(d.getDate()+n);return ymd(d)};
-const md=s=>{const x=parseD(s);return`${x.getMonth()+1}.${x.getDate()}.`};
+const md=s=>{const x=parseD(s);return`${x.getFullYear()!==new Date().getFullYear()?x.getFullYear()+'.':''}${x.getMonth()+1}.${x.getDate()}.`};
 const WD='일월화수목금토';
 const WONF=new Intl.NumberFormat('ko-KR');const won=n=>WONF.format(Math.round(n)||0)+'원';
 const today=()=>ymd(new Date());
@@ -3171,6 +3171,8 @@ function askNotify(){try{if('Notification'in window&&Notification.permission==='
 let fired={};try{fired=JSON.parse(localStorage.getItem('gj-fired')||'{}')}catch(e){}
 /* 루틴을 계획에 반영: 루틴의 알람 시각부터 루틴 길이만큼 (오늘·앞으로의 날만) */
 function rtPlanApply(o){if(!o||!o.date||o.date<today()||!Array.isArray(o.plan))return false;const wd=parseD(o.date).getDay();let ch=false;
+  /* 같은 루틴 블록이 겹겹이 쌓인 경우(동기화·복원·되돌리기 중 중복 생성) 한 개만 남긴다 */
+  (SET.routines||[]).forEach(r=>{const L=o.plan.filter(b=>b.rt===r.id);if(L.length<2)return;const sc=b=>(b.noteId?4:0)+(b.rtEdited?2:0)+(b.done||b.ok?1:0);const keep=L.slice().sort((x,y)=>sc(y)-sc(x))[0];o.plan=o.plan.filter(b=>b.rt!==r.id||b===keep);ch=true});
   (SET.routines||[]).forEach(r=>{const want=r.toPlan&&r.alarm&&r.alarm.time&&(r.alarm.days||[]).includes(wd);const tot=r.items.reduce((a,b)=>a+(+b.min||0),0);const e=addMin(r.alarm.time,Math.max(5,tot));const ex=o.plan.find(b=>b.rt===r.id);
     if(want){if(!ex){const cat=(SET.cats.find(c=>/루틴|생활|휴식|자기/.test(c.name))||SET.cats[0]).name;o.plan.push({id:uid(),s:r.alarm.time,e,act:'🔁 '+r.name,cat,who:'',rt:r.id,goal:r.goal||''});ch=true}else if(!ex.rtEdited&&(ex.s!==r.alarm.time||ex.e!==e||ex.act!=='🔁 '+r.name)){ex.s=r.alarm.time;ex.e=e;ex.act='🔁 '+r.name;ch=true}}
     else if(ex){o.plan.splice(o.plan.indexOf(ex),1);ch=true}});
@@ -15001,6 +15003,84 @@ navBtnSync=function(){const b=$('#navbk');if(!b)return;let can=false;try{can=!!(
   if(can&&document.querySelector('#focusov:not([hidden]),#routineov:not([hidden]),#sheet:not([hidden]),#blockedit:not([hidden]),#taskedit:not([hidden]),#bdov:not([hidden]),#lockov:not([hidden]),#inkov:not([hidden])'))can=false;
   if(b.hidden===can)b.hidden=!can;const l=$('#navbkl');if(l&&l.textContent!=='뒤로가기')l.textContent='뒤로가기'};
 setTimeout(navBtnSync,100);
+/* ===================== v342 📚 권·분류 노트 보기 · 🚫 하지 않기 · 3일 감쇠 · 🎁 상·벌 ===================== */
+const DCATS=['말씀·설교','양육·사역','일·군','사람·만남','가족·결혼','건강·운동','감정·내면','공부·성장','기도·감사','돈·소비','여가·일상','주간 돌아봄','기타 메모','빈 기록'];
+const DCEMO={'말씀·설교':'📖','양육·사역':'🌱','일·군':'🪖','사람·만남':'🤝','가족·결혼':'🏠','건강·운동':'💪','감정·내면':'💭','공부·성장':'📚','기도·감사':'🙏','돈·소비':'💰','여가·일상':'☕','주간 돌아봄':'🗓️','기타 메모':'📝','빈 기록':'▫️'};
+let DYY='',DYC='',DYM='';
+function dyNotes(){return[...NOTES.values()].filter(n=>!n.person&&!n.jt&&n.date)}
+function dyPlain(n){return String(n.body||'').replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim()}
+function dyRender(){const R=$('#nbody');document.querySelectorAll('#nmode button').forEach(b=>b.classList.toggle('on',b.dataset.nm==='dy'));$('#nmode').hidden=false;
+  const A=dyNotes();const yrs=[...new Set(A.map(n=>n.date.slice(0,4)))].sort().reverse();if(!DYY||!yrs.includes(DYY))DYY=yrs.includes(String(new Date().getFullYear()))?String(new Date().getFullYear()):(yrs[0]||'');
+  const Y=A.filter(n=>n.date.slice(0,4)===DYY);const cats=DCATS.filter(c=>Y.some(n=>n.dc===c));const nc=Y.filter(n=>!n.dc).length;
+  let L=Y.filter(n=>!DYC||(DYC==='__n'?!n.dc:n.dc===DYC));
+  const ms=[...Array(12)].map((_,i)=>{const m=DYY+'-'+String(i+1).padStart(2,'0');return[m,L.filter(n=>n.date.slice(0,7)===m).length]});
+  if(DYM)L=L.filter(n=>n.date.slice(0,7)===DYM);L.sort((a,b)=>a.date<b.date?1:a.date>b.date?-1:(b.created||0)-(a.created||0));
+  const lim=DYM?300:80;const sh=L.slice(0,lim);let last='';
+  R.innerHTML=`<div class="dyv"><div class="chips" style="margin:8px 0">${yrs.map(y=>`<button class="chip fbtn ${y===DYY?'on':''}" data-dyy="${y}">📕 ${y}년 ${A.filter(n=>n.date.slice(0,4)===y).length}</button>`).join('')}</div>
+   <div class="chips" style="margin:6px 0"><button class="chip fbtn ${!DYC?'on':''}" data-dyc="">전체 ${Y.length}</button>${cats.map(c=>`<button class="chip fbtn ${DYC===c?'on':''}" data-dyc="${esc(c)}">${DCEMO[c]||''} ${esc(c)} ${Y.filter(n=>n.dc===c).length}</button>`).join('')}${nc?`<button class="chip fbtn ${DYC==='__n'?'on':''}" data-dyc="__n">❔ 분류 안 함 ${nc}</button>`:''}</div>
+   <div class="dymo">${ms.map(([m,c])=>`<button class="${DYM===m?'on':''} ${c?'':'z'}" data-dym="${m}"><b>${+m.slice(5)}월</b><i>${c||''}</i></button>`).join('')}</div>
+   <div class="row" style="margin:8px 0"><button class="btn small" id="dytd">📓 오늘 하루노트</button><button class="btn small ghost" id="dyimp">📥 일기 분류 가져오기</button></div>
+   ${L.length>lim?`<p class="hint">${L.length}편 중 최근 ${lim}편만 보입니다. 위 월 띠로 좁혀 보세요.</p>`:`<p class="hint">${L.length}편${DYM?` · ${+DYM.slice(5)}월`:''}</p>`}
+   <div class="dypg">${sh.map(n=>{const dh=n.date!==last?`<div class="dyd">${n.date.replace(/-/g,'.')} (${WD[parseD(n.date).getDay()]})</div>`:'';last=n.date;const b=dyPlain(n);return dh+`<button class="dypc" data-dyo="${esc(n.id)}"><b>${esc(nTitle(n))}</b>${n.dc?`<small>${DCEMO[n.dc]||''} ${esc(n.dc)}</small>`:''}<span>${esc(b.slice(0,70))}</span></button>`}).join('')||'<p class="empty">이 조건의 노트가 없습니다.</p>'}</div></div>`;
+  R.querySelectorAll('[data-dyy]').forEach(b=>b.onclick=()=>{DYY=b.dataset.dyy;DYC='';DYM='';dyRender()});
+  R.querySelectorAll('[data-dyc]').forEach(b=>b.onclick=()=>{DYC=b.dataset.dyc;dyRender()});
+  R.querySelectorAll('[data-dym]').forEach(b=>b.onclick=()=>{DYM=DYM===b.dataset.dym?'':b.dataset.dym;dyRender()});
+  R.querySelectorAll('[data-dyo]').forEach(b=>b.onclick=()=>ntOpenPage(b.dataset.dyo));
+  $('#dytd').onclick=()=>{nView='dq';DQV='day';nDate=today();nTopic=null;renderNotes()};
+  $('#dyimp').onclick=dyImport}
+function dyImport(){const f=document.createElement('input');f.type='file';f.accept='.json,application/json';f.onchange=async()=>{try{const t=await f.files[0].text();const m=JSON.parse(t);let c=0;const sv=[];Object.keys(m).forEach(id=>{const n=NOTES.get(id);if(n&&DCATS.includes(m[id])&&n.dc!==m[id]){n.dc=m[id];c++;sv.push(n)}});
+  for(const n of sv){n.updated=Date.now();await store.putDoc(n.id,n)}toast(`${c}편에 분류를 넣었습니다.`);dyRender()}catch(e){toast('분류 파일을 읽지 못했습니다.')}};f.click()}
+{const _rn=renderNotes;renderNotes=function(){if(nView==='dy'&&!nEdit){try{dyRender()}catch(e){console.warn('dy',e)}return}
+  const r=_rn.apply(this,arguments);try{if(nEdit){setTimeout(dyEditSel,0)}}catch(e){}return r}}
+function dyEditSel(){const n=nEdit&&NOTES.get(nEdit);const R=$('#nbody');if(!n||!R||R.querySelector('#dycsel'))return;const h=document.createElement('div');h.style.cssText='margin:6px 0;font-size:.85rem';h.innerHTML=`분류 <select id="dycsel"><option value="">(없음)</option>${DCATS.map(c=>`<option ${n.dc===c?'selected':''}>${c}</option>`).join('')}</select>`;R.prepend(h);h.querySelector('select').onchange=e=>{n.dc=e.target.value;saveNote(n,true)}}
+(function(){const m=document.querySelector('#nmode');if(m&&!m.querySelector('[data-nm="dy"]')){const b=document.createElement('button');b.dataset.nm='dy';b.textContent='📚 권·분류';m.querySelector('[data-nm="topic"]').after(b);b.onclick=()=>{nView='dy';nTopic=null;DYC='';DYM='';renderNotes()}}
+ const st=document.createElement('style');st.textContent=`.dymo{display:grid;grid-template-columns:repeat(12,1fr);gap:3px;margin:6px 0}.dymo button{border:1px solid var(--line);background:var(--card);border-radius:6px;padding:3px 0;font-size:.68rem;color:var(--ink);display:flex;flex-direction:column;align-items:center}.dymo button i{font-style:normal;font-size:.62rem;color:var(--muted);min-height:.9em}.dymo button.z{opacity:.4}.dymo button.on{background:var(--acc);color:#fff;border-color:var(--acc)}.dymo button.on i{color:#fff}
+.dypg{display:grid;gap:6px}.dyd{font-size:.78rem;color:var(--muted);margin-top:6px}.dypc{text-align:left;border:1px solid var(--line);background:var(--card);border-radius:10px;padding:8px 10px;color:var(--ink);display:grid;gap:2px}.dypc small{color:var(--muted)}.dypc span{color:var(--muted);font-size:.84rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}`;document.head.appendChild(st)})();
+
+/* ---- 🚫 하지 않기 · 3일 감쇠 · 🎁 상·벌 ---- */
+const RW_DEF={avoid:[{id:'av1',name:'유튜브 쇼츠·릴스 습관 시청',lim:'하루 30분 이내'},{id:'av2',name:'밤 11시 이후 휴대폰'},{id:'av3',name:'과음'}],
+ rewards:[{id:'rw1',name:'아내와 둘만의 외식·데이트',need:'7일 연속 기록'},{id:'rw2',name:'혼자 카페·산책 반나절 (쉼)',need:'레벨 업'},{id:'rw3',name:'아이들과 하루 특별 나들이',need:'한 달 기록 25일'},{id:'rw4',name:'오래 못 본 사람 만나 식사 대접',need:'기둥 하나 레벨 업'},{id:'rw5',name:'좋은 숙면: 낮잠·늦잠 하루 허락',need:'14일 연속'}],
+ pens:[{id:'pn1',name:'어긴 날 밤: 스마트폰 없이 30분 걷기 + 이유 한 줄 적기'},{id:'pn2',name:'3일 이상 끊긴 뒤 복귀: 가장 미룬 일 하나를 먼저 끝내기'},{id:'pn3',name:'주 3회 이상 어기면: 그 주 말 가족에게 고백하고 하루 쉬운 집안일 맡기'},{id:'pn4',name:'(선택) 신념과 반대 방향의 기부 — 월 한도 안에서, 스스로 켠 경우만',off:1,amt:10000}]};
+function rwSet(){if(!SET.rw)SET.rw=JSON.parse(JSON.stringify(RW_DEF));SET.rw.log=SET.rw.log||[];SET.rw.rest=SET.rw.rest||[];if(!SET.rw.since)SET.rw.since=today();return SET.rw}
+function rwAv(o){return(o&&o.avoid)||{}}
+/* XP: 하지 않기 지킨 날 +4 / 감쇠 */
+{const _xd=xpDay;xpDay=function(o,d){const r=_xd.apply(this,arguments);try{const A=SET.rw&&SET.rw.avoid;if(A&&o){const a=rwAv(o);const ok=A.filter(x=>a[x.id]==='ok').length;if(ok){const v=Math.min(12,ok*4);r.parts.push(['🚫 하지 않기 지킴',v,ok+'개']);r.xp+=v}}}catch(e){}return r}}
+function rwDecay(v){const R=rwSet();const T=today();const lapses=[];let run=0,start='';let d=R.since;const rest=new Set(R.rest);
+  for(;d<=addD(T,-1);d=addD(d,1)){const ok=(v.per[d]||0)>=10||rest.has(d);if(ok){if(run>=3)lapses.push({s:start,n:run});run=0;start=''}else{if(!run)start=d;run++}}
+  if(run>=3)lapses.push({s:start,n:run,open:1});
+  let pt=0;lapses.forEach(l=>{pt+=30+Math.max(0,l.n-3)*10});const cap=Math.floor(v.tot*0.1);const cur=run;
+  return{lapses,pt:Math.min(pt,cap),run:cur,warn:cur===2}}
+{const _xa=xpAll;xpAll=function(){const v=_xa.apply(this,arguments);if(!v||v._dc)return v;try{const dc=rwDecay(v);v._dc=dc;if(dc.pt){v.rawTot=v.tot;v.tot=Math.max(xpNeed(Math.max(1,xpLevel(v.tot)-1)),v.tot-dc.pt)}}catch(e){}return v}}
+function rwPending(){const R=rwSet();const v=xpAll();const L=[];const done=new Set(R.log.filter(x=>x.t==='pen').map(x=>x.k));
+  if(cacheAll)for(const [d,o] of cacheAll){if(d<R.since)continue;const a=rwAv(o);Object.keys(a).forEach(id=>{if(a[id]==='slip'){const k='slip|'+d+'|'+id;if(!done.has(k)){const it=R.avoid.find(x=>x.id===id);L.push({k,txt:`${d.slice(5).replace('-','.')} 어김 — ${it?it.name:''}`})}}})}
+  if(v&&v._dc)v._dc.lapses.filter(l=>!l.open).forEach(l=>{const k='lapse|'+l.s;if(!done.has(k))L.push({k,txt:`${l.s.slice(5).replace('-','.')}부터 ${l.n}일 무기록 — 복귀 벌`})});return L}
+function rwOpen(){const R=rwSet();R.avoid=R.avoid||RW_DEF.avoid.slice();const v=xpAll();const T=today();const o=D;const a=rwAv(o);const pend=rwPending();const dc=(v&&v._dc)||{run:0,lapses:[],pt:0};
+  const S=$('#sheet');S.hidden=false;
+  S.innerHTML=`<div class="sheetbox" role="dialog" aria-label="상과 벌"><div class="shead"><b>🎁 상 · 벌 · 하지 않기</b><button class="del" id="rwx">닫기</button></div>
+  ${dc.run===2?'<p style="color:#e5484d;margin:0 0 8px">⚠️ 이틀째 기록이 없습니다. 오늘 기록하지 않으면 내일 감쇠가 시작됩니다.</p>':''}
+  ${dc.pt?`<p class="hint" style="margin:0 0 8px">감쇠 −${dc.pt} XP 적용 중 (3일 이상 끊긴 ${dc.lapses.length}회, 총 XP의 10% 한도 · 레벨은 한 단계까지만 내려감)</p>`:''}
+  <p class="fl">🚫 오늘 하지 않기 (${T.slice(5).replace('-','.')})</p>
+  ${R.avoid.map(x=>`<div class="xprow" style="gap:6px"><span>${esc(x.name)}${x.lim?` <small class="hint">${esc(x.lim)}</small>`:''}</span><span><button class="btn small ${a[x.id]==='ok'?'':'ghost'}" data-av="ok|${x.id}">지킴</button> <button class="btn small ${a[x.id]==='slip'?'':'ghost'}" data-av="slip|${x.id}">어김</button> <button class="del" data-avdel="${x.id}">✕</button></span></div>`).join('')||'<p class="hint">아직 없습니다.</p>'}
+  <button class="btn small ghost" id="avadd" style="margin:6px 0">＋ 하지 않을 일 추가</button>
+  <p class="hint" style="margin:0 0 10px">지킴 +4 XP(하루 최대 12). 어김은 XP를 깎지 않고 아래 ‘벌’ 대기에 올라갑니다.</p>
+  <p class="fl">⏳ 이행할 벌 ${pend.length}</p>${pend.map(p=>`<div class="xprow"><span>${esc(p.txt)}</span><button class="btn small" data-pdone="${esc(p.k)}">이행함</button></div>`).join('')||'<p class="hint">대기 중인 벌이 없습니다.</p>'}
+  <details open style="margin-top:8px"><summary><b>벌 목록</b> <small class="hint">(어김·복귀 때 스스로 고름)</small></summary>${R.pens.map(p=>`<div class="xprow"><span>${p.off?'◻︎':'◼︎'} ${esc(p.name)}${p.amt?` <small class="hint">월 한도 ${p.amt.toLocaleString()}원</small>`:''}</span><button class="del" data-ptg="${p.id}">${p.off?'켜기':'끄기'}</button></div>`).join('')}<button class="btn small ghost" id="pnadd">＋ 벌 추가</button></details>
+  <details open style="margin-top:8px"><summary><b>🎁 상 목록</b> <small class="hint">(물건 말고 경험·관계·쉼)</small></summary>${R.rewards.map(p=>{const dn=R.log.filter(x=>x.t==='rw'&&x.k===p.id).length;return`<div class="xprow"><span>${esc(p.name)}<small class="hint"> · ${esc(p.need||'')}${dn?` · ${dn}회 받음`:''}</small></span><button class="btn small ghost" data-rwdo="${p.id}">받았다</button></div>`}).join('')}<button class="btn small ghost" id="rwadd">＋ 상 추가</button></details>
+  <div class="row" style="margin-top:10px"><button class="btn small ghost" id="rwrest">😌 오늘은 쉬는 날 (감쇠 제외)</button></div></div>`;
+  const re=()=>{saveSet().catch(()=>{});XPC={k:'',v:null};rwOpen()};
+  $('#rwx').onclick=()=>{S.hidden=true;S.innerHTML=''};
+  S.querySelectorAll('[data-av]').forEach(b=>b.onclick=()=>{const[s,id]=b.dataset.av.split('|');D.avoid=D.avoid||{};if(D.avoid[id]===s)delete D.avoid[id];else D.avoid[id]=s;schedule();XPC={k:'',v:null};rwOpen()});
+  S.querySelectorAll('[data-avdel]').forEach(b=>b.onclick=async()=>{if(await uiConfirm('이 항목을 지울까요?')){R.avoid=R.avoid.filter(x=>x.id!==b.dataset.avdel);re()}});
+  $('#avadd').onclick=async()=>{const t=await uiPrompt('하지 않을 일 (예: 야식, 과한 유튜브)','');if(t&&t.trim()){const lim=await uiPrompt('기준이 있다면 (예: 하루 30분 이내). 없으면 비워 두세요','');R.avoid.push({id:'av'+uid(),name:t.trim(),lim:(lim||'').trim()});re()}};
+  S.querySelectorAll('[data-pdone]').forEach(b=>b.onclick=()=>{R.log.push({t:'pen',k:b.dataset.pdone,d:today()});toast('이행 기록했습니다.');re()});
+  S.querySelectorAll('[data-ptg]').forEach(b=>b.onclick=()=>{const p=R.pens.find(x=>x.id===b.dataset.ptg);if(p){p.off=p.off?0:1;re()}});
+  $('#pnadd').onclick=async()=>{const t=await uiPrompt('벌 내용','');if(t&&t.trim()){R.pens.push({id:'pn'+uid(),name:t.trim()});re()}};
+  S.querySelectorAll('[data-rwdo]').forEach(b=>b.onclick=()=>{R.log.push({t:'rw',k:b.dataset.rwdo,d:today()});toast('잘 쉬고 누리세요 🎉');re()});
+  $('#rwadd').onclick=async()=>{const t=await uiPrompt('상 내용 (경험·관계·쉼)','');if(t&&t.trim()){const n=await uiPrompt('받을 조건 (예: 7일 연속)','');R.rewards.push({id:'rw'+uid(),name:t.trim(),need:(n||'').trim()});re()}};
+  $('#rwrest').onclick=()=>{if(!R.rest.includes(today()))R.rest.push(today());toast('오늘은 감쇠에서 제외했습니다.');re()}}
+{const _xo=xpOpen;xpOpen=function(){_xo.apply(this,arguments);try{const S=$('#sheet');if(!S||S.querySelector('#rwopen'))return;const h=S.querySelector('.shead');if(h)h.insertAdjacentHTML('afterend',`<button class="btn small" id="rwopen" style="margin:0 0 8px">🎁 상·벌 · 하지 않기${(()=>{try{const n=rwPending().length;return n?` <em class="pcb">${n}</em>`:''}catch(e){return''}})()}</button>`);const b=$('#rwopen');if(b)b.onclick=rwOpen;
+  const v=xpAll();if(v&&v._dc&&v._dc.run===2&&!S.querySelector('#rwwarn'))h.insertAdjacentHTML('afterend','<p id="rwwarn" style="color:#e5484d;margin:0 0 6px">⚠️ 이틀째 기록이 없습니다. 오늘 기록하세요.</p>')}catch(e){}}}
+
 </script>
 <!--BIBLE{--><!--}BIBLE-->
 <div id="miniov" class="miniov" hidden></div>
