@@ -15161,8 +15161,8 @@ dyEditSel=function(){const n=nEdit&&NOTES.get(nEdit);const R=$('#nbody');if(!n||
   const h=document.createElement('div');h.className='dycs';h.innerHTML=`📁 분류 <select id="dycsel"><option value="">(없음)</option>${S.map(c=>`<option ${n.dc===c?'selected':''}>${esc(c)}</option>`).join('')}${!n.dc&&cur?`<option value="__t" selected>${esc(cur)} (주제)</option>`:''}<option value="__add">＋ 새 분류…</option></select>`;R.prepend(h);
   h.querySelector('select').onchange=async e=>{let v=e.target.value;if(v==='__t')return;if(v==='__add'){const t=((await uiPrompt('새 분류 이름',''))||'').trim();if(!t){e.target.value=n.dc||(cur?'__t':'');return}SET.dcx=SET.dcx||[];if(!dySecs().includes(t)){SET.dcx.push(t);saveSet().catch(()=>{})}v=t;h.remove();n.dc=v;saveNote(n,true);dyEditSel();return}
     if(v)n.dc=v;else delete n.dc;saveNote(n,true)}};
-{const _rn=renderNotes;renderNotes=function(){if(nView==='topic'&&!nTopic&&!nEdit&&!NFD&&nPil==null&&!(typeof nGraphC!=='undefined'&&0))nView='dy';return _rn.apply(this,arguments)}}
-(function(){const m=document.querySelector('#nmode');if(!m)return;const tb=m.querySelector('[data-nm="topic"]'),db=m.querySelector('[data-nm="dy"]');if(db){db.textContent='📚 노트';m.prepend(db);db.onclick=()=>{nView='dy';nTopic=null;nPil=null;NFD=null;DYC='';DYM='';renderNotes()}}if(tb)tb.hidden=true;
+
+(function(){const m=document.querySelector('#nmode');if(!m)return;const tb=m.querySelector('[data-nm="topic"]'),db=m.querySelector('[data-nm="dy"]');if(db){db.textContent='📚 원노트';if(tb)tb.after(db);db.onclick=()=>{nView='dy';nTopic=null;nPil=null;NFD=null;DYC='';DYM='';try{localStorage.setItem('gj-nv','dy')}catch(e){}renderNotes()}}if(tb){tb.hidden=false;tb.textContent='🌳 노트 목록';const o=tb.onclick;tb.addEventListener('click',()=>{try{localStorage.setItem('gj-nv','topic')}catch(e){}})}
  const st=document.createElement('style');st.textContent=`.dyq{display:flex;gap:6px;margin:10px 0 4px}.dyq input{flex:1;min-width:0}.dyyr{flex-wrap:nowrap;overflow-x:auto}.dyyr .chip{flex:0 0 auto}.dyyr small{opacity:.7}.dycs{margin:6px 0;font-size:.85rem}.dycs select{max-width:70%}`;document.head.appendChild(st)})();
 
 /* ===== v346 노트 쪽 넘기기(좌우 밀기) · 새 쪽 양식 고르기 · 다른 화면 좌우 밀기 ===== */
@@ -15259,6 +15259,8 @@ dySwipeSecs=function(){const A=dyNotes();const Y=A.filter(n=>n.date.slice(0,4)==
 .dypc{display:flex!important;align-items:center;gap:10px;padding:6px 10px!important}.dypg{gap:4px!important}.dyday{display:flex;flex-direction:column;align-items:center;width:34px;flex:0 0 auto;line-height:1.1}.dyday b{font-size:1.15rem}.dyday small{font-size:.66rem;color:var(--muted)}
 .dybd{flex:1;min-width:0;display:grid;gap:2px}.dybd>b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.dyk{flex:0 0 auto;max-width:34%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.dyd{font-weight:700;font-size:.82rem;margin-top:8px}`;document.head.appendChild(st)})();
 
+/* v350 노트: 🌳 노트 목록 / 📚 원노트 둘 다 사용 — 마지막에 쓴 방식을 기억 */
+{const _rn=renderNotes;renderNotes=function(){if(!window.__nvInit){window.__nvInit=1;try{if(localStorage.getItem('gj-nv')==='dy'&&nView==='topic'&&!nTopic&&!nEdit&&nPil==null)nView='dy'}catch(e){}}return _rn.apply(this,arguments)}}
 </script>
 <!--BIBLE{--><!--}BIBLE-->
 <div id="miniov" class="miniov" hidden></div>
