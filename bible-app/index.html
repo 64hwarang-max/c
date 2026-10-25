@@ -15193,6 +15193,41 @@ dyEditSel=function(){const n=nEdit&&NOTES.get(nEdit);const R=$('#nbody');if(!n||
 (function(){const m=document.querySelector('#nmode');if(!m)return;const tb=m.querySelector('[data-nm="topic"]'),db=m.querySelector('[data-nm="dy"]');if(db){db.textContent='📚 노트';m.prepend(db);db.onclick=()=>{nView='dy';nTopic=null;nPil=null;NFD=null;DYC='';DYM='';renderNotes()}}if(tb)tb.hidden=true;
  const st=document.createElement('style');st.textContent=`.dyq{display:flex;gap:6px;margin:10px 0 4px}.dyq input{flex:1;min-width:0}.dyyr{flex-wrap:nowrap;overflow-x:auto}.dyyr .chip{flex:0 0 auto}.dyyr small{opacity:.7}.dycs{margin:6px 0;font-size:.85rem}.dycs select{max-width:70%}`;document.head.appendChild(st)})();
 
+/* ===== v346 노트 쪽 넘기기(좌우 밀기) · 새 쪽 양식 고르기 · 다른 화면 좌우 밀기 ===== */
+NTPL.unshift(['📔 일기 (하루 돌아보기)','■ {date}\n\n■ 오늘 있었던 일\n• \n\n■ 마음에 남은 것\n• \n\n■ 감사\n• \n\n■ 내일 한 걸음\n☐ \n']);
+function dyPages(n){const yr=n.date.slice(0,4),sc=dySec(n);return dyNotes().filter(x=>x.date.slice(0,4)===yr&&dySec(x)===sc).sort((a,b)=>a.date<b.date?-1:a.date>b.date?1:(a.created||0)-(b.created||0))}
+async function dyFlip(dir){const n=nEdit&&NOTES.get(nEdit);if(!n||n.person||n.jt)return false;
+  try{if(typeof bdSave==='function'&&BD&&BD.n&&$('#bded'))bdSave(true)}catch(e){}if(nPend)try{clearTimeout(nTimer);await nPend()}catch(e){}
+  const L=dyPages(n);const i=L.findIndex(x=>x.id===n.id);const t=L[i+dir];
+  if(!t){toast(dir>0?`📖 ${n.date.slice(0,4)}권 ${dySec(n)||'분류 없음'}의 마지막 쪽입니다.`:`📖 첫 쪽입니다.`);return true}
+  ntOpenPage(t.id);swAnim($('#nbody'),dir);setTimeout(()=>{const h=$('#ncount');if(h)h.textContent=`${h.textContent}  ·  ${i+dir+1}/${L.length}쪽`},60);return true}
+/* 새 노트 → 양식 고르기 */
+function dyNewPage(){const S=$('#sheet');S.hidden=false;const L=tplList();
+  S.innerHTML=`<div class="sheetbox" role="dialog" aria-label="새 쪽"><div class="shead"><b>＋ 새 쪽 · 양식 고르기</b><button class="del" id="dnx">닫기</button></div><div class="ntsheet"><button class="btn" data-dnp="-1">📄 빈 쪽</button>${L.map((x,i)=>`<button class="btn ghost" data-dnp="${i}">${x.b?'':'⭐ '}${esc(x.n)}</button>`).join('')}</div></div>`;
+  const close=()=>{S.hidden=true;S.innerHTML=''};$('#dnx').onclick=close;S.onclick=e=>{if(e.target===S)close()};
+  S.querySelectorAll('[data-dnp]').forEach(b=>b.onclick=()=>{close();const k=+b.dataset.dnp;const id='note-'+uid();const t=DYC&&DYC!=='__n'&&!dySecs().includes(DYC)?SET.topics.find(x=>x.name===DYC):null;
+    const n={kind:'note',id,date:today(),topic:t?t.id:'',title:'',body:'',photos:[],tags:[],created:Date.now(),updated:Date.now()};if(DYC&&DYC!=='__n'&&dySecs().includes(DYC))n.dc=DYC;NOTES.set(id,n);saveNote(n,true);ntOpenPage(id);
+    if(k>=0)setTimeout(()=>tplApply(n,L[k]),200)})}
+{const _r=dyRender;dyRender=function(){const r=_r.apply(this,arguments);const b=$('#dynew');if(b)b.onclick=dyNewPage;return r}}
+/* 좌우 밀기 */
+let GW=null;
+const GNO='input,textarea,select,.chips,.dymo,.seg,.snp,.mwrap,.mapbox,.photos,.zoom,.sheet,.taskedit,.lockov,.ntsheet,.htable,.mtw,.pmap,.radar,.jumpbar,.cal,#subnav,nav.main,.fsel,.sblk.drag';
+document.addEventListener('touchstart',e=>{GW=null;if(e.touches.length!==1)return;const t=e.target;const p=e.touches[0];if(p.clientX<=26||p.clientX>=innerWidth-12)return;
+  const ed=curSection==='note'&&nEdit;{const c0=!ed&&t.closest&&t.closest('.dypc');if(c0){GW={x:p.clientX,y:p.clientY,t:Date.now(),el:t,ed};return}}
+  if(t.closest&&t.closest(ed?'.mwrap,.mapbox,.photos,.zoom,.sheet,#nrecs,.edtools,.tagrow,select,input[type=range],input[type=time],input[type=date]':GNO))return;GW={x:p.clientX,y:p.clientY,t:Date.now(),el:t,ed}},{passive:true,capture:true});
+document.addEventListener('touchend',async e=>{const g=GW;GW=null;if(!g)return;const p=e.changedTouches[0];const dx=p.clientX-g.x,dy=p.clientY-g.y;
+  if(Date.now()-g.t>650||Math.abs(dx)<(g.ed?95:100)||Math.abs(dx)<Math.abs(dy)*(g.ed?3:2.2))return;
+  if(document.querySelector('.dsel,.sblk.drag')||[...document.querySelectorAll('.sheet,.taskedit,.lockov,#blockedit,#focusov,#routineov')].some(x=>!x.hidden&&x.offsetParent!==null))return;
+  try{const sel=window.getSelection&&window.getSelection();if(sel&&!sel.isCollapsed&&String(sel).length>0)return}catch(x){}
+  const dir=dx<0?1:-1;
+  if(curSection==='note'){
+    if(nEdit){await dyFlip(dir);return}
+    if(nView==='dq'&&DQV==='day'){DQE=null;nDate=addD(nDate,dir);renderNotes();swAnim($('#nbody'),dir);return}
+    if(nView==='dy'){const A=dyNotes();const Y=A.filter(n=>n.date.slice(0,4)===DYY);const all=[...new Set(Y.map(dySec).filter(Boolean))];const S=dySecs();const secs=[...S.filter(s=>all.includes(s)),...all.filter(s=>!S.includes(s)).sort()];const ring=['',...secs];const i=Math.max(0,ring.indexOf(DYC==='__n'?'':DYC));const j=i+dir;if(j<0||j>=ring.length){const yrs=[...new Set(A.map(n=>n.date.slice(0,4)))].sort();const k=yrs.indexOf(DYY)-dir;if(k>=0&&k<yrs.length){DYY=yrs[k];DYC='';DYM='';dyRender();swAnim($('#nbody'),dir);toast(`📕 ${DYY}권`)}return}DYC=ring[j];dyRender();swAnim($('#nbody'),dir);return}
+    return}
+  if(['day','plan','care','score'].includes(curSection))return;
+  const bs=[...document.querySelectorAll('#subnav .snp button[data-sv]')];if(bs.length<2)return;let i=bs.findIndex(b=>b.classList.contains('on'));if(i<0)return;const t=bs[i+dir];if(!t)return;t.click();swAnim(document.querySelector('#v-'+curSection),dir)},{passive:true,capture:true});
+
 </script>
 <script id="bibshell">
 (function(){
