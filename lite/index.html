@@ -15327,6 +15327,44 @@ document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest
     document.querySelectorAll('#nmode button').forEach(b=>{if(b.dataset.nm==='topic')b.classList.toggle('on',nView==='topic'||nView==='dy')});
     if(nView==='dy'&&!nEdit){const R=$('#nbody');if(R&&!R.querySelector(':scope>.ntvbar')){R.insertAdjacentHTML('afterbegin',`<div class="ntvbar nthead" style="display:flex;gap:6px;justify-content:flex-end;margin:0 0 6px">${ntvBtn()}</div>${ntvRow()}`)}}
   }catch(e){console.warn('ntv',e)}return r}}
+
+/* ===== v356: 오늘의 제안(운동·큐티·성경 읽기·일기·독서)을 위 알림창 칸으로, 누르면 크게 ===== */
+function cvSgList(){const L=[];const T=today();if(typeof D==='undefined'||!D||D.date!==T)return L;
+  try{if(SET.wplan){const slot=wpSlotFor(T),cOn=wpCardioOn(T);if(slot||cOn){const done=slot?wpDone(D,slot).length:0,tot=slot?(slot.ex||[]).length:0;const cd=cOn&&wpCardioDone(D);
+    if(!((slot?done>=tot:true)&&(cOn?cd:true))){const nm=slot?(slot.ex||[]):[];L.push({k:'wk',e:'💪',t:'오늘의 운동'+(slot?' · '+slot.name:''),s:(nm.length?nm[0]+(nm.length>1?` 외 ${nm.length-1}개`:'')+' · '+done+'/'+tot+' 함':'')+(cOn?(nm.length?' · ':'')+'🏃 유산소':'')})}}}}catch(e){}
+  try{if(GX_QT()){const q=gxQtDone();if(!q){const g=gxQtSug();L.push({k:'qt',e:'🙏',t:'오늘 큐티',s:g.qt.ref+' · '+g.qt.src});if(g.qt.src!=='성경 읽기')L.push({k:'rd',e:'📖',t:'성경 읽기',s:g.rd.ref})}else if(!gxLog().shared)L.push({k:'qts',e:'📤',t:'큐티 한 줄 나누기',s:'받은 말씀을 한 줄로 나눠 보십시오'})}}catch(e){}
+  try{if(new Date().getHours()>=19){const has=[...NOTES.values()].some(n=>n.date===T&&(n.topic==='t-diarium'||/^note-dia-/.test(n.id))&&(((n.body||'')+(n.title||'')).trim()));if(!has)L.push({k:'dia',e:'📓',t:'오늘 일기',s:'아직 쓰지 않았습니다'})}}catch(e){}
+  try{const b=(BOOKS.items||[]).filter(x=>x.st==='reading');if(b.length)L.push({k:'bk',e:'📚',t:'독서',s:b[0].title||b[0].t||'읽는 중인 책'})}catch(e){}
+  return L}
+{const _m=cvMerge;cvMerge=function(r){const out=_m.apply(this,arguments);try{const L=cvSgList();if(!L.length)return out;const t=document.createElement('template');t.innerHTML=out;const F=t.content;const c=F.querySelector('.topcard .afc'),dots=F.querySelector('.topcard .afdots');if(!c||!dots)return out;
+  const h=L.map(x=>`<div class="afs" data-hs="sg-${x.k}"><button type="button" class="simnote cvmem" data-cvsg="${x.k}">${x.e} <b>${esc(x.t)}</b><span>${esc(x.s)}</span></button></div>`).join('');
+  const mem=c.querySelector('[data-hs="mem"]');if(mem)mem.insertAdjacentHTML('afterend',h);else c.insertAdjacentHTML('beforeend',h);
+  const n=c.children.length;dots.innerHTML=Array.from({length:n},(_,i)=>`<i class="${i===TOPI?'on':''}"></i>`).join('');return t.innerHTML}catch(e){console.warn('cvsg',e);return out}}}
+{const _g=gxBanner;gxBanner=function(){try{if(simOn())return''}catch(e){}return _g.apply(this,arguments)}}
+{const _w=wpDayMount;wpDayMount=function(){try{if(simOn()){const B=$('#dayBody');const o=B&&B.querySelector('#wptoday');if(o)o.remove();return}}catch(e){}return _w.apply(this,arguments)}}
+function cvSgClose(){const S=$('#sheet');S.hidden=true;S.innerHTML=''}
+function cvSgOpen(k){const S=$('#sheet');const T=today();let body='',ttl='';
+  const sh=(t,b)=>{S.hidden=false;S.innerHTML=`<div class="sheetbox" role="dialog" aria-label="${esc(t)}"><div class="shead"><b>${esc(t)}</b><button class="del" id="cvsgx">닫기</button></div>${b}</div>`;$('#cvsgx').onclick=cvSgClose;return S.querySelector('.sheetbox')};
+  if(k==='wk'){const B=sh('💪 오늘의 운동',wpTodayHTML().replace('style="--k:#13b5b1;margin-bottom:12px"','style="--k:#13b5b1;margin:0;border:0;box-shadow:none"').replace(/<h3>.*?<\/h3>/,''));
+    const card=B.querySelector('#wptoday');if(!card)return;wpBindToday(card);
+    card.querySelectorAll('[data-wped],[data-wped2],[data-wpced],[data-wpset]').forEach(b=>b.addEventListener('click',cvSgClose,true));
+    card.querySelectorAll('[data-wpgo],[data-wpcgo]').forEach(b=>b.addEventListener('click',()=>setTimeout(()=>{if(curSection==='day'&&!S.hidden)cvSgOpen('wk');else if(curSection!=='day')cvSgClose()},350)));return}
+  if(k==='qt'){const g=gxQtSug();const l=gxLog();
+    const B=sh('🙏 오늘 큐티',`<div class="card nocol" style="--k:#2e7d6b;margin:0;border:0;box-shadow:none"><p class="hint" style="margin:0">${esc(g.qt.src)}</p><p style="font-size:1.45rem;font-weight:800;margin:4px 0 12px;line-height:1.3">${esc(g.qt.ref)}</p>
+      <div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn" id="cvqgo">▶ 본문 열기</button><button class="btn ghost" id="cvqok">✓ 큐티 했어요</button><button class="btn ghost" id="cvqpk">${l.qtPick?'다시 정하기':'본문 바꾸기'}</button></div>
+      <div id="cvqpick" hidden style="margin-top:10px">${gxQtPickHTML()}</div>
+      <p class="hint" style="margin:14px 0 4px">📖 성경 읽기 · ${esc(g.rd.ref)}</p><button class="btn small ghost" id="cvqrd">읽으러 가기</button></div>`);
+    $('#cvqgo').onclick=()=>{cvSgClose();gxQtGo(g.qt)};$('#cvqrd').onclick=()=>{cvSgClose();bbOpen(g.rd.b,g.rd.c)};
+    $('#cvqok').onclick=()=>{const hid=gxQtHabit();gxDone({k:'qt-manual',e:'🙏',t:'큐티',m:0,a:'spirit',qt:1,tick:hid?{hab:hid}:null});cvSgClose();try{renderDay()}catch(e){}};
+    $('#cvqpk').onclick=()=>{const q=$('#cvqpick');q.hidden=!q.hidden};
+    const set=q=>{const l2=gxLog();if(q)l2.qtPick=q;else delete l2.qtPick;gxLogSave(l2);cvSgClose();try{renderDay()}catch(e){}toast(q?'🕊 오늘 큐티 본문: '+q.ref:'🕊 어성경 큐티 순서로 되돌렸습니다.')};
+    B.querySelectorAll('[data-gxqpc]').forEach(b=>b.onclick=()=>{const c=GX.qpk&&GX.qpk[+b.dataset.gxqpc];set(c?{src:c.src,ref:gxChLab(c.b,c.c),b:c.b,c:c.c}:null)});
+    B.querySelectorAll('[data-gxqpg]').forEach(b=>b.onclick=()=>{const t=B.querySelector('#gxqpt'),r=t&&bbParse(t.value);if(!r){toast('본문을 알아보지 못했습니다. 예: 요 3:16, 시편 23');return}set({src:'직접 정함',ref:r.v?`${BBN[r.b]} ${r.c}:${r.v}`:gxChLab(r.b,r.c),b:r.b,c:r.c,v:r.v})});return}
+  if(k==='rd'){cvSgClose();const r=gxQtSug().rd;bbOpen(r.b,r.c);return}
+  if(k==='qts'){cvSgClose();gxGoDay('run');return}
+  if(k==='dia'){cvSgClose();diaryToday();return}
+  if(k==='bk'){cvSgClose();bkQuick();return}}
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-cvsg]');if(!b)return;e.preventDefault();e.stopPropagation();cvSgOpen(b.dataset.cvsg)},true);
 </script>
 
 <div id="miniov" class="miniov" hidden></div>
