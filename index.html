@@ -15127,6 +15127,44 @@ function rwOpen(){const R=rwSet();const v=xpAll();const T=today();const a=rwAv(D
 .rwi.off{opacity:.5}.rwi.can b{color:#2f9e44}.rwb{font-style:normal;background:#2f9e44;color:#fff;border-radius:9px;padding:0 6px;font-size:.68rem;white-space:nowrap}.rwe{border:0;background:none;padding:2px 4px;font-size:.9rem}
 .rwi .btn.red{background:#e5484d;color:#fff;border-color:#e5484d}.rwwarn{color:#e5484d;margin:0 0 8px}.rwf input[type=text]{width:100%}.rwf .fl{margin:10px 0 4px;display:block}.rwr{display:flex;gap:6px}.rwr>*{flex:1;min-width:0}.rwi button[disabled]{opacity:.45}`;document.head.appendChild(st)})();
 
+/* v345 노트 목록 → 📚 권·분류로 대체: 권(연도) › 섹션(분류·기존 주제) › 쪽 · 검색 · 새 노트 */
+function dySecs(){return[...DCATS,...((SET.dcx)||[])]}
+function dySec(n){if(n.dc)return n.dc;const t=n.topic&&SET.topics.find(x=>x.id===n.topic);return t?t.name:''}
+let DYQ='';const dyIc=c=>DCEMO[c]||(/^\p{Extended_Pictographic}/u.test(c)?'':'📁');
+dyRender=function(){const R=$('#nbody');document.querySelectorAll('#nmode button').forEach(b=>b.classList.toggle('on',b.dataset.nm==='dy'));$('#nmode').hidden=false;
+  const A=dyNotes();const yrs=[...new Set(A.map(n=>n.date.slice(0,4)))].sort().reverse();const cy=String(new Date().getFullYear());if(!yrs.includes(cy))yrs.unshift(cy);
+  if(!DYY||!yrs.includes(DYY))DYY=cy;const q=nLow(DYQ.trim());
+  const Y=q?A:A.filter(n=>n.date.slice(0,4)===DYY);const secOf=new Map(Y.map(n=>[n.id,dySec(n)]));
+  const all=[...new Set(Y.map(n=>secOf.get(n.id)).filter(Boolean))];const S=dySecs();const secs=[...S.filter(s=>all.includes(s)),...all.filter(s=>!S.includes(s)).sort()];const nc=Y.filter(n=>!secOf.get(n.id)).length;
+  if(DYC&&DYC!=='__n'&&!secs.includes(DYC)){if(dySecs().includes(DYC))secs.push(DYC);else DYC=''}
+  let L=Y.filter(n=>!DYC||(DYC==='__n'?!secOf.get(n.id):secOf.get(n.id)===DYC));
+  if(q)L=L.filter(n=>nLow(nTitle(n)+' '+dyPlain(n)+' '+(n.tags||[]).join(' ')).includes(q));
+  const ms=[...Array(12)].map((_,i)=>{const m=DYY+'-'+String(i+1).padStart(2,'0');return[m,L.filter(n=>n.date.slice(0,7)===m).length]});
+  if(DYM&&!q)L=L.filter(n=>n.date.slice(0,7)===DYM);L.sort((a,b)=>a.date<b.date?1:a.date>b.date?-1:(b.created||0)-(a.created||0));
+  const lim=DYM||q?300:80;const sh=L.slice(0,lim);let last='';
+  R.innerHTML=`<div class="dyv"><div class="dyq"><input type="search" id="dyq" value="${esc(DYQ)}" placeholder="🔍 모든 노트에서 찾기"><button class="btn small" id="dynew">＋ 새 노트</button></div>
+   ${q?`<p class="hint" style="margin:6px 0">‘${esc(DYQ.trim())}’ 전체 연도에서 ${L.length}편</p>`:`<div class="chips dyyr" style="margin:8px 0">${yrs.map(y=>`<button class="chip fbtn ${y===DYY?'on':''}" data-dyy="${y}">📕 ${y} <small>${A.filter(n=>n.date.slice(0,4)===y).length}</small></button>`).join('')}</div>`}
+   <div class="chips" style="margin:6px 0"><button class="chip fbtn ${!DYC?'on':''}" data-dyc="">전체 ${Y.length}</button>${secs.map(c=>`<button class="chip fbtn ${DYC===c?'on':''}" data-dyc="${esc(c)}">${dyIc(c)} ${esc(c)} ${Y.filter(n=>secOf.get(n.id)===c).length}</button>`).join('')}${nc?`<button class="chip fbtn ${DYC==='__n'?'on':''}" data-dyc="__n">❔ 분류 안 함 ${nc}</button>`:''}</div>
+   ${q?'':`<div class="dymo">${ms.map(([m,c])=>`<button class="${DYM===m?'on':''} ${c?'':'z'}" data-dym="${m}"><b>${+m.slice(5)}월</b><i>${c||''}</i></button>`).join('')}</div>`}
+   <div class="row" style="margin:8px 0"><button class="btn small ghost" id="dytd">📓 오늘 하루노트</button><button class="btn small ghost" id="dyimp">📥 일기 분류 가져오기</button></div>
+   ${L.length>lim?`<p class="hint">${L.length}편 중 최근 ${lim}편만 보입니다. 월 띠나 검색으로 좁혀 보세요.</p>`:q?'':`<p class="hint">${L.length}편${DYM?` · ${+DYM.slice(5)}월`:''}</p>`}
+   <div class="dypg">${sh.map(n=>{const dh=n.date!==last?`<div class="dyd">${n.date.replace(/-/g,'.')} (${WD[parseD(n.date).getDay()]})</div>`:'';last=n.date;const b=dyPlain(n);const sc=secOf.get(n.id)||dySec(n);return dh+`<button class="dypc" data-dyo="${esc(n.id)}"><b>${esc(nTitle(n))}</b>${sc?`<small>${dyIc(sc)} ${esc(sc)}</small>`:''}<span>${esc(b.slice(0,70))}</span></button>`}).join('')||'<p class="empty">이 조건의 노트가 없습니다.</p>'}</div></div>`;
+  const qi=$('#dyq');qi.oninput=()=>{DYQ=qi.value;clearTimeout(dyRender._t);dyRender._t=setTimeout(()=>{dyRender();const x=$('#dyq');if(x){x.focus();try{x.setSelectionRange(x.value.length,x.value.length)}catch(e){}}},250)};
+  R.querySelectorAll('[data-dyy]').forEach(b=>b.onclick=()=>{DYY=b.dataset.dyy;DYC='';DYM='';dyRender()});
+  R.querySelectorAll('[data-dyc]').forEach(b=>b.onclick=()=>{DYC=b.dataset.dyc;dyRender()});
+  R.querySelectorAll('[data-dym]').forEach(b=>b.onclick=()=>{DYM=DYM===b.dataset.dym?'':b.dataset.dym;dyRender()});
+  R.querySelectorAll('[data-dyo]').forEach(b=>b.onclick=()=>ntOpenPage(b.dataset.dyo));
+  $('#dytd').onclick=()=>{nView='dq';DQV='day';nDate=today();nTopic=null;renderNotes()};$('#dyimp').onclick=dyImport;
+  $('#dynew').onclick=()=>{const id='note-'+uid();const t=DYC&&DYC!=='__n'&&!dySecs().includes(DYC)?SET.topics.find(x=>x.name===DYC):null;
+    const n={kind:'note',id,date:today(),topic:t?t.id:'',title:'',body:'',photos:[],tags:[],created:Date.now(),updated:Date.now()};if(DYC&&DYC!=='__n'&&dySecs().includes(DYC))n.dc=DYC;NOTES.set(id,n);saveNote(n,true);ntOpenPage(id)}};
+dyEditSel=function(){const n=nEdit&&NOTES.get(nEdit);const R=$('#nbody');if(!n||n.person||!R||R.querySelector('#dycsel'))return;const S=dySecs();const cur=dySec(n);
+  const h=document.createElement('div');h.className='dycs';h.innerHTML=`📁 분류 <select id="dycsel"><option value="">(없음)</option>${S.map(c=>`<option ${n.dc===c?'selected':''}>${esc(c)}</option>`).join('')}${!n.dc&&cur?`<option value="__t" selected>${esc(cur)} (주제)</option>`:''}<option value="__add">＋ 새 분류…</option></select>`;R.prepend(h);
+  h.querySelector('select').onchange=async e=>{let v=e.target.value;if(v==='__t')return;if(v==='__add'){const t=((await uiPrompt('새 분류 이름',''))||'').trim();if(!t){e.target.value=n.dc||(cur?'__t':'');return}SET.dcx=SET.dcx||[];if(!dySecs().includes(t)){SET.dcx.push(t);saveSet().catch(()=>{})}v=t;h.remove();n.dc=v;saveNote(n,true);dyEditSel();return}
+    if(v)n.dc=v;else delete n.dc;saveNote(n,true)}};
+{const _rn=renderNotes;renderNotes=function(){if(nView==='topic'&&!nTopic&&!nEdit&&!NFD&&nPil==null&&!(typeof nGraphC!=='undefined'&&0))nView='dy';return _rn.apply(this,arguments)}}
+(function(){const m=document.querySelector('#nmode');if(!m)return;const tb=m.querySelector('[data-nm="topic"]'),db=m.querySelector('[data-nm="dy"]');if(db){db.textContent='📚 노트';m.prepend(db);db.onclick=()=>{nView='dy';nTopic=null;nPil=null;NFD=null;DYC='';DYM='';renderNotes()}}if(tb)tb.hidden=true;
+ const st=document.createElement('style');st.textContent=`.dyq{display:flex;gap:6px;margin:10px 0 4px}.dyq input{flex:1;min-width:0}.dyyr{flex-wrap:nowrap;overflow-x:auto}.dyyr .chip{flex:0 0 auto}.dyyr small{opacity:.7}.dycs{margin:6px 0;font-size:.85rem}.dycs select{max-width:70%}`;document.head.appendChild(st)})();
+
 </script>
 <!--BIBLE{--><!--}BIBLE-->
 <div id="miniov" class="miniov" hidden></div>
