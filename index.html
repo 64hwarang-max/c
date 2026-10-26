@@ -15485,6 +15485,26 @@ async function pqMount(){if(pOpen)return;const R=$('#plist');if(!R)return;const 
   if(inp&&!F.querySelector('#fin7')){const m=new Map(cacheAll||[]);if(D)m.set(D.date,D);const T=window.FTD||today();const rows=[];for(let i=1;i<=7;i++){const d=addD(T,-i),o=m.get(d);(o&&o.fin||[]).forEach(f=>{if(+f.amt)rows.push({d,f})})}
     if(rows.length){const sp=rows.filter(x=>x.f.type==='지출').reduce((s,x)=>s+(+x.f.amt||0),0);const box=document.createElement('details');box.id='fin7';box.className='card nocol qtd';box.style.setProperty('--k','var(--c-fin)');
       box.innerHTML=`<summary><b>💸 지난 7일 내역</b> <span class="hint">${rows.length}건 · 지출 ${won(sp)}</span></summary>${rows.map(x=>`<p class="qh">${md(x.d)} · ${esc(x.f.type)} · <b>${esc(x.f.item||x.f.cat||'')}</b> · ${won(+x.f.amt||0)}</p>`).join('')}`;(rc||inp).after(box)}}}catch(e){console.warn('fin7',e)}return r}}
+
+/* ===== v366: 재정 메뉴 묶기 (오늘 · 내역↔대비 · 편성↔트리↔반복 · 재산) · 유산소 고르면 지난 기록 자동 입력 ===== */
+const FVG=[['today','📝 오늘',[['today','📝 오늘']]],['ledger','💸 내역·대비',[['ledger','💸 내역'],['budget','📊 대비']]],['edit','✏️ 편성',[['edit','✏️ 표'],['tree','🌳 트리'],['rec','🔁 반복']]],['assets','🏦 재산',[['assets','🏦 재산']]]];
+const FVL=(()=>{try{return JSON.parse(localStorage.getItem('gj-fvl')||'{}')}catch(e){return{}}})();
+function fvGroup(v){return(FVG.find(g=>g[2].some(x=>x[0]===v))||FVG[0])[0]}
+function fvSet(v){fView=v;bEdit=v==='edit';FVL[fvGroup(v)]=v;try{localStorage.setItem('gj-fvl',JSON.stringify(FVL))}catch(e){}renderBudget()}
+(function(){const st=document.createElement('style');st.textContent=`.fvsub{display:flex;gap:6px;margin:-4px 0 10px;flex-wrap:wrap}.fvsub button{border:1px solid var(--line);background:var(--paper);color:var(--ink);border-radius:999px;padding:6px 12px;font:inherit;font-size:.86rem;cursor:pointer}.fvsub button.on{background:var(--c-fin,#2e9e6b);border-color:transparent;color:#fff;font-weight:700}`;document.head.appendChild(st)})();
+function fvPaint(){const R=$('#bbody');const seg=R&&R.querySelector('#fview');if(!seg)return;const g=fvGroup(fView);
+  seg.innerHTML=FVG.map(([k,l])=>`<button data-fvg="${k}" class="${g===k?'on':''}">${l}</button>`).join('');
+  seg.querySelectorAll('[data-fvg]').forEach(b=>b.onclick=()=>{const G=FVG.find(x=>x[0]===b.dataset.fvg);const last=FVL[G[0]];fvSet(G[2].some(x=>x[0]===last)?last:G[2][0][0])});
+  R.querySelectorAll(':scope>.fvsub').forEach(x=>x.remove());const G=FVG.find(x=>x[0]===g);
+  if(G&&G[2].length>1){seg.insertAdjacentHTML('afterend',`<div class="fvsub">${G[2].map(([k,l])=>`<button data-fvs="${k}" class="${fView===k?'on':''}">${l}</button>`).join('')}</div>`);R.querySelectorAll('[data-fvs]').forEach(b=>b.onclick=()=>fvSet(b.dataset.fvs))}}
+{const _rb=renderBudget;renderBudget=async function(){const p=_rb.apply(this,arguments);try{fvPaint()}catch(e){}const r=await p;try{fvPaint()}catch(e){console.warn('fv',e)}return r}}
+/* 유산소: 종류를 누르면 그 종류의 지난 기록(거리·시간)을 채움 */
+function wkCardioLast(name){let best=null;try{const m=new Map(cacheAll||[]);if(D)m.set(D.date,D);[...m.values()].forEach(o=>{if(!o||o.date>(D?D.date:today()))return;const add=(km,min)=>{if(!(+km>0)&&!(+min>0))return;if(!best||o.date>=best.d)best={d:o.date,km:+km||0,min:+min||0}};
+  (o.wk||[]).forEach(x=>{if(x.t==='cardio'&&(x.name||'')===name)add(x.km,x.min)});(o.ex||[]).forEach(e=>{if((e.type||'')===name||(name==='러닝'&&RUNRE.test(e.type||'')))add(e.km,e.min)})})}catch(e){}return best}
+{const _b=wkBind;wkBind=function(R,re){_b.apply(this,arguments);try{R.querySelectorAll('[data-wkc]').forEach(b=>b.onclick=()=>{const F=WKF;const n=b.dataset.wkc;F.cname=n;const L=wkCardioLast(n);
+    if(L){F.km=L.km?String(L.km):'';F.min=L.min?String(L.min):'';toast(`🏃 지난번 ${md(L.d)} ${n} ${L.km?L.km+'km ':''}${L.min?L.min+'분':''}을 채웠습니다. 고쳐서 넣으십시오.`)}
+    else{let C=null;try{const c=wpCardioSug(D.date);if(c&&c.name===n)C=c}catch(e){}F.km=C&&C.km?String(C.km):'';F.min=C&&C.min?String(C.min):'';if(!C)toast(`🏃 ${n} — 거리나 시간을 적으십시오.`)}
+    re();setTimeout(()=>{const k=document.querySelector('#wkkm');if(k&&!k.value)k.focus()},400)})}catch(e){console.warn('wkc',e)}}}
 </script>
 <!--BIBLE{--><!--}BIBLE-->
 <div id="miniov" class="miniov" hidden></div>
