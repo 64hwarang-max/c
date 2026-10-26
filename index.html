@@ -9886,7 +9886,7 @@ function cvVerse(){const A=memAll(),S=memS(),t=today();const dn=Math.floor(new D
   return it}
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-cvmem]');if(!b)return;bbTab='mem';memV='home';openSection('bible')});
 /* 갓피플식 상단: 슬라이드(맨 위) → 날짜 줄(아이콘 포함) */
-const CVI=[['start','🚀','시작'],['run','📅','스케줄'],['gap','⏱️','짜투리'],['pm','📊','평가']];
+const CVI=[['start','🚀','시작'],['fr','🎯','몰입·루틴'],['gap','⏱️','짜투리'],['pm','📊','평가']];
 let CVM0=0;
 function rcSlim(){return'';const R=(SET.routines||[]).slice(0,4);if(!R.length||typeof rtqChip!=='function')return'';try{rtqCss()}catch(e){}return`<div class="rtqrow">${R.map(rtqChip).join('')}</div>`}
 function cvHead(){const db=document.querySelector('#v-day .datebar');if(!db)return;const V=$('#v-day');V.classList.toggle('cvg',simOn());
@@ -15779,10 +15779,24 @@ function rpHintSync(){try{const c=RPHINT[curSection];document.querySelectorAll('
   const ref=h.querySelector(':scope>.mdbox')||h.querySelector(':scope>.fvsub');if(ref)ref.after(p);else h.prepend(p)}catch(e){console.warn('rphint',e)}}
 DECO.add('반복 안내',{wait:200,run:rpHintSync});
 
-/* ===== v373: 도구줄에서 뺀 🎯 몰입·루틴 → 스케줄 화면 맨 위 한 줄로 ===== */
-function rcRowSync(){try{const R=$('#dayBody');if(!R||curSection!=='day'||typeof SCTX==='undefined'||SCTX!=='run'||(typeof ZMD!=='undefined'&&ZMD>0))return;const sc=R.querySelector(':scope>.sched');if(!sc||sc.querySelector(':scope>.rcrow'))return;
-  const on=(typeof FC!=='undefined'&&FC&&FC.ph!=='rate')||(typeof RT!=='undefined'&&RT);const d=document.createElement('div');d.className='rcrow';d.style.cssText='margin:0 0 8px';d.innerHTML=`<button type="button" class="btn small" id="rcgo">🎯 ${on?'몰입·루틴 진행 중 — 열기':'몰입·루틴 시작'}</button>`;sc.prepend(d);d.querySelector('#rcgo').onclick=()=>frOpen()}catch(e){console.warn('rcrow',e)}}
-DECO.add('몰입 한 줄',{wait:150,run:rcRowSync});
+
+/* ===== v374: 앱을 닫았다 켜도(3시간 안) 보던 화면 그대로 — 성경 읽던 장·탭, 스크롤 위치까지 ===== */
+let SCRREADY=false;
+function scrKeep(){try{if(!SCRREADY||typeof curSection==='undefined')return;const o={t:Date.now(),cur,sec:curSection,mode,sy:Math.round(window.scrollY||0)};
+  if(curSection==='bible')o.bb={tab:bbTab,view:bbView,b:bbB,c:bbC,t:bbT,v:[...bbSel][0]||0};
+  try{if(curSection==='budget')o.fv=fView}catch(e){}try{if(curSection==='people'&&pOpen)o.po=pOpen}catch(e){}
+  localStorage.setItem('gj-scr',JSON.stringify(o))}catch(e){}}
+async function scrRestore(){try{await scrRestore0()}catch(e){console.warn('scrRestore',e)}SCRREADY=true}
+async function scrRestore0(){const x=JSON.parse(localStorage.getItem('gj-scr')||'null');if(!x||Date.now()-x.t>3*3600000)return;
+  if(IS_NATIVE){try{const A=NP('App');const L=A&&A.getLaunchUrl?await A.getLaunchUrl():null;if(L&&L.url)return}catch(e){}}
+  const sy=()=>{if(x.sy>0)[500,1200,2200].forEach(t=>setTimeout(()=>window.scrollTo(0,x.sy),t))};
+  if(x.cur&&x.cur!==cur)await openDay(x.cur);
+  if(x.sec==='bible'&&x.bb){try{bbTab=x.bb.tab||'read';if(x.bb.view==='read'&&x.bb.b!=null){bbTab='read';bbOpen(x.bb.b,x.bb.c,x.bb.v||undefined);setTimeout(sy,900);return}
+    bbView=x.bb.view||'home';if(x.bb.b!=null){bbB=x.bb.b;bbC=x.bb.c}openSection('bible');await renderBible();sy();return}catch(e){console.warn('scr bible',e)}}
+  if(x.mode&&x.sec==='day'){mode=x.mode;renderDay()}
+  if(x.sec&&x.sec!=='day'){try{if(x.sec==='budget'&&x.fv==='ledger'){fView='ledger';window.LGKEEP=true}}catch(e){}try{if(x.po)pOpen=x.po}catch(e){}go(x.sec,!!x.po);try{if(x.sec==='budget'&&x.fv&&x.fv!=='today')[500,1100].forEach(t=>setTimeout(()=>{if(curSection==='budget'&&fView!==x.fv)fvSet(x.fv)},t))}catch(e){}}
+  sy()}
+setInterval(()=>{if(document.visibilityState==='visible')scrKeep()},4000);
 </script>
 <!--BIBLE{--><!--}BIBLE-->
 <div id="miniov" class="miniov" hidden></div>
