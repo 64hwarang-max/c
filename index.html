@@ -1966,7 +1966,7 @@ function tileGrids(sec){if(SET.tileGrid===false||!sec||sec.id==='v-day'||sec.id=
 let colObs=null;function colWatch(){const W=document.querySelector('.wrap');if(!W||colObs)return;let t=null;const run=()=>{colObs.disconnect();try{document.querySelectorAll('.wrap>section:not([hidden])').forEach(sec=>{collapsify(sec);try{tileGrids(sec)}catch(e){}})}catch(e){}try{segOrdAll()}catch(e){}colObs.observe(W,{childList:true,subtree:true})};
   colObs=new MutationObserver(()=>{clearTimeout(t);t=setTimeout(run,20)});colObs.observe(W,{childList:true,subtree:true});run()}
 function colReset(){Object.keys(PCOL).forEach(k=>delete PCOL[k])}
-function openColSet(){const S=$('#sheet');S.hidden=false;const off=new Set(SET.colOff||[]);const keys=Object.keys(SET.colSeen||{}).sort();const SN={day:'오늘',plan:'계획',task:'할 일',routine:'루틴',goal:'목표',review:'기록 분석',report:'돌아보기',work:'업무',note:'노트',lines:'한 줄',habit:'습관',cycle:'주기 할 일',budget:'재정',people:'관계관리',care:'몸관리',stuff:'제자리',export:'백업'};
+function openColSet(){const S=$('#sheet');S.hidden=false;const off=new Set(SET.colOff||[]);const keys=Object.keys(SET.colSeen||{}).sort();const SN={day:'오늘',plan:'계획',task:'할 일',routine:'루틴',goal:'목표',review:'기록 분석',report:'돌아보기',work:'업무',note:'노트',lines:'한 줄',habit:'습관',cycle:'주기 할 일',budget:'재정',people:'관계관리',care:'건강',stuff:'제자리',export:'백업'};
   const lab=k=>{const[a,t]=k.split('|');const[sec,md]=a.split(':');return{g:(SN[sec]||sec)+(md?' · '+({start:'계획',sched:'계획',run:'실행',pm:'닫는 시간'}[md]||md):''),t}};const G={};keys.forEach(k=>{const l=lab(k);(G[l.g]=G[l.g]||[]).push([k,l.t])});
   S.innerHTML=`<div class="sheetbox" role="dialog" aria-label="블록 접기"><div class="shead"><b>🗂️ 블록 접기·펼치기</b><button class="del" id="csx">닫기</button></div>
     <p class="hint" style="margin:0 0 8px">블록 제목을 누르면 접히고 펼쳐집니다. 제목 오른쪽 ⠿를 끌면 블록 순서가 바뀝니다. 하루 열매(점수 다각형)는 항상 펼쳐 둡니다. <button class="del" id="csord">↕️ 블록 순서 처음대로</button></p>
@@ -2391,7 +2391,7 @@ function pilFlow(k){const m=cacheAll||new Map();const T=today();const g=d=>d===D
   const mx=Math.max(1,...B.map(b=>b.min));const tot=B.reduce((a,b)=>a+b.min,0);const scs=B.filter(b=>b.n);const av=scs.length?scs.reduce((a,b)=>a+b.sc*b.n,0)/scs.reduce((a,b)=>a+b.n,0):0;
   return`<div class="seg pilper" style="--k:var(--k);margin:4px 0 8px">${[['w','이번 주'],['m','이번 달'],['y','올해']].map(([p,l])=>`<button data-pilper="${p}" class="${pilPer===p?'on':''}">${l}</button>`).join('')}</div>
     <p class="hint" style="margin:0 0 6px">쓴 시간 <b>${hm(tot)||'0분'}</b> · 🍎 평균 <b>${av?av.toFixed(1):'—'}</b></p><div class="pfl">${B.map(b=>`<div><i style="height:${Math.round(b.min/mx*100)}%"></i><small>${b.l}</small></div>`).join('')}</div>`}
-const PTOOLS={spirit:[['bible','📖 성경']],rel:[['people','👥 사람·관계']],fin:[['budget','💰 가계부·예산']],body:[['care','💪 몸관리']],work:[['work','🧩 프로젝트'],['task','📋 할 일']],habit:[['habit','✅ 습관'],['routine','⏰ 루틴'],['cycle','🔁 주기 할 일']],routine:[['routine','⏰ 루틴']],mind:[['lines','✍️ 한 줄']]};
+const PTOOLS={spirit:[['bible','📖 성경']],rel:[['people','👥 사람·관계']],fin:[['budget','💰 가계부·예산']],body:[['care','💪 건강']],work:[['work','🧩 프로젝트'],['task','📋 할 일']],habit:[['habit','✅ 습관'],['routine','⏰ 루틴'],['cycle','🔁 주기 할 일']],routine:[['routine','⏰ 루틴']],mind:[['lines','✍️ 한 줄']]};
 const ptOK=x=>(x==='lines'||!!document.getElementById('v-'+x))&&!isHid(x);
 function ptStat(x){try{const T=today();
   if(x==='habit'){const H=SET.habits||[];return H.length?`오늘 ${H.filter(h=>(D.habits||{})[h.id]).length}/${H.length}`:''}
@@ -2402,7 +2402,7 @@ function ptStat(x){try{const T=today();
   if(x==='work'){const n=(PROJ.list||[]).filter(p=>!p.done).length;return n?`진행 ${n}`:''}
   return''}catch(e){return''}}
 /* 기둥 방 안에 대표 도구 화면을 그대로 펼침 */
-const EMB={budget:'bbody',people:'plist',care:'careBody'};const EMBT={budget:'💰 가계부',people:'👥 사람·관계',care:'💪 몸관리'};
+const EMB={budget:'bbody',people:'plist',care:'careBody'};const EMBT={budget:'💰 가계부',people:'👥 사람·관계',care:'💪 건강'};
 const EMBR={budget:()=>{bEdit=false;if(!fView||fView==='edit')fView='today';renderBudget()},people:()=>{renderPeople()},care:()=>{renderCare()}};
 function embBack(){Object.entries(EMB).forEach(([k,id])=>{const el=document.getElementById(id);const sec=document.getElementById('v-'+k);if(el&&sec&&el.parentElement!==sec)sec.appendChild(el)})}
 function pilEmbKey(k){const t=(PTOOLS[k]||[]).map(x=>x[0]).find(x=>EMB[x]&&ptOK(x));return t||''}
@@ -7871,7 +7871,7 @@ async function openGoogleMgr(){const S=$('#sheet');S.hidden=false;const G=gcS(),
 /* ---------- navigation (6 groups) ---------- */
 const GROUPS={day:['day'],plan:['pgoal','goal','short','plan','task','work','routine','habit','gap'],pillar:[/*BIBLE{*/'bible',/*}BIBLE*/'people','budget','care','cycle','export'],note:['note'],goal:['vision','mine','pmd','rv2','pillar','wins','years','report'],set:['export','rfx','stuff']};
 const SUB2={td:['work','task'],rp:['routine','habit'],rv:['report'],rt:['routine']},SUB2L={td:'🧩 프로젝트·📋 할 일',rp:'🔁 루틴·습관',rv:'🪞 돌아보기',rt:'🔁 반복'},last2={td:'task',rp:'routine',rv:'report',rt:'routine'};
-const FEAT=[['bible','📖 성경·기도','개역개정 읽기·어성경·기도노트·암송·찬송'],['people','🤝 관계관리','사람별 만남·통화 기록'],['budget','💰 재정','수입·지출·예산'],['care','🩺 몸관리','몸 측정·수면·운동'],['work','🧩 프로젝트','큰 일을 단계로 쪼개 하나씩 끝내기'],['habit','✅ 습관','습관표·습관루틴'],['lines','📜 한 줄','오늘의 한 줄·기분 모아보기'],['routine','⏰ 루틴','아침·저녁 루틴 순서대로 하기'],['cycle','🔁 주기 할 일','이발·세제처럼 주기가 있는 일'],['stuff','📦 제자리','물건 위치 기록'],['review','📊 기록 분석','숫자·목록으로 펼쳐 보기'],['gap','⏱️ 짜투리 시간','짜투리 시간 목록 · 오늘 실행 카드 · 오늘 계획 칸'],['wins','🏆 이룬 것','기간을 고르면 마친 목표·할 일·습관·책·운동을 모아 보기']];
+const FEAT=[['bible','📖 성경·기도','개역개정 읽기·어성경·기도노트·암송·찬송'],['people','🤝 관계관리','사람별 만남·통화 기록'],['budget','💰 재정','수입·지출·예산'],['care','🩺 건강','운동·수면·몸 측정'],['work','🧩 프로젝트','큰 일을 단계로 쪼개 하나씩 끝내기'],['habit','✅ 습관','습관표·습관루틴'],['lines','📜 한 줄','오늘의 한 줄·기분 모아보기'],['routine','⏰ 루틴','아침·저녁 루틴 순서대로 하기'],['cycle','🔁 주기 할 일','이발·세제처럼 주기가 있는 일'],['stuff','📦 제자리','물건 위치 기록'],['review','📊 기록 분석','숫자·목록으로 펼쳐 보기'],['gap','⏱️ 짜투리 시간','짜투리 시간 목록 · 오늘 실행 카드 · 오늘 계획 칸'],['wins','🏆 이룬 것','기간을 고르면 마친 목표·할 일·습관·책·운동을 모아 보기']];
 const FEATK=FEAT.map(x=>x[0]);
 const LVL={mid:['work','care','cycle','stuff','years','review','lines','score','me'],easy:['short','report','work','pillar','people','budget','care','routine','habit','cycle',/*BIBLE{*/'bible',/*}BIBLE*/'stuff','vision','goal','years','lines','review','me','score']};
 const lvNow=()=>{try{return SET.lvl==='mid'||SET.lvl==='easy'?SET.lvl:'full'}catch(e){return'full'}};const LVH=()=>LVL[lvNow()]||[];
@@ -7879,7 +7879,7 @@ const isHid=k=>{try{return !!((SET.hide&&SET.hide.includes(k))||LVH().includes(k
 const PTOOL={spirit:'bible',rel:'people',fin:'budget',body:'care',work:'work',habit:'habit',mind:'lines'};
 const PILT=['pillar',/*BIBLE{*/'bible',/*}BIBLE*/'people','budget','care','cycle','work','habit','lines','export'];
 const pilTools=()=>{const o=[];const GP=PILT.filter(t=>!isHid(t));SCORE.forEach(([k])=>{const t=PTOOL[k];if(t&&GP.includes(t)&&!o.includes(t))o.push(t)});GP.forEach(t=>{if(t!=='pillar'&&t!=='export'&&!o.includes(t))o.push(t)});['cycle','habit'].forEach(t=>{const i=o.indexOf(t);if(i>=0){o.splice(i,1);o.push(t)}});return o};
-const SUBL={wins:'🏆 이룬 것',gap:'⏱️ 짜투리 시간',vision:'✨ 비전',years:'📜 지나온 해',short:'🎯 이번 주·단기',pillar:'🏛️ 삶의 기둥',plan:'🗓️ 계획',goal:'🎯 장·중기 목표',note:'📒 노트',cycle:'🔁 주기 할 일',routine:'⏰ 루틴',care:'🩺 몸관리',lines:'📜 한 줄',me:'🧬 나',report:'🪞 돌아보기',budget:'💰 재정',work:'🧩 프로젝트',people:'🤝 관계관리',habit:'✅ 습관',review:'📊 기록 분석',score:'💯 점수',task:'📋 할 일',stuff:'📦 제자리',export:'⚙️ 설정·백업'/*BIBLE{*/,bible:'📖 성경·기도'/*}BIBLE*/};
+const SUBL={wins:'🏆 이룬 것',gap:'⏱️ 짜투리 시간',vision:'✨ 비전',years:'📜 지나온 해',short:'🎯 이번 주·단기',pillar:'🏛️ 삶의 기둥',plan:'🗓️ 계획',goal:'🎯 장·중기 목표',note:'📒 노트',cycle:'🔁 주기 할 일',routine:'⏰ 루틴',care:'🩺 건강',lines:'📜 한 줄',me:'🧬 나',report:'🪞 돌아보기',budget:'💰 재정',work:'🧩 프로젝트',people:'🤝 관계관리',habit:'✅ 습관',review:'📊 기록 분석',score:'💯 점수',task:'📋 할 일',stuff:'📦 제자리',export:'⚙️ 설정·백업'/*BIBLE{*/,bible:'📖 성경·기도'/*}BIBLE*/};
 const SECS_ALL=['wins','gap','short','vision','years','me','pillar','cycle','goal','plan','day','note','budget','work','people','habit','routine','care','report','lines','review','score','task','stuff','rfx','pmd','export'/*BIBLE{*/,'bible'/*}BIBLE*/];
 let curSection='day';const lastSub={plan:'plan',goal:'vision',note:'note',pillar:'people',set:'export'};
 const SEC_ORDER=['day','vision','pgoal','goal','short','plan','task','work','gap','pillar','people','budget','care','routine','habit','cycle','note',/*BIBLE{*/'bible',/*}BIBLE*/'mine','pmd','rv2','wins','rfx','years','stuff','report','export'];const groupOf=v=>v==='export'?'set':(Object.keys(GROUPS).find(g=>GROUPS[g].includes(v))||'day');
@@ -10314,7 +10314,7 @@ function mnLvHTML(){let v=null;try{v=xpAll()}catch(e){}if(!v)return'';const L=xp
   if(!document.getElementById('mnlvcss')){const st=document.createElement('style');st.id='mnlvcss';st.textContent=`.mnlvb{margin:8px 0}.mnlvb small{color:var(--muted);font-size:.78rem}.mnlvt{display:grid;grid-template-columns:1fr 5em 3.6em 3.6em;gap:6px 8px;align-items:center;font-size:.88rem}.mnlvt>small{color:var(--muted);font-size:.7rem;text-align:center}.mnlvt>b{font-weight:600;font-size:.8rem;text-align:center}.mnlvt>b .xpl{height:5px;margin-top:2px}.mnsc{color:var(--k)}.mnln{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}`;document.head.appendChild(st)}}catch(e){console.warn('mnlv',e)}});}
 /* ===== v3.67: 기둥 탭 정리 — 삶의 기둥은 ‘나’로, 관계·재정·몸관리·반복·제자리는 📊 평가 아래로 ===== */
 (function(){const st=document.createElement('style');st.textContent=`.pmtools{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px}.pmtools button{display:flex;flex-direction:column;align-items:center;gap:4px;border:1px solid var(--line);border-radius:14px;background:var(--paper);color:var(--ink);font:inherit;font-size:.82rem;font-weight:600;padding:10px 4px;cursor:pointer}.pmtools button i{font-style:normal;font-size:1.4rem}.pmtools button small{font-weight:400;color:var(--muted);font-size:.68rem}`;document.head.appendChild(st)})();
-const PMT=[/*BIBLE{*/['bible','🙏','성경·기도'],/*}BIBLE*/['people','🤝','관계관리'],['budget','💰','재정'],['care','🩺','몸관리'],['cycle','🔁','주기 할 일']];
+const PMT=[/*BIBLE{*/['bible','🙏','성경·기도'],/*}BIBLE*/['people','🤝','관계관리'],['budget','💰','재정'],['care','🩺','건강'],['cycle','🔁','주기 할 일']];
 function pmToolsHTML(){const L=PMT.filter(([k])=>{try{return!isHid(k)}catch(e){return true}});if(!L.length)return'';
   return`<div class="card nocol pmtc" style="--k:var(--pen);margin-top:12px"><h3>🧰 관리</h3><div class="pmtools">${L.map(([k,e,l])=>`<button type="button" data-pmt="${k}"><i>${e}</i>${l}<small>${esc((()=>{try{return ptStat(k)||''}catch(x){return''}})())}</small></button>`).join('')}</div></div>`}
 {growthHTML=HK.w('growthHTML','3:simOn',growthHTML,_g3=>function(){let h=_g3.apply(this,arguments);try{if(simOn()){const i=h.lastIndexOf('<button class="del" data-recmgr="1"');const x=pmToolsHTML();h=i>=0?h.slice(0,i)+x+h.slice(i):h+x}}catch(e){}return h});}
@@ -11570,7 +11570,7 @@ function wkBind(R,re){const F=WKF;const rd=()=>{const g=id=>{const x=R.querySele
     F.km='';F.min='';F.memo='';if(F.t==='weight')F.sets=[{...(F.sets[F.sets.length-1]||{w:'',r:''})}];re()}}}
 /* 몸관리 화면 맨 위에 운동 기록 */
 {const _rc=renderCare;renderCare=async function(){const r=await _rc.apply(this,arguments);try{const R=$('#careBody');if(!R)return r;R.querySelectorAll('.wkp').forEach(x=>x.remove());const first=R.querySelector('.pgridc,.tgrid,.panel,.card');const h=wkPanelHTML();if(first)first.insertAdjacentHTML('beforebegin',h);else R.insertAdjacentHTML('beforeend',h);const P=R.querySelector('.wkp');wkBind(P,()=>{const y=scrollY;renderCare().then(()=>scrollTo(0,y))})}catch(e){console.warn('wk',e)}return r}}
-try{const t=PMT.find(x=>x[0]==='care');if(t){t[1]='🏋️';t[2]='운동·몸'}}catch(e){}
+try{const t=PMT.find(x=>x[0]==='care');if(t){t[1]='🩺';t[2]='건강'}}catch(e){}
 
 /* ===================== 💪 운동 계획: 분할(2·3·직접)·요일·순환·유산소 → 오늘 운동 제안 · 습관 연결 ===================== */
 (function(){const st=document.createElement('style');st.textContent=`
@@ -14959,7 +14959,7 @@ const MDX={
    {e:'🪜',t:'단기',go:()=>go('short')},{e:'🔭',t:'돌아보기',go:()=>go('rv2')}]})},
  pillar:{host:'#pilbody',title:'관리',build:()=>({c:{e:'🧰',t:'삶의 기둥',s:'돌보는 곳'},cells:[
    {e:'📖',t:'성경·기도',go:()=>go('bible')},{e:'🤝',t:'관계관리',go:()=>go('people')},{e:'💰',t:'재정',go:()=>go('budget')},
-   {e:'🩺',t:'몸관리',go:()=>go('care')},{e:'🔁',t:'주기 할 일',go:()=>go('cycle')},{e:'🧩',t:'프로젝트',go:()=>go('work')},
+   {e:'🩺',t:'건강',go:()=>go('care')},{e:'🔁',t:'주기 할 일',go:()=>go('cycle')},{e:'🧩',t:'프로젝트',go:()=>go('work')},
    {e:'📒',t:'노트',go:()=>go('note')},{e:'📦',t:'제자리',go:()=>go('stuff')}]})},
  bible:{host:'#bbbody',title:'성경·기도',when:()=>bbTab==='read'&&bbView==='home',place:(h,b)=>{const t=h.querySelector(':scope > #bbtab');if(t){if(t.nextElementSibling!==b)t.after(b)}else if(h.firstElementChild!==b)h.prepend(b)},
    build:()=>{let rf='';try{rf=gxQtSug().qt.ref}catch(e){}const bn=typeof renderBNote==='function';return{c:{e:'📖',t:'오늘 말씀',s:rf},cells:[
@@ -14971,7 +14971,7 @@ const MDX={
    let nd=0;try{nd=PEOPLE.list.filter(p=>{const u=pcDue(p,CACHE_M||new Map());return u&&u.left<=3}).length}catch(e){}
    return{c:{e:'🤝',t:'사람들',s:`${PEOPLE.list.length}명`},cells:E.slice(0,8).map(x=>({e:x.e,t:x.t,s:x.n+'명',go:async()=>{PPL.view='rel';PPL.q='';PPL.panel='';PPL.st[x.key]=true;if(x.key.includes('|'))PPL.st[x.key.split('|')[0]]=true;await renderPeople();const d=document.querySelector(`#pbody details[data-pk="${CSS.escape(x.key)}"]`);d&&d.scrollIntoView({block:'start',behavior:'smooth'})}}))}}},
  budget:{host:'#fbody',title:'재정',build:()=>({c:{e:'💰',t:'재정',s:'가계부'},cells:[['📝',/^📝/,'오늘'],['💸',/^💸/,'내역'],['📊',/^📊/,'대비'],['🔁',/^🔁/,'반복'],['✏️',/^✏️/,'편성'],['🌳',/^🌳/,'트리'],['🏦',/^🏦/,'재산'],['🗓️',/^한 달$/,'한 달']].map(([e,re,t])=>({e,t,go:()=>mdClick(document.querySelector('#fbody'),re)}))})},
- care:{host:'#careBody',title:'몸관리',place:(h,b)=>{const d=h.querySelector('.datebar');if(d){if(d.nextElementSibling!==b)d.after(b)}else if(h.firstElementChild!==b)h.prepend(b)},
+ care:{host:'#careBody',title:'건강',place:(h,b)=>{const d=h.querySelector('.datebar');if(d){if(d.nextElementSibling!==b)d.after(b)}else if(h.firstElementChild!==b)h.prepend(b)},
    build:()=>{const S=CARE_ST||[];if(S.length<6)return null;const G={wk:()=>{const r=document.querySelector('#carerec');if(r){r.open=true;const w=r.querySelector('.wkp');(w||r).scrollIntoView({block:'start',behavior:'smooth'})}},meas:()=>{const r=document.querySelector('#carerec');if(r){r.open=true;const m=[...r.querySelectorAll('.panel')].find(x=>/몸 측정/.test(x.textContent));(m||r).scrollIntoView({block:'start',behavior:'smooth'})}},run:()=>{const e=document.querySelector('#runcard');e&&e.scrollIntoView({block:'start',behavior:'smooth'})},trend:()=>mdJump(/수면.*운동/,document.querySelector('#careBody')),plan:()=>{const e=document.querySelector('#wpcare');e&&e.scrollIntoView({block:'start',behavior:'smooth'})}};
      const mk=x=>({e:x.e,t:x.t,v:x.v,s:x.s,go:G[x.go]});return{c:{e:'🩺',t:'몸 관리',s:'현황'},cells:[...S.map(mk),{e:'🗓️',t:'운동 계획',go:G.plan},{e:'✏️',t:'기록하기',s:'운동·측정',go:G.wk}]}}},
  note:{host:'#nbody',title:'기록',build:()=>{let n=0;try{n=NOTES.size}catch(e){}return{c:{e:'📒',t:'노트',s:n+'개'},cells:[['🌳',/^🌳/,'목록'],['📓',/^📓/,'하루'],['📅',/^📅/,'날짜'],['🔁',/^🔁/,'복습'],['🏷️',/^🏷/,'태그'],['📖',/^📖/,'독서'],['🎙',/^🎙/,'녹음'],['💬',/^💬/,'다짐·명언']].map(([e,re,t])=>({e,t,go:()=>mdClick(document.querySelector('#nmode')||document.querySelector('#nbody'),re)}))}}},
@@ -15505,6 +15505,56 @@ function wkCardioLast(name){let best=null;try{const m=new Map(cacheAll||[]);if(D
     if(L){F.km=L.km?String(L.km):'';F.min=L.min?String(L.min):'';toast(`🏃 지난번 ${md(L.d)} ${n} ${L.km?L.km+'km ':''}${L.min?L.min+'분':''}을 채웠습니다. 고쳐서 넣으십시오.`)}
     else{let C=null;try{const c=wpCardioSug(D.date);if(c&&c.name===n)C=c}catch(e){}F.km=C&&C.km?String(C.km):'';F.min=C&&C.min?String(C.min):'';if(!C)toast(`🏃 ${n} — 거리나 시간을 적으십시오.`)}
     re();setTimeout(()=>{const k=document.querySelector('#wkkm');if(k&&!k.value)k.focus()},400)})}catch(e){console.warn('wkc',e)}}}
+
+/* ===== v368: 관리 탭 모두 만다라트 — 가운데 ✏️ 기록, 둘레 현황 · 몸관리→건강 · 연필 방향(1시–7시) ===== */
+/* 연필 이모지를 좌우로 뒤집어 1시–7시 방향으로 */
+(function(){const st=document.createElement('style');st.textContent=`html.penflip .pen17{display:inline-block;transform:scaleX(-1)}.mdc.mdctr.mdgo small{color:var(--muted)!important}
+.mdc.mdctr.mdgo{cursor:pointer;background:color-mix(in srgb,var(--acc) 16%,var(--paper));border:2px solid color-mix(in srgb,var(--acc) 55%,var(--line));font:inherit;color:var(--ink)}.mdc.mdctr.mdgo b{font-weight:800}`;document.head.appendChild(st);
+  /* 삼성 기기(연필이 11시–5시로 그려짐)에서만 뒤집음 — 다른 기기는 이미 1시–7시 */try{if(/SM-|SAMSUNG|Samsung/.test(navigator.userAgent)||localStorage.getItem('gj-penflip')==='1')document.documentElement.classList.add('penflip')}catch(e){}
+  const SKIP=/^(TEXTAREA|INPUT|OPTION|SELECT|SCRIPT|STYLE|TITLE)$/;
+  const fix=root=>{if(!root)return;const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>n.nodeValue.indexOf('✏')<0?2:1});const L=[];let n;while(n=w.nextNode())L.push(n);
+    L.forEach(t=>{const p=t.parentNode;if(!p||SKIP.test(p.nodeName)||(p.classList&&p.classList.contains('pen17'))||(p.closest&&p.closest('[contenteditable="true"],[contenteditable=""],.ProseMirror')))return;
+      const parts=t.nodeValue.split(/(✏️?)/);if(parts.length<2)return;const f=document.createDocumentFragment();parts.forEach(x=>{if(!x)return;if(/^✏/.test(x)){const sp=document.createElement('span');sp.className='pen17';sp.textContent='✏️';f.appendChild(sp)}else f.appendChild(document.createTextNode(x))});p.replaceChild(f,t)})};
+  let q=new Set(),raf=0;const run=()=>{raf=0;const L=[...q];q.clear();L.forEach(x=>{try{fix(x)}catch(e){}})};
+  new MutationObserver(M=>{M.forEach(m=>{if(m.type==='characterData'){if(m.target.nodeValue&&m.target.nodeValue.includes('✏'))q.add(m.target.parentNode)}else m.addedNodes.forEach(a=>{if(a.nodeType===3){if(a.nodeValue.includes('✏'))q.add(a.parentNode)}else if(a.nodeType===1&&a.textContent&&a.textContent.includes('✏'))q.add(a)})});if(q.size&&!raf)raf=requestAnimationFrame(run)}).observe(document.body,{childList:true,subtree:true,characterData:true});
+  setTimeout(()=>fix(document.body),500)})();
+/* 가운데 칸을 누를 수 있게 */
+{const _h=mdBoxHTML;mdBoxHTML=function(sec,D0){let h=_h.apply(this,arguments);try{if(D0&&D0.c&&D0.c.go){h=h.replace('<div class="mdc mdctr">','<button type="button" class="mdc mdctr mdgo" data-mdctr="1">').replace(/(<button type="button" class="mdc mdctr mdgo" data-mdctr="1">[\s\S]*?)<\/div>/,'$1</button>')}}catch(e){}return h}}
+let MDC=null;{const _s=mdSync;mdSync=function(){try{const cfg=MDX[curSection];if(cfg){const _b=cfg.build;if(!cfg._wr){cfg._wr=1;cfg.build=function(){const r=_b.apply(this,arguments);MDC=r&&r.c||null;return r}}}}catch(e){}return _s.apply(this,arguments)}}
+document.addEventListener('click',e=>{const c=e.target.closest&&e.target.closest('.mdbox [data-mdctr]');if(!c)return;e.preventDefault();e.stopPropagation();try{const sec=c.closest('.mdbox').dataset.sec||curSection;const cfg=MDX[sec];const r=cfg&&cfg.build();const g=(r&&r.c&&r.c.go)||(MDC&&MDC.go);g&&g()}catch(er){console.warn('mdctr',er)}},true);
+const mdOpenTo=(el,focus)=>{if(!el)return false;let d=el.closest('details');while(d){d.open=true;d=d.parentElement&&d.parentElement.closest('details')}el.scrollIntoView({block:'start',behavior:'smooth'});if(focus)mdFocus(focus);return true};
+const mdFocus=sel=>{[350,800,1400].forEach(t=>setTimeout(()=>{const f=document.querySelector(sel);if(f&&document.activeElement!==f){try{f.focus({preventScroll:true})}catch(e){}}},t))};
+const mdM=()=>{const m=new Map(cacheAll||[]);if(D)m.set(D.date,D);return m};
+/* 건강 */
+MDX.care={host:'#careBody',title:'건강',place:(h,b)=>{const d=h.querySelector('.datebar');if(d){if(d.nextElementSibling!==b)d.after(b)}else if(h.firstElementChild!==b)h.prepend(b)},
+ build:()=>{const S=CARE_ST||[];const open=sel=>()=>{const r=document.querySelector('#carerec');if(r)r.open=true;mdOpenTo(document.querySelector(sel))};
+  const G={wk:open('#carerec .wkp'),meas:()=>{const r=document.querySelector('#carerec');if(r)r.open=true;mdOpenTo([...document.querySelectorAll('#carerec .panel')].find(x=>/몸 측정/.test(x.textContent)))},run:open('#runcard'),trend:()=>{const d=[...document.querySelectorAll('#carerec details.wkin')].find(x=>/최근 2주/.test(x.textContent));mdOpenTo(d)},plan:open('#wpcare')};
+  const cells=S.slice(0,6).map(x=>({e:x.e,t:x.t,v:x.v,s:x.s,go:G[x.go]}));
+  let ps='';try{const w=wpWeek(D.date),sl=wpSlotFor(D.date);ps=(sl?sl.name:'쉼')+(w&&w.wp?` · ${w.wd}/${w.wp}`:'')}catch(e){}cells.push({e:'🗓️',t:'운동 계획',s:ps,go:G.plan});
+  let last='';try{const L=[...mdM().values()].filter(o=>o.date<=today()&&(wkList(o).length||(o.ex||[]).length)).map(o=>o.date).sort().pop();if(L){const n=Math.round((parseD(today())-parseD(L))/864e5);last=n?n+'일 전':'오늘'}}catch(e){}cells.push({e:'⏳',t:'마지막 운동',v:last||'—',go:G.wk});
+  return{c:{e:'✏️',t:'기록',s:'운동·몸',go:()=>{G.wk();setTimeout(()=>{const c=document.querySelector('#carerec [data-wksug]');(c||document.querySelector('#wkname')||{}).focus&&0},400)}},cells}}};
+/* 관계 */
+MDX.people={host:'#plist',title:'관계',when:()=>!pOpen,place:(h,b)=>{if(h.firstElementChild!==b)h.prepend(b)},build:()=>{const m=mdM(),T=today(),wa=mondayOf(T),ym=T.slice(0,7);let td=0,wk=0,mo=0,last=null;
+  [...m.values()].forEach(o=>{(o.meet||[]).forEach(x=>{if(!tx(x.who)&&!tx(x.what))return;if(o.date===T)td++;if(o.date>=wa&&o.date<=T)wk++;if(o.date.startsWith(ym))mo++;if(o.date<=T&&(!last||o.date>last.d))last={d:o.date,w:x.who}})});
+  let due=0,pray=0,nur=0;try{due=PEOPLE.list.filter(p=>{const u=pcDue(p,m);return u&&u.left<=3}).length}catch(e){}try{pray=PEOPLE.list.filter(p=>tx(p.pray)||(p.prays||[]).length).length}catch(e){}try{nur=PEOPLE.list.filter(p=>(p.tags||[]).some(t=>/양육중/.test(t))).length}catch(e){}
+  const pq=()=>mdOpenTo(document.querySelector('#pqtoday'),'#pqnm');
+  return{c:{e:'✏️',t:'기록',s:'만남·연락',go:pq},cells:[{e:'📅',t:'오늘',v:td+'건',go:pq},{e:'🗓️',t:'이번 주',v:wk+'건',go:pq},{e:'📆',t:'이번 달',v:mo+'건',go:pq},{e:'🕒',t:'최근',v:last?(last.w||'').split(/[,·]/)[0].slice(0,6):'—',s:last?md(last.d):'',go:()=>{const d=document.querySelector('#pqtoday details');if(d){d.open=true;mdOpenTo(d)}}},
+   {e:'🔔',t:'챙길 사람',v:due+'명',go:()=>{const b=[...document.querySelectorAll('#plist button')].find(x=>/📅/.test(x.textContent));b?b.click():toast('챙길 사람 보기는 위 📅 단추입니다.')}},{e:'🙏',t:'기도',v:pray+'명',go:()=>{const b=[...document.querySelectorAll('#plist button')].find(x=>/🙏/.test(x.textContent)&&!x.closest('.mdbox'));b&&b.click()}},{e:'🌱',t:'양육 중',v:nur+'명'},{e:'👥',t:'전체',v:PEOPLE.list.length+'명',go:()=>{const s=document.querySelector('#plist input[type=search],#plist input[placeholder*="검색"]');mdOpenTo(s,null)}}]}}};
+/* 재정 */
+MDX.budget={host:'#bbody',title:'재정',place:(h,b)=>{const s=h.querySelector(':scope>.fvsub')||h.querySelector(':scope>#fview');if(s){if(s.nextElementSibling!==b)s.after(b)}else if(h.firstElementChild!==b)h.prepend(b)},build:()=>{const m=mdM(),T=today(),wa=mondayOf(T),ym=T.slice(0,7);let P=null;try{P=plan()}catch(e){}
+  const sp=pred=>{try{return spendList(m,pred).filter(x=>x.type==='지출').reduce((s,x)=>s+x.amt,0)}catch(e){return 0}};let inc=0,give=0,unc=0;[...m.values()].forEach(o=>{if(!o.date.startsWith(ym))return;(o.fin||[]).forEach(f=>{if(f.type==='수입')inc+=+f.amt||0;if(f.type==='나눔')give+=+f.amt||0;if(f.type==='지출'&&!f.acc&&+f.amt)unc++})});
+  const mb=P?P.accounts.reduce((s,a)=>s+accMon(a),0):0,wb=mb*7*12/365;const sd=sp(d=>d===T),sw=sp(d=>d>=wa&&d<=T),sm=sp(d=>d.startsWith(ym));let rc=0;try{rc=recList().length}catch(e){}
+  const k=n=>n>=1e4?(Math.round(n/1e3)/10)+'만':won(n);const to=v=>()=>{fvSet(v)};
+  return{c:{e:'✏️',t:'기록',s:'수입·지출',go:()=>{if(fView!=='today')fvSet('today');setTimeout(()=>{const i=document.querySelector('#bqfin');if(i)i.scrollIntoView({block:'center',behavior:'smooth'})},500);mdFocus('#bqfin')}},cells:[
+   {e:'📅',t:'오늘 지출',v:k(sd),go:to('today')},{e:'🗓️',t:'이번 주',v:k(sw),s:wb?'예산 '+k(wb):'',go:to('budget')},{e:'📆',t:'이번 달',v:k(sm),s:mb?'예산 '+k(mb):'',go:to('budget')},{e:'💡',t:'남은 예산',v:mb?k(mb-sm):'—',s:'이번 달',go:to('budget')},
+   {e:'💵',t:'이번 달 수입',v:k(inc),go:to('ledger')},{e:'🤲',t:'나눔',v:k(give),go:to('ledger')},{e:'🔁',t:'반복',v:rc+'개',go:to('rec')},{e:'❓',t:'미분류',v:unc+'건',go:to('ledger')}]}}};
+/* 주기 할 일 */
+MDX.cycle={host:'#cyHost',title:'주기 할 일',build:()=>{let L=[];try{L=cycDue()}catch(e){}const T=today(),ym=T.slice(0,7);const od=L.filter(x=>x.left<=0).length,d3=L.filter(x=>x.left>0&&x.left<=3).length,d7=L.filter(x=>x.left<=7).length;
+  const near=L.slice().sort((a,b)=>a.left-b.left)[0];let mo=0,lastD=null;cycs().forEach(c=>{(c.hist||[]).forEach(d=>{if(d.startsWith(ym))mo++;if(!lastD||d>lastD.d)lastD={d,c}})});
+  const top=()=>{const r=document.querySelector('#cyHost .trow,#cyHost [data-cyt],#cyHost .cyrow');mdOpenTo(r||document.querySelector('#cyHost'))};
+  return{c:{e:'✏️',t:'기록',s:'오늘 함 체크',go:top},cells:[{e:'⏰',t:'오늘·지남',v:od+'개',go:top},{e:'⏳',t:'3일 안',v:d3+'개',go:top},{e:'🗓️',t:'이번 주',v:d7+'개',go:top},{e:'🎯',t:'가장 가까운',v:near?(near.c.name||'').slice(0,6):'—',s:near?(near.left<0?-near.left+'일 지남':near.left===0?'오늘':near.left+'일 뒤'):'',go:top},
+   {e:'✅',t:'이번 달 한 것',v:mo+'번',go:top},{e:'🕒',t:'최근 한 것',v:lastD?(lastD.c.name||'').slice(0,6):'—',s:lastD?md(lastD.d):'',go:top},{e:'📋',t:'전체',v:cycs().length+'개',go:top},{e:'➕',t:'추가',go:()=>{const b=[...document.querySelectorAll('#cyHost button')].find(x=>/주기 할 일 추가/.test(x.textContent));b&&b.click()}}]}}};
+try{if(typeof mdSync==='function')setTimeout(mdSync,300)}catch(e){}
 </script>
 <!--BIBLE{--><!--}BIBLE-->
 <div id="miniov" class="miniov" hidden></div>
