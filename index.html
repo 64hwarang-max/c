@@ -2403,7 +2403,7 @@ function ptStat(x){try{const T=today();
   return''}catch(e){return''}}
 /* 기둥 방 안에 대표 도구 화면을 그대로 펼침 */
 const EMB={budget:'bbody',people:'plist',care:'careBody'};const EMBT={budget:'💰 가계부',people:'👥 사람·관계',care:'💪 몸관리'};
-const EMBR={budget:()=>{bEdit=false;if(!fView||fView==='edit')fView='budget';renderBudget()},people:()=>{renderPeople()},care:()=>{renderCare()}};
+const EMBR={budget:()=>{bEdit=false;if(!fView||fView==='edit')fView='today';renderBudget()},people:()=>{renderPeople()},care:()=>{renderCare()}};
 function embBack(){Object.entries(EMB).forEach(([k,id])=>{const el=document.getElementById(id);const sec=document.getElementById('v-'+k);if(el&&sec&&el.parentElement!==sec)sec.appendChild(el)})}
 function pilEmbKey(k){const t=(PTOOLS[k]||[]).map(x=>x[0]).find(x=>EMB[x]&&ptOK(x));return t||''}
 function pilEmbed(R){const ph=R.querySelector('[data-embhost]');if(!ph)return;const key=ph.dataset.embhost;const el=document.getElementById(EMB[key]);if(!el)return;ph.appendChild(el);try{EMBR[key]()}catch(e){console.error(e)}}
@@ -4295,7 +4295,7 @@ const ACC_SUB={fixed:['월세','관리비','각종 대여비','수도','가스',
  husband:['정기 용돈','교통'],wife:['정기 용돈','교통']};
 function fillAccSub(P){let n=0;P.accounts.forEach(a=>{const have=new Set(a.items.map(i=>(i.name||'').replace(/[\s·\/]/g,'')));(ACC_SUB[a.id]||[]).forEach(nm=>{if(!have.has(nm.replace(/[\s·\/]/g,''))){a.items.push({id:a.id+'-'+uid(),name:nm,m:0,y:0});n++}})});return n}
 const ACOL=['--c-time','--c-meet','--c-grat','--c-fin','--c-mis','--pen','--c-grat','--c-time','--c-meet'];
-let fView='budget',bPer='w',bAnc=today();
+let fView='today',bPer='w',bAnc=today();
 let BUD=null,bTimer=null,bMonth=today().slice(0,7),bEdit=false,bOpen=null,bAll=false;
 async function loadBudget(){try{const b=await store.getDoc('budget');if(b&&Array.isArray(b.plans)&&b.plans.length)BUD=b}catch(e){}
   if(BUD&&BUD.plans.length>1){const keep=BUD.plans.find(p=>p.id==='p1')||BUD.plans[0];BUD.plans=[keep];BUD.active=keep.id;keep.name='예산';try{await store.putDoc('budget',BUD)}catch(e){}}
@@ -7889,7 +7889,7 @@ function openSection(v){try{embBack()}catch(e){}if(v!=='export'&&LVH().includes(
     let PL=g==='set'?['export','rfx','stuff']:g==='pillar'?pilTools().filter(t=>GROUPS.pillar.includes(t)&&t!=='export'):g==='plan'?['plan',at('td'),at('rp'),'gap']:g==='goal'?['vision','mine','pmd','rv2','wins']:GROUPS[g];if(SET.navMap&&g!=='set'&&g!=='day'){const MM=navMap();if(MM[g])PL=MM[g].map(x=>x[0]==='@'?at(x.slice(1)):x)}PL=PL.filter(x=>x&&(x[0]==='@'||vis(x)));PL=ordBy(PL,(SET.subOrd||{})[g]);if(g==='pillar'&&v!=='export'&&v!=='pillar'&&!PL.includes(v)&&!PL.some(x=>x[0]==='@'&&(SUB2[x.slice(1)]||[]).includes(v)))PL.push(v);sn.innerHTML=`<button class="snarr" data-sv="${pv}" aria-label="이전: ${lb(pv)}">‹<small>${lb(pv)}</small></button><div class="snp">${PL.map(s=>s[0]==='@'?`<button data-sk="${s}" data-sv="${s2(s.slice(1)).includes(last2[s.slice(1)])?last2[s.slice(1)]:s2(s.slice(1))[0]}" class="${SUB2[s.slice(1)].includes(v)?'on':''}">${SUB2L[s.slice(1)]}</button>`:`<button data-sk="${s}" data-sv="${s}" class="${s===v?'on':''}">${SUBL[s]}</button>`).join('')}</div><button class="snarr r" data-sv="${nx}" aria-label="다음: ${lb(nx)}"><small>${lb(nx)}</small>›</button>`;setTimeout(()=>sn.querySelector('.snp .on')?.scrollIntoView({block:'nearest',inline:'center'}),30);if(k2&&s2(k2).length>1){sn.insertAdjacentHTML('beforeend',`<div class="snp2">${ordBy(s2(k2),(SET.subOrd||{})['@'+k2]).map(x=>`<button data-sk="${x}" data-sv="${x}" class="${x===v?'on':''}">${SUBL[x]}</button>`).join('')}</div>`)}sn.querySelectorAll('[data-sv]').forEach(b=>b.onclick=()=>openSection(b.dataset.sv));sortable(sn.querySelector('.snp'),'button',ks=>subOrdSave(g,ks),'x');if(k2)sortable(sn.querySelector('.snp2'),'button',ks=>subOrdSave('@'+k2,ks),'x')}else sn.hidden=true;
   SECS_ALL.forEach(s=>{const e=$('#v-'+s);if(e)e.hidden=s!==v});if(v==='goal'&&(gSub==='me'||gSub==='sladder'||gSub==='vision'))gSub=gvFirst();if(v==='vision'){const e=$('#v-goal');if(e)e.hidden=false;gSub='vision'}if(v==='years')renderYears();if(v==='wins')renderWins();if(v==='short'){const e=$('#v-goal');if(e)e.hidden=false;if(gSub!=='sladder'){gEdit=null;gOpen=null}gSub='sladder'}if(v==='cycle')renderCycle();if(v==='pillar')renderPillarHub();window.scrollTo(0,0);
   if(v==='stuff')renderStuff();if(v==='review')renderReview();if(v==='habit'){hEnd=today();renderGrow()}if(v==='score')renderScore();if(v==='day')renderDay();if(v==='goal'||v==='short'||v==='vision')renderGoals();if(v==='task')renderTasks();if(v==='plan')renderPlan();if(v==='gap')renderGap();if(v==='report')renderReport();if(v==='routine')renderRoutine();if(v==='care')renderCare();if(v==='lines')renderLines();/*BIBLE{*/if(v==='bible')renderBible();/*}BIBLE*/if(v==='export'){renderFeatCard();renderBkCard();renderLock();renderTrash()}if(v==='work')renderWork();
-  if(v==='budget'){bEdit=false;if(fView!=='ledger'||!window.LGKEEP)fView='budget';window.LGKEEP=false;renderBudget()}if(v==='note'){if(!keepEdit){nEdit=null;nReturn=null}renderNotes()}if(v==='people'){if(!keepEdit)pOpen=null;syncPeople().then(()=>renderPeople()).catch(()=>{});renderPeople()}try{zmBarSync()}catch(e){}if(typeof navBtnSync==='function')setTimeout(navBtnSync,30)}
+  if(v==='budget'){bEdit=false;if(fView!=='ledger'||!window.LGKEEP)fView='today';window.LGKEEP=false;renderBudget()}if(v==='note'){if(!keepEdit){nEdit=null;nReturn=null}renderNotes()}if(v==='people'){if(!keepEdit)pOpen=null;syncPeople().then(()=>renderPeople()).catch(()=>{});renderPeople()}try{zmBarSync()}catch(e){}if(typeof navBtnSync==='function')setTimeout(navBtnSync,30)}
 document.querySelectorAll('nav.main button').forEach(b=>b.onclick=()=>{const g=b.dataset.g;{let t=g==='set'?'export':GROUPS[g].length>1?lastSub[g]:GROUPS[g][0];if(isHid(t))t=GROUPS[g].find(x=>!isHid(x))||GROUPS[g][0];openSection(t)}});
 
 /* ---------- ⭐ 즐겨찾기 · 끌어서 순서 바꾸기 ---------- */
@@ -15457,6 +15457,34 @@ try{delete MDX.care}catch(e){}
   const sm=rec.querySelector(':scope>summary');if(sm){const n=wkList(D).length+((D.ex||[]).length);sm.innerHTML=`<b>🏋️ ${md(D.date)}${D.date===today()?' 오늘':''} 운동 일지</b> <span class="hint">한 것 ${n}개</span>`}
  }catch(e){console.warn('v364 care',e)}return r}}
 {const _m=cvMerge;cvMerge=function(){const out=_m.apply(this,arguments);try{if(!/3분 돌아보기[^<]{0,12}감사/.test(out))return out;const t=document.createElement('template');t.innerHTML=out;const F=t.content;const g=F.querySelector('[data-hs="sg-gr"]');if(!g)return out;g.remove();const c=F.querySelector('.topcard .afc'),dots=F.querySelector('.topcard .afdots');if(c&&dots){const n=c.children.length;if(TOPI>=n)TOPI=0;dots.innerHTML=Array.from({length:n},(_,i)=>`<i class="${i===TOPI?'on':''}"></i>`).join('')}return t.innerHTML}catch(e){return out}}}
+
+/* ===== v365: 관리 탭 — 입력과 기록 확인을 한 곳에서 (관계관리·재정) ===== */
+(function(){const st=document.createElement('style');st.textContent=`.qtd .ql{display:flex;gap:6px;align-items:flex-start;border:1px solid var(--line);border-radius:12px;padding:7px 10px;margin:5px 0;background:var(--paper)}.qtd .ql div{flex:1;min-width:0}.qtd .ql b{font-size:.9rem}.qtd .ql small{display:block;color:var(--muted);font-size:.78rem;line-height:1.45;white-space:pre-wrap}
+.qtd .qin{display:grid;gap:6px;margin-top:8px}.qtd .qin input,.qtd .qin textarea{width:100%;box-sizing:border-box}.qtd details{margin-top:8px}.qtd details summary{cursor:pointer;color:var(--muted);font-size:.86rem}.qtd .qh{font-size:.82rem;color:var(--muted);margin:3px 0}`;document.head.appendChild(st)})();
+/* ---- 관계관리: 오늘 만남·연락 ---- */
+let PQK='교제';
+async function pqDoc(d){if(D&&D.date===d)return D;let o=cacheAll&&cacheAll.get(d);if(!o){try{o=await store.load(d)}catch(e){}}return norm(o||{date:d})}
+async function pqSave(o){if(o===D)schedule();else{await store.save(o.date,o);if(cacheAll)cacheAll.set(o.date,o)}}
+function pqTodayHTML(o,recent){const L=(o.meet||[]).map((m,i)=>[m,i]).filter(([m])=>tx(m.who)||tx(m.what));
+  return`<div class="card nocol qtd" id="pqtoday" style="--k:var(--c-meet);margin:0 0 10px"><h3>🤝 ${md(o.date)} 오늘 만남·연락 <small class="hint">${L.length}건</small></h3>
+  ${L.length?L.map(([m,i])=>`<div class="ql"><div><b>${esc(m.who||'(이름 없음)')}</b> <span class="hint">${esc(m.kind||'교제')}</span><small>${esc(m.what||'')}</small></div><button class="del" data-pqx="${i}" aria-label="지우기">✕</button></div>`).join(''):'<p class="hint" style="margin:2px 0">오늘 적은 만남·연락이 없습니다.</p>'}
+  <div class="qin"><input type="text" id="pqnm" list="pqnames" placeholder="누구와 (예: 아내, 김OO)" autocomplete="off"><datalist id="pqnames">${PEOPLE.list.map(p=>`<option value="${esc(p.name)}">`).join('')}</datalist>
+  <div class="chips">${MKIND.map(k=>`<button type="button" class="chip fbtn ${PQK===k?'on':''}" data-pqk="${esc(k)}">${esc(k)}</button>`).join('')}</div>
+  <textarea id="pqtx" rows="2" placeholder="무엇을 했는지 · 나눈 이야기 한 줄"></textarea><button type="button" class="btn" id="pqok">기록 넣기</button></div>
+  ${recent.length?`<details><summary>최근 만남·연락 ${recent.length}건 보기</summary>${recent.map(x=>`<p class="qh">${md(x.d)} · <b>${esc(x.who)}</b> · ${esc(x.k)} · ${esc((x.t||'').slice(0,60))}</p>`).join('')}</details>`:''}</div>`}
+function pqRecent(){const out=[];try{const m=new Map(cacheAll||[]);if(D)m.set(D.date,D);[...m.values()].forEach(o=>{if(!o||o.date>=today())return;(o.meet||[]).forEach(x=>{if(tx(x.who)||tx(x.what))out.push({d:o.date,who:x.who||'',k:x.kind||'교제',t:x.what||''})})})}catch(e){}return out.sort((a,b)=>a.d<b.d?1:-1).slice(0,15)}
+async function pqMount(){if(pOpen)return;const R=$('#plist');if(!R)return;const o=await pqDoc(today());if(pOpen||!R.isConnected)return;const old=R.querySelector('#pqtoday');if(old)old.remove();R.insertAdjacentHTML('afterbegin',pqTodayHTML(o,pqRecent()));const C=R.querySelector('#pqtoday');
+  C.querySelectorAll('[data-pqk]').forEach(b=>b.onclick=()=>{PQK=b.dataset.pqk;C.querySelectorAll('[data-pqk]').forEach(x=>x.classList.toggle('on',x===b))});
+  C.querySelectorAll('[data-pqx]').forEach(b=>b.onclick=async()=>{if(!await uiConfirm('이 만남 기록을 지울까요?'))return;const o2=await pqDoc(today());o2.meet.splice(+b.dataset.pqx,1);await pqSave(o2);pqMount()});
+  $('#pqok').onclick=async()=>{const who=$('#pqnm').value.trim(),t=$('#pqtx').value.trim();if(!who&&!t){$('#pqnm').focus();return}const o2=await pqDoc(today());o2.meet=Array.isArray(o2.meet)?o2.meet:[];o2.meet.push({who,kind:PQK,what:t,learn:'',follow:false});splitNames(who).forEach(n=>ensurePerson(n));await pqSave(o2);try{XPC.k=''}catch(e){}
+    const n=splitNames(who)[0];let cnt=0;try{const m=new Map(cacheAll||[]);m.set(o2.date,o2);cnt=n?contacts(n,m).length:0}catch(e){}toast(`🤝 ${who||'만남'} 기록${cnt?` · ${n}님과 지금까지 ${cnt}번`:''}`);pqMount()}}
+{const _rp=renderPeople;renderPeople=async function(){const r=await _rp.apply(this,arguments);try{if(!pOpen)await pqMount()}catch(e){console.warn('pq',e)}return r}}
+/* ---- 재정: 오늘 탭 — 입력 카드를 맨 위로, 최근 7일 내역 ---- */
+{const _ft=renderFinToday;renderFinToday=async function(){const r=await _ft.apply(this,arguments);try{const F=$('#fbody');if(!F||fView!=='today')return r;
+  const cards=[...F.querySelectorAll(':scope>.card,:scope>.fwrap,:scope>div')];const inp=cards.find(x=>x.querySelector('#bqfin'));const rc=cards.find(x=>x!==inp&&/반복 지출/.test((x.querySelector('h3')||x).textContent));if(inp&&rc&&rc.compareDocumentPosition(inp)&Node.DOCUMENT_POSITION_FOLLOWING)inp.after(rc);
+  if(inp&&!F.querySelector('#fin7')){const m=new Map(cacheAll||[]);if(D)m.set(D.date,D);const T=window.FTD||today();const rows=[];for(let i=1;i<=7;i++){const d=addD(T,-i),o=m.get(d);(o&&o.fin||[]).forEach(f=>{if(+f.amt)rows.push({d,f})})}
+    if(rows.length){const sp=rows.filter(x=>x.f.type==='지출').reduce((s,x)=>s+(+x.f.amt||0),0);const box=document.createElement('details');box.id='fin7';box.className='card nocol qtd';box.style.setProperty('--k','var(--c-fin)');
+      box.innerHTML=`<summary><b>💸 지난 7일 내역</b> <span class="hint">${rows.length}건 · 지출 ${won(sp)}</span></summary>${rows.map(x=>`<p class="qh">${md(x.d)} · ${esc(x.f.type)} · <b>${esc(x.f.item||x.f.cat||'')}</b> · ${won(+x.f.amt||0)}</p>`).join('')}`;(rc||inp).after(box)}}}catch(e){console.warn('fin7',e)}return r}}
 </script>
 <!--BIBLE{--><!--}BIBLE-->
 <div id="miniov" class="miniov" hidden></div>
