@@ -1,10 +1,5 @@
 name: 성장일지 (말씀 제외) APK 만들기
 on:
-  push:
-    paths:
-      - 'lite/**'
-      - 'compat.js'
-      - '.github/workflows/build-apk-lite.yml'
   workflow_dispatch:
 jobs:
   build:

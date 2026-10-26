@@ -19,7 +19,8 @@ jobs:
       - name: 프로젝트 준비
         run: |
           mkdir -p www && cp index.html www/index.html && cp bible-text.txt bible-meta.txt www/
-          sed -i "s/__BUILD__/#${GITHUB_RUN_NUMBER} $(TZ=Asia/Seoul date +%m.%d_%H:%M)/" www/index.html
+          VER=$(tr -d '[:space:]' < VERSION)
+          sed -i "s/__BUILD__/v${VER} #${GITHUB_RUN_NUMBER} $(TZ=Asia/Seoul date +%m.%d_%H:%M)/" www/index.html
           # 구형 안드로이드(낡은 웹뷰)에서도 열리도록 문법을 낮추고 빠진 기능을 채움 (실패해도 원본 그대로 진행)
           mkdir -p /tmp/eb && (cd /tmp/eb && npm init -y >/dev/null 2>&1 && npm i esbuild@0.21.5 >/dev/null 2>&1) || echo "esbuild 설치 실패 - 기능 채우기만 적용"
           cp www/index.html /tmp/index.orig.html
@@ -32,6 +33,7 @@ jobs:
           cat > capacitor.config.json <<'J'
           {"appId":"kr.growthjournal.app","appName":"성장일지","webDir":"www"}
           J
+          sed -i "s/\"appName\":\"성장일지\"/\"appName\":\"성장일지 v${VER}\"/" capacitor.config.json
           npm install
           npx cap add android
       - name: 권한 설정
