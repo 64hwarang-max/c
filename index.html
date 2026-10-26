@@ -1560,7 +1560,7 @@ span.prck{border:0;cursor:default;font-size:1.05rem;color:var(--ink)}
       <label class="f" style="margin-top:10px">📱 앱에서 저장할 때<select id="ex-to"><option value="ask">매번 묻기</option><option value="folder">휴대폰 폴더에 바로 저장 (Documents › 앱 이름)</option><option value="share">다른 앱으로 보내기 (공유)</option><option value="both">폴더에 저장하고 보내기</option></select></label>
       <p class="hint" style="margin:8px 0 0">읽기용은 일기장처럼 날짜순으로 풀어 쓴 파일, 복원용은 다른 기기나 나중에 그대로 되살릴 수 있는 파일입니다. 복원용에는 사진도 담깁니다(아래에서 끌 수 있음).</p></div>
     <div class="card" data-sg="view" style="--k:#ff8a3d"><h3>✏️ 칸·블록 편집</h3><div class="row" style="flex-wrap:wrap"><button class="del" data-recmgr="1">✏️ 기록 칸 켜기·끄기·추가</button><button class="del" data-areamgr="1">🏛️ 삶의 기둥</button><button class="del" id="colset">🗂️ 블록 접기·펼치기</button></div></div>
-    <div class="card" style="--k:#2fbf71" id="featcard" data-sg="feat"></div>
+    <div class="card" style="--k:#2fbf71" id="featcard" data-sg="view"></div>
     <div class="card" style="--k:#ff8a3d" id="viewcard" data-sg="view"></div>
     <div class="card" style="--k:#00897b" id="watchcard" data-sg="watch"></div>
     <div class="card" style="--k:#23397a" id="floatcard" data-sg="float"></div>
@@ -4572,7 +4572,7 @@ function lifeHTML(part){const S=D.sleep;const sm=sleepMin();
   if(RECF('ex').on)h+=`<div class="panel sub" style="--k:var(--c-meet)"><h2>${RLF('ex')}</h2>${D.ex.map((x,i)=>`<div class="item"><div class="hd"><span>${x.min?x.min+'분':''}</span><button class="del" data-xdel="${i}">지우기</button></div>
       <div class="g2"><select data-p="ex.${i}.type">${[...EXT,...(x.type&&!EXT.includes(x.type)?[x.type]:[])].map(t=>`<option ${x.type===t?'selected':''}>${esc(t)}</option>`).join('')}<option value="__add">＋ 종류 추가…</option></select><input type="number" inputmode="numeric" data-p="ex.${i}.min" value="${x.min||''}" placeholder="분"></div>
       ${inp(`ex.${i}.detail`,'거리·세트·코스 (예: 5km, 스쿼트 5×10)')}
-      <div class="focus"><span class="hint">강도</span>${dialBtn(`data-xid="${i}" aria-label="운동 강도"`,+x.int||0)}</div></div>`).join('')}<button class="add" data-xadd="1">운동 기록</button><div class="row" style="justify-content:space-between;align-items:center;margin-top:4px"><span class="hint">📒 운동 기록은 운동일지에도 남습니다</span><button class="del" data-extm="1">⚙️ 운동 종류 정하기</button></div>
+      <div class="focus"><span class="hint">강도</span>${dialBtn(`data-xid="${i}" aria-label="운동 강도"`,+x.int||0)}</div></div>`).join('')}<button class="add" data-gocare="1">🏋️ 건강에서 운동 기록 ›</button>${D.ex.length?'<p class="hint" style="margin:4px 0 0">웨이트·유산소 입력은 관리 › 건강 한 곳에서 합니다. 위 기록은 예전에 적은 것입니다.</p>':''}
     ${D.ex.length?`<div class="sum">오늘 운동 <b>${D.ex.reduce((s,x)=>s+(+x.min||0),0)}분</b></div>`:''}</div>`;
   if(part!=='body'&&part!=='care'&&RECF('thought').on)h+=`<div class="panel" style="--k:var(--pen)"><h2>${RLF('thought')}</h2>${RECF('thought').q?`<p class="q">${esc(RECF('thought').q)}</p>`:''}<div class="micbar">${micBtn('#dayBody [data-p="thought"]')}<span class="hint">말로 받아쓰기</span></div>${ta('thought','',5)}</div>`;
   return h}
@@ -4581,6 +4581,7 @@ function bindLife(root){const renderDay=root.closest&&root.closest('#careBody')|
   root.querySelectorAll('[data-xi]').forEach(b=>b.onclick=()=>{const[i,v]=b.dataset.xi.split('|');const x=D.ex[+i];x.int=+x.int===+v?0:+v;schedule();renderDay()});
   root.querySelectorAll('[data-madd]').forEach(b=>b.onclick=()=>{D.meals.push({id:uid(),k:b.dataset.madd,what:'',feel:'적당히',amt:''});D.meals.sort((x,y)=>MEALK.indexOf(x.k)-MEALK.indexOf(y.k));schedule();renderDay();const el=document.querySelector(`#dayBody [data-p="meals.${D.meals.findIndex(m=>m.k===b.dataset.madd&&!m.what)}.what"]`);el&&el.focus()});
   const xadd=root.querySelector('[data-xadd]');if(xadd)xadd.onclick=()=>{D.ex.push({id:uid(),type:'걷기',min:'',detail:'',int:0});schedule();renderDay()};
+  root.querySelectorAll('[data-gocare]').forEach(b=>b.onclick=()=>go('care'));
   root.querySelectorAll('[data-mdel]').forEach(b=>b.onclick=async ()=>{if(!await uiConfirm('이 식사 기록을 지울까요? 연결된 지출도 함께 지워집니다.'))return;const m=D.meals.splice(+b.dataset.mdel,1)[0];const f=m&&linkedFin(m.id);if(f)D.fin.splice(D.fin.indexOf(f),1);schedule();renderDay()});
   root.querySelectorAll('[data-xdel]').forEach(b=>b.onclick=()=>{D.ex.splice(+b.dataset.xdel,1);schedule();renderDay()})}
 
@@ -7878,7 +7879,7 @@ const lvNow=()=>{try{return SET.lvl==='mid'||SET.lvl==='easy'?SET.lvl:'full'}cat
 const isHid=k=>{try{return !!((SET.hide&&SET.hide.includes(k))||LVH().includes(k))}catch(e){return false}};
 const PTOOL={spirit:'bible',rel:'people',fin:'budget',body:'care',work:'work',habit:'habit',mind:'lines'};
 const PILT=['pillar',/*BIBLE{*/'bible',/*}BIBLE*/'people','budget','care','cycle','work','habit','lines','export'];
-const pilTools=()=>{const o=[];const GP=PILT.filter(t=>!isHid(t));SCORE.forEach(([k])=>{const t=PTOOL[k];if(t&&GP.includes(t)&&!o.includes(t))o.push(t)});GP.forEach(t=>{if(t!=='pillar'&&t!=='export'&&!o.includes(t))o.push(t)});['cycle','habit'].forEach(t=>{const i=o.indexOf(t);if(i>=0){o.splice(i,1);o.push(t)}});return o};
+const pilTools=()=>{const o=[];const GP=PILT.filter(t=>!isHid(t)&&t!=='habit'&&t!=='work'&&t!=='lines');SCORE.forEach(([k])=>{const t=PTOOL[k];if(t&&GP.includes(t)&&!o.includes(t))o.push(t)});GP.forEach(t=>{if(t!=='pillar'&&t!=='export'&&!o.includes(t))o.push(t)});['cycle','habit'].forEach(t=>{const i=o.indexOf(t);if(i>=0){o.splice(i,1);o.push(t)}});return o};
 const SUBL={wins:'🏆 이룬 것',gap:'⏱️ 짜투리 시간',vision:'✨ 비전',years:'📜 지나온 해',short:'🎯 이번 주·단기',pillar:'🏛️ 삶의 기둥',plan:'🗓️ 계획',goal:'🎯 장·중기 목표',note:'📒 노트',cycle:'🔁 주기 할 일',routine:'⏰ 루틴',care:'🩺 건강',lines:'📜 한 줄',me:'🧬 나',report:'🪞 돌아보기',budget:'💰 재정',work:'🧩 프로젝트',people:'🤝 관계관리',habit:'✅ 습관',review:'📊 기록 분석',score:'💯 점수',task:'📋 할 일',stuff:'📦 제자리',export:'⚙️ 설정·백업'/*BIBLE{*/,bible:'📖 성경·기도'/*}BIBLE*/};
 const SECS_ALL=['wins','gap','short','vision','years','me','pillar','cycle','goal','plan','day','note','budget','work','people','habit','routine','care','report','lines','review','score','task','stuff','rfx','pmd','export'/*BIBLE{*/,'bible'/*}BIBLE*/];
 let curSection='day';const lastSub={plan:'plan',goal:'vision',note:'note',pillar:'people',set:'export'};
@@ -8188,7 +8189,7 @@ function renderViewCard(){const C=$('#viewcard');if(!C)return;const f=+SET.fsz||
   C.querySelectorAll('[data-vlk]').forEach(b=>b.onclick=()=>{SET.look=b.dataset.vlk==='rich'?'rich':b.dataset.vlk==='cute'?'cute':'';sv();renderViewCard()});
   $('#vtip').onchange=e=>{SET.tipFold=e.target.checked;sv();if(SET.tipFold){document.querySelectorAll('[data-tf]').forEach(x=>delete x.dataset.tf);tipFold()}};
   $('#vfab').onchange=e=>{SET.fab=e.target.checked;sv()};$('#vdm').onchange=e=>{SET.dayMini=e.target.checked;sv();dmSync()}}
-const SGR=[['backup','💾','백업·복원'],['cloud','☁️','드라이브·기기 연동'],['feat','🧩','쓰는 기능'],['view','🎨','화면·칸 편집'],['map','🗺️','메뉴 옮기기'],['watch','⌚','워치·건강'],['float','🍎','떠 있는 버튼'],['lock','🔒','앱 잠금'],['trash','🗑️','휴지통']];
+const SGR=[['backup','💾','백업·복원'],['cloud','☁️','드라이브·기기 연동'],['view','🎨','화면·기능 고르기'],['map','🗺️','메뉴 옮기기'],['watch','⌚','워치·건강'],['float','🍎','떠 있는 버튼'],['lock','🔒','앱 잠금'],['trash','🗑️','휴지통']];
 let sgCur='';
 /* 설정 칸 아래에 붙는 관리 단추(예전에는 감시 코드가 따로 붙였음) */
 const SGX=[['qlinks','🚀','앱 바로가기','data-qlmgr'],['areas','🏛️','삶의 기둥','data-armgr'],['alinks','🔗','연결 앱','data-almgr'],['xprules','⭐','경험치 기준','data-xropen']];
@@ -9885,7 +9886,7 @@ function cvVerse(){const A=memAll(),S=memS(),t=today();const dn=Math.floor(new D
   return it}
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-cvmem]');if(!b)return;bbTab='mem';memV='home';openSection('bible')});
 /* 갓피플식 상단: 슬라이드(맨 위) → 날짜 줄(아이콘 포함) */
-const CVI=[['start','🚀','시작'],['run','📅','스케줄'],['fr','🎯','몰입·루틴'],['gap','⏱️','짜투리'],['pm','📊','평가']];
+const CVI=[['start','🚀','시작'],['run','📅','스케줄'],['gap','⏱️','짜투리'],['pm','📊','평가']];
 let CVM0=0;
 function rcSlim(){return'';const R=(SET.routines||[]).slice(0,4);if(!R.length||typeof rtqChip!=='function')return'';try{rtqCss()}catch(e){}return`<div class="rtqrow">${R.map(rtqChip).join('')}</div>`}
 function cvHead(){const db=document.querySelector('#v-day .datebar');if(!db)return;const V=$('#v-day');V.classList.toggle('cvg',simOn());
@@ -15762,6 +15763,26 @@ function pplSheet(kind){const m=mdM(),T=today(),wa=mondayOf(T),ym=T.slice(0,7);c
 .pslr{display:flex;flex-direction:column;align-items:flex-start;width:100%;text-align:left;border:0;border-bottom:1px solid var(--line);background:none;color:var(--ink);font:inherit;padding:8px 2px;cursor:pointer}.pslr small{color:var(--muted);font-size:.8rem}`;document.head.appendChild(st)})();
 /* v372: 요일별 기둥 실행은 균형판 카드 안으로 */
 (function(){const st=document.createElement('style');st.textContent='.wbx .plwk{margin:10px 0 4px;padding-top:8px;border-top:1px solid var(--line)}.wbx .plwk>summary{cursor:pointer;font-weight:700;font-size:.92rem;list-style:none;padding:2px 0}.wbx .plwk>summary::-webkit-details-marker{display:none}.wbx .plwk>summary::before{content:"▾ ";color:var(--muted)}.wbx .plwk:not([open])>summary::before{content:"▸ "}';document.head.appendChild(st)})();
+
+
+/* ===== v373: 습관·루틴은 한 메뉴에만 (메뉴 지도에서 ‘루틴·습관’이 놓인 곳) ===== */
+function oneRp(){try{const M=navMap();const g=Object.keys(M).find(k=>(M[k]||[]).some(x=>x==='@rp'||x==='routine'||x==='habit'))||'plan';
+  ['routine','habit'].forEach(k=>{Object.keys(GROUPS).forEach(h=>{const a=GROUPS[h],ix=a.indexOf(k);if(h===g){if(ix<0)a.push(k)}else if(ix>=0)a.splice(ix,1)})})}catch(e){console.warn('oneRp',e)}}
+{const _a=applyNavMap;applyNavMap=function(){const r=_a.apply(this,arguments);oneRp();return r}}
+oneRp();
+{const _o=openSection;openSection=function(){oneRp();return _o.apply(this,arguments)}}
+
+/* ===== v373: 반복 4종 안내 한 줄 — 어디에 무엇을 적는지 ===== */
+const RPHINT={cycle:['#cyHost','🔁 이발·손톱처럼 날짜 간격이 있는 일은 여기, 매일·매주 하는 일은 계획 › 루틴·습관, 월세·구독 같은 결제는 재정 › 반복에 적습니다.'],routine:['#rtHost','⏰ 시간대마다 하는 일은 여기(루틴), 이발·손톱처럼 며칠마다 하는 일은 관리 › 주기 할 일, 결제는 재정 › 반복입니다.'],budget:['#bbody','🔁 결제가 반복되면 편성 › 반복, 이발·손톱 같은 일은 주기 할 일, 매일 하는 일은 루틴입니다.']};
+function rpHintSync(){try{const c=RPHINT[curSection];document.querySelectorAll('.rphint').forEach(x=>{if(!c||x.dataset.sec!==curSection||(curSection==='budget'&&fView!=='rec'))x.remove()});if(!c)return;if(curSection==='budget'&&fView!=='rec')return;
+  const h=document.querySelector(c[0]);if(!h||document.querySelector('.rphint[data-sec="'+curSection+'"]'))return;const p=document.createElement('p');p.className='rphint hint';p.dataset.sec=curSection;p.style.cssText='margin:6px 2px 8px';p.textContent=c[1];
+  const ref=h.querySelector(':scope>.mdbox')||h.querySelector(':scope>.fvsub');if(ref)ref.after(p);else h.prepend(p)}catch(e){console.warn('rphint',e)}}
+DECO.add('반복 안내',{wait:200,run:rpHintSync});
+
+/* ===== v373: 도구줄에서 뺀 🎯 몰입·루틴 → 스케줄 화면 맨 위 한 줄로 ===== */
+function rcRowSync(){try{const R=$('#dayBody');if(!R||curSection!=='day'||typeof SCTX==='undefined'||SCTX!=='run'||(typeof ZMD!=='undefined'&&ZMD>0))return;const sc=R.querySelector(':scope>.sched');if(!sc||sc.querySelector(':scope>.rcrow'))return;
+  const on=(typeof FC!=='undefined'&&FC&&FC.ph!=='rate')||(typeof RT!=='undefined'&&RT);const d=document.createElement('div');d.className='rcrow';d.style.cssText='margin:0 0 8px';d.innerHTML=`<button type="button" class="btn small" id="rcgo">🎯 ${on?'몰입·루틴 진행 중 — 열기':'몰입·루틴 시작'}</button>`;sc.prepend(d);d.querySelector('#rcgo').onclick=()=>frOpen()}catch(e){console.warn('rcrow',e)}}
+DECO.add('몰입 한 줄',{wait:150,run:rcRowSync});
 </script>
 <!--BIBLE{--><!--}BIBLE-->
 <div id="miniov" class="miniov" hidden></div>
