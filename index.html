@@ -4565,7 +4565,7 @@ function lifeHTML(part){const S=D.sleep;const sm=sleepMin();
   let h='';if(RECF('sleep').on)h+=`<div class="panel sub" style="--k:var(--c-time)"><h2>${RLF('sleep')}</h2>${HB()?'<button class="xlink" data-hcget="1" style="margin:-4px 0 8px">⌚ 워치 건강 기록 가져오기</button>':''}${typeof hcSumHTML==='function'?hcSumHTML(D):''}<div class="g2"><label class="f">잠든 시각<input type="time" data-p="sleep.bed" data-re="1" value="${esc(S.bed)}"></label><label class="f">일어난 시각<input type="time" data-p="sleep.wake" data-re="1" value="${esc(S.wake)}"></label></div>
     <div class="sum" style="margin-top:6px">${sm?`수면 <b>${hm(sm)}</b>`:'시각을 적으면 수면 시간이 계산됩니다'}</div>
     <div class="focus" style="margin-top:8px"><span class="hint">잠의 질</span>${dialBtn('data-sqd="1" aria-label="잠의 질"',+S.q||0)}</div></div>`;
-  if(part!=='care'&&RECF('meal').on)h+=`<div class="panel sub" style="--k:var(--c-grat)"><h2>${RLF('meal')}</h2><p class="q" style="margin-top:-4px">일정에 식사 블록(메뉴·장소)을 적으면 여기에 자동으로 들어옵니다.</p>${D.meals.map((m,i)=>{const bk=m.bid&&mealBlk(D,m.bid);return`<div class="item"><div class="hd"><b style="color:var(--ink);font-size:.95rem">${esc(m.k)}</b>${bk?`<span class="hint" style="margin-right:auto;margin-left:8px">⏱ ${esc(bk.s||'')} 일정에서${bk.who?' · 👤'+esc(bk.who):''}</span>`:''}<button class="del" data-mdel="${i}">지우기</button></div>
+  if(RECF('meal').on)h+=`<div class="panel sub" style="--k:var(--c-grat)"><h2>${RLF('meal')}</h2><p class="q" style="margin-top:-4px">일정에 식사 블록(메뉴·장소)을 적으면 여기에 자동으로 들어옵니다.</p>${D.meals.map((m,i)=>{const bk=m.bid&&mealBlk(D,m.bid);return`<div class="item"><div class="hd"><b style="color:var(--ink);font-size:.95rem">${esc(m.k)}</b>${bk?`<span class="hint" style="margin-right:auto;margin-left:8px">⏱ ${esc(bk.s||'')} 일정에서${bk.who?' · 👤'+esc(bk.who):''}</span>`:''}<button class="del" data-mdel="${i}">지우기</button></div>
       ${inp(`meals.${i}.what`,'무엇을 먹었나 (예: 김치찌개, 부대 식당)')}
       <div class="seg">${['가볍게','적당히','많이'].map(v=>`<button data-set="meals.${i}.feel" data-v="${v}" class="${m.feel===v?'on':''}">${v}</button>`).join('')}</div>
       ${bk&&(parseAmt(String(bk.amt||''))||+bk.amt)?`<div class="spend on"><span>💳</span><span class="hint" style="grid-column:2/-1">${won(parseAmt(String(bk.amt||''))||+bk.amt)} · 일정 블록에서 재정에 기록됨</span></div>`:spendRow('meals',i,m,`${m.k} ${m.what||'식사'}`)}</div>`}).join('')}<div class="mealadd">${MEALK.map(k=>`<button data-madd="${k}">＋ ${k}</button>`).join('')}</div></div>`;
@@ -15529,7 +15529,13 @@ const mdM=()=>{const m=new Map(cacheAll||[]);if(D)m.set(D.date,D);return m};
 MDX.care={host:'#careBody',title:'건강',place:(h,b)=>{const d=h.querySelector('.datebar');if(d){if(d.nextElementSibling!==b)d.after(b)}else if(h.firstElementChild!==b)h.prepend(b)},
  build:()=>{const S=CARE_ST||[];const open=sel=>()=>{const r=document.querySelector('#carerec');if(r)r.open=true;mdOpenTo(document.querySelector(sel))};
   const G={wk:open('#carerec .wkp'),meas:()=>{const r=document.querySelector('#carerec');if(r)r.open=true;mdOpenTo([...document.querySelectorAll('#carerec .panel')].find(x=>/몸 측정/.test(x.textContent)))},run:open('#runcard'),trend:()=>{const d=[...document.querySelectorAll('#carerec details.wkin')].find(x=>/최근 2주/.test(x.textContent));mdOpenTo(d)},plan:open('#wpcare')};
-  const cells=S.slice(0,6).map(x=>({e:x.e,t:x.t,v:x.v,s:x.s,go:G[x.go]}));
+  G.run=()=>wkShow('run');G.trend=()=>wkShow('trend');G.plan=()=>wkShow('plan');G.meas=()=>wkShow('meas');G.meal=()=>wkShow('meal');G.sleep=()=>wkShow('sleep');
+  const mg=(S[2]&&S[3])?{e:'⚖️',t:'몸 측정',v:S[2].v,s:(S[3].v&&S[3].v!=='—'?'체지방·근육 '+S[3].v:S[2].s),go:G.meas}:null;
+  let nm=0;try{nm=(D.meals||[]).filter(m=>tx(m.what)).length}catch(e){}
+  const cells=[S[0],S[1]].filter(Boolean).map(x=>({e:x.e,t:x.t,v:x.v,s:x.s,go:x.go==='run'?G.run:G.wk}));
+  if(mg)cells.push(mg);if(S[4])cells.push({e:S[4].e,t:S[4].t,v:S[4].v,s:S[4].s,go:G.sleep});
+  cells.push({e:'🍚',t:'식사',v:nm+'끼',s:'오늘 기록',go:G.meal});
+  if(S[5])cells.push({e:S[5].e,t:S[5].t,v:S[5].v,s:S[5].s,go:G.run});
   let ps='';try{const w=wpWeek(D.date),sl=wpSlotFor(D.date);ps=(sl?sl.name:'쉼')+(w&&w.wp?` · ${w.wd}/${w.wp}`:'')}catch(e){}cells.push({e:'🗓️',t:'운동 계획',s:ps,go:G.plan});
   let last='';try{const L=[...mdM().values()].filter(o=>o.date<=today()&&(wkList(o).length||(o.ex||[]).length)).map(o=>o.date).sort().pop();if(L){const n=Math.round((parseD(today())-parseD(L))/864e5);last=n?n+'일 전':'오늘'}}catch(e){}cells.push({e:'⏳',t:'마지막 운동',v:last||'—',go:G.wk});
   return{c:{e:'✏️',t:'기록',s:'운동·몸',go:()=>{G.wk();setTimeout(()=>{const c=document.querySelector('#carerec [data-wksug]');(c||document.querySelector('#wkname')||{}).focus&&0},400)}},cells}}};
@@ -15555,6 +15561,23 @@ MDX.cycle={host:'#cyHost',title:'주기 할 일',build:()=>{let L=[];try{L=cycDu
   return{c:{e:'✏️',t:'기록',s:'오늘 함 체크',go:top},cells:[{e:'⏰',t:'오늘·지남',v:od+'개',go:top},{e:'⏳',t:'3일 안',v:d3+'개',go:top},{e:'🗓️',t:'이번 주',v:d7+'개',go:top},{e:'🎯',t:'가장 가까운',v:near?(near.c.name||'').slice(0,6):'—',s:near?(near.left<0?-near.left+'일 지남':near.left===0?'오늘':near.left+'일 뒤'):'',go:top},
    {e:'✅',t:'이번 달 한 것',v:mo+'번',go:top},{e:'🕒',t:'최근 한 것',v:lastD?(lastD.c.name||'').slice(0,6):'—',s:lastD?md(lastD.d):'',go:top},{e:'📋',t:'전체',v:cycs().length+'개',go:top},{e:'➕',t:'추가',go:()=>{const b=[...document.querySelectorAll('#cyHost button')].find(x=>/주기 할 일 추가/.test(x.textContent));b&&b.click()}}]}}};
 try{if(typeof mdSync==='function')setTimeout(mdSync,300)}catch(e){}
+
+/* ===== v369: 건강 — 계획·달린 거리·수면 변화·몸 변화는 감추고(만다라트 칸을 누르면 그 부분만 열림), 식사 입력 추가 ===== */
+(function(){const st=document.createElement('style');st.textContent='#carerec .wkin.wkhid{display:none}';document.head.appendChild(st)})();
+const WKKEY={plan:/운동 계획/,run:/달린 거리/,trend:/최근 2주/,chg:/몸 변화/,sleep:/수면 기록/,meal:/식사/};
+function wkShow(k){const rec=document.querySelector('#carerec');if(!rec)return;rec.open=true;
+  const L=[...rec.querySelectorAll('details.wkin')];
+  if(k==='meas'){L.forEach(d=>{if(d.dataset.k==='chg')d.classList.remove('wkhid')});const p=[...rec.querySelectorAll('.panel')].find(x=>/몸 측정/.test(x.textContent));mdOpenTo(p);return}
+  L.forEach(d=>{if(['plan','run','trend','chg'].includes(d.dataset.k)&&d.dataset.k!==(k==='sleep'?'trend':k))d.classList.add('wkhid')});
+  const t=L.find(d=>d.dataset.k===(k==='sleep'?'trend':k));if(t){t.classList.remove('wkhid');t.open=true;mdOpenTo(t)}
+  if(k==='sleep'){const sl=L.find(d=>d.dataset.k==='sleep');if(sl)sl.open=true}}
+{const _rc=renderCare;renderCare=async function(){const r=await _rc.apply(this,arguments);try{const R=$('#careBody');if(!R)return r;const rec=R.querySelector('#carerec');if(!rec)return r;
+  [...rec.querySelectorAll('details.wkin')].forEach(d=>{const t=(d.querySelector('summary')||{}).textContent||'';const k=Object.keys(WKKEY).find(x=>WKKEY[x].test(t));if(k&&!d.dataset.k)d.dataset.k=k});
+  /* 식사 입력 */
+  if(!rec.querySelector('details.wkin[data-k="meal"]')){const mp=[...R.querySelectorAll('.panel.sub')].find(x=>!rec.contains(x)&&/식사/.test((x.querySelector('h2')||{}).textContent||''));
+    if(mp){const n=(D.meals||[]).filter(m=>tx(m.what)).length;const d=document.createElement('details');d.className='wkin';d.dataset.k='meal';d.innerHTML=`<summary>🍚 식사 <small>오늘 ${n}끼 · 눌러서 적기</small></summary>`;rec.appendChild(d);d.appendChild(mp)}}
+  [...rec.querySelectorAll('details.wkin')].forEach(d=>{if(['plan','run','trend','chg'].includes(d.dataset.k)&&!d.dataset.sh){d.dataset.sh='1';d.classList.add('wkhid');d.open=false}});
+  const sm=rec.querySelector(':scope>summary');if(sm)sm.innerHTML='<b>🏋️ 오늘 운동 일지</b> <span class="hint">한 것 · 바로 입력 · 몸 측정 · 수면 · 식사</span>'}catch(e){console.warn('v369',e)}return r}}
 </script>
 <!--BIBLE{--><!--}BIBLE-->
 <div id="miniov" class="miniov" hidden></div>
