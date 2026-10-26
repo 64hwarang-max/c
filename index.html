@@ -15385,6 +15385,34 @@ const cvMmDue=()=>{try{return[...new Map([...memAll().values()].filter(it=>memDu
     $('#cvsgx').onclick=cvSgClose;const ta=$('#cvgrx');setTimeout(()=>{try{ta.focus()}catch(e){}},120);
     $('#cvgrok').onclick=()=>{const v=ta.value.trim();if(!v){ta.focus();return}D[key]=Array.isArray(D[key])?D[key]:['','',''];let i=D[key].findIndex(y=>!tx(y));if(i<0){D[key].push('');i=D[key].length-1}D[key][i]=v;schedule();cvSgClose();toast('🙏 감사를 적었습니다 · '+v);try{renderDay()}catch(e){}};return}
   return _o.apply(this,arguments)}}
+
+/* ===== v359: 몸관리 ‘오늘 운동 일지’ — 한 것이 먼저 보이고 그 밑에서 바로 입력 · 오늘 할 운동 칩 · 입력하면 누적 안내 ===== */
+{const _p=wkPanelHTML;wkPanelHTML=function(){let h=_p.apply(this,arguments);try{const o=D;const T=o.date||today();const nWk=wkList(o).length,ex=(Array.isArray(o.ex)?o.ex:[]);
+  h=h.replace('<h3>🏋️ 운동 기록</h3>',`<h3>🏋️ ${md(T)}${T===today()?' · 오늘':''} 운동 일지 <small class="hint">한 것 ${nWk+ex.length}개</small></h3>`);
+  const exH=ex.map(x=>`<div class="wki"><i>🏃</i><div><b>${esc(x.type||'운동')} ${+x.min?x.min+'분':''}${+x.km?' · '+x.km+'km':''}</b><small>${esc(x.detail||'')}${+x.int?` · 강도 ${x.int}`:''}</small></div><button class="del" data-wkexdel="${esc(x.id||'')}" aria-label="지우기">✕</button></div>`).join('');
+  let sug='';try{const done=new Set();const slot=wpSlotFor(T);if(slot){wpDone(o,slot).forEach(n=>done.add(n));const left=(slot.ex||[]).filter(n=>!done.has(n));
+      if(left.length)sug+=`<p class="wkhint" style="margin:8px 0 2px">오늘 할 운동 (${esc(slot.name)}) · 눌러서 바로 입력</p><div class="chips">${left.map(n=>`<button type="button" class="chip fbtn" data-wksug="w|${esc(n)}">${esc(n)}</button>`).join('')}</div>`;
+      else if((slot.ex||[]).length)sug+=`<p class="wkhint" style="margin:8px 0 2px">✅ 오늘 ${esc(slot.name)} 운동을 모두 했습니다.</p>`}
+    if(wpCardioOn(T)&&!wpCardioDone(o)){const C=wpCardioSug(T);if(C)sug+=`<p class="wkhint" style="margin:8px 0 2px">오늘 유산소</p><div class="chips"><button type="button" class="chip fbtn" data-wksug="c|${esc(C.name)}">🏃 ${esc(C.name)} ${C.km?C.km+'km':''}</button></div>`}}catch(e){}
+  const key='<div style="border-top:1px dashed var(--line);margin-top:8px;padding-top:6px">';
+  const i=h.indexOf(key);if(i>0){h=h.slice(0,i)+exH+sug+`<p class="wkhint" style="margin:10px 0 0;font-weight:700">＋ 이어서 입력</p>`+h.slice(i)}
+  h=h.replace('<p class="hint">오늘 한 운동을 아래에서 넣으십시오.</p>',ex.length?'':'<p class="hint">아직 기록한 운동이 없습니다. 아래에서 바로 넣으십시오.</p>')}catch(e){console.warn('v359 panel',e)}return h}}
+{const _b=wkBind;wkBind=function(R,re){
+  const sv=R.querySelector('#wksave');let n0=0;if(sv)sv.addEventListener('click',()=>{n0=wkList(D).length},true);
+  _b.apply(this,arguments);
+  try{if(sv)sv.addEventListener('click',()=>{if(wkList(D).length<=n0)return;const T=D.date,ym=T.slice(0,7);let w=null;try{w=wpWeek(T)}catch(e){}
+      const m0=addD(T,-((parseD(T).getDay()+6)%7));let wd=0;for(let i=0;i<7;i++){const x=addD(m0,i),o=x===D.date?D:(cacheAll&&cacheAll.get(x));if(o&&wkList(o).some(y=>y.t==='weight'))wd++}
+      const wT=w&&w.wp?w.wp:0,km=wkMonthKm(ym),g=+SET.kmGoal||100;const t=$('#toast');const pre=(t&&/^🏆/.test(t.textContent))?t.textContent.split(' · 이번')[0]+' · ':'✅ 기록했습니다 · ';
+      toast(`${pre}이번 주 웨이트 ${wd}${wT?'/'+wT:''}일 · 이번 달 ${km}/${g}km`)})}catch(e){}
+  R.querySelectorAll('[data-wkexdel]').forEach(b=>b.onclick=async()=>{if(!await uiConfirm('이 운동 기록을 지울까요?'))return;D.ex=(D.ex||[]).filter(x=>x.id!==b.dataset.wkexdel);schedule();try{XPC.k=''}catch(e){}re()});
+  R.querySelectorAll('[data-wksug]').forEach(b=>b.onclick=()=>{const[k,n]=b.dataset.wksug.split('|');const F=WKF;
+    if(k==='w'){const part=wpPartOf(n),S=wpSuggest(n,part,D.date),slot=wpSlotFor(D.date);Object.assign(F,{t:'weight',up:part,name:n,sets:S.sets.map(s=>({w:String(s.w),r:String(s.r)})),sl:slot?slot.id:''})}
+    else{const C=wpCardioSug(D.date);Object.assign(F,{t:'cardio',cname:n,km:String(C&&C.km||''),min:String(C&&C.min||'')})}
+    re();setTimeout(()=>{try{const t=document.querySelector('#wksave');if(t)t.scrollIntoView({block:'center',behavior:'smooth'})}catch(e){}},350)})}}
+{const _rc=renderCare;renderCare=async function(){const r=await _rc.apply(this,arguments);try{const R=$('#careBody');if(!R)return r;
+  const rec=R.querySelector('#carerec'),dash=R.querySelector('.cdash');
+  if(rec){rec.open=true;const sm=rec.querySelector('summary');if(sm)sm.innerHTML='<b>🏋️ 오늘 운동 일지</b> <span class="hint">한 것 보기 · 바로 입력 · 몸 측정</span>';if(dash)dash.after(rec)}
+  [...R.querySelectorAll('.panel.sub')].forEach(x=>{const h=x.querySelector('h2');if(h&&/^\s*🏃\s*운동/.test(h.textContent))x.remove()})}catch(e){console.warn('v359',e)}return r}}
 </script>
 <!--BIBLE{--><!--}BIBLE-->
 <div id="miniov" class="miniov" hidden></div>
