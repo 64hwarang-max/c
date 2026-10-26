@@ -1744,7 +1744,7 @@ const LDS={};
 function shInferDel(d,o){const L=LDS[d];if(!L||Date.now()-L.t>15000)return;const S=shGet();const e=S[d]||(S[d]={});let ch=false;SHKIND.forEach(([k,bk,dk])=>{e[dk]=e[dk]||[];const have=new Set((o[k]||[]).map(b=>b&&b.id));(L[k]||[]).forEach(id=>{if(!have.has(id)&&!e[dk].includes(id)){e[dk].push(id);ch=true}})});if(ch)shPut(S)}
 function shWrapStore(){if(!store||store._shg)return;const sv=store.save.bind(store),ld=store.load.bind(store);
   store.load=async d=>{const r=await ld(d);try{if(r&&/^\d{4}-\d{2}-\d{2}$/.test(d)){const x={t:Date.now()};SHKIND.forEach(([k])=>{x[k]=(r[k]||[]).filter(b=>shOk(k,b)).map(b=>b.id)});LDS[d]=x}}catch(e){}return r};
-  const SVQ={};const body=async(d,o)=>{try{if(o&&/^\d{4}-\d{2}-\d{2}$/.test(d)){if(o!==D)shInferDel(d,o);let cur=null;try{cur=await ld(d)}catch(e){}const n=shMerge(d,o,cur);
+  const SVQ={};const body=async(d,o)=>{try{if(o&&/^\d{4}-\d{2}-\d{2}$/.test(d)){if(o!==D)shInferDel(d,o);let cur=null;try{cur=await ld(d)}catch(e){}const n=0;/* v367: 저장할 때 지운 블록을 되살리지 않음 */
       const st=String(new Error().stack||'').split('\n').slice(2,6).map(l=>(l.match(/at (\S+)/)||[])[1]||'').filter(Boolean).join('<');
       svLog({t:new Date().toTimeString().slice(0,8),d,tm:(o.time||[]).length,pl:(o.plan||[]).length,live:o===D?1:0,add:n,src:st});
       try{if(cur){const a=(cur.time||[]).length,c1=(cur.plan||[]).length;if((o.time||[]).length<a||(o.plan||[]).length<c1){svLog({t:new Date().toTimeString().slice(0,8),d,ev:'shrink',tm0:a,tm1:(o.time||[]).length,pl0:c1,pl1:(o.plan||[]).length,live:o===D?1:0,src:st});shSnap(d,cur)}}}catch(e){}
@@ -1756,7 +1756,7 @@ async function shSnap(d,cur){try{const now=Date.now();if(SNAPT[d]&&now-SNAPT[d]<
 function shSnapMerge(d,o,L){const e=shGet()[d]||{};let n=0;SHKIND.forEach(([k,bk,dk])=>{o[k]=Array.isArray(o[k])?o[k]:[];const have=new Set(o[k].map(b=>b&&b.id));const del=e[dk]||[];L.forEach(x=>(x[k]||[]).forEach(b=>{if(!shOk(k,b)||have.has(b.id)||del.includes(b.id)||(k==='plan'&&b.rt&&shRtGone(o,b)))return;o[k].push(JSON.parse(JSON.stringify(b)));have.add(b.id);n++}));o[k].sort((x,y)=>(x.s||'99')<(y.s||'99')?-1:1)});return n}
 /* 🛟 자동 되살리기: 앱을 열 때·날짜를 열 때, 최근 3일의 사라진 실제·계획 블록(지운 적 없는 것)을 조용히 되살리고 알려 줌 */
 let SHAUTO=false;
-async function shAuto(){if(SHAUTO)return;SHAUTO=true;try{const T=today(),ds=[T,addD(T,-1),addD(T,-2)];const SN={};
+async function shAuto(){return;/* v367: 자동 되살리기 끔 — 설정의 ‘사라진 기록 찾기’로만 */if(SHAUTO)return;SHAUTO=true;try{const T=today(),ds=[T,addD(T,-1),addD(T,-2)];const SN={};
     try{const ks=(await store.keys()).filter(k=>/^snap:\d{4}-\d{2}-\d{2}:/.test(k)&&ds.includes(k.slice(5,15)));for(const k of ks){const x=await store.getDoc(k);if(x&&x.date)(SN[x.date]=SN[x.date]||[]).push(x)}}catch(e){}
     let tot=0;for(const d of ds){if(D&&D.date===d){try{shKeep(D)}catch(e){}const n=shMerge(d,D,null)+shSnapMerge(d,D,SN[d]||[]);if(n){tot+=n;svLog({t:new Date().toTimeString().slice(0,8),d,ev:'auto-restore',add:n});schedule()}continue}
       let o=null;try{o=await store.load(d)}catch(e){}if(!o&&!(shGet()[d]||SN[d]))continue;o=norm(o||{date:d});const n=shMerge(d,o,null)+shSnapMerge(d,o,SN[d]||[]);if(n){tot+=n;svLog({t:new Date().toTimeString().slice(0,8),d,ev:'auto-restore',add:n});await store.save(d,o);if(cacheAll)cacheAll.set(d,o)}}
@@ -1776,7 +1776,7 @@ function getP(path){return path.split('.').reduce((o,k)=>o==null?o:o[k],D)}
 async function openDay(d){
   ZMD=0;{const v=$('#v-day');if(v)v.classList.remove('zmon')}LR={};await flush();cur=d;let o=await store.load(d);for(let g=0;g<3&&dirty;g++){await flush();o=await store.load(d)}D=norm(o||{date:d});
   const dt=parseD(d);$('#dlabel').classList.toggle('notoday',d!==today());$('#dlabel').innerHTML=`${d!==today()?'⚠️ ':''}${dt.getMonth()+1}월 ${dt.getDate()}일 (${WD[dt.getDay()]})${d===today()?' · 오늘':' · <u data-totoday="1" role="button">오늘로</u>'}${holName(d)?` <span class="holt">${esc(holName(d))}</span>`:''}`;$('#dpick').value=d;
-  try{const n=shMerge(d,D,null);if(n){svLog({t:new Date().toTimeString().slice(0,8),d,ev:'open-restore',add:n});schedule();setTimeout(()=>toast(`🛟 사라졌던 기록 ${n}개를 되살렸습니다.`),300)}}catch(e){}shLast={};try{SHKIND.forEach(([k])=>{shLast[k]={o:D,d,ids:new Set((D[k]||[]).filter(b=>shOk(k,b)).map(b=>b.id))}})}catch(e){}setTimeout(()=>{shAuto()},600);
+  try{const n=0;if(n){svLog({t:new Date().toTimeString().slice(0,8),d,ev:'open-restore',add:n});schedule();setTimeout(()=>toast(`🛟 사라졌던 기록 ${n}개를 되살렸습니다.`),300)}}catch(e){}shLast={};try{SHKIND.forEach(([k])=>{shLast[k]={o:D,d,ids:new Set((D[k]||[]).filter(b=>shOk(k,b)).map(b=>b.id))}})}catch(e){}setTimeout(()=>{shAuto()},600);
   const p=await store.load(addD(d,-1));prevDay=p?norm(p):null;try{await allMap()}catch(e){}{const a=repApply(D),b=rtPlanApply(D);if(a||b)schedule()}apAutoRun();renderDay();
 }
 function renderDay(){if(ZMD>0&&curSection==='day'){zmDay();return}{const v=$('#v-day');if(v)v.classList.remove('zmon')}try{zmBarSync()}catch(e){}if(mode==='sched')mode='start';document.querySelectorAll('#mode button').forEach(b=>b.classList.toggle('on',b.dataset.m===mode));
