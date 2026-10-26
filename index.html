@@ -15415,6 +15415,25 @@ const cvMmDue=()=>{try{return[...new Map([...memAll().values()].filter(it=>memDu
   const rec=R.querySelector('#carerec'),dash=R.querySelector('.cdash');
   if(rec){rec.open=true;const sm=rec.querySelector('summary');if(sm)sm.innerHTML='<b>🏋️ 오늘 운동 일지</b> <span class="hint">한 것 보기 · 바로 입력 · 몸 측정</span>';if(dash)dash.after(rec)}
   [...R.querySelectorAll('.panel.sub')].forEach(x=>{const h=x.querySelector('h2');if(h&&/^\s*🏃\s*운동/.test(h.textContent))x.remove()})}catch(e){console.warn('v359',e)}return r}}
+
+/* ===== v361: 몸관리를 ‘운동 일지’ 한 카드로 통합 — 오늘 챙길 것·운동 계획·달린 거리·최근 2주·수면·몸 변화를 안으로 ===== */
+(function(){const st=document.createElement('style');st.textContent=`#carerec .cdtodo{margin:4px 0 8px;padding:8px 10px;border-radius:12px;background:var(--bg2,rgba(127,127,127,.08))}#carerec .cdtodo b{font-size:.84rem}#carerec .cdtodo ul{margin:4px 0 0}
+#carerec .wkin{border-top:1px solid var(--line);margin-top:8px;padding-top:6px}#carerec .wkin>summary{cursor:pointer;font-weight:700;font-size:.92rem;padding:6px 2px;list-style:none}#carerec .wkin>summary::-webkit-details-marker{display:none}#carerec .wkin>summary::before{content:'▸ ';color:var(--muted)}#carerec .wkin[open]>summary::before{content:'▾ '}#carerec .wkin>summary small{font-weight:400;color:var(--muted);margin-left:4px}
+#carerec .wkin>.card,#carerec .wkin>.panel{border:0!important;box-shadow:none!important;margin:0!important;padding:4px 0!important;background:none!important}`;document.head.appendChild(st)})();
+{const _rc=renderCare;renderCare=async function(){const r=await _rc.apply(this,arguments);try{const R=$('#careBody');if(!R)return r;const rec=R.querySelector('#carerec');if(!rec||rec.dataset.u361)return r;rec.dataset.u361='1';
+  const wkp=rec.querySelector('.wkp');
+  const cd=R.querySelector('.cdash');if(cd){const li=cd.querySelector('.ctodo'),pp=cd.querySelector(':scope>p.hint');const src=li||pp;if(src){const w=document.createElement('div');w.className='cdtodo';w.innerHTML='<b>📌 오늘 챙길 것</b>';w.appendChild(src);if(wkp)wkp.before(w);else rec.appendChild(w)}cd.remove()}
+  const find=re=>[...R.children].find(x=>x!==rec&&re.test(((x.querySelector('h3,h2,summary')||x).textContent||'').trim()));
+  let wk=null;try{wk=wpWeek(D.date)}catch(e){}const P=SET.wplan;let slot=null;try{slot=wpSlotFor(D.date)}catch(e){}
+  const km=(()=>{try{return runStats(D.date.slice(0,7)).km}catch(e){return 0}})();
+  const items=[
+    [R.querySelector('#wpcare'),`📅 운동 계획`,P?`${slot?slot.name:'오늘 쉼'}${wk&&wk.wp?` · 웨이트 ${wk.wd}/${wk.wp}`:''}`:'아직 없음 · 눌러서 정하기'],
+    [R.querySelector('#runcard'),`🏃 달린 거리·걸음`,`${km}km / ${+SET.kmGoal||100}km`],
+    [find(/^😴?\s*수면\s*·\s*🏃?\s*운동/),`📊 최근 2주 수면·운동`,''],
+    [find(/^😴\s*수면(?!\s*·)/),`😴 수면 기록`,''],
+    [find(/^📈?\s*몸 변화/),`📈 몸 변화`,'']];
+  items.forEach(([n,t,sm])=>{if(!n||rec.contains(n))return;n.classList.remove('pclosed');const d=document.createElement('details');d.className='wkin';d.innerHTML=`<summary>${t}${sm?` <small>${esc(sm)}</small>`:''}</summary>`;rec.appendChild(d);d.appendChild(n)});
+  const sm=rec.querySelector(':scope>summary');if(sm)sm.innerHTML='<b>🏋️ 운동 일지</b> <span class="hint">챙길 것 · 한 것 · 바로 입력 · 계획 · 달리기 · 수면 · 몸</span>'}catch(e){console.warn('v361',e)}return r}}
 </script>
 <!--BIBLE{--><!--}BIBLE-->
 <div id="miniov" class="miniov" hidden></div>
