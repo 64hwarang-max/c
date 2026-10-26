@@ -15718,6 +15718,48 @@ document.addEventListener('click',async e=>{const b=e.target.closest&&e.target.c
 .plwn{border:0;background:none;color:var(--ink);font:inherit;font-size:.74rem;text-align:left;padding:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}
 .plwc{position:relative;display:flex;align-items:center;justify-content:center;height:26px;border-radius:6px}.plwc.td{background:color-mix(in srgb,#3b82f6 8%,transparent)}
 .plwc .plf{display:block;border-radius:50%;background:#43a047}.plwc .plo{display:block;width:12px;height:12px;border-radius:50%;border:2px solid #3b82f6;box-sizing:border-box}.plwc .plr{position:absolute;bottom:1px;right:calc(50% - 12px);width:5px;height:5px;border-radius:50%;background:#f59e0b}`;document.head.appendChild(st)})();
+
+/* ===== v371: 관리 만다라트 칸마다 다른 입력 — 건강(웨이트·유산소·몸 측정·수면 각각) · 관계(기간별 만남·양육 중 목록) / 운동 일지에서 수면·몸 측정 빼기 ===== */
+let CSH=null;
+function careHoldIn(R,rec){let H=R.querySelector(':scope>#carehold');if(!H){H=document.createElement('div');H.id='carehold';H.hidden=true;R.appendChild(H)}
+  const meas=[...R.querySelectorAll('.panel')].find(x=>!H.contains(x)&&/몸 측정/.test((x.querySelector('h2')||{}).textContent||''));if(meas){meas.dataset.ch='meas';meas.classList.remove('pclosed');H.appendChild(meas)}
+  const slp=[...R.querySelectorAll('.panel')].find(x=>!H.contains(x)&&/^\s*😴?\s*수면(?!\s*·)/.test((x.querySelector('h2')||{}).textContent||''));if(slp){slp.dataset.ch='sleep';slp.classList.remove('pclosed');H.appendChild(slp)}
+  ['sleep','trend','chg'].forEach(k=>{const d=rec.querySelector(`details.wkin[data-k="${k}"]`);if(!d)return;[...d.children].forEach(c=>{if(c.tagName!=='SUMMARY'){if(!c.dataset.ch)c.dataset.ch=k;H.appendChild(c)}});d.remove()});return H}
+function careSheetFill(){const B=document.querySelector('#cshb'),H=document.querySelector('#carehold');if(!B||!H||!CSH)return;B.innerHTML='';
+  (CSH==='meas'?['meas','chg']:['sleep','trend']).forEach(p=>H.querySelectorAll(`[data-ch="${p}"]`).forEach(n=>{n.classList.remove('pclosed');B.appendChild(n)}));
+  if(!B.children.length)B.innerHTML='<p class="hint">불러오는 중입니다…</p>'}
+function careSheet(k){if(curSection!=='care'||!document.querySelector('#carehold')){go('care');setTimeout(()=>careSheet(k),900);return}
+  CSH=k;const S=$('#sheet');S.hidden=false;S.innerHTML=`<div class="sheetbox csheet" role="dialog" aria-label="${k==='meas'?'몸 측정':'수면'}"><div class="shead"><b>${k==='meas'?'📏 몸 측정':'😴 수면'}</b><button class="del" id="cshx">닫기</button></div><div id="cshb"></div></div>`;
+  const close=()=>{S.hidden=true;S.innerHTML='';CSH=null;try{renderCare()}catch(e){}};$('#cshx').onclick=close;S.onclick=e=>{if(e.target===S)close()};careSheetFill()}
+function careWk(t){const r=document.querySelector('#carerec');if(!r){go('care');setTimeout(()=>careWk(t),900);return}r.open=true;
+  const b=t&&r.querySelector(`[data-wkt="${t}"]`);if(b&&!b.classList.contains('on'))b.click();
+  setTimeout(()=>{const R=document.querySelector('#carerec');const w=R&&(R.querySelector('[data-wkt].on')||R.querySelector('.wkp'));if(w)w.scrollIntoView({block:'start',behavior:'smooth'})},b?400:50)}
+{const _rc=renderCare;renderCare=async function(){const r=await _rc.apply(this,arguments);try{const R=$('#careBody');const rec=R&&R.querySelector('#carerec');if(!rec)return r;careHoldIn(R,rec);
+  const sm=rec.querySelector(':scope>summary');if(sm)sm.innerHTML='<b>🏋️ 오늘 운동 일지</b> <span class="hint">한 것 · 바로 입력 · 식사</span>';
+  if(CSH&&!$('#sheet').hidden)careSheetFill()}catch(e){console.warn('v371',e)}return r}}
+{const _b=MDX.care.build;MDX.care.build=function(){const r=_b.apply(this,arguments);try{if(!r)return r;r.cells.forEach(c=>{
+  if(/이번 주 운동/.test(c.t)){c.t='웨이트 (이번 주)';c.go=()=>careWk('weight')}
+  else if(/달리기/.test(c.t)){c.t='유산소 · 달리기';c.go=()=>careWk('cardio')}
+  else if(/몸 측정/.test(c.t))c.go=()=>careSheet('meas');
+  else if(/수면/.test(c.t))c.go=()=>careSheet('sleep');
+  else if(/마지막 운동/.test(c.t))c.go=()=>careWk('')});r.c.go=()=>careWk('')}catch(e){console.warn('v371c',e)}return r}}
+
+/* 관계: 기간별 만남 목록 · 양육 중 사람 */
+function pplSheet(kind){const m=mdM(),T=today(),wa=mondayOf(T),ym=T.slice(0,7);const S=$('#sheet');
+  const close=()=>{S.hidden=true;S.innerHTML=''};let ttl='',body='';
+  if(kind==='nur'){const L=PEOPLE.list.filter(p=>(p.tags||[]).some(t=>/양육중/.test(t)));ttl='🌱 양육 중';
+    body=L.length?L.map(p=>`<button type="button" class="pslr" data-pslp="${p.id}"><b>${esc(p.name)}</b><small>${esc((p.tags||[]).join(' · '))}</small></button>`).join(''):'<p class="hint">‘양육중’ 꼬리표를 단 사람이 없습니다. 사람 카드에서 꼬리표를 붙이십시오.</p>'}
+  else{const pr=kind==='d'?d=>d===T:kind==='w'?d=>d>=wa&&d<=T:d=>d.startsWith(ym);ttl=kind==='d'?'📅 오늘 만남':kind==='w'?'🗓️ 이번 주 만남':'📆 이번 달 만남';
+    const L=[];[...m.values()].forEach(o=>{if(!pr(o.date))return;(o.meet||[]).forEach(x=>{if(tx(x.who)||tx(x.what))L.push({d:o.date,x})})});L.sort((a,b)=>a.d<b.d?1:-1);
+    body=(L.length?L.map(({d,x})=>{const nm=splitNames(x.who)[0]||'';const p=nm&&PEOPLE.list.find(q=>q.name===nm);return`<button type="button" class="pslr" ${p?`data-pslp="${p.id}"`:''}><b>${esc(x.who||'—')}</b><small>${md(d)}${x.what?' · '+esc(x.what):''}</small></button>`}).join(''):'<p class="hint">아직 기록한 만남이 없습니다.</p>')+`<button type="button" class="btn" id="psladd" style="margin-top:10px">✏️ 만남 기록하기</button>`}
+  S.hidden=false;S.innerHTML=`<div class="sheetbox" role="dialog" aria-label="${esc(ttl)}"><div class="shead"><b>${ttl}</b><button class="del" id="pslx">닫기</button></div>${body}</div>`;
+  $('#pslx').onclick=close;S.onclick=e=>{if(e.target===S)close()};
+  S.querySelectorAll('[data-pslp]').forEach(b=>b.onclick=()=>{close();pOpen=b.dataset.pslp;go('people',true)});
+  const a=$('#psladd');if(a)a.onclick=()=>{close();mdOpenTo(document.querySelector('#pqtoday'),'#pqnm')}}
+{const _b=MDX.people.build;MDX.people.build=function(){const r=_b.apply(this,arguments);try{r.cells.forEach(c=>{
+  if(c.t==='오늘')c.go=()=>pplSheet('d');else if(c.t==='이번 주')c.go=()=>pplSheet('w');else if(c.t==='이번 달')c.go=()=>pplSheet('m');else if(c.t==='양육 중')c.go=()=>pplSheet('nur')})}catch(e){}return r}}
+(function(){const st=document.createElement('style');st.textContent=`.csheet #cshb>.panel[data-ch="meas"]>h2,.csheet #cshb>.panel[data-ch="sleep"]>h2{display:none}.csheet #cshb>.panel,.csheet #cshb>.card{border:0!important;box-shadow:none!important;margin:0 0 10px!important;padding:6px 0!important;background:none!important}
+.pslr{display:flex;flex-direction:column;align-items:flex-start;width:100%;text-align:left;border:0;border-bottom:1px solid var(--line);background:none;color:var(--ink);font:inherit;padding:8px 2px;cursor:pointer}.pslr small{color:var(--muted);font-size:.8rem}`;document.head.appendChild(st)})();
 </script>
 <!--BIBLE{--><!--}BIBLE-->
 <div id="miniov" class="miniov" hidden></div>
