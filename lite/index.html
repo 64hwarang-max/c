@@ -15365,6 +15365,24 @@ function cvSgOpen(k){const S=$('#sheet');const T=today();let body='',ttl='';
   if(k==='dia'){cvSgClose();diaryToday();return}
   if(k==='bk'){cvSgClose();bkQuick();return}}
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-cvsg]');if(!b)return;e.preventDefault();e.stopPropagation();cvSgOpen(b.dataset.cvsg)},true);
+
+/* ===== v357: 오늘의 제안에 감사 · 암송 복습 추가 ===== */
+const cvGrKey=()=>new Date().getHours()>=15?'grat':'mgrat';
+const cvGrN=()=>{try{return[...(D.mgrat||[]),...(D.grat||[])].filter(tx).length}catch(e){return 0}};
+const cvMmDue=()=>{try{return[...new Map([...memAll().values()].filter(it=>memDue(it.id)).map(x=>[x.id,x])).values()]}catch(e){return[]}};
+{const _l=cvSgList;cvSgList=function(){const L=_l.apply(this,arguments);if(!L.length&&!(typeof D!=='undefined'&&D&&D.date===today()))return L;
+  try{if(D&&D.date===today()&&!cvGrN())L.push({k:'gr',e:'🙏',t:'오늘의 감사',s:'오늘 감사한 일 한 가지를 적어 보십시오'})}catch(e){}
+  try{const n=cvMmDue().length;if(n)L.push({k:'mm',e:'🧠',t:'암송 복습',s:`복습할 구절 ${n}개가 기다리고 있습니다`})}catch(e){}
+  return L}}
+{const _o=cvSgOpen;cvSgOpen=function(k){
+  if(k==='mm'){const q=cvMmDue();if(!q.length){toast('오늘 복습할 구절은 모두 마쳤습니다.');return}const S=$('#sheet');S.hidden=false;
+    S.innerHTML=`<div class="sheetbox" role="dialog" aria-label="암송 복습"><div class="shead"><b>🧠 암송 복습</b><button class="del" id="cvsgx">닫기</button></div><div class="card nocol" style="--k:var(--acc);margin:0;border:0;box-shadow:none"><p style="font-size:1.25rem;font-weight:800;margin:0 0 6px">복습할 구절 ${q.length}개</p><div style="margin:0 0 10px">${q.slice(0,6).map(x=>`<p class="hint" style="margin:2px 0">· ${esc(x.r||x.ref||x.id)}</p>`).join('')}${q.length>6?`<p class="hint" style="margin:2px 0">… 외 ${q.length-6}개</p>`:''}</div><button class="btn" id="cvmmgo">▶ 복습 시작</button></div></div>`;
+    $('#cvsgx').onclick=cvSgClose;$('#cvmmgo').onclick=()=>{cvSgClose();memQ=q.map(x=>x.id);memI=0;memMode='hide';memLv=4;memShow=false;memV='card';bbTab='mem';openSection('bible');try{renderBible()}catch(e){}};return}
+  if(k==='gr'){const key=cvGrKey();const S=$('#sheet');S.hidden=false;const done=[...(D.mgrat||[]),...(D.grat||[])].filter(tx);
+    S.innerHTML=`<div class="sheetbox" role="dialog" aria-label="오늘의 감사"><div class="shead"><b>🙏 오늘의 감사</b><button class="del" id="cvsgx">닫기</button></div><div class="card nocol" style="--k:var(--c-grat,#e6a23c);margin:0;border:0;box-shadow:none">${done.length?`<div style="margin:0 0 8px">${done.map(x=>`<p style="margin:2px 0">✓ ${esc(x)}</p>`).join('')}</div>`:''}<p class="hint" style="margin:0 0 6px">오늘 감사한 일을 구체적으로 한 가지 적으십시오.</p><textarea id="cvgrx" rows="2" placeholder="예: 동료가 원고를 끝까지 읽어 주었다" style="width:100%"></textarea><div class="row" style="gap:8px;margin-top:8px"><button class="btn" id="cvgrok">저장</button></div></div></div>`;
+    $('#cvsgx').onclick=cvSgClose;const ta=$('#cvgrx');setTimeout(()=>{try{ta.focus()}catch(e){}},120);
+    $('#cvgrok').onclick=()=>{const v=ta.value.trim();if(!v){ta.focus();return}D[key]=Array.isArray(D[key])?D[key]:['','',''];let i=D[key].findIndex(y=>!tx(y));if(i<0){D[key].push('');i=D[key].length-1}D[key][i]=v;schedule();cvSgClose();toast('🙏 감사를 적었습니다 · '+v);try{renderDay()}catch(e){}};return}
+  return _o.apply(this,arguments)}}
 </script>
 
 <div id="miniov" class="miniov" hidden></div>
