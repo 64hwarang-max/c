@@ -15652,9 +15652,9 @@ function plSheet(k){PLS=k;const S=$('#sheet');const T=today(),mon=mondayOf(T);co
   <div class="plsec"><p class="plsh2">🗓️ 오늘 계획에 넣기 <small class="hint">빈 시간에 들어갑니다</small></p>
    <div class="plds">${[30,60,90,120].map(m=>`<button type="button" data-pld2="${m}" class="${PLX.dur===m?'on':''}">${plH(m)}</button>`).join('')}</div>
    <div class="plcats">${cats.length?cats.map(c=>`<button type="button" data-plcat="${esc(c)}"><i class="cdot" style="background:${catColor(c)}"></i>${esc(c)}</button>`).join(''):'<span class="hint">이 기둥에 연결된 분류가 없습니다. 분류 설정에서 기둥을 정해 주십시오.</span>'}</div></div>
-  <button type="button" class="xlink" id="plhub">🏛️ 기둥 관리 열기 ›</button></div>`;
+</div>`;
   const close=()=>{S.hidden=true;S.innerHTML='';PLS=null};$('#plsx').onclick=close;S.onclick=e=>{if(e.target===S)close()};
-  $('#plrec').onclick=()=>{close();plGoRec(k)};$('#plhub').onclick=()=>{close();pilSel=k;go('pillar')};
+  $('#plrec').onclick=()=>{close();plGoRec(k)};
   S.querySelector('[data-plfo]').onclick=()=>{SET.wkFocus=SET.wkFocus||{};const L=(SET.wkFocus[mon]||[]).slice();const i=L.indexOf(k);if(i>=0)L.splice(i,1);else L.push(k);SET.wkFocus[mon]=L;saveSet().catch(()=>{});plSheet(k);plRefresh()};
   S.querySelectorAll('[data-pld2]').forEach(b=>b.onclick=()=>{PLX.dur=+b.dataset.pld2;S.querySelectorAll('[data-pld2]').forEach(x=>x.classList.toggle('on',x===b))});
   S.querySelectorAll('[data-plcat]').forEach(b=>b.onclick=async()=>{if(!D||D.date!==T){await openDay(T)}if(plAddBlock(b.dataset.plcat,PLX.dur)){close();if(curSection!=='day')go('day')}});
@@ -15686,12 +15686,12 @@ function plWkHTML(mon,M){const T=today();const days=[...Array(7)].map((_,i)=>add
   const head=days.map((d,i)=>`<button type="button" class="plwd ${d===T?'td':''}" data-plday="${d}"><b>${WD[parseD(d).getDay()]}</b><small>${parseD(d).getDate()}</small></button>`).join('');
   const rows=SCORE.map(([k])=>`<button type="button" class="plwn" data-pil="${k}">${AREA_E[k]||''} ${esc(areaName(k))}</button>`+days.map((d,i)=>{const a=DY[i].A[k]||0,p=DY[i].P[k]||0,r=plRecs(k,O[i]).length;const sz=a?Math.min(22,10+Math.round(a/15)):0;
     return`<span class="plwc ${d===T?'td':''}" title="${md(d)} 계획 ${plH(p)} · 실행 ${plH(a)}">${a?`<i class="plf" style="width:${sz}px;height:${sz}px"></i>`:p?'<i class="plo"></i>':''}${r?'<i class="plr"></i>':''}</span>`}).join('')).join('');
-  return`<div class="card nocol plwk" style="--k:#3b82f6"><h3>🗓️ 요일별 기둥 실행</h3><div class="plwg"><span></span>${head}${rows}</div><p class="hint" style="margin:8px 0 0">○ 계획만 · ● 실행(클수록 오래) · • 관리 기록 — 요일을 누르면 그날 화면, 기둥을 누르면 기둥 정리로 갑니다.</p></div>`}
+  return`<details class="plwk" open><summary>🗓️ 요일별 기둥 실행</summary><div class="plwg"><span></span>${head}${rows}</div><p class="hint" style="margin:8px 0 0">○ 계획만 · ● 실행(클수록 오래) · • 관리 기록 — 요일을 누르면 그날 화면, 기둥을 누르면 기둥 시트로 갑니다.</p></details>`}
 async function plWkSync(){try{const old=document.querySelector('.plwk');const on=curSection==='plan'&&typeof qhKind==='function'&&PLM!=='goal'&&qhKind()==='w'&&!(typeof ZMP!=='undefined'&&ZMP!=null);
   if(!on){if(old)old.remove();return}const host=$('#pbody');if(!host)return;const mon=mondayOf(pAnchor||today());
   if(plWkSync.busy)return;plWkSync.busy=1;let M=plMap();try{M=new Map(await allMap());if(D)M.set(D.date,D)}catch(e){}plWkSync.busy=0;
-  const h=plWkHTML(mon,M);let el=host.querySelector(':scope>.plwk');if(!el||el.dataset.sig!==h){const t=document.createElement('div');t.innerHTML=h;const n=t.firstElementChild;n.dataset.sig=h;if(el)el.replaceWith(n);el=n}
-  const wb=host.querySelector(':scope>.wbx');if(wb){if(wb.nextElementSibling!==el)wb.after(el)}else{const pt=host.querySelector(':scope>.ptop');if(pt){if(pt.nextElementSibling!==el)pt.after(el)}else if(host.firstElementChild!==el)host.prepend(el)}}catch(e){plWkSync.busy=0;console.warn('plwk',e)}}
+  const h=plWkHTML(mon,M);let el=host.querySelector('.plwk');if(!el||el.dataset.sig!==h){const t=document.createElement('div');t.innerHTML=h;const n=t.firstElementChild;n.dataset.sig=h;if(el)el.replaceWith(n);el=n}
+  const wb=host.querySelector(':scope>.wbx');if(wb){const nb=wb.querySelector(':scope>.wbgo');if(el.parentNode!==wb||(nb&&el.nextElementSibling!==nb)){nb?nb.before(el):wb.appendChild(el)}}else el.remove()}catch(e){plWkSync.busy=0;console.warn('plwk',e)}}
 DECO.add('요일×기둥',{wait:200,run:plWkSync});
 document.addEventListener('click',async e=>{const b=e.target.closest&&e.target.closest('[data-plday]');if(!b)return;e.preventDefault();e.stopPropagation();try{ZMD=0}catch(x){}await openDay(b.dataset.plday);go('day');try{renderDay()}catch(x){}},true);
 
@@ -15760,6 +15760,8 @@ function pplSheet(kind){const m=mdM(),T=today(),wa=mondayOf(T),ym=T.slice(0,7);c
   if(c.t==='오늘')c.go=()=>pplSheet('d');else if(c.t==='이번 주')c.go=()=>pplSheet('w');else if(c.t==='이번 달')c.go=()=>pplSheet('m');else if(c.t==='양육 중')c.go=()=>pplSheet('nur')})}catch(e){}return r}}
 (function(){const st=document.createElement('style');st.textContent=`.csheet #cshb>.panel[data-ch="meas"]>h2,.csheet #cshb>.panel[data-ch="sleep"]>h2{display:none}.csheet #cshb>.panel,.csheet #cshb>.card{border:0!important;box-shadow:none!important;margin:0 0 10px!important;padding:6px 0!important;background:none!important}
 .pslr{display:flex;flex-direction:column;align-items:flex-start;width:100%;text-align:left;border:0;border-bottom:1px solid var(--line);background:none;color:var(--ink);font:inherit;padding:8px 2px;cursor:pointer}.pslr small{color:var(--muted);font-size:.8rem}`;document.head.appendChild(st)})();
+/* v372: 요일별 기둥 실행은 균형판 카드 안으로 */
+(function(){const st=document.createElement('style');st.textContent='.wbx .plwk{margin:10px 0 4px;padding-top:8px;border-top:1px solid var(--line)}.wbx .plwk>summary{cursor:pointer;font-weight:700;font-size:.92rem;list-style:none;padding:2px 0}.wbx .plwk>summary::-webkit-details-marker{display:none}.wbx .plwk>summary::before{content:"▾ ";color:var(--muted)}.wbx .plwk:not([open])>summary::before{content:"▸ "}';document.head.appendChild(st)})();
 </script>
 <!--BIBLE{--><!--}BIBLE-->
 <div id="miniov" class="miniov" hidden></div>
