@@ -2287,7 +2287,7 @@ let GOALS={list:[]},gTimer=null;
 async function loadGoals(){try{const g=await store.getDoc('goals');if(g&&Array.isArray(g.list))GOALS=g}catch(e){}}
 function saveGoals(){clearTimeout(gTimer);gTimer=setTimeout(async()=>{try{await store.putDoc('goals',GOALS);status('저장됨')}catch(e){status('목표를 저장하지 못했습니다.')}},500)}
 const chain=date=>LV.map(([lv])=>({lv,per:perKey(lv,date)}));
-const goalsAt=(lv,per)=>GOALS.list.filter(g=>g.lv===lv&&g.per===per);
+const goalsAt=(lv,per)=>GOALS.list.filter(g=>g.lv===lv&&g.per===per).map(g=>{if(!Array.isArray(g.tasks))g.tasks=[];return g});
 function perRange(lv,per){const lastD=(y,m)=>`${y}-${pad(m)}-${pad(new Date(y,m,0).getDate())}`;
   if(lv==='y')return[per+'-01-01',per+'-12-31'];if(lv==='h'){const y=per.slice(0,4);return per.endsWith('1')?[y+'-01-01',y+'-06-30']:[y+'-07-01',y+'-12-31']}
   if(lv==='q'){const y=+per.slice(0,4),q=+per.slice(-1);return[`${y}-${pad(q*3-2)}-01`,lastD(y,q*3)]}if(lv==='m'){const[y,m]=per.split('-').map(Number);return[per+'-01',lastD(y,m)]}if(lv==='w')return[per,addD(per,6)];return null}
@@ -5681,7 +5681,7 @@ function dashHTML(){const T=cur===today();const pr=D.pri.filter(p=>tx(p.text));c
   const hb=SET.habits.filter(h=>D.habits[h.id]).length;const sc=scoreOf(D);
   let bud='—';try{const mo=cur.slice(0,7);const P=plan();const b=P.accounts.reduce((s,a)=>s+accMon(a),0);if(b&&cacheAll){const sp=spendList(cacheAll,d=>d.startsWith(mo)).filter(x=>{const f=findItem(x.acc,x.bi);return x.acc!=='unexp'&&!(f.i&&isAnnual(f.i))}).reduce((s,x)=>s+x.amt,0);bud=(b-sp>=0?'':'−')+Math.round(Math.abs(b-sp)/10000)+'만'}}catch(e){}
   const tile=(emo,lab,val,go,col)=>`<button class="dtile" data-dgo="${go}" style="--tc:${col}"><span class="de">${emo}</span><b>${val}</b><small>${lab}</small></button>`;
-  const T0=today();let ban='';if([0,1].includes(parseD(T0).getDay())&&[...goalsAt('w',perKey('w',T0)),...goalsAt('m',perKey('m',T0))].some(g=>g.tasks.some(t=>!t.done&&!t.due)))ban+='<button class="banner" data-wkplace="1">🗓️ 이번 주 목표 할 일을 요일에 배치하기</button>';if(daysSince(SET.lastBackup)>=(IS_NATIVE?((SET.autoBk||'week')==='off'?3:10):7)&&cacheAll&&[...cacheAll.values()].filter(hasAny).length>=3)ban+=`<button class="banner bk" data-dgo="export">💾 ${SET.lastBackup?`마지막 백업 ${daysSince(SET.lastBackup)}일 전`:'아직 백업 파일이 없습니다'} · 지금 백업하기 ›</button>`;
+  const T0=today();let ban='';if([0,1].includes(parseD(T0).getDay())&&[...goalsAt('w',perKey('w',T0)),...goalsAt('m',perKey('m',T0))].some(g=>(g.tasks||[]).some(t=>!t.done&&!t.due)))ban+='<button class="banner" data-wkplace="1">🗓️ 이번 주 목표 할 일을 요일에 배치하기</button>';if(daysSince(SET.lastBackup)>=(IS_NATIVE?((SET.autoBk||'week')==='off'?3:10):7)&&cacheAll&&[...cacheAll.values()].filter(hasAny).length>=3)ban+=`<button class="banner bk" data-dgo="export">💾 ${SET.lastBackup?`마지막 백업 ${daysSince(SET.lastBackup)}일 전`:'아직 백업 파일이 없습니다'} · 지금 백업하기 ›</button>`;
   {const e=eveItems().length+priCarry().length,n=carryNotes().length;if(T&&e+n)ban+=`<button class="banner" data-dgo="carry">📌 이어 받을 것${e?` · 어제에서 ${e}`:''}${n?` · 참고 노트 ${n}`:''} ›</button>`}
   {const F=weekFocus();const f=F[0];if(f&&!f.low)ban+=`<button class="banner" data-dgo="report">🎯 이번 주 한 걸음: ${f.area?(AREA_E[f.area]||'')+' ':''}${esc(f.g.title)} · 진척 ${Math.round(f.p*100)}% ›</button>`}
   {const L=typeof ddList==='function'?ddList().filter(x=>{const n=ddN(x.d);return n>=0&&n<=30}):[];if(L.length)ban+=`<button class="banner" data-dgo="goal">📅 ${L.slice(0,3).map(x=>`${esc(x.t)} <b>${ddTxt(x.d)}</b>`).join(' · ')} ›</button>`}
@@ -14481,7 +14481,7 @@ function zbAgg(s,e,M){const S={},N={},A={};let nd=0;for(let d=s;d<=e;d=addD(d,1)
     (o.time||[]).forEach(b=>{if(!b||!b.cat||b.hcs)return;const a=b.area||w168Ar(b.cat);if(a){A[a]=(A[a]||0)+wkDur(b);any=true}});
     const sl=o.sleep&&o.sleep.bed&&o.sleep.wake?wkDur({s:o.sleep.bed,e:o.sleep.wake}):(+(o.sleep||{}).hours||0)*60;if(sl)A.body=(A.body||0)+sl;if(any)nd++}
   const avg={};SCORE.forEach(([k])=>{avg[k]=N[k]?Math.round(S[k]/N[k]*10)/10:0});return{avg,N,A,nd}}
-const ZBU={m:'월',q:'3개월',h:'6개월',y:'연'};
+const ZBU={d:'일',w:'주',m:'월',q:'3개월',h:'6개월',y:'연'};
 function zbHTML(k,a,M){const[s,e]=zbRange(k,a),[ps,pe]=zbRange(k,addD(s,-1));const W=zbAgg(s,e,M),P=zbAgg(ps,pe,M),T=wkTarget();const lab=perLabel(k,perKey(k,a));
   const td=today(),upto=e<td?e:td;let el=0;if(upto>=s){el=Math.round((parseD(upto)-parseD(s))/864e5)+1}const tw=el/7;
   const vals=SCORE.map(([x])=>W.avg[x]),pv=SCORE.map(([x])=>P.avg[x]),hasP=pv.some(v=>v);
@@ -15439,6 +15439,24 @@ const cvMmDue=()=>{try{return[...new Map([...memAll().values()].filter(it=>memDu
 
 /* v362: 몸관리 타일 요약(만다라트) 끄기 — 운동 일지 한 카드로 충분 */
 try{delete MDX.care}catch(e){}
+
+/* ===== v364: 같은 화면 중복 정리 ===== */
+(function(){const st=document.createElement('style');st.textContent=`
+/* 계획: ‘이번 주·이번 달 계획’ 카드에서는 목표 목록을 빼고(목표는 🎯 목표 카드 한 곳에만) 중점 기둥만 */
+.pcc>.fl:first-of-type,.pcc .plgl{display:none!important}
+/* 몸관리 운동 일지: 접이 제목과 안쪽 카드 제목이 겹치지 않게 */
+#carerec .wkin>.card>h3:first-child,#carerec .wkin>.card>.fwh:first-child,#carerec .wkin>.card>h2:first-child,#carerec .wkin>.panel>h2:first-child,#carerec .wkin>.card>.pch:first-child{display:none!important}
+#carerec .wkp>h3:first-child{display:none!important}
+#carerec .wkin>.pcol>.pbody{display:block!important}`;document.head.appendChild(st)})();
+{const _rc=renderCare;renderCare=async function(){const r=await _rc.apply(this,arguments);try{const R=$('#careBody');const rec=R&&R.querySelector('#carerec');if(!rec)return r;
+  /* 안쪽 카드의 접이 머리(▸ 제목 ⠿)가 h3가 아닌 경우도 숨김 */
+  rec.querySelectorAll(':scope>.wkin').forEach(d=>{const c=d.lastElementChild;if(!c)return;const h=c.querySelector(':scope>.pch,:scope>.phd,:scope>.cardh,:scope>h3,:scope>h2,:scope>.fwh');if(h)h.style.display='none'});
+  /* 챙길 것에서 ‘오늘 운동 · 분할’ 줄은 아래 칩과 겹치므로 뺌 */
+  rec.querySelectorAll('.cdtodo li').forEach(li=>{if(/오늘 (운동|유산소)|아직 운동 기록이 없/.test(li.textContent))li.remove()});const ul=rec.querySelector('.cdtodo ul');if(ul&&!ul.children.length)rec.querySelector('.cdtodo').remove();
+  /* 접이 제목에 날짜·한 것 개수(안쪽 제목 대신) */
+  const sm=rec.querySelector(':scope>summary');if(sm){const n=wkList(D).length+((D.ex||[]).length);sm.innerHTML=`<b>🏋️ ${md(D.date)}${D.date===today()?' 오늘':''} 운동 일지</b> <span class="hint">한 것 ${n}개</span>`}
+ }catch(e){console.warn('v364 care',e)}return r}}
+{const _m=cvMerge;cvMerge=function(){const out=_m.apply(this,arguments);try{if(!/3분 돌아보기[^<]{0,12}감사/.test(out))return out;const t=document.createElement('template');t.innerHTML=out;const F=t.content;const g=F.querySelector('[data-hs="sg-gr"]');if(!g)return out;g.remove();const c=F.querySelector('.topcard .afc'),dots=F.querySelector('.topcard .afdots');if(c&&dots){const n=c.children.length;if(TOPI>=n)TOPI=0;dots.innerHTML=Array.from({length:n},(_,i)=>`<i class="${i===TOPI?'on':''}"></i>`).join('')}return t.innerHTML}catch(e){return out}}}
 </script>
 <!--BIBLE{--><!--}BIBLE-->
 <div id="miniov" class="miniov" hidden></div>
