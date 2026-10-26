@@ -15434,6 +15434,9 @@ const cvMmDue=()=>{try{return[...new Map([...memAll().values()].filter(it=>memDu
     [find(/^📈?\s*몸 변화/),`📈 몸 변화`,'']];
   items.forEach(([n,t,sm])=>{if(!n||rec.contains(n))return;n.classList.remove('pclosed');const d=document.createElement('details');d.className='wkin';d.innerHTML=`<summary>${t}${sm?` <small>${esc(sm)}</small>`:''}</summary>`;rec.appendChild(d);d.appendChild(n)});
   const sm=rec.querySelector(':scope>summary');if(sm)sm.innerHTML='<b>🏋️ 운동 일지</b> <span class="hint">챙길 것 · 한 것 · 바로 입력 · 계획 · 달리기 · 수면 · 몸</span>'}catch(e){console.warn('v361',e)}return r}}
+
+/* v362: 몸관리 타일 요약(만다라트) 끄기 — 운동 일지 한 카드로 충분 */
+try{delete MDX.care}catch(e){}
 </script>
 <!--BIBLE{--><!--}BIBLE-->
 <div id="miniov" class="miniov" hidden></div>
