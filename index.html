@@ -11165,11 +11165,12 @@ function frOpen(){try{if(FC){openFocus();return}if(RT){openRoutine();return}}cat
   const S=$('#sheet');if(!S)return;const L=fcRts();const tm=r=>r.items.reduce((a,x)=>a+(+x.min||0),0);
   S.hidden=false;S.innerHTML=`<div class="sheetbox" role="dialog" aria-label="몰입·루틴"><div class="shead"><b>🎯 무엇을 시작할까요</b><button class="del" id="frx">닫기</button></div>
    <button type="button" class="frb" data-frf="1"><i>🎯</i><span>몰입<small>타이머 · 구간 나누기 · 계획대로</small></span><em>›</em></button>
+   <button type="button" class="frb" data-frw="1"><i>💼</i><span>업무실행<small>시작이 안 될 때 · 전환 · 시간 감각 · 머릿속 정리</small></span><em>›</em></button>
    <p class="hint" style="margin:12px 0 4px">🔁 루틴 · 누르면 바로 시작합니다. 🍅는 몰입 구간으로 불러옵니다.</p>
    ${L.length?L.map((r,i)=>`<div class="frr"><button type="button" class="frb" data-frr="${i}"><i>▶</i><span>${esc(r.name||'루틴')}<small>${r.items.length}개 · ${tm(r)}분${r.items.some(x=>x.fz)?' · 🎯 몰입 포함':''}</small></span></button><button type="button" class="frp" data-frp="${i}" aria-label="몰입 구간으로">🍅</button></div>`).join(''):'<p class="empty">아직 루틴이 없습니다.</p>'}
    <button type="button" class="xlink" data-fred="1" style="margin-top:8px">🔁 루틴 만들기·고치기 ›</button></div>`;
   const close=()=>{S.hidden=true;S.innerHTML=''};$('#frx').onclick=close;S.onclick=e=>{if(e.target===S)close()};
-  S.querySelector('[data-frf]').onclick=()=>{close();openFocus()};
+  S.querySelector('[data-frf]').onclick=()=>{close();openFocus()};{const w=S.querySelector('[data-frw]');if(w)w.onclick=()=>wxOpen()};
   S.querySelectorAll('[data-frr]').forEach(b=>b.onclick=async()=>{const r=L[+b.dataset.frr];close();if(!r)return;if(cur!==today())await openDay(today());openRoutine();if(!RT)rtStart(r);else renderRoutine()});
   S.querySelectorAll('[data-frp]').forEach(b=>b.onclick=()=>{const r=L[+b.dataset.frp];close();if(!r)return;openFocus();const d=fcDraft;if(!d)return;d.mode='pomo';const its=r.items.filter(x=>+x.min>0),hz=its.some(x=>x.fz);
     d.seg=its.map(x=>({n:(x.name||'').trim(),m:Math.round(+x.min),k:hz?(x.fz?'f':'b'):(FC_REST.test(x.name||'')?'b':'f')}));if(!d.seg.some(y=>y.k==='f'))d.seg.forEach(y=>y.k='f');d.rounds=1;renderFocus()});
@@ -15829,6 +15830,142 @@ html.taste *{transition-duration:.01s!important;animation-duration:.01s!importan
 html.taste body *:not(canvas):not(svg *){backdrop-filter:none!important}
 `;document.head.appendChild(st)})();
 (function(){const o=lvApply;lvApply=function(){const r=o.apply(this,arguments);try{document.documentElement.classList.toggle('taste',lkCur()==='taste')}catch(e){}return r};try{document.documentElement.classList.toggle('taste',lkCur()==='taste')}catch(e){}})();
+
+/* v376 정돈 스타일 전 화면 보완: 칩·타일·배너의 파스텔 바탕·색 테두리·그림자 정리 */
+(function(){const st=document.createElement('style');st.id='tastecss2';st.textContent=`
+html.taste .xlink,html.taste .plsh button,html.taste .mnc i,html.taste .wnk>div,html.taste .rxst div,html.taste .mnwords,html.taste .cyrow.due,html.taste .ddn{
+  background:var(--pen-soft)!important;border-color:var(--line)!important;box-shadow:none!important}
+html.taste .xlink{border:1px solid var(--line)!important;border-radius:6px}
+html.taste .wnk>div,html.taste .rxst div{border-radius:8px;border:1px solid var(--line)}
+html.taste .mnc i{border-radius:4px}
+html.taste .mnwords{border:1px solid var(--line)!important}
+html.taste .banner,html.taste .fminbox{background:var(--paper)!important;background-image:none!important;border:1px solid var(--line)!important;box-shadow:none!important;color:var(--ink)!important;border-radius:8px!important}
+html.taste .sgi,html.taste .bpil,html.taste .ptile,html.taste .mntile,html.taste .gview{box-shadow:none!important}
+html.taste .sgi{border:1px solid var(--line)!important;background:var(--paper)!important}
+html.taste .tgi,html.taste .ptool,html.taste .proom,html.taste .mdc.cat,html.taste .gp-hero{border:1px solid var(--line)!important;box-shadow:none!important;background:var(--paper)!important}
+html.taste .tgi.on,html.taste .ptool.on,html.taste .mdc.ctr,html.taste .mdc.mdctr,html.taste .mdgo{background:var(--pen-soft)!important;color:var(--ink)!important;border:1px solid var(--ink)!important;box-shadow:none!important}
+html.taste .mdc.ctr *,html.taste .mdc.mdctr *{color:inherit!important}
+html.taste .mdc{border-radius:8px!important;box-shadow:none!important}
+html.taste .chip.on,html.taste .chips button.on,html.taste .pseg button.on,html.taste .wnper button.on,html.taste .prtabs button.on{background:var(--ink)!important;color:var(--paper)!important;border-color:var(--ink)!important;box-shadow:none!important}
+html.taste .chip,html.taste .chips button,html.taste .fbtn{box-shadow:none!important}
+html.taste .hero,html.taste .afcard,html.taste .topcard{background:var(--paper)!important;background-image:none!important}
+html.taste .mdbox,html.taste .mdhd{box-shadow:none!important}
+html.taste .add{border-radius:6px}
+html.taste .btn{box-shadow:none!important}
+html.taste .tgi.on,html.taste .ptool.on{outline:0!important}
+html.taste .panel,html.taste section>.card{border-top-width:1px!important;border-top-color:var(--line)!important}
+html.taste .panel::before,html.taste .card::before{display:none!important}
+html.taste .tehead{background:var(--paper)!important;color:var(--ink)!important;border-bottom:1px solid var(--line)}
+html.taste .tehead select{color:var(--ink)!important;border-bottom-color:var(--line)!important}
+html.taste .tehead button,html.taste .tehead a{color:var(--ink)!important;border-color:var(--line)!important;background:transparent!important}
+html.taste #focusov button,html.taste #sheet button,html.taste .sheetbox button{box-shadow:none!important}
+html.taste #focusov button.on,html.taste #fcgo{background:var(--ink)!important;color:var(--paper)!important;border-color:var(--ink)!important}
+html.taste #focusov input{background:var(--paper)!important}
+html.taste .pmsec{background:var(--paper)!important;border:1px solid var(--line)!important}
+html.taste .rcbtn{background:var(--pen-soft)!important}
+`;document.head.appendChild(st)})();
+
+/* v376 업무실행: 몰입·루틴 아래 7가지 실행 도구 (앱 안에서 바로 실행 · AI는 선택) */
+const WXT=[
+ ['stuck','🧊','작업 마비 풀기','시작이 안 될 때 1분짜리 단계로'],
+ ['dopa','🍽️','도파민 메뉴','5분 움직임 · 20분 집중 · 10분 놀이'],
+ ['buddy','👥','같이 작업하기','30분 · 10분마다 상태 점검'],
+ ['switch','🔀','전환 루틴','A를 마치고 B로 넘어가는 3분'],
+ ['mission','🎮','관심 기반 미션','지루한 일을 관심사와 엮어 미션으로'],
+ ['clock','⏳','시간 감각 점검','숨은 하위 작업 · 현실적인 마감'],
+ ['dump','🧠','머릿속 비우기','지금 · 나중에 · 삭제로 나누기']];
+function wxS(){if(!SET.wx||typeof SET.wx!=='object')SET.wx={};const w=SET.wx;if(!Array.isArray(w.dump))w.dump=[];if(!(+w.ratio>0))w.ratio=6;if(!(+w.est>0))w.est=20;return w}
+function wxSave(){try{saveSet()}catch(e){}}
+function wxPrompt(k){const w=wxS(),f=(v,d)=>(v||'').trim()||d;
+ return({stuck:`저는 지금 [${f(w.task,'작업')}]을 앞에 두고 있는데, 도저히 시작할 수가 없어요. 각 단계가 1분도 채 걸리지 않는 아주 작은 단계들로 나누어 주세요. 그리고 제가 바로 시작할 수 있도록 첫 번째 단계와 지금 당장 손을 어디에 두어야 하는지 정확히 알려 주세요.`,
+ dopa:`지금 뭔가 재미가 없고 의욕이 없어요. 제 뇌가 다시 활발해질 수 있도록 '도파민 메뉴'를 만들어 주세요. 5분짜리 '애피타이저'(가벼운 움직임), 20분짜리 '메인 코스'(집중 작업${w.main?': '+w.main:''}), 그리고 10분짜리 '사이드 메뉴'(창의적인 놀이)로 구성해서 제 뇌를 지속적으로 자극할 수 있게 해주세요.`,
+ buddy:`앞으로 30분 동안 저의 가상 작업 파트너가 되어 주세요. 제가 하는 일은 [${f(w.bud,'작업')}]입니다. 10분마다 진행 상황을 확인해 주시고, 현재 상태를 물어봐 주며 제가 집중할 수 있도록 도와주세요.`,
+ switch:`저는 방금 [${f(w.ta,'작업 A')}]을 마쳤고 이제 [${f(w.tb,'작업 B')}]를 시작해야 하는데, 제 뇌가 멈춰버린 것 같아요. 이 두 가지 에너지 유형 사이를 전환할 수 있도록 도와주는 3분짜리 '멘탈 리프레시' 루틴을 설계해 주세요.`,
+ mission:`지루한 행정 업무가 있어요: [${f(w.bore,'작업')}]. 제가 지금 빠져 있는 관심사: [${f(w.like,'관심사')}]와 연결해서 이 일을 더 재미있게 할 수 있도록 도와주세요. 작업을 완료하면 보상을 얻을 수 있는 '미션' 구조로 만들어 주세요.`,
+ clock:`저는 [${f(w.proj,'프로젝트')}]가 ${w.est}분이면 끝날 거라고 생각하지만, 보통은 ${Math.round(w.est*w.ratio)}분이 걸려요. 제가 항상 놓치는 3가지 숨은 하위 작업을 찾아서 '시간을 지도처럼 정리'해 주고, 현실적인 마감 기한을 설정할 수 있도록 도와주세요.`,
+ dump:`제 머릿속이 '열린 루프'로 가득해요. 저를 걱정하게 만드는 모든 것들을 브레인 덤프할게요. 이 항목들을 '지금', '나중에', '삭제' 세 가지로 분류해 주고, '지금'에 해당하는 항목에 대해서만 한 문장으로 된 '다음 행동 단계'를 작성해 주세요.\n\n${w.dump.map(x=>'- '+x.t).join('\n')}`})[k]||''}
+function wxGo(seg,act){const S=$('#sheet');if(S){S.hidden=true;S.innerHTML=''}openFocus();const d=fcDraft;if(!d)return;d.mode='pomo';d.act=act||d.act||'';d.seg=seg.map(([m,n,k])=>({n,m,k}));if(!d.seg.some(y=>y.k==='f'))d.seg.forEach(y=>y.k='f');d.rounds=1;renderFocus()}
+function wxClock(){const w=wxS(),est=+w.est||20,real=Math.round(est*(+w.ratio||1));const parts=[['준비 · 자료 찾기 · 파일 열기 · 물어볼 것 정리',.2],['본 작업',.45],['검토 · 고치기 · 서식 맞추기',.2],['전달 · 보고 · 저장 · 정리',.15]];
+ const rows=parts.map(([n,r])=>[n,Math.max(5,Math.round(real*r/5)*5)]);const tot=rows.reduce((a,x)=>a+x[1],0);const buf=Math.round(tot*.2/5)*5;const end=new Date(Date.now()+(tot+buf)*6e4);
+ return{rows,tot,buf,end:`${end.getMonth()+1}.${end.getDate()}. ${String(end.getHours()).padStart(2,'0')}:${String(end.getMinutes()).padStart(2,'0')}`}}
+function wxCkHTML(){const c=wxClock();return`<table class="wxt"><tbody>${c.rows.map(([n,m])=>`<tr><td>${esc(n)}</td><td>${m}분</td></tr>`).join('')}<tr><td>여유 (20%)</td><td>${c.buf}분</td></tr><tr class="wxsum"><td>현실적인 소요</td><td>${c.tot+c.buf}분</td></tr></tbody></table><p class="wxnow">⏰ 지금 시작하면 현실적인 마감: <b>${c.end}</b></p>`}
+function wxBody(k){const w=wxS(),inp=(id,v,ph)=>`<input type="text" data-wxi="${id}" value="${esc(v||'')}" placeholder="${esc(ph)}" enterkeyhint="done">`;
+ const ai=`<div class="wxai"><button type="button" class="btn small ghost" data-wxai="1">${GEM&&GEM.key?'🤖 AI 도움 받기':'📋 AI에 물을 문장 복사'}</button><div class="wxout" id="wxout" hidden></div></div>`;
+ if(k==='stuck')return`<label class="wxl">무엇이 시작이 안 되나요</label>${inp('task',w.task,'예: 교관 참고자료 본론 2 쓰기')}
+  <ol class="wxol"><li>필요한 파일·책·도구 <b>하나만</b> 연다</li><li>제목이나 첫 줄을 아무렇게나 한 줄 쓴다</li><li>지난번 멈춘 곳, 다음에 할 것을 한 줄 적는다</li><li>5분 타이머를 켜고 그것만 한다</li></ol>
+  <p class="wxnow">✋ 지금 손을 둘 곳: 휴대폰을 내려놓고 <b data-wxv="task" data-d="그 작업">${esc((w.task||'').trim()||'그 작업')}</b>에 필요한 첫 화면을 연다.</p>
+  <div class="wxrow"><button type="button" class="btn small" data-wxgo="stuck">▶ 5분만 시작</button><button type="button" class="btn small ghost" data-wxtd="task">＋ 할 일로</button></div>${ai}`;
+ if(k==='dopa')return`<label class="wxl">메인 코스로 집중할 일</label>${inp('main',w.main,'예: 보고서 초안')}
+  <div class="wxmenu"><div><b>🥗 애피타이저 5분</b><span>스트레칭 · 계단 오르기 · 물 한 잔 · 팔굽혀펴기 10회</span></div><div><b>🍖 메인 코스 20분</b><span data-wxv="main" data-d="집중 작업 하나">${esc((w.main||'').trim()||'집중 작업 하나')}</span></div><div><b>🎨 사이드 메뉴 10분</b><span>낙서 · 좋아하는 음악 한 곡 · 사진 정리 · 짧은 글</span></div></div>
+  <div class="wxrow"><button type="button" class="btn small" data-wxgo="dopa">▶ 메뉴대로 시작 (35분)</button></div>${ai}`;
+ if(k==='buddy')return`<label class="wxl">지금 하는 일</label>${inp('bud',w.bud,'예: 메일 답장 정리')}
+  <p class="hint">30분을 10분씩 세 번 나눕니다. 종이 울릴 때마다 '지금 어디까지 했나 · 막힌 것은 무엇인가'를 한 줄로 확인하고 다음 10분으로 넘어갑니다.</p>
+  <div class="wxrow"><button type="button" class="btn small" data-wxgo="buddy">▶ 30분 같이 작업 시작</button></div>${ai}`;
+ if(k==='switch')return`<div class="wx2"><div><label class="wxl">방금 마친 일 (A)</label>${inp('ta',w.ta,'예: 회의')}</div><div><label class="wxl">시작할 일 (B)</label>${inp('tb',w.tb,'예: 원고 수정')}</div></div>
+  <ol class="wxol"><li><b>1분</b> · A에서 남은 것, 다음에 이어 할 곳을 한 줄 적고 덮는다</li><li><b>1분</b> · 일어나 물 한 잔 · 어깨 돌리기 · 창밖 보기</li><li><b>1분</b> · B의 첫 행동 하나를 정하고 필요한 화면을 연다</li></ol>
+  <div class="wxrow"><button type="button" class="btn small" data-wxgo="switch">▶ 3분 전환 시작</button></div>${ai}`;
+ if(k==='mission'){const t=(w.bore||'').trim()||'지루한 일',l=(w.like||'').trim()||'관심사';return`<div class="wx2"><div><label class="wxl">지루한 일</label>${inp('bore',w.bore,'예: 출장비 정산')}</div><div><label class="wxl">요즘 빠져 있는 것</label>${inp('like',w.like,'예: 달리기')}</div></div>
+  <label class="wxl">다 끝내면 받을 보상</label>${inp('rew',w.rew,'예: 좋아하는 커피 한 잔')}
+  <div class="wxmenu"><div><b>🎯 미션 · '<i data-wxv="like" data-d="관심사">${esc(l)}</i>'처럼 '<i data-wxv="bore" data-d="지루한 일">${esc(t)}</i>' 끝내기</b><span>기록을 깨듯 단계마다 시간을 재고 보상을 받는다</span></div><div><b>1단계 준비 5분 ⭐</b><span>필요한 자료를 모두 한곳에 모은다</span></div><div><b>2단계 돌파 20분 ⭐⭐</b><span>가장 귀찮은 부분부터 끝낸다</span></div><div><b>3단계 마무리 10분 🏆</b><span>확인하고 보내면 보상: <i data-wxv="rew" data-d="스스로 정한 보상">${esc((w.rew||'').trim()||'스스로 정한 보상')}</i></span></div></div>
+  <div class="wxrow"><button type="button" class="btn small" data-wxgo="mission">▶ 미션 시작</button><button type="button" class="btn small ghost" data-wxtd="bore">＋ 할 일로</button></div>${ai}`}
+ if(k==='clock'){return`<label class="wxl">프로젝트</label>${inp('proj',w.proj,'예: 강군인사이드 원고')}
+  <div class="wx2"><div><label class="wxl">예상 (분)</label><input type="number" data-wxi="est" value="${w.est}" min="5" step="5"></div><div><label class="wxl">보통 실제로 걸리는 배수</label><input type="number" data-wxi="ratio" value="${w.ratio}" min="1" step="0.5"></div></div>
+  <div id="wxck">${wxCkHTML()}</div>
+  <div class="wxrow"><button type="button" class="btn small" data-wxgo="clock">▶ 준비 단계부터 시작</button><button type="button" class="btn small ghost" data-wxtd="proj">＋ 할 일로</button></div>${ai}`}
+ if(k==='dump'){const L=w.dump;const c=x=>L.filter(y=>y.c===x).length;return`<label class="wxl">걱정되는 것을 한 줄에 하나씩</label><textarea id="wxdin" rows="3" placeholder="예: 보고서 마감\n치과 예약\n어제 실수한 말"></textarea>
+  <div class="wxrow"><button type="button" class="btn small" id="wxdadd">＋ 쏟아 넣기</button>${L.length?`<button type="button" class="btn small ghost" id="wxdclr">비우기</button>`:''}</div>
+  ${L.length?`<p class="hint">지금 ${c('now')} · 나중에 ${c('later')} · 삭제 ${c('del')} · 안 나눔 ${L.length-c('now')-c('later')-c('del')}</p>`:''}
+  <div class="wxdl">${L.map(x=>`<div class="wxd${x.c==='del'?' wxdel':''}"><div class="wxdt">${esc(x.t)}</div><div class="wxdc">${[['now','지금'],['later','나중에'],['del','삭제']].map(([v,n])=>`<button type="button" data-wxdc="${x.id}" data-v="${v}" class="${x.c===v?'on':''}">${n}</button>`).join('')}</div>${x.c==='now'?`<input type="text" data-wxnx="${x.id}" value="${esc(x.nx||'')}" placeholder="다음 행동 한 문장 (예: 9시에 김 대위에게 전화)">`:''}</div>`).join('')}</div>
+  ${L.some(x=>x.c==='now'||x.c==='later')?`<div class="wxrow"><button type="button" class="btn small" id="wxdsend">📋 지금 → 오늘 할 일 · 나중에 → 할 일로 보내기</button></div>`:''}${L.length?ai:''}`}
+ return''}
+function wxOpen(k){const S=$('#sheet');if(!S)return;wxS();const T=WXT.find(x=>x[0]===k);
+ S.hidden=false;S.innerHTML=`<div class="sheetbox wxbox" role="dialog" aria-label="업무실행"><div class="shead">${T?`<button class="del" id="wxb">‹ 업무실행</button>`:'<b>💼 업무실행</b>'}<button class="del" id="wxx">닫기</button></div>
+  ${T?`<h3 class="wxh">${T[1]} ${esc(T[2])}</h3><p class="hint" style="margin:0 0 8px">${esc(T[3])}</p>${wxBody(k)}`:`<p class="hint" style="margin:0 0 6px">손이 안 갈 때 고르십시오. 대부분 몰입 타이머로 바로 이어집니다.</p>${WXT.map(([id,i,n,d])=>`<button type="button" class="frb" data-wxk="${id}"><i>${i}</i><span>${esc(n)}<small>${esc(d)}</small></span><em>›</em></button>`).join('')}<button type="button" class="xlink" id="wxfr" style="margin-top:6px">‹ 몰입·루틴</button>`}</div>`;
+ const close=()=>{S.hidden=true;S.innerHTML=''};S.querySelector('#wxx').onclick=close;S.onclick=e=>{if(e.target===S)close()};
+ const b=S.querySelector('#wxb');if(b)b.onclick=()=>wxOpen();const fr=S.querySelector('#wxfr');if(fr)fr.onclick=()=>{close();frOpen()};
+ S.querySelectorAll('[data-wxk]').forEach(x=>x.onclick=()=>wxOpen(x.dataset.wxk));if(!T)return;
+ const w=wxS();let tm;
+ S.querySelectorAll('[data-wxi]').forEach(i=>{i.oninput=()=>{const n=i.dataset.wxi;w[n]=i.type==='number'?(+i.value||0):i.value;clearTimeout(tm);tm=setTimeout(wxSave,600)};i.addEventListener('input',()=>{S.querySelectorAll(`[data-wxv="${i.dataset.wxi}"]`).forEach(e=>e.textContent=(i.value||'').trim()||e.dataset.d);const ck=S.querySelector('#wxck');if(ck&&k==='clock')ck.innerHTML=wxCkHTML()});i.onchange=wxSave});
+ const g=S.querySelector('[data-wxgo]');if(g)g.onclick=()=>{wxSave();const t=x=>(w[x]||'').trim();
+  if(k==='stuck')wxGo([[5,'첫 단계: '+(t('task')||'시작'),'f']],t('task'));
+  if(k==='dopa')wxGo([[5,'애피타이저 · 가볍게 움직이기','b'],[20,'메인 · '+(t('main')||'집중 작업'),'f'],[10,'사이드 · 창의적인 놀이','b']],t('main'));
+  if(k==='buddy')wxGo([[10,'1/3 · '+(t('bud')||'작업'),'f'],[10,'2/3 · 상태 확인 후 계속','f'],[10,'3/3 · 마무리','f']],t('bud'));
+  if(k==='switch')wxGo([[1,'A 정리 · 남은 것 한 줄','b'],[1,'몸 풀기 · 물 한 잔','b'],[1,'B 첫 행동 정하기','f']],t('tb'));
+  if(k==='mission')wxGo([[5,'1단계 준비 ⭐','f'],[20,'2단계 돌파 ⭐⭐','f'],[10,'3단계 마무리 🏆','f']],t('bore'));
+  if(k==='clock'){const c=wxClock();wxGo(c.rows.map(([n,m],i)=>[m,n,'f']),t('proj'))}};
+ const td=S.querySelector('[data-wxtd]');if(td)td.onclick=()=>{const v=(w[td.dataset.wxtd]||'').trim();if(!v){toast('먼저 할 일을 적어 주십시오.');return}if(quickTask(v,today()))toast(`📋 '${v}'을(를) 오늘 할 일에 넣었습니다.`)};
+ const ai=S.querySelector('[data-wxai]');if(ai)ai.onclick=async()=>{const q=wxPrompt(k),o=S.querySelector('#wxout');
+  if(!(GEM&&GEM.key)){try{await navigator.clipboard.writeText(q);toast('📋 복사했습니다. 클로드 등 AI 앱에 붙여 넣으십시오.')}catch(e){o.hidden=false;o.textContent=q}return}
+  o.hidden=false;o.textContent='생각하는 중…';ai.disabled=true;try{const t=await gemCall([{text:q+'\n\n한국어로, 짧고 실행 가능한 문장으로 답하십시오.'}],null,{temperature:.7});o.textContent=t;w.lastAI={k,t,at:Date.now()};wxSave()}catch(e){o.textContent=e.message||'실패했습니다.'}ai.disabled=false};
+ if(k==='dump'){const re=()=>{wxSave();const y=S.querySelector('.sheetbox').scrollTop;wxOpen('dump');S.querySelector('.sheetbox').scrollTop=y};
+  const a=S.querySelector('#wxdadd');a.onclick=()=>{const v=S.querySelector('#wxdin').value.split('\n').map(x=>x.trim()).filter(Boolean);if(!v.length)return;v.forEach(t=>w.dump.push({id:'d'+uid(),t:t.slice(0,200),c:'',nx:''}));re()};
+  const c=S.querySelector('#wxdclr');if(c)c.onclick=()=>{if(!confirm('쏟아 놓은 목록을 모두 비울까요?'))return;w.dump=[];re()};
+  S.querySelectorAll('[data-wxdc]').forEach(b=>b.onclick=()=>{const x=w.dump.find(y=>y.id===b.dataset.wxdc);if(!x)return;x.c=x.c===b.dataset.v?'':b.dataset.v;re()});
+  S.querySelectorAll('[data-wxnx]').forEach(i=>{i.oninput=()=>{const x=w.dump.find(y=>y.id===i.dataset.wxnx);if(x){x.nx=i.value;clearTimeout(tm);tm=setTimeout(wxSave,600)}}});
+  const sd=S.querySelector('#wxdsend');if(sd)sd.onclick=()=>{let n=0;w.dump.forEach(x=>{if(x.c==='now'){if(quickTask((x.nx||'').trim()||x.t,today()))n++}else if(x.c==='later'){if(quickTask(x.t,''))n++}});w.dump=w.dump.filter(x=>!x.c);toast(`📋 ${n}개를 할 일로 보냈습니다. 삭제로 고른 것은 지웠습니다.`);re()}}}
+{const st=document.createElement('style');st.textContent=`
+.wxbox .wxh{margin:4px 0 2px;font-size:1rem}
+.wxl{display:block;font-size:.78rem;color:var(--muted);margin:10px 0 4px}
+.wx2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.wxol{margin:10px 0;padding-left:20px;font-size:.88rem;line-height:1.6}
+.wxnow{background:var(--pen-soft);border-radius:8px;padding:8px 10px;font-size:.86rem;margin:8px 0}
+.wxrow{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0 4px}
+.wxmenu{display:grid;gap:6px;margin:10px 0}
+.wxmenu>div{border:1px solid var(--line);border-radius:8px;padding:8px 10px}
+.wxmenu b{display:block;font-size:.88rem}.wxmenu i{font-style:normal}.wxmenu span{font-size:.8rem;color:var(--muted)}
+.wxt{width:100%;border-collapse:collapse;margin:10px 0;font-size:.85rem;font-variant-numeric:tabular-nums}
+.wxt td{border-bottom:1px solid var(--line);padding:6px 4px}.wxt td:last-child{text-align:right;white-space:nowrap}
+.wxt .wxsum td{font-weight:700;border-bottom:0}
+.wxai{margin-top:12px;border-top:1px solid var(--line);padding-top:10px}
+.wxout{white-space:pre-wrap;font-size:.86rem;line-height:1.6;margin-top:8px;border:1px solid var(--line);border-radius:8px;padding:10px;max-height:50vh;overflow:auto}
+.wxdl{display:grid;gap:6px;margin-top:8px}
+.wxd{border:1px solid var(--line);border-radius:8px;padding:8px}
+.wxd.wxdel .wxdt{text-decoration:line-through;color:var(--muted)}
+.wxdt{font-size:.88rem;margin-bottom:6px}
+.wxdc{display:flex;gap:4px}.wxdc button{flex:1;border:1px solid var(--line);background:var(--paper);color:var(--ink);font:inherit;font-size:.8rem;padding:5px 0;border-radius:6px;cursor:pointer}
+.wxdc button.on{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.wxd input{margin-top:6px}
+`;document.head.appendChild(st)}
 </script>
 <!--BIBLE{--><!--}BIBLE-->
 <div id="miniov" class="miniov" hidden></div>
