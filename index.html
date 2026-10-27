@@ -15966,6 +15966,98 @@ function wxOpen(k){const S=$('#sheet');if(!S)return;wxS();const T=WXT.find(x=>x[
 .wxdc button.on{background:var(--ink);color:var(--paper);border-color:var(--ink)}
 .wxd input{margin-top:6px}
 `;document.head.appendChild(st)}
+
+/* v377 비전 대화: 대화로 비전·버킷리스트·기둥별 목표를 찾고 바로 저장 (앱 안 대화 또는 클로드 앱에서 대화 후 붙여넣기) */
+const VCA=()=>PBP().map(([k,n])=>[k,n]);
+function vcS(){if(!SET.vc||typeof SET.vc!=='object')SET.vc={};if(!Array.isArray(SET.vc.m))SET.vc.m=[];return SET.vc}
+function vcSave(){try{saveSet()}catch(e){}}
+function vcHasAI(){try{return (AI.prov==='gemini'||AI.prov==='claude'||AI.prov==='gpt')&&!!aiKey(AI.prov)}catch(e){return false}}
+function vcState(){const G=GOALS,lv=x=>x.lv,act=G.list.filter(g=>!g.done&&g.title);
+ const pb=(G.vis&&G.vis.pboard)||{};
+ const bk=act.filter(g=>g.bk||g.lv==='S').slice(0,20).map(g=>g.title);
+ const yr=act.filter(g=>g.lv==='y').slice(0,24).map(g=>`${areaName(g.area||'')||'기타'}: ${g.title}`);
+ return `[앱에 지금 적힌 것]\n비전 선언: ${tx(G.vision)?G.vision.trim():'(없음)'}\n가치: ${tx(G.values)?G.values.trim():'(없음)'}\n기둥별 먼 훗날의 모습: ${VCA().map(([k,n])=>`${n}=${tx(pb[k])?pb[k].trim():'(없음)'}`).join(' / ')}\n버킷리스트: ${bk.length?bk.join(' · '):'(없음)'}\n올해 목표: ${yr.length?yr.join(' · '):'(없음)'}`}
+function vcSys(){return `당신은 개인 기록 앱 '성장일지' 안의 삶의 방향 코치입니다. 사용자가 대화를 통해 스스로 ①삶에서 지키고 싶은 가치와 비전 한 문장 ②기둥별(${VCA().map(x=>x[1]).join('·')}) 먼 훗날의 모습 ③버킷리스트 ④기둥별 올해 목표를 찾도록 돕습니다.
+규칙: 한 번에 질문은 하나만 합니다. 답은 2~4문장으로, 사용자가 한 말을 짧게 되짚은 뒤 구체적인 장면·사례·이유를 묻습니다. 정답을 대신 만들어 주지 말고, 막힌 사용자에게만 예시 2~3개를 제시합니다. 존댓말을 쓰고 과장·감상적인 표현은 피합니다. 대화가 충분히 쌓였다고 판단하면 '지금까지 내용을 앱에 정리해 저장할까요?'라고 한 번 제안합니다. 앱에 이미 적힌 내용이 있으면 이어서 다듬는 방향으로 묻습니다.
+${vcState()}`}
+function vcFinalPrompt(){return `지금까지 대화에서 사용자가 직접 말한 내용만 근거로 아래 JSON 객체 하나만 출력하십시오. 설명·머리말·코드블록 표시 없이 JSON만 씁니다. 말하지 않은 항목은 빈 값으로 두고, 지어내지 마십시오.
+{"vision":"비전 선언 1~2문장","values":["가치 단어 2~5개"],"pillars":{${VCA().map(([k,n])=>`"${k}":"${n} 영역의 먼 훗날 모습 한 문장(60자 이내)"`).join(',')}},"bucket":[{"t":"버킷리스트 항목(30자 이내)","area":"기둥 키"}],"goals":[{"area":"기둥 키","lv":"y","t":"목표(40자 이내)"}]}
+area 키는 ${VCA().map(([k,n])=>k+'='+n).join(', ')} 중 하나, goals의 lv는 y(올해)·h(반기)·q(분기) 중 하나입니다. 기둥마다 올해 목표는 1~2개로 줄이십시오.`}
+function vcStarter(){return `${vcSys()}\n\n위 역할로 저와 대화를 시작해 주십시오. 첫 질문부터 해 주십시오. 제가 '정리해줘'라고 하면 다음 지시를 따르십시오.\n${vcFinalPrompt()}`}
+async function vcAsk(msgs,sys){const p=AI.prov,name=AI_NAME[p],key=aiKey(p);if(!key)throw new Error(`${name} API 키가 필요합니다.`);
+ if(p==='gemini'){const tr=msgs.map(m=>(m.r==='u'?'사용자: ':'코치: ')+m.t).join('\n\n');return gemCall([{text:sys+'\n\n[지금까지의 대화]\n'+tr+'\n\n코치로서 다음 한 번의 답만 쓰십시오.'}],null,{temperature:.7})}
+ if(p==='claude'){let last;for(const m of [...new Set([(AI.cm||'').trim(),'claude-sonnet-5-5','claude-haiku-4-5-20251001'].filter(Boolean))]){
+  const r=await aiFetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'content-type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:m,max_tokens:1500,system:sys,messages:msgs.map(x=>({role:x.r==='u'?'user':'assistant',content:x.t}))})},name);
+  const j=await r.json().catch(()=>({}));if(r.ok)return(j.content||[]).map(x=>x.text||'').join('').trim();
+  const msg=(j.error&&j.error.message)||'';last=aiErr(name,r.status,msg);if(r.status===404||/model/i.test(msg)&&r.status===400)continue;throw last}throw last}
+ let last;for(const m of [...new Set([(AI.om||'').trim(),'gpt-5.4-mini','gpt-5-mini'].filter(Boolean))]){
+  const r=await aiFetch('https://api.openai.com/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},body:JSON.stringify({model:m,messages:[{role:'system',content:sys},...msgs.map(x=>({role:x.r==='u'?'user':'assistant',content:x.t}))]})},name);
+  const j=await r.json().catch(()=>({}));if(r.ok)return((j.choices||[])[0]?.message?.content||'').trim();
+  const msg=(j.error&&j.error.message)||'';last=aiErr(name,r.status,msg);if(r.status===404||(j.error&&j.error.code==='model_not_found'))continue;throw last}throw last}
+function vcParse(txt){const a=String(txt||'');const i=a.indexOf('{'),k=a.lastIndexOf('}');if(i<0||k<=i)throw new Error('정리본(JSON)을 찾지 못했습니다. { 로 시작해 } 로 끝나는 부분을 붙여 넣어 주십시오.');
+ let o;try{o=JSON.parse(a.slice(i,k+1))}catch(e){throw new Error('정리본을 읽지 못했습니다. 클로드에게 "JSON만 다시 출력해줘"라고 해 보십시오.')}return o}
+function vcApply(o){const G=GOALS,keys=new Set(SCORE.map(x=>x[0])),cl=(v,n)=>String(v||'').replace(/\s+/g,' ').trim().slice(0,n);
+ G.vcBackup={at:Date.now(),vision:G.vision||'',values:G.values||'',pboard:JSON.parse(JSON.stringify((G.vis&&G.vis.pboard)||{})),added:[]};
+ const res={vis:0,pil:0,bk:0,goal:0,dup:0};
+ if(cl(o.vision,300)){G.vision=cl(o.vision,300);res.vis=1}
+ const vals=Array.isArray(o.values)?o.values.map(x=>cl(x,16)).filter(Boolean):[];if(vals.length){G.values=vals.slice(0,6).join(', ');res.vis=1}
+ G.vis=G.vis||{};G.vis.pboard=G.vis.pboard||{};
+ VCA().forEach(([k])=>{const t=cl((o.pillars||{})[k],120);if(t){G.vis.pboard[k]=t;res.pil++}});
+ const have=new Set(G.list.map(g=>(g.title||'').replace(/\s+/g,'').toLowerCase()));
+ const area=a=>keys.has(a)?a:'';
+ (Array.isArray(o.bucket)?o.bucket:[]).slice(0,30).forEach(b=>{const t=cl(b&&b.t||b,60);if(!t)return;const kk=t.replace(/\s+/g,'').toLowerCase();if(have.has(kk)){res.dup++;return}have.add(kk);
+  const g={id:uid(),lv:'S',per:'S',title:t,kind:'once',done:false,doneAt:'',w:'○',bk:1,parent:null,tasks:[],area:area(b&&b.area)||guessArea(t),rank:0};G.list.push(g);G.vcBackup.added.push(g.id);res.bk++});
+ const LV=new Set(['y','h','q','m','L10','M3','M5']);
+ (Array.isArray(o.goals)?o.goals:[]).slice(0,40).forEach(x=>{const t=cl(x&&x.t,80);if(!t)return;const kk=t.replace(/\s+/g,'').toLowerCase();if(have.has(kk)){res.dup++;return}have.add(kk);const lv=LV.has(x.lv)?x.lv:'y';
+  const g={id:uid(),lv,per:perOf(lv,today()),title:t,done:false,doneAt:'',parent:null,tasks:[],area:area(x.area)||guessArea(t),rank:0,kind:'once'};G.list.push(g);G.vcBackup.added.push(g.id);res.goal++});
+ saveGoals();return res}
+function vcUndo(){const G=GOALS,b=G.vcBackup;if(!b)return;G.vision=b.vision;G.values=b.values;G.vis=G.vis||{};G.vis.pboard=b.pboard||{};const ad=new Set(b.added||[]);G.list=G.list.filter(g=>!ad.has(g.id));G.vcBackup=null;saveGoals();toast('↩️ 저장하기 전 상태로 되돌렸습니다.');try{renderGoals()}catch(e){}}
+function vcDone(o,from){let r;try{r=vcApply(o)}catch(e){toast('저장하지 못했습니다: '+(e.message||e));return false}
+ const n=r.vis+r.pil+r.bk+r.goal;if(!n){GOALS.vcBackup=null;toast('저장할 내용이 없었습니다. 대화를 조금 더 이어 가십시오.');return false}
+ toastAct(`✅ 저장: 비전${r.vis?' ✓':' -'} · 기둥 ${r.pil} · 버킷 ${r.bk} · 목표 ${r.goal}${r.dup?' (겹치는 '+r.dup+'개 제외)':''}`,'되돌리기',vcUndo);
+ try{renderGoals()}catch(e){}return true}
+function vcOpen(){const S=$('#sheet');if(!S)return;const V=vcS(),ai=vcHasAI();S.hidden=false;
+ const msgs=V.m.map(m=>`<div class="vcm ${m.r==='u'?'vcu':'vca'}">${esc(m.t).replace(/\n/g,'<br>')}</div>`).join('');
+ S.innerHTML=`<div class="sheetbox vcbox" role="dialog" aria-label="비전 대화"><div class="shead"><b>🧭 비전 대화</b><span style="display:flex;gap:6px">${V.m.length?'<button class="del" id="vcnew">새 대화</button>':''}<button class="del" id="vcx">닫기</button></span></div>
+  ${ai?`<div class="vclog" id="vclog">${msgs||`<div class="vcm vca">편하게 이야기해 봅시다. 비전·버킷리스트·기둥별 목표를 대화로 찾아가고, 끝나면 앱에 바로 정리해 저장합니다.<br><br>시작할 말을 골라도 됩니다.</div><div class="vcst">${['요즘 삶에서 아쉬운 점부터','10년 뒤 이상적인 하루','올해 꼭 이루고 싶은 것','지금 적힌 내용 다듬기'].map(x=>`<button type="button" data-vcs="${x}">${x}</button>`).join('')}</div>`}</div>
+   <div class="vcin"><textarea id="vcq" rows="2" placeholder="생각나는 대로 적으십시오"></textarea><button class="btn small" id="vcsend">보내기</button></div>
+   <div class="wxrow"><button class="btn small" id="vcfin"${V.m.length<2?' disabled':''}>✅ 여기까지 정리해서 저장</button></div>`
+  :`<p class="hint" style="margin:6px 0">앱 안 대화는 AI 키(Gemini·Claude·ChatGPT)가 있을 때 됩니다. 지금은 <b>클로드 앱에서 대화한 뒤 정리본을 붙여 넣는 방식</b>으로 쓰십시오.</p>`}
+  <details class="vcpaste" ${ai?'':'open'}><summary>📋 클로드 앱에서 대화하고 붙여 넣기</summary>
+   <ol class="wxol"><li>아래 단추로 시작 문장을 복사해 클로드 앱에 붙여 넣고 대화합니다.</li><li>대화가 끝나면 클로드에게 <b>정리해줘</b>라고 합니다.</li><li>나온 정리본을 아래 칸에 붙여 넣고 저장합니다.</li></ol>
+   <div class="wxrow"><button class="btn small ghost" id="vccopy">📋 대화 시작 문장 복사</button></div>
+   <textarea id="vcpaste" rows="4" placeholder="클로드가 정리한 { … } 를 여기에 붙여 넣기"></textarea>
+   <div class="wxrow"><button class="btn small" id="vcpsave">✅ 붙여 넣은 정리본 저장</button></div></details></div>`;
+ const close=()=>{S.hidden=true;S.innerHTML=''};S.querySelector('#vcx').onclick=close;S.onclick=e=>{if(e.target===S)close()};
+ const nw=S.querySelector('#vcnew');if(nw)nw.onclick=()=>{if(!confirm('지금 대화를 지우고 새로 시작할까요? (이미 저장한 내용은 그대로입니다)'))return;V.m=[];vcSave();vcOpen()};
+ S.querySelector('#vccopy').onclick=async()=>{const q=vcStarter();try{await navigator.clipboard.writeText(q);toast('📋 복사했습니다. 클로드 앱에 붙여 넣어 대화를 시작하십시오.')}catch(e){const t=S.querySelector('#vcpaste');t.value=q;t.select();toast('복사하지 못해 아래 칸에 넣었습니다. 직접 복사하십시오.')}};
+ S.querySelector('#vcpsave').onclick=()=>{const t=S.querySelector('#vcpaste').value;try{const o=vcParse(t);if(vcDone(o))close()}catch(e){toast(e.message||String(e))}};
+ if(!ai)return;
+ const log=S.querySelector('#vclog'),q=S.querySelector('#vcq'),sd=S.querySelector('#vcsend');log.scrollTop=log.scrollHeight;
+ const add=(r,t)=>{log.querySelector('.vcst')?.remove();const d=document.createElement('div');d.className='vcm '+(r==='u'?'vcu':'vca');d.innerHTML=esc(t).replace(/\n/g,'<br>');log.append(d);log.scrollTop=log.scrollHeight;return d};
+ const send=async txt=>{txt=(txt||q.value).trim();if(!txt||sd.disabled)return;q.value='';V.m.push({r:'u',t:txt});add('u',txt);const w=add('a','…');sd.disabled=true;
+  try{const t=await vcAsk(V.m,vcSys());V.m.push({r:'a',t});w.innerHTML=esc(t).replace(/\n/g,'<br>');S.querySelector('#vcfin').disabled=false}catch(e){V.m.pop();w.textContent='⚠️ '+(e.message||e);w.classList.add('vcerr')}
+  sd.disabled=false;vcSave();log.scrollTop=log.scrollHeight};
+ sd.onclick=()=>send();S.querySelectorAll('[data-vcs]').forEach(b=>b.onclick=()=>send(b.dataset.vcs));
+ q.onkeydown=e=>{if(e.key==='Enter'&&(e.ctrlKey||e.metaKey)){e.preventDefault();send()}};
+ S.querySelector('#vcfin').onclick=async()=>{const b=S.querySelector('#vcfin');b.disabled=true;b.textContent='정리하는 중…';
+  try{const t=await vcAsk([...V.m,{r:'u',t:vcFinalPrompt()}],vcSys());const o=vcParse(t);if(vcDone(o)){V.m.push({r:'a',t:'✅ 앱에 정리해 저장했습니다. 더 이어서 이야기해도 됩니다.'});vcSave();close()}else{b.disabled=false;b.textContent='✅ 여기까지 정리해서 저장'}}
+  catch(e){toast(e.message||String(e));b.disabled=false;b.textContent='✅ 여기까지 정리해서 저장'}}}
+function vcBtnSync(){try{if(typeof gSub==='undefined'||gSub!=='vision')return;const R=$('#glist');if(!R||R.querySelector(':scope>#vcbar'))return;
+ const d=document.createElement('div');d.id='vcbar';d.className='vcbar';d.innerHTML=`<button type="button" id="vcgo"><b>🧭 대화로 비전·목표 찾기</b><small>이야기하며 비전·버킷리스트·기둥별 목표를 정하고 바로 저장</small></button>`;R.prepend(d);d.querySelector('#vcgo').onclick=vcOpen}catch(e){}}
+{renderGoals=HK.w('renderGoals','16:비전대화',renderGoals,_rg=>function(){const r=_rg.apply(this,arguments);try{if(r&&r.then)r.then(vcBtnSync);else vcBtnSync()}catch(e){}return r});}
+{const st=document.createElement('style');st.textContent=`
+.vcbar button{display:flex;flex-direction:column;align-items:flex-start;gap:2px;width:100%;text-align:left;border:1px solid var(--line);background:var(--paper);color:var(--ink);font:inherit;border-radius:10px;padding:10px 12px;margin:0 0 10px;cursor:pointer}
+.vcbar small{color:var(--muted);font-size:.78rem}
+.sheetbox.vcbox{display:flex;flex-direction:column;max-height:88vh;overflow:hidden}
+.vclog{flex:1;min-height:180px;max-height:46vh;overflow-y:auto;display:flex;flex-direction:column;gap:8px;padding:4px 0}
+.vcm{max-width:88%;padding:8px 11px;border-radius:12px;font-size:.9rem;line-height:1.6;border:1px solid var(--line);background:var(--paper)}
+.vcu{align-self:flex-end;background:var(--pen-soft)}.vca{align-self:flex-start}.vcerr{color:var(--c-mis)}
+.vcst{display:flex;flex-wrap:wrap;gap:6px}.vcst button{border:1px solid var(--line);background:var(--paper);color:var(--ink);font:inherit;font-size:.82rem;padding:6px 10px;border-radius:999px;cursor:pointer}
+.vcin{display:flex;gap:6px;align-items:flex-end;margin-top:8px}.vcin textarea{flex:1;font-family:inherit}
+.vcpaste{margin-top:10px;border-top:1px solid var(--line);padding-top:8px;overflow-y:auto}.vcpaste summary{cursor:pointer;font-size:.86rem}
+.vcpaste textarea{width:100%;margin-top:6px;font-family:inherit}
+`;document.head.appendChild(st)}
 </script>
 <!--BIBLE{--><!--}BIBLE-->
 <div id="miniov" class="miniov" hidden></div>
