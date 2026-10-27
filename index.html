@@ -8174,7 +8174,7 @@ function renderViewCard(){const C=$('#viewcard');if(!C)return;const f=+SET.fsz||
     <div><div class="hint" style="margin:0 0 4px">일간 위젯 보이는 시간 (24시간 전체가 아니라 고르기)</div><div class="g2"><label class="f">시작<select id="vcds"><option value="">앱 설정 따름</option>${[...Array(24)].map((_,i)=>`<option value="${i}" ${SET.cwDayS===i?'selected':''}>${i}시</option>`).join('')}</select></label><label class="f">끝<select id="vcde"><option value="">앱 설정 따름</option>${[...Array(24)].map((_,i)=>`<option value="${i+1}" ${SET.cwDayE===i+1?'selected':''}>${i+1}시</option>`).join('')}</select></label></div></div>
     <div><div class="hint" style="margin:0 0 4px">주간 위젯 보기</div><div class="seg" style="--k:#ff8a3d">${[['roll','오늘부터 7일'],['cal','일~토 한 주']].map(([v,l])=>`<button data-vwk="${v}" class="${v===(SET.cwWk==='cal'?'cal':'roll')?'on':''}">${l}</button>`).join('')}</div></div>
     <div><div class="hint" style="margin:0 0 4px">화면 색</div><div class="seg" style="--k:#ff8a3d">${[['auto','자동'],['light','밝게'],['dark','어둡게']].map(([v,l])=>`<button data-vth="${v}" class="${v===th?'on':''}">${l}</button>`).join('')}</div></div>
-    <div><div class="hint" style="margin:0 0 4px">화면 스타일</div><div class="seg" style="--k:#ff8a3d">${[['cute','귀여운'],['simple','심플'],['rich','이전 (색 많이)']].map(([v,l])=>`<button data-vlk="${v}" class="${v===lkCur()?'on':''}">${l}</button>`).join('')}</div></div>
+    <div><div class="hint" style="margin:0 0 4px">화면 스타일</div><div class="seg" style="--k:#ff8a3d">${[['cute','귀여운'],['taste','정돈'],['simple','심플'],['rich','이전 (색 많이)']].map(([v,l])=>`<button data-vlk="${v}" class="${v===lkCur()?'on':''}">${l}</button>`).join('')}</div></div>
     <label class="chk"><input type="checkbox" id="vtip" ${SET.tipFold!==false?'checked':''}>설명 문구 접어 두기 · 제목 옆 ⓘ로 펼침</label>
     <label class="chk"><input type="checkbox" id="vfab" ${SET.fab!==false?'checked':''}>오른쪽 아래 ＋ 빠르게 적기 버튼</label>
     <label class="chk"><input type="checkbox" id="vdm" ${SET.dayMini!==false?'checked':''}>오늘 화면을 내리면 위에 바로가기 줄</label>
@@ -8186,7 +8186,7 @@ function renderViewCard(){const C=$('#viewcard');if(!C)return;const f=+SET.fsz||
   {const a=C.querySelector('#vcds'),b=C.querySelector('#vcde');const ch=()=>{let x=a.value===''?null:+a.value,y=b.value===''?null:+b.value;if(x!=null&&y!=null&&y<=x){y=Math.min(24,x+1);b.value=String(y)}SET.cwDayS=x;SET.cwDayE=y;saveSet().catch(()=>{});try{cwSoon()}catch(e){}toast(x==null&&y==null?'🕐 일간 위젯: 앱의 표시 시간 설정을 따릅니다.':`🕐 일간 위젯: ${x??'앱'}시 ~ ${y??'앱'}시만 보여 줍니다.`)};if(a)a.onchange=ch;if(b)b.onchange=ch}
   C.querySelectorAll('[data-vwk]').forEach(b=>b.onclick=()=>{SET.cwWk=b.dataset.vwk;saveSet().catch(()=>{});try{cwSoon()}catch(e){}toast(SET.cwWk==='cal'?'📅 주간 위젯: 일~토 한 주로 보여 줍니다.':'📅 주간 위젯: 오늘을 포함한 7일로 보여 줍니다.');renderViewCard()});
   C.querySelectorAll('[data-vth]').forEach(b=>b.onclick=()=>{SET.theme=b.dataset.vth;sv();renderViewCard()});
-  C.querySelectorAll('[data-vlk]').forEach(b=>b.onclick=()=>{SET.look=b.dataset.vlk==='rich'?'rich':b.dataset.vlk==='cute'?'cute':'';sv();renderViewCard()});
+  C.querySelectorAll('[data-vlk]').forEach(b=>b.onclick=()=>{SET.look=b.dataset.vlk==='rich'?'rich':b.dataset.vlk==='cute'?'cute':b.dataset.vlk==='taste'?'taste':'';SET.cuteOn=1;sv();try{lvApply()}catch(e){}renderViewCard()});
   $('#vtip').onchange=e=>{SET.tipFold=e.target.checked;sv();if(SET.tipFold){document.querySelectorAll('[data-tf]').forEach(x=>delete x.dataset.tf);tipFold()}};
   $('#vfab').onchange=e=>{SET.fab=e.target.checked;sv()};$('#vdm').onchange=e=>{SET.dayMini=e.target.checked;sv();dmSync()}}
 const SGR=[['backup','💾','백업·복원'],['cloud','☁️','드라이브·기기 연동'],['view','🎨','화면·기능 고르기'],['map','🗺️','메뉴 옮기기'],['watch','⌚','워치·건강'],['float','🍎','떠 있는 버튼'],['lock','🔒','앱 잠금'],['trash','🗑️','휴지통']];
@@ -11875,7 +11875,7 @@ html.cute body .card:not(.card .card) h3,html.cute body .panel:not(.card .panel)
 html.cute .pcico button.on{border:2px solid var(--ol);box-shadow:0 2px 0 var(--ol)}
 html.cute .seg button.on{box-shadow:inset 0 0 0 1.5px var(--ol)}
 `;document.head.appendChild(st)})();
-function lkCur(){return SET.look==='rich'?'rich':SET.look==='cute'||SET.look==null?'cute':'simple'}
+function lkCur(){return SET.look==='rich'?'rich':SET.look==='taste'?'taste':SET.look==='cute'||SET.look==null?'cute':'simple'}
 (function(){
   const o=lvApply;lvApply=function(){try{if(!SET.cuteOn){SET.cuteOn=1;if(SET.look!=='rich')SET.look='cute';try{saveSet()}catch(e){}}}catch(e){}const r=o.apply(this,arguments);try{document.documentElement.classList.toggle('cute',lkCur()==='cute')}catch(e){}return r};
   try{document.documentElement.classList.toggle('cute',lkCur()==='cute')}catch(e){}
@@ -15797,6 +15797,38 @@ async function scrRestore0(){const x=JSON.parse(localStorage.getItem('gj-scr')||
   if(x.sec&&x.sec!=='day'){try{if(x.sec==='budget'&&x.fv==='ledger'){fView='ledger';window.LGKEEP=true}}catch(e){}try{if(x.po)pOpen=x.po}catch(e){}go(x.sec,!!x.po);try{if(x.sec==='budget'&&x.fv&&x.fv!=='today')[500,1100].forEach(t=>setTimeout(()=>{if(curSection==='budget'&&fView!==x.fv)fvSet(x.fv)},t))}catch(e){}}
   sy()}
 setInterval(()=>{if(document.visibilityState==='visible')scrKeep()},4000);
+
+/* v375 정돈 스타일 (taste-skill 앱 화면 규칙: 3/2/8 — 얌전한 배치·거의 없는 움직임·촘촘한 정보) */
+(function(){const st=document.createElement('style');st.id='tastecss';st.textContent=`
+html.taste{--bg:#f9fafb;--paper:#fff;--ink:#111;--muted:#5f6368;--line:#e8e8e8;--pen:#111;--pen-soft:#f1f2f4}
+@media (prefers-color-scheme:dark){html.taste:not([data-theme="light"]){--bg:#101214;--paper:#181b1f;--ink:#ececec;--muted:#a0a6ae;--line:#2b3037;--pen:#ececec;--pen-soft:#22262b}}
+html.taste[data-theme="dark"]{--bg:#101214;--paper:#181b1f;--ink:#ececec;--muted:#a0a6ae;--line:#2b3037;--pen:#ececec;--pen-soft:#22262b}
+html.taste body{font-size:14px;line-height:1.5;font-variant-numeric:tabular-nums}
+html.taste h1,html.taste .datebar .d,html.taste .panel h2,html.taste textarea{font-family:inherit}
+html.taste .top h1{font-size:1.15rem;font-weight:650}
+html.taste .datebar .d{font-size:1rem;font-weight:600}
+html.taste .wrap{padding-top:10px}
+html.taste body .card:not(.card .card):not(.panel .card):not(.fwrap .card):not(.sheet .card),
+html.taste body .panel:not(.card .panel):not(.panel .panel),
+html.taste body .rcard,html.taste .gview,html.taste .fwrap,html.taste .sched,html.taste .hero{
+  background:var(--paper)!important;border:1px solid var(--line)!important;border-top:1px solid var(--line)!important;
+  border-radius:8px!important;box-shadow:none!important;margin-bottom:10px!important;padding:12px!important}
+html.taste .panel h2,html.taste .card h3,html.taste .panel h3{color:var(--ink)!important;font-size:.95rem;font-weight:650;letter-spacing:0;margin-bottom:4px}
+html.taste .q,html.taste .hint{color:var(--muted);font-size:.8rem}
+html.taste .item{border-radius:6px;padding:8px;margin-bottom:6px}
+html.taste input[type=text],html.taste input[type=number],html.taste input[type=time],html.taste textarea,html.taste select{border-radius:6px;padding:7px 9px;min-height:34px}
+html.taste .five button{border-radius:6px;padding:6px 2px 5px}
+html.taste .five button[aria-selected="true"]{border-color:var(--ink);box-shadow:none;background:var(--pen-soft)}
+html.taste nav.main{background:var(--bg);padding:4px 14px;gap:2px}
+html.taste nav.main button{padding:6px 10px;font-size:.88rem}
+html.taste nav.main button[aria-selected="true"]{color:var(--ink);font-weight:650;box-shadow:inset 0 -2px 0 var(--ink);border-radius:0;background:none}
+html.taste .subnav .snp button.on,html.taste .snp2 button.on{border-bottom-color:var(--ink)!important}
+html.taste .mode button.on{background:var(--pen-soft)!important}
+html.taste .seg button.on{background:var(--pen-soft);color:var(--ink);box-shadow:none}
+html.taste *{transition-duration:.01s!important;animation-duration:.01s!important;animation-iteration-count:1!important;text-shadow:none!important}
+html.taste body *:not(canvas):not(svg *){backdrop-filter:none!important}
+`;document.head.appendChild(st)})();
+(function(){const o=lvApply;lvApply=function(){const r=o.apply(this,arguments);try{document.documentElement.classList.toggle('taste',lkCur()==='taste')}catch(e){}return r};try{document.documentElement.classList.toggle('taste',lkCur()==='taste')}catch(e){}})();
 </script>
 <!--BIBLE{--><!--}BIBLE-->
 <div id="miniov" class="miniov" hidden></div>
