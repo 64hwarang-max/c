@@ -1779,7 +1779,7 @@ async function openDay(d){
   try{const n=0;if(n){svLog({t:new Date().toTimeString().slice(0,8),d,ev:'open-restore',add:n});schedule();setTimeout(()=>toast(`🛟 사라졌던 기록 ${n}개를 되살렸습니다.`),300)}}catch(e){}shLast={};try{SHKIND.forEach(([k])=>{shLast[k]={o:D,d,ids:new Set((D[k]||[]).filter(b=>shOk(k,b)).map(b=>b.id))}})}catch(e){}setTimeout(()=>{shAuto()},600);
   const p=await store.load(addD(d,-1));prevDay=p?norm(p):null;try{await allMap()}catch(e){}{const a=repApply(D),b=rtPlanApply(D);if(a||b)schedule()}apAutoRun();renderDay();
 }
-function renderDay(){if(ZMD>0&&curSection==='day'){zmDay();return}{const v=$('#v-day');if(v)v.classList.remove('zmon')}try{zmBarSync()}catch(e){}if(mode==='sched')mode='start';document.querySelectorAll('#mode button').forEach(b=>b.classList.toggle('on',b.dataset.m===mode));
+function renderDay(){if(ZMD>0&&curSection==='day'){zmDay().catch(e=>{console.warn('zmDay',e);ZMD=0;try{toast('⚠️ 이 확대 보기를 그리지 못해 1일 보기로 돌아갑니다 ('+(e&&e.message||e)+')')}catch(_){}try{renderDay()}catch(_){}});return}{const v=$('#v-day');if(v)v.classList.remove('zmon')}try{zmBarSync()}catch(e){}if(mode==='sched')mode='start';document.querySelectorAll('#mode button').forEach(b=>b.classList.toggle('on',b.dataset.m===mode));
   if(curSection==='habit'&&growSub!=='habits'){renderGrow();return}if(curSection==='score'){renderScore();return}
   if(!['start','sched','run','pm'].includes(mode))mode=mode==='plan'?'start':'pm';if(lvNow()==='easy'&&mode==='pm'&&!simOn())mode='start';document.querySelectorAll('#mode button').forEach(b=>b.classList.toggle('on',b.dataset.m===mode));
   if(applyDraft(D))schedule();{const qb=$('#qbox');if(qb)qb.hidden=true}qInit();modeSubs();navScore();{const Dh=$('#dash');if(Dh){Dh.innerHTML=dashHTML();bindDash(Dh)}}
@@ -5139,7 +5139,7 @@ async function updateWidget(){const WB=NP('WidgetBridge');if(!WB)return;try{
 /* ---------- planner (계획) ---------- */
 /* ---------- 🔍 보기 범위 슬라이더: 1일 → 9일 → 2~8주 → 1년 (오늘·계획 공통) ---------- */
 const ZMS=[...[1,2,3,4,5,6,7,8,9].map(n=>['d',n,n+'일']),...[1,2,3,4].map(n=>['w',n,n+'주']),['m',1,'1달'],['m',2,'2달'],['m',3,'3달'],['m',6,'6달'],['y',1,'1년']];
-let ZMD=0,ZMP=null,ZMA=today(),ZMSEQ=0;
+let ZMD=0,ZMP=null,ZMA=today(),ZMSEQ=0,ZMSEQP=0;
 const zmLeg=z=>({w:9,m:13,q:15,h:16,y:17}[z]??13);
 const zmCtx=()=>curSection==='plan'?'plan':curSection==='day'?'day':'';
 const zmIdx=c=>c==='day'?ZMD:(ZMP==null?zmLeg(pZoom):ZMP);
@@ -5203,7 +5203,7 @@ function zmRender(c){c==='day'?renderDay():renderPlan();try{zmBarSync()}catch(e)
 function zmShift(c,dir){const i=zmIdx(c),[k,n]=ZMS[i];let a=zmAnc(c);if(k==='d')a=addD(a,dir*n);else if(k==='w')a=addD(mondayOf(a),dir*7*n);else if(k==='m'){const d=parseD(a);a=ymd(new Date(d.getFullYear(),d.getMonth()+dir*n,1))}else{const d=parseD(a);d.setFullYear(d.getFullYear()+dir);a=ymd(d)}if(c==='day')ZMA=a;else pAnchor=a;zmRender(c)}
 async function zmDay(){const my=++ZMSEQ;try{await allMap()}catch(e){}if(my!==ZMSEQ||ZMD<=0)return;const V=$('#v-day');V.classList.add('zmon');const a=ZMA;const lb=$('#dlabel');lb.classList.remove('notoday');lb.textContent=zmRange(ZMD,a);
   const B=$('#dayBody');B.innerHTML=zmBody(ZMD,a)+`<div class="zbtn"><button id="zhol">🎌 휴일 관리</button><button id="zday" style="margin-left:auto">1일 보기로</button></div>`;hydrate(B);zmBind(B,'day');$('#zhol').onclick=openHolMgr;$('#zday').onclick=()=>zmSet(0)}
-async function zmPlan(R){const my=++ZMSEQ;try{await allMap()}catch(e){}if(my!==ZMSEQ||ZMP==null)return;const i=ZMP,a=pAnchor;
+async function zmPlan(R){const my=++ZMSEQP;try{await allMap()}catch(e){}if(my!==ZMSEQP||ZMP==null)return;const i=ZMP,a=pAnchor;
   R.innerHTML=`<div class="ptop"><div class="wk" style="margin:8px 0"><button class="iconbtn" id="zprev" aria-label="이전">‹</button><span><b style="font-family:'Gowun Batang',serif">${zmRange(i,a)}</b> <button class="del" id="ztoday">오늘</button></span><button class="iconbtn" id="znext" aria-label="다음">›</button></div></div>${zmBody(i,a)}<div class="zbtn">${repHideBtn()}<button id="phol">🎌 휴일 관리</button><button id="pgoog" style="margin-right:auto">🔗 구글</button><button id="pleg">기본 달력으로</button></div>`;
   hydrate(R);zmBind(R,'plan');$('#zprev').onclick=()=>zmShift('plan',-1);$('#znext').onclick=()=>zmShift('plan',1);$('#ztoday').onclick=()=>{pAnchor=today();zmRender('plan')};$('#phol').onclick=openHolMgr;$('#pgoog').onclick=openGoogleMgr;$('#pleg').onclick=()=>{ZMP=null;zmRender('plan')}}
 function zmSet(i){const c=zmCtx();if(!c)return;i=Math.max(0,Math.min(ZMS.length-1,i));
@@ -5393,7 +5393,7 @@ function bindSched(R,rer){{const sn=R.querySelector('#ssnap');if(sn)sn.onchange=
   {const py=R.querySelector('#pyes');if(py)py.onclick=()=>openYesSheet(rer)}const pc2=R.querySelector('#pcopy');if(pc2)pc2.onclick=()=>{D.time=D.plan.map(t=>{const c={...t};delete c.rid;return c});schedule();rer()};
   R.querySelectorAll('[data-pdone2]').forEach(c=>c.onchange=()=>{const p=D.pri[+c.dataset.pdone2];p.done=c.checked;const t=taskBy(p.link);if(t){t.done=c.checked;saveGoals()}schedule();rer()});
   const pf=R.querySelector('#pfull');if(pf)pf.onclick=()=>{mode='pm';sec='growth';go('day')}}
-async function renderPlan(){const R=$('#pbody');if(ZMP!=null){zmPlan(R);return}try{await allMap()}catch(e){}const r=pRange();const zi=ZOOMS.findIndex(z=>z[0]===pZoom);
+async function renderPlan(){const R=$('#pbody');if(ZMP!=null){zmPlan(R).catch(e=>{console.warn('zmPlan',e);ZMP=null;try{toast('⚠️ 이 확대 보기를 그리지 못해 기본 계획으로 돌아갑니다 ('+(e&&e.message||e)+')')}catch(_){}try{zmBarSync()}catch(_){}renderPlan()});setTimeout(()=>{try{const B=$('#pbody');if(ZMP!=null&&B&&!B.querySelector('.zmv')&&curSection==='plan'){ZMP=null;toast('⚠️ 확대 보기가 열리지 않아 기본 계획으로 돌아갑니다.');try{zmBarSync()}catch(_){}renderPlan()}}catch(_){}},5000);return}try{await allMap()}catch(e){}const r=pRange();const zi=ZOOMS.findIndex(z=>z[0]===pZoom);
   let h=`<div class="ptop"><div class="seg pzoom" style="--k:var(--pen)">${ZOOMS.map(([k,l])=>`<button data-pz="${k}" class="${k===pZoom?'on':''}">${l}</button>`).join('')}</div>
     <div class="wk" style="margin:8px 0"><button class="iconbtn" id="pprev" aria-label="이전">‹</button><span><b style="font-family:'Gowun Batang',serif">${r.label}</b> <button class="del" id="ptoday">오늘</button></span><button class="iconbtn" id="pnext" aria-label="다음">›</button></div></div>`+foldBeg('plcal','📅 달력',false)+`
     <div class="cal z-${pZoom}">${r.days?weekList(r.days):r.months.map(([y,m])=>monthGrid(y,m,pZoom==='m')).join('')}</div>
