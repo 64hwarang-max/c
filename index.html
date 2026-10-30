@@ -1691,8 +1691,9 @@ function remote(db,uid){
 async function initStore(){
   try{if(window.claude&&claude.use){const[db,user]=await Promise.all([claude.use('db'),claude.use('user')]);
     if(db&&user){const uid=await user.id();if(uid){store=remote(db,uid);status('기기 간 동기화됨 · 나만 볼 수 있음');return}}}}catch(e){}
-  try{if(window.indexedDB){const b=idbStore();await b.getDoc('settings');store=syncWrap(b);await syLoad();status(syCfg().on?'이 기기 + 📲 연동':IS_NATIVE?'이 휴대폰에 저장됨 · ⚙️ 설정·백업에서 정기 백업 권장':'이 기기에만 저장됨');return}}catch(e){}
-  store=syncWrap(local);await syLoad();status('이 기기에만 저장됨');
+  let ie=null;if(window.indexedDB)for(let a=0;a<4;a++){try{const b=idbStore();await b.getDoc('settings');store=syncWrap(b);await syLoad();status(syCfg().on?'이 기기 + 📲 연동':IS_NATIVE?'이 휴대폰에 저장됨 · ⚙️ 설정·백업에서 정기 백업 권장':'이 기기에만 저장됨');if(a)svLog({t:new Date().toTimeString().slice(0,8),ev:'idb-open-retry',n:a});try{await lsBackMerge(b)}catch(e){}return}catch(e){ie=e;await new Promise(r=>setTimeout(r,[300,800,1500,0][a]))}}
+  store=syncWrap(local);await syLoad();status('⚠️ 임시 저장소 사용 중');try{svLog({t:new Date().toTimeString().slice(0,8),ev:'idb-fallback',err:String(ie&&(ie.name||ie.message)||ie||'')})}catch(e){}
+  if(window.indexedDB)setTimeout(()=>{try{toast('⚠️ 기기 저장소를 열지 못해 예전 임시 저장소로 열었습니다. 오늘 기록이 비어 보이면 아무것도 고치지 말고 앱을 완전히 닫았다가 다시 여십시오.')}catch(e){}},1200);
 }
 function status(t){$('#status').textContent=t}
 const DEF_R=[['이불 정리',1],['물 한 잔',1],['기도',10],['스트레칭',5],['감사 세 줄·다짐',5],['모닝 페이지',10]];
@@ -1767,9 +1768,9 @@ function shMissing(o){const e=shGet()[o&&o.date];if(!e)return[];const have=new S
 document.addEventListener('click',async ev=>{const t=ev.target.closest&&ev.target.closest('[data-shrest]');if(!t)return;ev.preventDefault();const L=shMissing(D);if(!L.length)return;
   if(!await uiConfirm(`사라진 ‘실제 한 일’ ${L.length}개를 되살릴까요?\n\n${L.sort((a,b)=>a.s<b.s?-1:1).map(b=>`${b.s}${b.e?'~'+b.e:''} ${b.act||b.cat||''}`).join('\n')}\n\n(‘취소’를 누르면 이 목록을 비웁니다)`)){const S=shGet();const e=S[D.date];if(e){L.forEach(b=>e.del.push(b.id));shPut(S)}renderDay();return}
   L.forEach(b=>D.time.push(b));D.time.sort((x,y)=>(x.s||'99')<(y.s||'99')?-1:1);schedule();renderDay();toast(`🛟 ${L.length}개를 되살렸습니다.`)});
-let SAVP=Promise.resolve();const FLN={};
+let SAVP=Promise.resolve();const FLN={};let FLR=0;
 function flush(){const p=SAVP.then(flush0,flush0);SAVP=p.catch(()=>{});return p}
-async function flush0(){if(!dirty)return;dirty=false;const o=D;const t0=Date.now();o._sv=t0;try{try{shKeep(o)}catch(e){}let vok=true;if(hasAny(o)||(o.rm&&o.rm.length)||await store.load(o.date)){try{const n1=(o.time||[]).length+(o.plan||[]).length,L=FLN[o.date];if(L!=null&&n1<L)svLog({t:new Date().toTimeString().slice(0,8),d:o.date,ev:'shrink',from:L,to:n1});FLN[o.date]=n1}catch(e){}await store.save(o.date,o);try{const v=await store.load(o.date);if(!v||(v.time||[]).length!==(o.time||[]).length||(v.plan||[]).length!==(o.plan||[]).length){svLog({t:new Date().toTimeString().slice(0,8),d:o.date,ev:'verify-fail',saved:[(o.time||[]).length,(o.plan||[]).length],read:v?[(v.time||[]).length,(v.plan||[]).length]:null});await store.save(o.date,o);const v2=await store.load(o.date);if(!v2||(v2.time||[]).length!==(o.time||[]).length||(v2.plan||[]).length!==(o.plan||[]).length){vok=false;setTimeout(()=>{try{toast('⚠️ 저장이 확인되지 않았습니다. 앱을 닫기 전에 ⚙️ 설정에서 백업을 해 두십시오.')}catch(e){}},300)}}}catch(e){}}if(cacheAll)cacheAll.set(o.date,o);try{const p=JSON.parse(localStorage.getItem('gj-pend')||'null');if(p&&p.d&&p.d.date===o.date&&p.t<=t0&&!dirty&&vok)localStorage.removeItem('gj-pend')}catch(e){}status(store.mode==='cloud'?'저장됨 · 동기화':'저장됨 · 이 기기');gcPushDaySoon(o)}catch(e){status(e&&e.code==='quota_exceeded'?'저장 공간이 가득 찼습니다. 백업 후 오래된 기록을 정리하십시오.':'저장하지 못했습니다. 잠시 후 다시 입력하십시오.');dirty=true}}
+async function flush0(){if(!dirty)return;dirty=false;const o=D;const t0=Date.now();o._sv=t0;try{try{shKeep(o)}catch(e){}let vok=true;if(hasAny(o)||(o.rm&&o.rm.length)||await store.load(o.date)){try{const n1=(o.time||[]).length+(o.plan||[]).length,L=FLN[o.date];if(L!=null&&n1<L)svLog({t:new Date().toTimeString().slice(0,8),d:o.date,ev:'shrink',from:L,to:n1});FLN[o.date]=n1}catch(e){}await store.save(o.date,o);try{const v=await store.load(o.date);if(!v||(v.time||[]).length!==(o.time||[]).length||(v.plan||[]).length!==(o.plan||[]).length){svLog({t:new Date().toTimeString().slice(0,8),d:o.date,ev:'verify-fail',saved:[(o.time||[]).length,(o.plan||[]).length],read:v?[(v.time||[]).length,(v.plan||[]).length]:null});await store.save(o.date,o);const v2=await store.load(o.date);if(!v2||(v2.time||[]).length!==(o.time||[]).length||(v2.plan||[]).length!==(o.plan||[]).length){vok=false;setTimeout(()=>{try{toast('⚠️ 저장이 확인되지 않았습니다. 앱을 닫기 전에 ⚙️ 설정에서 백업을 해 두십시오.')}catch(e){}},300)}}}catch(e){}}if(cacheAll)cacheAll.set(o.date,o);try{const p=JSON.parse(localStorage.getItem('gj-pend')||'null');if(p&&p.d&&p.d.date===o.date&&p.t<=t0&&!dirty&&vok)localStorage.removeItem('gj-pend')}catch(e){}status(store.mode==='cloud'?'저장됨 · 동기화':'저장됨 · 이 기기');FLR=0;gcPushDaySoon(o)}catch(e){status(e&&e.code==='quota_exceeded'?'저장 공간이 가득 찼습니다. 백업 후 오래된 기록을 정리하십시오.':'저장하지 못했습니다. 잠시 후 다시 입력하십시오.');dirty=true;try{svLog({t:new Date().toTimeString().slice(0,8),d:o.date,ev:'save-fail',err:String(e&&(e.name||e.message)||e).slice(0,80)})}catch(x){}FLR=(FLR||0)+1;if(FLR<6){clearTimeout(timer);timer=setTimeout(flush,1500*FLR)}else setTimeout(()=>{try{toast('⚠️ 기록을 저장하지 못하고 있습니다. 앱을 완전히 닫기 전에 ⚙️ 설정에서 백업해 두십시오.')}catch(x){}},300)}}
 function setP(path,val){const ks=path.split('.');let o=D;for(let i=0;i<ks.length-1;i++){if(o[ks[i]]==null)o[ks[i]]={};o=o[ks[i]]}o[ks[ks.length-1]]=val}
 function getP(path){return path.split('.').reduce((o,k)=>o==null?o:o[k],D)}
 
@@ -4846,9 +4847,16 @@ const IOS_NA='아이폰에서는 지원하지 않는 기능입니다 (안드로�
 const STORE_APP='__STORE__'==='1';const LITE_APP='__LITE__'==='1';
 const NA_MSG=IOS_APP?IOS_NA:STORE_APP?'스토어 버전에서는 제공하지 않는 기능입니다 (구글 정책상 직접 설치하는 APK에서만 쓸 수 있습니다).':'';
 const NP=name=>IS_NATIVE?(window.Capacitor.Plugins&&window.Capacitor.Plugins[name])||(window.Capacitor.registerPlugin&&window.Capacitor.registerPlugin(name)):null;
-function idbStore(){let dbp=null;const open=()=>dbp||(dbp=new Promise((res,rej)=>{const r=indexedDB.open('growth-journal',1);r.onupgradeneeded=()=>r.result.createObjectStore('docs');r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)}));
-  const tx=async(mode,fn)=>{const db=await open();return new Promise((res,rej)=>{const t=db.transaction('docs',mode);const st=t.objectStore('docs');const out=fn(st);t.oncomplete=()=>res(out&&typeof out==='object'&&'readyState' in out?out.result:out);t.onerror=()=>rej(t.error)})};
-  const getAll=async()=>{const db=await open();return new Promise((res,rej)=>{const out=[];const c=db.transaction('docs').objectStore('docs').openCursor();c.onsuccess=()=>{const cur=c.result;if(cur){out.push([cur.key,cur.value]);cur.continue()}else res(out)};c.onerror=()=>rej(c.error)})};
+function idbStore(){let dbp=null;const idbLog=(ev,e)=>{try{svLog({t:new Date().toTimeString().slice(0,8),ev,err:String(e&&(e.name||e.message)||e||'').slice(0,80)})}catch(x){}};
+  /* v381: 연결이 닫히거나(앱이 뒤로 갔다 올 때 등) 트랜잭션이 중단되면 응답 없이 멈추던 문제 → 연결을 새로 열고 한 번 더 시도 */
+  const open=()=>dbp||(dbp=new Promise((res,rej)=>{let r;try{r=indexedDB.open('growth-journal',1)}catch(e){dbp=null;rej(e);return}r.onupgradeneeded=()=>r.result.createObjectStore('docs');r.onsuccess=()=>{const db=r.result;db.onclose=()=>{dbp=null;idbLog('idb-close')};db.onversionchange=()=>{try{db.close()}catch(e){}dbp=null};res(db)};r.onerror=()=>{dbp=null;rej(r.error)};r.onblocked=()=>idbLog('idb-blocked')}));
+  const tx1=async(mode,fn)=>{const db=await open();return new Promise((res,rej)=>{let t,done=false;const fin=f=>v=>{if(done)return;done=true;clearTimeout(to);f(v)};const to=setTimeout(()=>{if(done)return;done=true;dbp=null;try{t&&t.abort()}catch(e){}rej(new Error('idb-timeout'))},15000);
+    try{t=mode==='readwrite'?db.transaction('docs',mode,{durability:'strict'}):db.transaction('docs',mode)}catch(e){dbp=null;fin(rej)(e);return}
+    let out;try{out=fn(t.objectStore('docs'))}catch(e){fin(rej)(e);return}
+    t.oncomplete=()=>fin(res)(out&&typeof out==='object'&&'readyState' in out?out.result:out);t.onerror=()=>fin(rej)(t.error||new Error('idb-error'));t.onabort=()=>fin(rej)(t.error||new Error('idb-abort'))})};
+  const tx=async(mode,fn)=>{try{return await tx1(mode,fn)}catch(e){if(e&&e.name==='QuotaExceededError')throw e;idbLog('idb-retry',e);dbp=null;await new Promise(r=>setTimeout(r,150));return tx1(mode,fn)}};
+  const getAll1=async()=>{const db=await open();return new Promise((res,rej)=>{const out=[];let t;try{t=db.transaction('docs')}catch(e){dbp=null;rej(e);return}const c=t.objectStore('docs').openCursor();c.onsuccess=()=>{const cur=c.result;if(cur){out.push([cur.key,cur.value]);cur.continue()}else res(out)};c.onerror=()=>rej(c.error);t.onabort=()=>rej(t.error||new Error('idb-abort'))})};
+  const getAll=async()=>{try{return await getAll1()}catch(e){idbLog('idb-retry-all',e);dbp=null;await new Promise(r=>setTimeout(r,150));return getAll1()}};
   return{mode:'device',
     async load(d){return(await tx('readonly',st=>st.get('day:'+d)))||null},
     async save(d,o){await tx('readwrite',st=>st.put(JSON.parse(JSON.stringify(o)),'day:'+d))},
@@ -16059,6 +16067,14 @@ function vcBtnSync(){try{if(typeof gSub==='undefined'||gSub!=='vision')return;co
 .vcpaste{margin-top:10px;border-top:1px solid var(--line);padding-top:8px;overflow-y:auto}.vcpaste summary{cursor:pointer;font-size:.86rem}
 .vcpaste textarea{width:100%;margin-top:6px;font-family:inherit}
 `;document.head.appendChild(st)}
+
+/* v381: 기기 저장소를 못 열어 임시 저장소(localStorage)에 적었던 날의 블록을, 기기 저장소가 다시 열리면 합쳐 넣는다 */
+async function lsBackMerge(b){const ks=[];for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(/^gj:\d{4}-\d{2}-\d{2}$/.test(k))ks.push(k)}let n=0;
+  for(const k of ks){let o=null;try{o=JSON.parse(localStorage.getItem(k)||'null')}catch(e){}if(!o||!o.date){localStorage.removeItem(k);continue}
+    const t=await b.load(o.date);if(!t){await b.save(o.date,o);n++}else{let ch=0;['time','plan','mis','fin','meet','pri'].forEach(f=>{if(!Array.isArray(o[f]))return;t[f]=Array.isArray(t[f])?t[f]:[];const have=new Set(t[f].map(x=>x&&x.id).filter(Boolean));o[f].forEach(x=>{if(x&&x.id&&!have.has(x.id)){t[f].push(x);ch++}})});
+      ['time','plan'].forEach(f=>t[f].sort((x,y)=>(x.s||'99')<(y.s||'99')?-1:1));if(ch){await b.save(o.date,t);n+=ch}}
+    try{localStorage.removeItem(k)}catch(e){}}
+  if(n){svLog({t:new Date().toTimeString().slice(0,8),ev:'ls-merge',n});setTimeout(()=>{try{toast('🛟 임시 저장소에 남아 있던 기록 '+n+'건을 합쳤습니다.')}catch(e){}},1600)}}
 </script>
 <!--BIBLE{--><!--}BIBLE-->
 <div id="miniov" class="miniov" hidden></div>
