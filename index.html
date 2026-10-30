@@ -12961,12 +12961,13 @@ function qtHomeHTML(){const F=qtFlat(),Q=qtS();const from=+Q.from||0;const FR=F.
     <p class="hint" style="margin:4px 0 8px">어성경 책 Day 274~365(신약)를 이야기 단위로 나눠, 화·수·목·금·토·월 6일에 걸쳐 읽습니다. 읽고 느낀점을 적습니다.</p>
     <div class="pilbar"><i style="width:${(done/FR.length*100).toFixed(1)}%;background:#2e7d6b"></i></div>
     <p class="hint" style="margin:4px 0 8px"><b>${done}</b> / ${FR.length}일 읽음 · ${(done/FR.length*100).toFixed(1)}%${Q.from?` · 📍 ${Q.fromDate?Q.fromDate.slice(5).replace('-','.')+(Q.fromDate>today()?' 시작 예정':' 시작')+' · ':''}${fx.w}주차 ${fx.wd}요일부터`:''}</p>
-    <div class="qtsr"><label class="hint" style="margin:0">시작 날짜 <input type="date" id="qtsdt" value="${esc(Q.fromDate||today())}" style="width:auto"></label><span class="hint">이 날을</span><select id="qtsw" aria-label="주차">${QT_NT.map((_,k)=>`<option value="${k+1}" ${k+1===fx.w?'selected':''}>${k+1}주차</option>`).join('')}</select><select id="qtsd" aria-label="요일">${QT_WD.map((d,k)=>`<option value="${k}" ${QT_WD[fx.i%6]===d?'selected':''}>${d}요일</option>`).join('')}</select><button class="btn small" id="qtsgo">▶ 시작</button>${Q.from?'<button class="del" id="qtsclr">처음부터</button>':''}</div>
+    ${Q.from||Q.fromDate?`<details class="qtset"><summary class="hint">⚙️ 시작 설정 · ${Q.fromDate?Q.fromDate.slice(5).replace('-','.')+' · ':''}${fx.w}주차 ${fx.wd}요일부터 <u>바꾸기</u></summary>`:''}<div class="qtsr"><label class="hint" style="margin:0">시작 날짜 <input type="date" id="qtsdt" value="${esc(Q.fromDate||today())}" style="width:auto"></label><span class="hint">이 날을</span><select id="qtsw" aria-label="주차">${QT_NT.map((_,k)=>`<option value="${k+1}" ${k+1===fx.w?'selected':''}>${k+1}주차</option>`).join('')}</select><select id="qtsd" aria-label="요일">${QT_WD.map((d,k)=>`<option value="${k}" ${QT_WD[fx.i%6]===d?'selected':''}>${d}요일</option>`).join('')}</select><button class="btn small" id="qtsgo">▶ 시작</button>${Q.from?'<button class="del" id="qtsclr">처음부터</button>':''}</div>${Q.from||Q.fromDate?'</details>':''}
     ${next?`<button class="btn" data-qto="${next.i}" style="width:100%;text-align:left">▶ 오늘 큐티 · ${next.w}주차 ${next.wd}요일 · Day ${next.day}<br><small>${esc(qtRefs(next))}</small></button>`:'<p class="hint">신약 큐티를 모두 읽었습니다.</p>'}</div>`;
-  for(let w=1;w<=QT_NT.length;w++){const L=F.filter(x=>x.w===w);const dn=L.filter(x=>Q.d[x.i]).length;
-    h+=`<details class="card nocol eo qtw" data-qtw="${w}" style="--k:#2e7d6b" ${w===(qtOpenW||cw)?'open':''}><summary><b>${w}주차</b> <span class="hint">Day ${L[0].day}${L[5].day!==L[0].day?'–'+L[5].day:''} · ${dn}/6${dn===6?' ✓':''}</span></summary>
-      <div class="qtrows">${L.map(x=>`<button type="button" class="qtrow ${Q.d[x.i]?'dn':''} ${x.i<from?'sk':''}" data-qto="${x.i}"><b>${x.wd}</b><span>${esc(qtRefs(x))}</span><i>${Q.d[x.i]?'✓':''}${Q.notes[x.i]?'✎':''}</i></button>`).join('')}</div></details>`}
-  return h}
+  const setd=!!(Q.from||Q.fromDate);let top='';
+  for(let w=1;w<=QT_NT.length;w++){const L=F.filter(x=>x.w===w);const dn=L.filter(x=>Q.d[x.i]).length;const isCw=setd&&w===cw;
+    const card=`<details class="card nocol eo qtw${isCw?' qtcw':''}" data-qtw="${w}" style="--k:#2e7d6b" ${isCw||w===(qtOpenW||cw)?'open':''}><summary>${isCw?'<span class="qtnow">이번 주</span> ':''}<b>${w}주차</b> <span class="hint">Day ${L[0].day}${L[5].day!==L[0].day?'–'+L[5].day:''} · ${dn}/6${dn===6?' ✓':''}</span></summary>
+      <div class="qtrows">${L.map(x=>`<button type="button" class="qtrow ${Q.d[x.i]?'dn':''} ${x.i<from?'sk':''}" data-qto="${x.i}"><b>${x.wd}</b><span>${esc(qtRefs(x))}</span><i>${Q.d[x.i]?'✓':''}${Q.notes[x.i]?'✎':''}</i></button>`).join('')}</div></details>`;if(isCw)top=card;else h+=card}
+  return top+h}
 async function qtDayHTML(i){const F=qtFlat(),x=F[i],Q=qtS();if(!x)return'<p class="empty">없는 날입니다.</p>';let B;try{B=await bbLoad()}catch(e){return`<p class="empty">${esc(e.message||e)}</p>`}
   const ok=!!Q.d[i];const note=(Q.notes[i]&&Q.notes[i].t)||'';
   let h=`<div class="bbhd" style="margin:8px 0"><button class="del" id="qtback">‹ 큐티</button><h3>${x.w}주차 ${x.wd}요일</h3><span class="hint">Day ${x.day}</span></div><p class="eoref">${esc(qtRefs(x))}</p><div class="bbtxt eotxt">`;
@@ -16079,4 +16080,6 @@ async function lsBackMerge(b){const ks=[];for(let i=0;i<localStorage.length;i++)
 <!--BIBLE{--><!--}BIBLE-->
 <div id="miniov" class="miniov" hidden></div>
 </body></html>
+
+<style id="qtsetcss">.qtset{margin:4px 0 8px}.qtset>summary{cursor:pointer;list-style:none;padding:4px 0}.qtset>summary::-webkit-details-marker{display:none}.qtset>summary u{margin-left:4px}.qtset[open]>summary{margin-bottom:4px}.qtnow{display:inline-block;font-size:.75em;font-weight:700;padding:1px 7px;border-radius:999px;background:#2e7d6b;color:#fff;vertical-align:1px}.qtcw{border-color:#2e7d6b}</style>
 </body></html>
