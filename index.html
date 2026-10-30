@@ -16023,8 +16023,8 @@ function vcApply(o){const G=GOALS,keys=new Set(SCORE.map(x=>x[0])),cl=(v,n)=>Str
  saveGoals();return res}
 function vcUndo(){const G=GOALS,b=G.vcBackup;if(!b)return;G.vision=b.vision;G.values=b.values;G.vis=G.vis||{};G.vis.pboard=b.pboard||{};const ad=new Set(b.added||[]);G.list=G.list.filter(g=>!ad.has(g.id));G.vcBackup=null;saveGoals();toast('↩️ 저장하기 전 상태로 되돌렸습니다.');try{renderGoals()}catch(e){}}
 function vcDone(o,from){let r;try{r=vcApply(o)}catch(e){toast('저장하지 못했습니다: '+(e.message||e));return false}
- const n=r.vis+r.pil+r.bk+r.goal;if(!n){GOALS.vcBackup=null;toast('저장할 내용이 없었습니다. 대화를 조금 더 이어 가십시오.');return false}
- toastAct(`✅ 저장: 비전${r.vis?' ✓':' -'} · 기둥 ${r.pil} · 버킷 ${r.bk} · 목표 ${r.goal}${r.dup?' (겹치는 '+r.dup+'개 제외)':''}`,'되돌리기',vcUndo);
+ const n=r.vis+r.pil+r.bk+r.goal+(r.role||0);if(!n){GOALS.vcBackup=null;toast('저장할 내용이 없었습니다. 대화를 조금 더 이어 가십시오.');return false}
+ toastAct(`✅ 저장: 비전${r.vis?' ✓':' -'} · 기둥 ${r.pil} · 버킷 ${r.bk} · 목표 ${r.goal}${r.role?' · 역할 '+r.role:''}${r.dup?' (겹치는 '+r.dup+'개 제외)':''}`,'되돌리기',vcUndo);
  try{renderGoals()}catch(e){}return true}
 function vcOpen(){const S=$('#sheet');if(!S)return;const V=vcS(),ai=vcHasAI();S.hidden=false;
  const msgs=V.m.map(m=>`<div class="vcm ${m.r==='u'?'vcu':'vca'}">${esc(m.t).replace(/\n/g,'<br>')}</div>`).join('');
@@ -16076,6 +16076,69 @@ async function lsBackMerge(b){const ks=[];for(let i=0;i<localStorage.length;i++)
       ['time','plan'].forEach(f=>t[f].sort((x,y)=>(x.s||'99')<(y.s||'99')?-1:1));if(ch){await b.save(o.date,t);n+=ch}}
     try{localStorage.removeItem(k)}catch(e){}}
   if(n){svLog({t:new Date().toTimeString().slice(0,8),ev:'ls-merge',n});setTimeout(()=>{try{toast('🛟 임시 저장소에 남아 있던 기록 '+n+'건을 합쳤습니다.')}catch(e){}},1600)}}
+/* ---------- v383 🎭 역할: 아버지·남편·직업·교회·멘토·리더 … 역할 선언 · 이번 주 핵심 행동 · 사람으로 자동 연결 ---------- */
+const RL_SUG=[['아버지','👨‍👧','rel'],['남편','💑','rel'],['직업','🎖️','work'],['교회','⛪','spirit'],['멘토','🧭','rel'],['리더','🚩','work']];
+const rlList=()=>Array.isArray(GOALS.roles)?GOALS.roles:(GOALS.roles=[]);
+const rlWk=()=>{const k=mondayOf(today());GOALS.roleWk=GOALS.roleWk&&typeof GOALS.roleWk==='object'?GOALS.roleWk:{};const ks=Object.keys(GOALS.roleWk).sort();while(ks.length>26)delete GOALS.roleWk[ks.shift()];return GOALS.roleWk[k]||(GOALS.roleWk[k]={})};
+function rlOfBlock(b){if(!b)return null;const L=rlList();if(b.role){const r=L.find(x=>x.id===b.role);if(r)return r}
+  const ns=splitNames(b.who).map(n=>n.replace(/\s+/g,''));if(!ns.length)return null;return L.find(r=>(r.ppl||[]).some(p=>ns.includes(String(p).replace(/\s+/g,''))))||null}
+async function rlWeekMin(){const m0=mondayOf(today()),out={};let m=null;try{m=await allMap()}catch(e){}
+  for(let i=0;i<7;i++){const d=addD(m0,i);const o=D&&D.date===d?D:(m&&m.get(d));if(!o)continue;(o.time||[]).forEach(b=>{const r=rlOfBlock(b);if(r)out[r.id]=(out[r.id]||0)+mins(b.s,b.e)})}return out}
+const rlHM=n=>n>=60?`${Math.floor(n/60)}시간${n%60?' '+n%60+'분':''}`:`${n}분`;
+function rlBoxHTML(){const L=rlList(),W=rlWk();const has=new Set(L.map(r=>r.name));
+  const sug=RL_SUG.filter(([n])=>!has.has(n));
+  return `<div class="rlhd"><b>🎭 나의 역할</b><span class="hint">누구를 위해 사는지 · 이번 주 역할마다 꼭 할 일 하나</span></div>
+  ${L.length?L.map(r=>{const w=W[r.id]||{};return `<div class="rlrow" data-rlid="${r.id}">
+    <button type="button" class="rlname" data-rledit="${r.id}"><span class="rle">${esc(r.e||'🎭')}</span><b>${esc(r.name)}</b>${r.area?`<small>${AREA_E[r.area]||''} ${esc(areaName(r.area))}</small>`:''}</button>
+    <p class="rlst ${tx(r.stmt)?'':'em'}" data-rledit="${r.id}">${tx(r.stmt)?esc(r.stmt):'이 역할에서 어떤 사람으로 기억되고 싶은가 · 눌러서 쓰기'}</p>
+    <label class="rlwk"><input type="checkbox" data-rlwd="${r.id}" ${w.done?'checked':''} ${tx(w.t)?'':'disabled'}><input type="text" data-rlwt="${r.id}" value="${esc(w.t||'')}" placeholder="이번 주 핵심 행동 하나" enterkeyhint="done"></label>
+    <small class="rlmin" data-rlmin="${r.id}"></small></div>`}).join(''):'<p class="hint" style="margin:4px 0 8px">아래에서 고르거나 직접 추가하십시오.</p>'}
+  <div class="rlsug">${sug.map(([n,e])=>`<button type="button" class="del" data-rladd="${esc(n)}">＋ ${e} ${esc(n)}</button>`).join('')}<button type="button" class="del" data-rladd="">＋ 직접 추가</button></div>`}
+function rlFillMin(R){rlWeekMin().then(M=>{rlList().forEach(r=>{const el=R.querySelector(`[data-rlmin="${r.id}"]`);if(!el)return;const n=M[r.id]||0;el.textContent=(r.ppl||[]).length?(n?`이번 주 실제 ${rlHM(n)}`:`이번 주 실제 기록 없음 · ${r.ppl.join(', ')}`):'함께하는 사람을 연결하면 실제 한 일에서 시간을 셉니다'})}).catch(()=>{})}
+function rlBind(R){
+  R.querySelectorAll('[data-rladd]').forEach(b=>b.onclick=async()=>{let n=b.dataset.rladd;const s=RL_SUG.find(x=>x[0]===n);
+    if(!n){n=((await uiPrompt('역할 이름 (예: 아들, 친구, 소그룹 리더)',''))||'').trim();if(!n)return}
+    const r={id:uid(),name:n.slice(0,16),e:s?s[1]:'🎭',area:s?s[2]:'',stmt:'',ppl:[]};rlList().push(r);saveGoals();rlEdit(r.id)});
+  R.querySelectorAll('[data-rledit]').forEach(b=>b.onclick=()=>rlEdit(b.dataset.rledit));
+  R.querySelectorAll('[data-rlwt]').forEach(inp=>{const sv=()=>{const W=rlWk(),id=inp.dataset.rlwt,t=inp.value.trim();const w=W[id]||(W[id]={});if((w.t||'')===t)return;w.t=t;if(!t)w.done=false;saveGoals();const c=R.querySelector(`[data-rlwd="${id}"]`);if(c){c.disabled=!t;if(!t)c.checked=false}};inp.onchange=sv;inp.onkeydown=e=>{if(e.key==='Enter'&&!e.isComposing){sv();inp.blur()}}});
+  R.querySelectorAll('[data-rlwd]').forEach(c=>c.onchange=()=>{const W=rlWk(),id=c.dataset.rlwd;const w=W[id]||(W[id]={});w.done=c.checked;saveGoals();if(c.checked)toast('✅ 이번 주 '+((rlList().find(r=>r.id===id)||{}).name||'')+' 역할의 핵심 행동을 했습니다.')});
+  rlFillMin(R)}
+function rlEdit(id){const r=rlList().find(x=>x.id===id);if(!r)return;const S=$('#sheet');if(!S)return;S.hidden=false;
+  const pp=[...new Set([...(PEOPLE.list||[]).map(p=>p.name).filter(Boolean)])].slice(0,80);
+  S.innerHTML=`<div class="sheetbox" role="dialog" aria-label="역할 고치기"><div class="shead"><b>🎭 역할</b><button class="del" id="rlx">닫기</button></div>
+   <div class="rlform"><label>이름<span class="rlnm"><input type="text" id="rle" value="${esc(r.e||'🎭')}" maxlength="4" aria-label="아이콘"><input type="text" id="rln" value="${esc(r.name)}" maxlength="16"></span></label>
+   <label>기둥 <select id="rla"><option value="">고르지 않음</option>${VCA().map(([k,n])=>`<option value="${k}" ${r.area===k?'selected':''}>${AREA_E[k]||''} ${esc(n)}</option>`).join('')}</select></label>
+   <label>역할 선언 <small class="hint">이 역할에서 나는 어떤 사람으로 기억되고 싶은가</small><textarea id="rls" rows="3" placeholder="예: 아이가 힘들 때 제일 먼저 찾는 아버지">${esc(r.stmt||'')}</textarea></label>
+   <label>함께하는 사람 <small class="hint">쉼표로 · 블록의 👤에 이 이름이 있으면 이 역할로 셉니다</small><input type="text" id="rlp" list="rlpl" value="${esc((r.ppl||[]).join(', '))}" placeholder="예: 아내, 서윤"><datalist id="rlpl">${pp.map(n=>`<option value="${esc(n)}">`).join('')}</datalist></label>
+   <div class="rlbtn"><button class="btn" id="rlok">저장</button><button class="del" id="rldel" style="color:var(--c-mis)">이 역할 지우기</button></div></div></div>`;
+  const close=()=>{S.hidden=true;S.innerHTML='';try{renderGoals()}catch(e){}};
+  $('#rlx').onclick=close;S.onclick=e=>{if(e.target===S)close()};
+  $('#rlok').onclick=()=>{r.name=($('#rln').value.trim()||r.name).slice(0,16);r.e=$('#rle').value.trim()||'🎭';r.area=$('#rla').value;r.stmt=$('#rls').value.trim().slice(0,200);r.ppl=splitNames($('#rlp').value).slice(0,20);saveGoals();toast('🎭 ‘'+r.name+'’ 역할을 저장했습니다.');close()};
+  $('#rldel').onclick=async()=>{if(!await uiConfirm(`‘${r.name}’ 역할을 지울까요?\n(블록·목표 기록은 그대로 남습니다)`))return;GOALS.roles=rlList().filter(x=>x.id!==r.id);saveGoals();close()}}
+function rlBoxSync(){try{if(typeof gSub==='undefined'||gSub!=='vision')return;const R=$('#glist');if(!R||R.querySelector(':scope>#rlbox'))return;
+  const d=document.createElement('div');d.id='rlbox';d.className='card nocol rlbox';d.innerHTML=rlBoxHTML();const vb=R.querySelector(':scope>#vcbar');if(vb)vb.after(d);else R.prepend(d);rlBind(d)}catch(e){console.warn('roles',e)}}
+{renderGoals=HK.w('renderGoals','17:역할',renderGoals,_rg=>function(){const r=_rg.apply(this,arguments);try{if(r&&r.then)r.then(rlBoxSync);else rlBoxSync()}catch(e){}return r});}
+/* 비전 대화에도 역할 선언을 함께 찾기 */
+{const _st=vcState;vcState=function(){const L=rlList();return _st.apply(this,arguments)+`\n역할 선언: ${L.length?L.map(r=>`${r.name}=${tx(r.stmt)?r.stmt:'(없음)'}`).join(' / '):'(역할 없음)'}`}
+ const _sy=vcSys;vcSys=function(){return _sy.apply(this,arguments)+`\n삶의 역할(예: 아버지·남편·직업·교회·멘토·리더)마다 '이 역할에서 어떤 사람으로 기억되고 싶은가'도 한 문장으로 찾도록 도울 수 있습니다.`}
+ const _fp=vcFinalPrompt;vcFinalPrompt=function(){return _fp.apply(this,arguments)+`\n역할 선언을 이야기했다면 같은 JSON 객체 안에 "roles":[{"name":"역할 이름(8자 이내)","stmt":"역할 선언 한 문장(60자 이내)"}] 도 넣으십시오.`}
+ const _ap=vcApply;vcApply=function(o){const before=JSON.parse(JSON.stringify(rlList()));const res=_ap.apply(this,arguments);res.role=0;
+   const cl=(v,n)=>String(v||'').replace(/\s+/g,' ').trim().slice(0,n);
+   (Array.isArray(o&&o.roles)?o.roles:[]).slice(0,10).forEach(x=>{const n=cl(x&&x.name,16),st=cl(x&&x.stmt,200);if(!n)return;let r=rlList().find(y=>y.name===n);
+     if(!r){const s=RL_SUG.find(y=>y[0]===n);r={id:uid(),name:n,e:s?s[1]:'🎭',area:s?s[2]:'',stmt:'',ppl:[]};rlList().push(r)}if(st)r.stmt=st;res.role++});
+   if(GOALS.vcBackup)GOALS.vcBackup.roles=before;if(res.role){res.vis=res.vis||0;saveGoals()}return res}
+ const _un=vcUndo;vcUndo=function(){const b=GOALS.vcBackup;const rb=b&&b.roles;_un.apply(this,arguments);if(rb){GOALS.roles=rb;saveGoals();try{renderGoals()}catch(e){}}}
+ }
+{const st=document.createElement('style');st.textContent=`
+.rlbox{padding:12px}.rlhd{display:flex;flex-direction:column;gap:2px;margin-bottom:8px}.rlhd .hint{font-size:.78rem}
+.rlrow{border-top:1px solid var(--line);padding:9px 0 8px}.rlrow:first-of-type{border-top:0}
+.rlname{display:flex;align-items:center;gap:6px;background:none;border:0;padding:0;font:inherit;color:var(--ink);cursor:pointer;text-align:left}.rlname small{color:var(--muted);font-size:.75rem;margin-left:2px}.rle{font-size:1.1em}
+.rlst{margin:3px 0 6px;font-size:.88rem;line-height:1.45;cursor:pointer}.rlst.em{color:var(--muted);font-size:.8rem}
+.rlwk{display:flex;align-items:center;gap:6px}.rlwk input[type=text]{flex:1;min-width:0;padding:6px 8px;font-size:.88rem}.rlwk input[type=checkbox]{width:18px;height:18px;flex:none}
+.rlmin{display:block;color:var(--muted);font-size:.74rem;margin-top:4px}
+.rlsug{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.rlform{display:flex;flex-direction:column;gap:10px}.rlform label{display:flex;flex-direction:column;gap:4px;font-size:.88rem}.rlnm{display:flex;gap:6px}.rlnm #rle{width:52px;text-align:center}.rlnm #rln{flex:1}
+.rlbtn{display:flex;justify-content:space-between;align-items:center;margin-top:4px}`;document.head.appendChild(st)}
 </script>
 <!--BIBLE{--><!--}BIBLE-->
 <div id="miniov" class="miniov" hidden></div>
