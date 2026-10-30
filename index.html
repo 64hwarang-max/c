@@ -16094,7 +16094,7 @@ function rlBoxHTML(){const L=rlList(),W=rlWk();const has=new Set(L.map(r=>r.name
     <label class="rlwk"><input type="checkbox" data-rlwd="${r.id}" ${w.done?'checked':''} ${tx(w.t)?'':'disabled'}><input type="text" data-rlwt="${r.id}" value="${esc(w.t||'')}" placeholder="이번 주 핵심 행동 하나" enterkeyhint="done"></label>
     <small class="rlmin" data-rlmin="${r.id}"></small></div>`}).join(''):'<p class="hint" style="margin:4px 0 8px">아래에서 고르거나 직접 추가하십시오.</p>'}
   <div class="rlsug">${sug.map(([n,e])=>`<button type="button" class="del" data-rladd="${esc(n)}">＋ ${e} ${esc(n)}</button>`).join('')}<button type="button" class="del" data-rladd="">＋ 직접 추가</button></div>`}
-function rlFillMin(R){rlWeekMin().then(M=>{rlList().forEach(r=>{const el=R.querySelector(`[data-rlmin="${r.id}"]`);if(!el)return;const n=M[r.id]||0;el.textContent=(r.ppl||[]).length?(n?`이번 주 실제 ${rlHM(n)}`:`이번 주 실제 기록 없음 · ${r.ppl.join(', ')}`):'함께하는 사람을 연결하면 실제 한 일에서 시간을 셉니다'})}).catch(()=>{})}
+function rlFillMin(R){rlWeekMin().then(M=>{rlList().forEach(r=>{const el=R.querySelector(`[data-rlmin="${r.id}"]`);if(!el)return;const n=M[r.id]||0;el.textContent=n?`이번 주 실제 ${rlHM(n)}`:(r.ppl||[]).length?`이번 주 실제 기록 없음 · ${r.ppl.join(', ')}`:'이번 주 실제 기록 없음 · 블록에서 이 역할을 고르면 시간을 셉니다'})}).catch(()=>{})}
 function rlBind(R){
   R.querySelectorAll('[data-rladd]').forEach(b=>b.onclick=async()=>{let n=b.dataset.rladd;const s=RL_SUG.find(x=>x[0]===n);
     if(!n){n=((await uiPrompt('역할 이름 (예: 아들, 친구, 소그룹 리더)',''))||'').trim();if(!n)return}
@@ -16139,6 +16139,26 @@ function rlBoxSync(){try{if(typeof gSub==='undefined'||gSub!=='vision')return;co
 .rlsug{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
 .rlform{display:flex;flex-direction:column;gap:10px}.rlform label{display:flex;flex-direction:column;gap:4px;font-size:.88rem}.rlnm{display:flex;gap:6px}.rlnm #rle{width:52px;text-align:center}.rlnm #rln{flex:1}
 .rlbtn{display:flex;justify-content:space-between;align-items:center;margin-top:4px}`;document.head.appendChild(st)}
+/* v384 🎭 역할: 블록에서 직접 고르기 · 목표에 역할 표시 */
+function rlChipsHTML(cur,auto,attr){const L=rlList();return `<div class="rlchips"><small class="hint">🎭 역할</small><button type="button" class="${!cur?'on':''}" ${attr}="">${auto?`자동 · ${esc(auto.e||'')} ${esc(auto.name)}`:'없음'}</button>${L.map(r=>`<button type="button" class="${cur===r.id?'on':''}" ${attr}="${r.id}">${esc(r.e||'🎭')} ${esc(r.name)}</button>`).join('')}</div>`}
+{const _dbe=drawBlockEditor;drawBlockEditor=function(){const r=_dbe.apply(this,arguments);try{if(!rlList().length||!bES)return r;const O=$('#blockedit');const a=O&&O.querySelector('#bact');if(!a||O.querySelector('.rlchips'))return r;const b=bES.b;
+  const put=()=>{const old=O.querySelector('.rlchips');const auto=rlOfBlock({who:(O.querySelector('#bwho')||{}).value||b.who});const h=rlChipsHTML(b.role&&rlList().some(x=>x.id===b.role)?b.role:'',auto,'data-blrl');if(old)old.outerHTML=h;else a.closest('.terow').insertAdjacentHTML('afterend',h);
+    O.querySelectorAll('[data-blrl]').forEach(x=>x.onclick=()=>{const v=x.dataset.blrl;if(v)b.role=v;else delete b.role;put()})};
+  put();const w=O.querySelector('#bwho');if(w)w.addEventListener('input',()=>{if(!b.role)put()})}catch(e){console.warn('rl-be',e)}return r}}
+function rlGoalPick(g){if(!g)return;const L=rlList();if(!L.length){toast('먼저 나 › 비전에서 역할을 추가하십시오.');return}
+  ntSheet(`🎭 ‘${g.title}’은(는) 어느 역할의 목표입니까?`,[...L.map(r=>[`${r.e||'🎭'} ${r.name}${g.role===r.id?' ✓':''}`,()=>{g.role=r.id;saveGoals();try{renderGoals()}catch(e){}toast(`🎭 ${r.name} 역할 목표로 표시했습니다.`)}]),['역할 표시 없음',()=>{delete g.role;saveGoals();try{renderGoals()}catch(e){}}]])}
+function rlGoalBtns(){try{const R=$('#glist');if(!R)return;R.querySelectorAll('[data-gedit]').forEach(b=>{if(b.parentNode.querySelector('[data-grole]'))return;const g=GOALS.list.find(x=>x.id===b.dataset.gedit);if(!g)return;const r=g.role&&rlList().find(x=>x.id===g.role);
+  const x=document.createElement('button');x.className='del';x.dataset.grole=g.id;x.textContent=r?`${r.e||'🎭'} ${r.name}`:'🎭 역할';x.onclick=()=>rlGoalPick(g);b.before(x)})}catch(e){}}
+{renderGoals=HK.w('renderGoals','18:역할목표',renderGoals,_rg=>function(){const r=_rg.apply(this,arguments);try{if(r&&r.then)r.then(rlGoalBtns);else rlGoalBtns()}catch(e){}return r});}
+/* 역할 카드: 연결된 목표 */
+{const _bh=rlBoxHTML;rlBoxHTML=function(){let h=_bh.apply(this,arguments);rlList().forEach(r=>{const gs=GOALS.list.filter(g=>g.role===r.id&&!g.done&&g.title);const add=`<div class="rlgoals">${gs.slice(0,4).map(g=>`<span>🎯 ${esc(g.title)}</span>`).join('')}${gs.length>4?`<span>외 ${gs.length-4}개</span>`:''}<button type="button" class="del" data-rlgl="${r.id}">＋ 목표 연결</button></div>`;h=h.replace(`<small class="rlmin" data-rlmin="${r.id}"></small>`,`<small class="rlmin" data-rlmin="${r.id}"></small>${add}`)});return h}
+ const _bd=rlBind;rlBind=function(R){_bd.apply(this,arguments);R.querySelectorAll('[data-rlgl]').forEach(b=>b.onclick=()=>{const r=rlList().find(x=>x.id===b.dataset.rlgl);if(!r)return;const act=GOALS.list.filter(g=>!g.done&&g.title&&g.lv!=='S').slice(0,40);if(!act.length){toast('연결할 목표가 아직 없습니다.');return}
+   ntSheet(`🎭 ${r.name} 역할에 연결할 목표`,act.map(g=>[`${g.role===r.id?'✓ ':''}${g.title}${g.role&&g.role!==r.id?' · '+((rlList().find(x=>x.id===g.role)||{}).name||''):''}`,()=>{if(g.role===r.id)delete g.role;else g.role=r.id;saveGoals();try{renderGoals()}catch(e){}}]))})}}
+{const st=document.createElement('style');st.textContent=`
+.rlchips{display:flex;flex-wrap:wrap;align-items:center;gap:5px;margin:2px 0 8px}.rlchips small{margin-right:2px}
+.rlchips button{border:1px solid var(--line);background:var(--paper);color:var(--ink);font:inherit;font-size:.8rem;border-radius:999px;padding:3px 9px;cursor:pointer}
+.rlchips button.on{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.rlgoals{display:flex;flex-wrap:wrap;gap:4px 8px;align-items:center;margin-top:5px;font-size:.78rem}.rlgoals span{color:var(--ink)}`;document.head.appendChild(st)}
 </script>
 <!--BIBLE{--><!--}BIBLE-->
 <div id="miniov" class="miniov" hidden></div>
