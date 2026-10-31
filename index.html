@@ -16171,6 +16171,16 @@ function planToActual(b){const c=JSON.parse(JSON.stringify(b));c.id=uid();c.from
   a.closest('.terow').insertAdjacentHTML('afterend',h);
   O.querySelector('#bsame').onclick=()=>{try{bES._read();if(!bES.b.s||!bES.b.e){toast('시작·끝 시간을 먼저 정하십시오.');return}applyBlock();const p=D.plan.find(x=>x.id===pid)||bES.b;
     if(D.time.some(x=>x.from===pid)){toast('이미 실제에 넣은 블록입니다.');return}const c=planToActual(p);D.time.push(c);D.time.sort((x,y)=>(x.s||'99')<(y.s||'99')?-1:1);try{syncSpend(c,'time',c.act||c.cat)}catch(e){}schedule();toast(`✅ ${p.s}~${p.e} ${p.act||p.cat} · 실제 한 일에도 넣었습니다.`);closeBlockEditor()}catch(e){console.warn('same',e);toast('넣지 못했습니다.')}}}catch(e){console.warn('same',e)}return r}}
+/* v387 실제 한 일 블록 → 하루 평가(감사한 일·잘한 일·반성/개선) 연동 */
+const EVK=[['grat','🙏','감사'],['great','👍','잘함'],['better','🔧','반성·개선']];
+function evSync(b){if(!b||!D)return;const clean=()=>{const p=b.evP;if(!p)return;try{if(p.k==='better'){D.better=String(D.better||'').split('\n').filter(l=>l!==p.t).join('\n')}else{const a=D[p.k];if(Array.isArray(a)){const i=a.indexOf(p.t);if(i>=0)a[i]='';else{const j=a.findIndex(x=>String(x).includes(p.t));if(j>=0)a[j]=String(a[j]).replace(' / '+p.t,'').replace(p.t,'').trim()}}}}catch(e){}delete b.evP};
+  clean();if(!b.dayev)return;const t=String(b.memo||b.act||'').replace(/\s+/g,' ').trim().slice(0,120);if(!t)return;
+  if(b.dayev==='better'){D.better=(D.better?String(D.better)+'\n':'')+t;b.evP={k:'better',t};return}
+  const a=D[b.dayev]=Array.isArray(D[b.dayev])?D[b.dayev]:['','',''];let i=a.findIndex(x=>!tx(x));if(i<0){i=a.length>3?a.length-1:2;a[i]=(String(a[i])+' / '+t).slice(0,200);b.evP={k:b.dayev,t};return}a[i]=t;b.evP={k:b.dayev,t}}
+{const _d=drawBlockEditor;drawBlockEditor=function(){const r=_d.apply(this,arguments);try{if(!bES||bES.kind!=='time')return r;const O=$('#blockedit');if(!O||O.querySelector('.evchips'))return r;const a=O.querySelector('#bact');if(!a)return r;const b=bES.b;
+  const put=()=>{const h=`<div class="rlchips evchips"><small class="hint">📝 하루 평가에 넣기</small>${EVK.map(([k,e,l])=>`<button type="button" class="${b.dayev===k?'on':''}" data-blev="${k}">${e} ${l}</button>`).join('')}${b.dayev?`<small class="hint" style="flex-basis:100%">저장하면 메모(없으면 이름)가 ${EVK.find(x=>x[0]===b.dayev)[2]} 칸에 들어갑니다. 다시 누르면 뺍니다.</small>`:''}</div>`;const old=O.querySelector('.evchips');if(old)old.outerHTML=h;else{const ref=O.querySelector('.rlchips')||a.closest('.terow');ref.insertAdjacentHTML('afterend',h)}
+    O.querySelectorAll('[data-blev]').forEach(x=>x.onclick=()=>{const k=x.dataset.blev;if(b.dayev===k)delete b.dayev;else b.dayev=k;put()})};put()}catch(e){console.warn('ev',e)}return r}}
+{const _ap=applyBlock;applyBlock=function(){const r=_ap.apply(this,arguments);try{if(r&&bES&&bES.kind==='time'){evSync(bES.b);schedule()}}catch(e){}return r}}
 </script>
 <!--BIBLE{--><!--}BIBLE-->
 <div id="miniov" class="miniov" hidden></div>
