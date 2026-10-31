@@ -16181,6 +16181,16 @@ function evSync(b){if(!b||!D)return;const clean=()=>{const p=b.evP;if(!p)return;
   const put=()=>{const h=`<div class="rlchips evchips"><small class="hint">📝 하루 평가에 넣기</small>${EVK.map(([k,e,l])=>`<button type="button" class="${b.dayev===k?'on':''}" data-blev="${k}">${e} ${l}</button>`).join('')}${b.dayev?`<small class="hint" style="flex-basis:100%">저장하면 메모(없으면 이름)가 ${EVK.find(x=>x[0]===b.dayev)[2]} 칸에 들어갑니다. 다시 누르면 뺍니다.</small>`:''}</div>`;const old=O.querySelector('.evchips');if(old)old.outerHTML=h;else{const ref=O.querySelector('.rlchips')||a.closest('.terow');ref.insertAdjacentHTML('afterend',h)}
     O.querySelectorAll('[data-blev]').forEach(x=>x.onclick=()=>{const k=x.dataset.blev;if(b.dayev===k)delete b.dayev;else b.dayev=k;put()})};put()}catch(e){console.warn('ev',e)}return r}}
 {const _ap=applyBlock;applyBlock=function(){const r=_ap.apply(this,arguments);try{if(r&&bES&&bES.kind==='time'){evSync(bES.b);schedule()}}catch(e){}return r}}
+/* v388 덮어쓰기 방지: 이 화면이 한 번도 본 적 없는 블록이 저장소에 있으면(다른 창·다른 실행·못 읽은 채 시작) 지우지 않고 합쳐서 저장 */
+const KNB={};
+const knIds=o=>{const s=new Set();['time','plan'].forEach(k=>(o[k]||[]).forEach(b=>{if(b&&b.id)s.add(b.id)}));return s};
+async function guardMerge(o){if(!o||!o.date)return 0;let s=null;try{s=await store.load(o.date)}catch(e){return 0}
+  const kn=KNB[o.date]||(KNB[o.date]=new Set());let n=0;
+  if(s){const have=knIds(o);['time','plan'].forEach(k=>{o[k]=Array.isArray(o[k])?o[k]:[];(s[k]||[]).forEach(b=>{if(!b||!b.id||have.has(b.id)||kn.has(b.id))return;if(b.rid&&(o.rm||[]).includes(b.rid)&&k==='plan')return;o[k].push(JSON.parse(JSON.stringify(b)));have.add(b.id);n++});if(n)o[k].sort((x,y)=>(x.s||'99')<(y.s||'99')?-1:1)})}
+  knIds(o).forEach(i=>kn.add(i));if(s)knIds(s).forEach(i=>kn.add(i));
+  if(n){try{svLog({t:new Date().toTimeString().slice(0,8),d:o.date,ev:'guard-merge',n})}catch(e){}setTimeout(()=>{try{toast(`🛟 다른 실행에서 저장된 블록 ${n}개를 지우지 않고 합쳤습니다.`);if(D===o){if(!$('#v-plan').hidden)renderPlan();else if(!$('#v-day').hidden)renderDay()}}catch(e){}},200)}return n}
+{const _f=flush0;flush0=async function(){if(dirty&&D){try{await guardMerge(D)}catch(e){}}return _f.apply(this,arguments)}}
+{const _o=openDay;openDay=async function(d){const r=await _o.apply(this,arguments);try{KNB[D.date]=KNB[D.date]||new Set();knIds(D).forEach(i=>KNB[D.date].add(i))}catch(e){}return r}}
 </script>
 <!--BIBLE{--><!--}BIBLE-->
 <div id="miniov" class="miniov" hidden></div>
