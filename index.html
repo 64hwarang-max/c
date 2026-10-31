@@ -4199,8 +4199,10 @@ function allTagList(){const c={};[...NOTES.values()].forEach(n=>tagsOf(n).forEac
 let REC=null,recBtn=null;
 function micBtn(sel){return`<button type="button" class="mic" data-mic="${esc(sel)}" aria-label="받아쓰기">🎤</button>`}
 function stopMic(){try{REC&&REC.stop()}catch(e){}}
-function toast(msg){const t=$('#toast');t.textContent=msg;t.hidden=false;clearTimeout(t._h);t._h=setTimeout(()=>t.hidden=true,6000)}
-function toastAct(msg,label,fn){const t=$('#toast');t.innerHTML='';t.append(document.createTextNode(msg));const b=document.createElement('button');b.className='tact';b.textContent=label;b.onclick=e=>{e.stopPropagation();t.hidden=true;fn()};t.append(b);t.hidden=false;clearTimeout(t._h);t._h=setTimeout(()=>t.hidden=true,7000)}
+const toastMs=d=>{const n=+SET.toastSec;return(n>=1&&n<=30?n:d/1000)*1000};
+function toast(msg){const t=$('#toast');t.textContent=msg;t.hidden=false;clearTimeout(t._h);t._h=setTimeout(()=>t.hidden=true,toastMs(6000))}
+document.addEventListener('click',e=>{const t=$('#toast');if(t&&!t.hidden&&e.target===t){t.hidden=true;clearTimeout(t._h)}});
+function toastAct(msg,label,fn){const t=$('#toast');t.innerHTML='';t.append(document.createTextNode(msg));const b=document.createElement('button');b.className='tact';b.textContent=label;b.onclick=e=>{e.stopPropagation();t.hidden=true;fn()};t.append(b);t.hidden=false;clearTimeout(t._h);t._h=setTimeout(()=>t.hidden=true,toastMs(7000)+1000)}
 /* 반복 일정을 지울 때: 이 날만 / 이 날부터 앞으로 모두 */
 function delBlock(kind,i,after){const rm=D[kind]&&D[kind][i];if(kind==='plan'&&rm&&rm.rt&&(SET.routines||[]).some(r=>r.id===rm.rt&&r.toPlan)){const r=SET.routines.find(x=>x.id===rm.rt);
     ntSheet(`🔁 루틴 블록 지우기 · ${rm.act||''}`,[['🗑 이 날만 지우기',()=>{D.rtOff=[...new Set([...(D.rtOff||[]),rm.rt])];D.plan.filter(b=>b!==rm&&b.rt===rm.rt).forEach(b=>{try{shDel(D.date,b.id,'plan')}catch(e){}});D.plan=D.plan.filter(b=>b===rm||b.rt!==rm.rt);delBlock0(kind,D[kind].indexOf(rm),after)}],[`📅 앞으로 ‘${r.name}’은 계획표에 넣지 않기`,async()=>{r.toPlan=false;await saveSet().catch(()=>{});D.plan.filter(b=>b.rt===rm.rt).forEach(b=>{try{shDel(D.date,b.id,'plan')}catch(e){}});D.plan=D.plan.filter(b=>b.rt!==rm.rt);schedule();after&&after();try{renderPlan()}catch(e){}toast(`📅 ‘${r.name}’은 이제 계획표에 자동으로 넣지 않습니다. (알람은 그대로)`)}],['✖ 지우지 않기',()=>{}]]);return}
@@ -8184,6 +8186,7 @@ function renderViewCard(){const C=$('#viewcard');if(!C)return;const f=+SET.fsz||
     <div><div class="hint" style="margin:0 0 4px">주간 위젯 보기</div><div class="seg" style="--k:#ff8a3d">${[['roll','오늘부터 7일'],['cal','일~토 한 주']].map(([v,l])=>`<button data-vwk="${v}" class="${v===(SET.cwWk==='cal'?'cal':'roll')?'on':''}">${l}</button>`).join('')}</div></div>
     <div><div class="hint" style="margin:0 0 4px">화면 색</div><div class="seg" style="--k:#ff8a3d">${[['auto','자동'],['light','밝게'],['dark','어둡게']].map(([v,l])=>`<button data-vth="${v}" class="${v===th?'on':''}">${l}</button>`).join('')}</div></div>
     <div><div class="hint" style="margin:0 0 4px">화면 스타일</div><div class="seg" style="--k:#ff8a3d">${[['cute','귀여운'],['taste','정돈'],['simple','심플'],['rich','이전 (색 많이)']].map(([v,l])=>`<button data-vlk="${v}" class="${v===lkCur()?'on':''}">${l}</button>`).join('')}</div></div>
+    <label class="chk">안내 메시지(아래쪽 검은 창)는 <select id="vtoast" style="width:auto">${[1,2,3,4,6,10].map(n=>`<option value="${n}" ${(+SET.toastSec||6)===n?'selected':''}>${n}초</option>`).join('')}</select> 동안 보이기 · 누르면 바로 닫힘</label>
     <label class="chk"><input type="checkbox" id="vtip" ${SET.tipFold!==false?'checked':''}>설명 문구 접어 두기 · 제목 옆 ⓘ로 펼침</label>
     <label class="chk"><input type="checkbox" id="vfab" ${SET.fab!==false?'checked':''}>오른쪽 아래 ＋ 빠르게 적기 버튼</label>
     <label class="chk"><input type="checkbox" id="vdm" ${SET.dayMini!==false?'checked':''}>오늘 화면을 내리면 위에 바로가기 줄</label>
@@ -8195,6 +8198,7 @@ function renderViewCard(){const C=$('#viewcard');if(!C)return;const f=+SET.fsz||
   {const a=C.querySelector('#vcds'),b=C.querySelector('#vcde');const ch=()=>{let x=a.value===''?null:+a.value,y=b.value===''?null:+b.value;if(x!=null&&y!=null&&y<=x){y=Math.min(24,x+1);b.value=String(y)}SET.cwDayS=x;SET.cwDayE=y;saveSet().catch(()=>{});try{cwSoon()}catch(e){}toast(x==null&&y==null?'🕐 일간 위젯: 앱의 표시 시간 설정을 따릅니다.':`🕐 일간 위젯: ${x??'앱'}시 ~ ${y??'앱'}시만 보여 줍니다.`)};if(a)a.onchange=ch;if(b)b.onchange=ch}
   C.querySelectorAll('[data-vwk]').forEach(b=>b.onclick=()=>{SET.cwWk=b.dataset.vwk;saveSet().catch(()=>{});try{cwSoon()}catch(e){}toast(SET.cwWk==='cal'?'📅 주간 위젯: 일~토 한 주로 보여 줍니다.':'📅 주간 위젯: 오늘을 포함한 7일로 보여 줍니다.');renderViewCard()});
   C.querySelectorAll('[data-vth]').forEach(b=>b.onclick=()=>{SET.theme=b.dataset.vth;sv();renderViewCard()});
+  {const vt=C.querySelector('#vtoast');if(vt)vt.onchange=()=>{SET.toastSec=+vt.value;sv();toast('이 메시지는 '+vt.value+'초 보입니다.')}}
   C.querySelectorAll('[data-vlk]').forEach(b=>b.onclick=()=>{SET.look=b.dataset.vlk==='rich'?'rich':b.dataset.vlk==='cute'?'cute':b.dataset.vlk==='taste'?'taste':'';SET.cuteOn=1;sv();try{lvApply()}catch(e){}renderViewCard()});
   $('#vtip').onchange=e=>{SET.tipFold=e.target.checked;sv();if(SET.tipFold){document.querySelectorAll('[data-tf]').forEach(x=>delete x.dataset.tf);tipFold()}};
   $('#vfab').onchange=e=>{SET.fab=e.target.checked;sv()};$('#vdm').onchange=e=>{SET.dayMini=e.target.checked;sv();dmSync()}}
