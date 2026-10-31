@@ -16159,6 +16159,14 @@ function rlGoalBtns(){try{const R=$('#glist');if(!R)return;R.querySelectorAll('[
 .rlchips button{border:1px solid var(--line);background:var(--paper);color:var(--ink);font:inherit;font-size:.8rem;border-radius:999px;padding:3px 9px;cursor:pointer}
 .rlchips button.on{background:var(--ink);color:var(--paper);border-color:var(--ink)}
 .rlgoals{display:flex;flex-wrap:wrap;gap:4px 8px;align-items:center;margin-top:5px;font-size:.78rem}.rlgoals span{color:var(--ink)}`;document.head.appendChild(st)}
+/* v385 계획 블록 → '실행도 동일' 한 번에 실제 한 일로 넣기 */
+function planToActual(b){const c=JSON.parse(JSON.stringify(b));c.id=uid();c.from=b.id;['rid','gext','gsync','apx','rt','noteId','ph'].forEach(k=>delete c[k]);return c}
+{const _d=drawBlockEditor;drawBlockEditor=function(){const r=_d.apply(this,arguments);try{if(!bES||bES.kind!=='plan'||bES.i==null)return r;const O=$('#blockedit');if(!O||O.querySelector('#bsame'))return r;const a=O.querySelector('#bact');if(!a)return r;const pid=bES.b.id;
+  const ex=()=>D.time.find(x=>x.from===pid);const e0=ex();
+  const h=`<div class="terow"><button type="button" class="btn" id="bsame" style="width:100%" ${e0?'disabled':''}>${e0?'✅ 실제에 이미 있음 · '+esc(e0.s)+'~'+esc(e0.e||''):'✅ 실행도 동일 · 실제 한 일에 같은 시간으로 넣기'}</button></div>`;
+  a.closest('.terow').insertAdjacentHTML('afterend',h);
+  O.querySelector('#bsame').onclick=()=>{try{bES._read();if(!bES.b.s||!bES.b.e){toast('시작·끝 시간을 먼저 정하십시오.');return}applyBlock();const p=D.plan.find(x=>x.id===pid)||bES.b;
+    if(D.time.some(x=>x.from===pid)){toast('이미 실제에 넣은 블록입니다.');return}const c=planToActual(p);D.time.push(c);D.time.sort((x,y)=>(x.s||'99')<(y.s||'99')?-1:1);try{syncSpend(c,'time',c.act||c.cat)}catch(e){}schedule();toast(`✅ ${p.s}~${p.e} ${p.act||p.cat} · 실제 한 일에도 넣었습니다.`);closeBlockEditor()}catch(e){console.warn('same',e);toast('넣지 못했습니다.')}}}catch(e){console.warn('same',e)}return r}}
 </script>
 <!--BIBLE{--><!--}BIBLE-->
 <div id="miniov" class="miniov" hidden></div>
