@@ -6527,13 +6527,14 @@ async function renderBible(){const R=$('#bbbody');if(!R)return;const S=bbS();if(
     <div id="bbsb"></div>`;
   const ref=()=>{const a=[...bbSel].sort((x,y)=>x-y);if(!a.length)return'';const rs=[];let st=a[0],pv=a[0];for(const x of a.slice(1)){if(x===pv+1){pv=x;continue}rs.push(st===pv?st:st+'-'+pv);st=pv=x}rs.push(st===pv?st:st+'-'+pv);return`${BBN[bbB]} ${bbC}:${rs.join(',')}`};
   const selTxt=()=>[...bbSel].sort((x,y)=>x-y).map(n=>`${n} ${vs[n-1]}`).join('\n');
-  const bar=()=>{const sb=$('#bbsb');if(!bbSel.size){sb.innerHTML='';return}sb.innerHTML=`<div class="bbbar"><b style="align-self:center;font-size:.85rem">${esc(ref())}</b><button class="btn small" id="bbvw">✍️ 느낀 점</button><button class="btn small" id="bbcp">📋 복사</button><button class="btn small" id="bbnt">📝 노트에 담기</button><button class="btn small" id="bbwd">☀️ 한 문장으로</button><button class="btn small" id="bbsh">📤 말씀+느낀점 공유</button><button class="btn small" id="bbdocs">📄 문서로</button><button class="del" id="bbx">✕</button></div>`;
+  const bar=()=>{const sb=$('#bbsb');if(!bbSel.size){sb.innerHTML='';return}sb.innerHTML=`<div class="bbbar"><b style="align-self:center;font-size:.85rem">${esc(ref())}</b><button class="btn small" id="bbvw">✍️ 느낀 점</button><button class="btn small" id="bbcp">📋 복사</button><button class="btn small" id="bbnt">📝 노트에 담기</button><button class="btn small" id="bbwd">☀️ 한 문장으로</button><button class="btn small" id="bbmm">🧠 암송구절로</button><button class="btn small" id="bbsh">📤 말씀+느낀점 공유</button><button class="btn small" id="bbdocs">📄 문서로</button><button class="del" id="bbx">✕</button></div>`;
     $('#bbdocs').onclick=()=>{const a=[...bbSel].sort((x,y)=>x-y);const tt=`${ref()} 묵상`;bbSel.clear();const n=bdNew(bbB,bbC,a,tt);bdOpen(n)};
     $('#bbsh').onclick=()=>{const a=[...bbSel].sort((x,y)=>x-y);const V=bbVN();const ln=a.map(n=>`${n} ${vs[n-1]}`).join('\n');const ns=a.filter(n=>V[bbB+'-'+bbC+'-'+n]&&V[bbB+'-'+bbC+'-'+n].t).map(n=>`${a.length>1||V[bbB+'-'+bbC+'-'+n].vs?(V[bbB+'-'+bbC+'-'+n].vs&&V[bbB+'-'+bbC+'-'+n].vs.length>1?bbRng(V[bbB+'-'+bbC+'-'+n].vs):n)+'절 · ':''}${V[bbB+'-'+bbC+'-'+n].t}`);
       bbShareWord(`📖 ${ref()} (개역개정)\n${ln}${ns.length?'\n\n✍️ 느낀 점\n'+ns.join('\n'):''}`)};
     $('#bbvw').onclick=()=>{const a=[...bbSel].sort((x,y)=>x-y);const v=a[0];bbSel.clear();R.querySelectorAll('.bbtxt p.sel').forEach(p=>p.classList.remove('sel'));bar();bbVNEdit(R,v,a)};
     $('#bbcp').onclick=async()=>{const t=`${selTxt()}\n— ${ref()} (개역개정)`;try{await navigator.clipboard.writeText(t);toast('📋 복사했습니다.')}catch(e){toast('복사하지 못했습니다.')}};
     $('#bbwd').onclick=async()=>{const t=`${selTxt().replace(/^\d+ /gm,'')} (${ref()})`;await bbToday(o=>{o.word=tx(o.word)?o.word.trim()+'\n'+t:t});toast('☀️ 오늘 ‘아침의 한 문장’에 담았습니다.')};
+    $('#bbmm').onclick=()=>{const r=ref();if(!r)return;const L=memMy();const k=r.replace(/\s+/g,'');const ex=L.find(x=>String(x.r||'').replace(/\s+/g,'')===k);if(ex){toast('🧠 이미 암송구절에 있습니다.');return}const id='my-'+uid();L.push({id,t:'',r});memS()[id]={b:0,n:0,t0:today(),due:today()};saveSet().catch(()=>{});toast(`🧠 ${r}을 암송구절(내 구절)에 담았습니다. 암송 탭에서 외울 수 있습니다.`)};
     $('#bbnt').onclick=()=>bbNote(ref(),selTxt()+`\n— ${ref()} (개역개정)\n\n`);$('#bbx').onclick=()=>{bbSel.clear();R.querySelectorAll('.bbtxt p.sel').forEach(p=>p.classList.remove('sel'));bar()}};
   R.querySelectorAll('[data-bbv]').forEach(p=>p.onclick=()=>{const n=+p.dataset.bbv;if(S.vnMode){bbVNEdit(R,n);return}bbSel.has(n)?bbSel.delete(n):bbSel.add(n);p.classList.toggle('sel',bbSel.has(n));bar()});bar();
   R.querySelectorAll('.bbvn[data-vnk]').forEach(d=>d.onclick=e=>{e.stopPropagation();bbVNEdit(R,+d.dataset.vnk)});bbVNCount(R);
@@ -10979,11 +10980,11 @@ document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest
 /* ===================== v4.13: 성경 장·어성경 Day 밀어서 넘기기 ===================== */
 (()=>{const c=document.createElement('style');c.textContent='html,body{overscroll-behavior-x:none}';document.head.appendChild(c)})();
 /*BIBLE{*/
-(()=>{let g=null;const Z='.bbtxt,.eotxt';
-  window.addEventListener('touchstart',e=>{g=null;if(e.touches.length!==1)return;const t=e.touches[0];if(t.clientX<=26)return;const z=e.target.closest&&e.target.closest(Z);if(!z)return;g={x:t.clientX,y:t.clientY,t:Date.now(),eo:!!z.closest('.eotxt')||z.classList.contains('eotxt')}},{capture:true,passive:true});
+(()=>{let g=null;const Z='.bbtxt,.eotxt,#bbbody';
+  window.addEventListener('touchstart',e=>{g=null;if(e.touches.length!==1)return;const t=e.touches[0];if(t.clientX<=26)return;const z=e.target.closest&&e.target.closest(Z);if(!z)return;if(e.target.closest('.bbbar,textarea,input,select,.bbvned,.eonq,.eonfab,.pilbar,.seg,.bbhd,.mpbar'))return;if(z.id==='bbbody'&&!z.querySelector('.bbtxt'))return;g={x:t.clientX,y:t.clientY,t:Date.now(),eo:!!z.closest('.eotxt')||z.classList.contains('eotxt')}},{capture:true,passive:true});
   window.addEventListener('touchmove',e=>{if(g&&e.touches.length>1)g=null},{capture:true,passive:true});
   window.addEventListener('touchend',e=>{if(!g)return;const o=g;g=null;try{SW=null}catch(x){}const t=e.changedTouches[0];const dx=t.clientX-o.x,dy=t.clientY-o.y;
-    if(Date.now()-o.t>800||Math.abs(dx)<80||Math.abs(dx)<Math.abs(dy)*1.8)return;
+    if(window.BBZ||Date.now()-o.t>800||Math.abs(dx)<80||Math.abs(dx)<Math.abs(dy)*1.8)return;
     if(document.querySelector('.bbvned textarea:focus')||[...document.querySelectorAll('.sheet,.taskedit,.lockov')].some(x=>!x.hidden))return;
     const sel=o.eo?'[data-eoopen]':'[data-bbgo]';const bs=[...document.querySelectorAll(sel)];if(bs.length<2)return;const b=dx<0?bs[bs.length-1]:bs[0];
     if(b&&!b.disabled){b.click();window.scrollTo(0,0)}},{capture:true,passive:true})})();
@@ -13692,7 +13693,7 @@ function evEnhance(R){try{if(!R||!R.querySelector('.eotxt'))return;
     if(tg.closest('textarea,input,select,.bbbar,.bbvned,.eonq,.eonfab,.pilbar'))return;g={x:t.clientX,y:t.clientY,t:Date.now(),day}},{capture:true,passive:true});
   window.addEventListener('touchmove',e=>{if(g&&e.touches.length>1)g=null},{capture:true,passive:true});
   window.addEventListener('touchend',e=>{if(!g)return;const o=g;g=null;const t=e.changedTouches[0];const dx=t.clientX-o.x,dy=t.clientY-o.y;
-    if(Date.now()-o.t>900||Math.abs(dx)<70||Math.abs(dx)<Math.abs(dy)*1.6)return;
+    if(window.BBZ||Date.now()-o.t>900||Math.abs(dx)<70||Math.abs(dx)<Math.abs(dy)*1.6)return;
     if(window.getSelection&&String(getSelection()).length>0)return;
     if([...document.querySelectorAll('.sheet,.taskedit,.lockov')].some(x=>!x.hidden))return;
     const sel=o.day==='qt'?'#bbbody [data-qto]':'#bbbody [data-eoopen]';const bs=[...document.querySelectorAll(sel)];if(bs.length<2)return;
@@ -15229,7 +15230,7 @@ document.addEventListener('touchend',async e=>{const g=GW;GW=null;if(!g)return;c
     if(nView==='dq'&&DQV==='day'){DQE=null;nDate=addD(nDate,dir);renderNotes();swAnim($('#nbody'),dir);return}
     if(nView==='dy'){const A=dyNotes();const ring=dySwipeSecs();const i=Math.max(0,ring.indexOf(DYC));const j=i+dir;if(j<0||j>=ring.length){const yrs=[...new Set(A.map(n=>n.date.slice(0,4)))].sort();const k=yrs.indexOf(DYY)-dir;if(k>=0&&k<yrs.length){DYY=yrs[k];DYC='';DYM='';dyRender();swAnim($('#nbody'),dir);toast(`📕 ${DYY}권`)}return}DYC=ring[j];DYF='';DYM='';dyRender();swAnim($('#nbody'),dir);return}
     return}
-  if(['day','plan','care','score'].includes(curSection))return;
+  if(['day','plan','care','score','bible'].includes(curSection))return;
   const bs=[...document.querySelectorAll('#subnav .snp button[data-sv]')];if(bs.length<2)return;let i=bs.findIndex(b=>b.classList.contains('on'));if(i<0)return;const t=bs[i+dir];if(!t)return;t.click();swAnim(document.querySelector('#v-'+curSection),dir)},{passive:true,capture:true});
 
 /* ===== v349 원노트 방식: 노트북(연도) › 섹션 탭(📔 일기 · 분류·주제) › 쪽 목록 › 쪽(좌우 밀기) ===== */
@@ -16220,7 +16221,7 @@ async function syPutSafe(B,k,v){if(!k.startsWith('day:')||!v||typeof v!=='object
 {const _o=openDay;openDay=async function(d){try{staleGuardInstall()}catch(e){}return _o.apply(this,arguments)}}
 {const _f=flush0;flush0=async function(){try{staleGuardInstall()}catch(e){}return _f.apply(this,arguments)}}
 /* v390 ① 앱 버전 표시 · 새 버전 알림 (GitHub에서 마지막으로 성공한 빌드 번호와 비교) */
-var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/394})();
+var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/395})();
 const VRK='gj-verchk',VRURL='https://github.com/64hwarang-max/c/actions/workflows/build-apk.yml';
 const vrGet=()=>{try{return JSON.parse(localStorage.getItem(VRK)||'{}')}catch(e){return{}}};
 async function vrCheck(force){const c=vrGet();if(!force&&c.t&&Date.now()-c.t<6*36e5)return c;
@@ -16313,6 +16314,15 @@ function runPeriodHTML(){const T=today(),m0=mondayOf(T),mE=addD(m0,6),ym=T.slice
   const box=`<div class="hint" style="margin:8px 0 0;padding:7px 9px;border:1px solid ${bad?'#d84315':'var(--line)'};border-radius:8px">⌚ 워치 읽기 점검 · ${esc(msg)}${bad||!g?' <button type="button" class="del" data-runperm="1" style="margin-top:4px">🔑 권한 다시 허용 후 읽기</button>':''}</div>`;
   h=h.replace('<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">',box+'<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">')}}catch(e){console.warn('run-diag',e)}return h}}
 document.addEventListener('click',async e=>{const b=e.target.closest&&e.target.closest('[data-runperm]');if(!b)return;e.preventDefault();const H=HB();if(!H){toast('안드로이드 앱에서만 됩니다.');return}b.disabled=true;try{await H.request()}catch(x){}try{await runBackfill()}finally{b.disabled=false}});
+/* v395 성경 하단 단추줄(느낀 점·복사·…): 보이는 크기는 그대로, 손가락이 위아래로 흔들려도 단추줄이 밀리고 다른 쓸기는 일어나지 않음 */
+(()=>{const css=document.createElement('style');css.textContent='.bbbar{touch-action:pan-x}';document.head.appendChild(css);
+  let z=null;const PAD=44;
+  window.addEventListener('touchstart',e=>{window.BBZ=false;z=null;if(e.touches.length!==1)return;const b=document.querySelector('.bbbar');if(!b||!b.getClientRects().length)return;const r=b.getBoundingClientRect(),t=e.touches[0];
+    if(t.clientX<r.left-6||t.clientX>r.right+6||t.clientY<r.top-PAD||t.clientY>r.bottom+PAD)return;if(e.target.closest&&e.target.closest('.mpbar,nav.main')&&t.clientY>r.bottom+4)return;
+    window.BBZ=true;z={b,x:t.clientX,y:t.clientY,sl:b.scrollLeft,on:false,inb:t.clientY>=r.top&&t.clientY<=r.bottom}},{capture:true,passive:true});
+  window.addEventListener('touchmove',e=>{if(!z||e.touches.length!==1)return;const t=e.touches[0],dx=t.clientX-z.x,dy=t.clientY-z.y;if(!z.on){if(Math.abs(dx)>10&&Math.abs(dx)>Math.abs(dy)*.5)z.on=true;else if(Math.abs(dy)>24&&Math.abs(dy)>Math.abs(dx)*2.5&&!z.inb){window.BBZ=false;z=null;return}}
+    if(z&&z.on){z.b.scrollLeft=z.sl-dx;if(e.cancelable)e.preventDefault()}},{capture:true,passive:false});
+  const end=()=>{z=null;setTimeout(()=>{window.BBZ=false},350)};window.addEventListener('touchend',end,{capture:true,passive:true});window.addEventListener('touchcancel',end,{capture:true,passive:true})})();
 </script>
 <!--BIBLE{--><!--}BIBLE-->
 <div id="miniov" class="miniov" hidden></div>
