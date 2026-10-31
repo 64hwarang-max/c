@@ -4867,7 +4867,10 @@ function idbStore(){let dbp=null;const idbLog=(ev,e)=>{try{svLog({t:new Date().t
     async getDoc(id){return(await tx('readonly',st=>st.get(id)))||null},
     async putDoc(id,o){await tx('readwrite',st=>st.put(JSON.parse(JSON.stringify(o)),id))},
     async delDoc(id){await tx('readwrite',st=>st.delete(id))},
-    async keys(){return(await getAll()).map(([k])=>k)}}}
+    async keys(){return(await getAll()).map(([k])=>k)},
+    async range(pre){return(await tx('readonly',st=>st.getAll(IDBKeyRange.bound(pre,pre+'\uffff'))))||[]},
+    async rangeKeys(pre){return(await tx('readonly',st=>st.getAllKeys(IDBKeyRange.bound(pre,pre+'\uffff'))))||[]},
+    async swap(put,dels){await tx('readwrite',st=>{if(put)st.put(JSON.parse(JSON.stringify(put[1])),put[0]);(dels||[]).forEach(k=>st.delete(k))})}}}
 async function saveToFolder(name,text){const FS=NP('Filesystem');try{if(FS.requestPermissions)await FS.requestPermissions().catch(()=>{})}catch(e){}
   for(const dir of['DOCUMENTS','DATA']){try{try{await FS.mkdir({path:APPN,directory:dir,recursive:true})}catch(e){}await FS.writeFile({path:`${APPN}/${name}`,data:text,directory:dir,encoding:'utf8'});return dir==='DOCUMENTS'?`📁 휴대폰에 저장했습니다: 내 파일 › 내장 저장공간 › Documents › ${APPN} › ${name}`:`📁 앱 안 보관함에 저장했습니다(${name}). 이 휴대폰은 공용 문서 폴더 저장을 막아, ⚙️ 설정·백업의 ‘폴더에 저장된 백업’ 목록에서 복원·공유할 수 있습니다.`}catch(e){}}return null}
 function askSaveTo(name){return new Promise(res=>{const S=$('#sheet');S.hidden=false;S.innerHTML=`<div class="sheetbox" role="dialog" aria-label="저장 방식"><div class="shead"><b>💾 어디에 저장할까요</b><button class="del" id="svx">닫기</button></div><p class="hint" style="margin:0 0 10px">${esc(name)}</p>
@@ -6309,7 +6312,7 @@ function openOdSetup(){const S=$('#sheet');S.hidden=false;let msg='',dc=null,pol
     const ot=$('#odout');if(ot)ot.onclick=async()=>{if(!await uiConfirm('OneDrive 연결을 끊을까요? 이미 올린 백업은 OneDrive에 남습니다.'))return;OD.rt='';OD.at='';OD.who='';await saveOd();draw()}};
   draw()}
 /* ---------- 폰·태블릿 연동 (구글 Apps Script 웹 앱 경유) ---------- */
-const SYNCX=k=>/^(secret-|snap:|_sync$|fcsound$)/.test(k);
+const SYNCX=k=>/^(secret-|snap:|ops:|_sync$|fcsound$)/.test(k);
 let SY={mt:{},dirty:{}},syBusy=false,syTimer=null,syMsg='';
 const syCfg=()=>{try{return JSON.parse(localStorage.getItem('gj-sync')||'{}')}catch(e){return{}}};
 const syCfgSet=c=>{try{localStorage.setItem('gj-sync',JSON.stringify(c))}catch(e){}};
@@ -16212,7 +16215,7 @@ async function syPutSafe(B,k,v){if(!k.startsWith('day:')||!v||typeof v!=='object
 {const _o=openDay;openDay=async function(d){try{staleGuardInstall()}catch(e){}return _o.apply(this,arguments)}}
 {const _f=flush0;flush0=async function(){try{staleGuardInstall()}catch(e){}return _f.apply(this,arguments)}}
 /* v390 ① 앱 버전 표시 · 새 버전 알림 (GitHub에서 마지막으로 성공한 빌드 번호와 비교) */
-var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/390})();
+var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/391})();
 const VRK='gj-verchk',VRURL='https://github.com/64hwarang-max/c/actions/workflows/build-apk.yml';
 const vrGet=()=>{try{return JSON.parse(localStorage.getItem(VRK)||'{}')}catch(e){return{}}};
 async function vrCheck(force){const c=vrGet();if(!force&&c.t&&Date.now()-c.t<6*36e5)return c;
@@ -16227,6 +16230,52 @@ function vrBind(R){const g=R.querySelector('#vrget');if(g)g.onclick=()=>{const c
 async function vrAuto(){if(!IS_NATIVE)return;const c=await vrCheck(false);if(c.v>APPV&&c.seen!==c.v){try{toastAct(`🆕 새 버전 v${c.v}이(가) 나왔습니다 (지금 v${APPV})`,'받기',()=>{try{window.open(c.url||VRURL,'_blank')}catch(e){}})}catch(e){}const o=vrGet();o.seen=c.v;try{localStorage.setItem(VRK,JSON.stringify(o))}catch(e){}}}
 setTimeout(()=>{vrAuto().catch(()=>{})},9000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)setTimeout(()=>vrAuto().catch(()=>{}),3000)});
 {const st=document.createElement('style');st.textContent=`.vrrow{display:flex;justify-content:space-between;align-items:center;gap:8px;border:1px solid var(--line);border-radius:10px;padding:9px 11px;margin:0 0 10px}.vrrow .vrbtn{display:flex;gap:6px;flex:none}`;document.head.appendChild(st)}
+
+/* ---------- v391 ③ 블록 변경 기록장 (계획·실제 블록 한 건씩, 추가만 하는 기록) ----------
+   하루 기록(day:날짜)을 누가 통째로 덮어써도, 'ops:날짜:시각-실행' 기록장에서 블록을 되살린다.
+   · 이 화면에서 추가·고친 블록 → put, 이 화면에서 지운 블록 → del (이 화면이 알던 블록만)
+   · 날짜를 열 때: 기록장에 있는데 하루 기록에 없는 블록은 되살리고, 지움(del)이 기록된 블록은 뺀다
+   · 저장하기 전: 다른 실행(다른 창)이 남긴 기록을 먼저 반영(다른 창에서 지운 것이 되살아나지 않게)
+   · 날짜마다 기록이 40건을 넘으면 한 건으로 묶어 정리, 45일 지난 기록장은 지움 */
+const BJ_IID=Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+const BJL={},BJSEEN={};let bjSeq=0;
+const bjOn=()=>!!(store&&store.base&&typeof store.base.range==='function'&&typeof store.base.swap==='function');
+const bjKey=(k,b)=>k+'|'+b.id;
+const bjSnap=o=>{const m=new Map();['time','plan'].forEach(k=>(o&&o[k]||[]).forEach(b=>{if(b&&b.id)m.set(bjKey(k,b),JSON.stringify(b))}));return m};
+async function bjRead(d){if(!bjOn())return[];let L=[];try{L=await store.base.range('ops:'+d+':')}catch(e){return[]}return(L||[]).filter(x=>x&&Array.isArray(x.ops)).sort((a,b)=>(a.t-b.t)||String(a.id).localeCompare(String(b.id)))}
+/* 기록장을 블록별 마지막 상태로: key → {t,op,k,id,b,src} */
+function bjMat(L){const M=new Map();L.forEach(x=>x.ops.forEach(o=>{const key=o.k+'|'+o.id;const p=M.get(key);if(!p||(o.t||x.t)>=p.t)M.set(key,{t:o.t||x.t,op:o.op,k:o.k,id:o.id,b:o.b,src:x.src})}));return M}
+/* 기록장 → 하루 기록(o)에 반영. 돌려줌: 바뀐 개수 */
+function bjApply(o,M,onlyAfter,skipSrc){let n=0;const rr=new Set((repRules()||[]).map(r=>r.id));
+  M.forEach(m=>{if(onlyAfter&&m.t<=onlyAfter)return;if(skipSrc&&m.src===skipSrc)return;const arr=o[m.k]=Array.isArray(o[m.k])?o[m.k]:[];const i=arr.findIndex(b=>b&&b.id===m.id);
+    if(m.op==='del'){if(i>=0){arr.splice(i,1);n++}return}
+    if(m.op==='put'&&m.b){if(i<0){if(m.k==='plan'&&m.b.rid&&(!rr.has(m.b.rid)||arr.some(b=>b&&b.rid===m.b.rid)))return;arr.push(JSON.parse(JSON.stringify(m.b)));n++}
+      else if(m.t>(+o._sv||0)&&JSON.stringify(arr[i])!==JSON.stringify(m.b)){arr[i]=JSON.parse(JSON.stringify(m.b));n++}}});
+  if(n)['time','plan'].forEach(k=>(o[k]||[]).sort((x,y)=>(x.s||'99')<(y.s||'99')?-1:1));return n}
+/* 이 화면의 변경을 기록장에 한 건으로 남김 */
+async function bjRecord(o){if(!bjOn()||!o||!o.date)return;const d=o.date,cur=bjSnap(o),last=BJL[d]||new Map(),t=Date.now(),ops=[];
+  cur.forEach((js,key)=>{if(last.get(key)!==js){const[k,id]=[key.slice(0,key.indexOf('|')),key.slice(key.indexOf('|')+1)];ops.push({op:'put',k,id,b:JSON.parse(js),t})}});
+  last.forEach((js,key)=>{if(!cur.has(key)){const k=key.slice(0,key.indexOf('|')),id=key.slice(key.indexOf('|')+1);ops.push({op:'del',k,id,t})}});
+  if(!ops.length){BJL[d]=cur;return}
+  const id=String(t).padStart(14,'0')+'-'+BJ_IID+'-'+(bjSeq++);
+  try{await store.base.putDoc('ops:'+d+':'+id,{kind:'ops',date:d,t,id,src:BJ_IID,ops});BJL[d]=cur;BJSEEN[d]=Math.max(BJSEEN[d]||0,t)}catch(e){try{svLog({t:new Date().toTimeString().slice(0,8),d,ev:'bj-fail',err:String(e&&e.message||e).slice(0,60)})}catch(x){}}}
+/* 날짜마다 40건 넘으면 묶기 */
+async function bjCompact(d,L){if(!bjOn()||L.length<=40)return;try{const M=bjMat(L);const t=Date.now();const ops=[...M.values()].map(m=>({op:m.op,k:m.k,id:m.id,b:m.b,t:m.t}));
+  const id=String(L[L.length-1].t).padStart(14,'0')+'-c'+BJ_IID;await store.base.swap(['ops:'+d+':'+id,{kind:'ops',date:d,t:L[L.length-1].t,id,src:'compact',ops}],L.map(x=>'ops:'+d+':'+x.id))}catch(e){}}
+async function bjPrune(){if(!bjOn())return;try{const lim=addD(today(),-45);const ks=await store.base.rangeKeys('ops:');const old=ks.filter(k=>k.slice(4,14)<lim);if(old.length)await store.base.swap(null,old)}catch(e){}}
+/* 날짜를 열 때: 기록장으로 하루 기록 맞추기 */
+{const _o=openDay;openDay=async function(d){const r=await _o.apply(this,arguments);try{if(bjOn()&&D&&D.date){const dd=D.date;const L=await bjRead(dd);if(L.length){const n=bjApply(D,bjMat(L));if(n){try{svLog({t:new Date().toTimeString().slice(0,8),d:dd,ev:'bj-restore',n})}catch(e){}schedule();try{if(!$('#v-plan').hidden)renderPlan();else if(!$('#v-day').hidden)renderDay()}catch(e){}setTimeout(()=>{try{toast(`🛟 블록 기록장에서 ${n}건을 맞췄습니다.`)}catch(e){}},400)}
+      BJSEEN[dd]=L[L.length-1].t;bjCompact(dd,L)}{const M0=bjMat(L);BJL[dd]=new Map([...M0.values()].filter(m=>m.op==='put'&&m.b).map(m=>[m.k+'|'+m.id,JSON.stringify(m.b)]));await bjRecord(D)}try{if(typeof KNB!=='undefined'){KNB[dd]=KNB[dd]||new Set();bjSnap(D).forEach((v,k)=>KNB[dd].add(k.slice(k.indexOf('|')+1)))}}catch(e){}}}catch(e){console.warn('bj-open',e)}return r}}
+/* 저장하기 전: 다른 실행의 기록 반영 → 이 화면 변경 기록 → 저장 */
+{const _f=flush0;flush0=async function(){if(dirty&&D&&D.date&&bjOn()){const o=D,d=o.date;try{const L=await bjRead(d);const after=BJSEEN[d]||0;const fresh=L.filter(x=>x.t>after&&x.src!==BJ_IID);if(fresh.length){const M=bjMat(fresh);
+      /* 다른 창에서 지운 블록: 이 화면이 그 뒤로 고치지 않았으면 뺀다 · 다른 창에서 추가한 블록: 넣는다 */
+      const last=BJL[d]||new Map();let n=0;M.forEach(m=>{const key=m.k+'|'+m.id;const arr=o[m.k]=Array.isArray(o[m.k])?o[m.k]:[];const i=arr.findIndex(b=>b&&b.id===m.id);
+        if(m.op==='del'){if(i>=0&&last.get(key)===JSON.stringify(arr[i])){arr.splice(i,1);last.delete(key);n++}}
+        else if(m.op==='put'&&m.b){if(i<0){arr.push(JSON.parse(JSON.stringify(m.b)));last.set(key,JSON.stringify(m.b));n++}else if(last.get(key)===JSON.stringify(arr[i])&&JSON.stringify(arr[i])!==JSON.stringify(m.b)){arr[i]=JSON.parse(JSON.stringify(m.b));last.set(key,JSON.stringify(m.b));n++}}});
+      BJL[d]=last;if(n){['time','plan'].forEach(k=>(o[k]||[]).sort((x,y)=>(x.s||'99')<(y.s||'99')?-1:1));try{svLog({t:new Date().toTimeString().slice(0,8),d,ev:'bj-other',n})}catch(e){}setTimeout(()=>{try{if(D===o){if(!$('#v-plan').hidden)renderPlan();else if(!$('#v-day').hidden)renderDay()}}catch(e){}},50)}}
+      if(L.length)BJSEEN[d]=Math.max(after,L[L.length-1].t);await bjRecord(o)}catch(e){console.warn('bj-flush',e)}}
+  return _f.apply(this,arguments)}}
+setTimeout(()=>{bjPrune()},20000);
 </script>
 <!--BIBLE{--><!--}BIBLE-->
 <div id="miniov" class="miniov" hidden></div>

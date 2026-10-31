@@ -105,6 +105,41 @@ const ok = (name, pass, info) => { results.push({ name, pass: !!pass, info }); c
     const s13 = await S.evaluate(async () => { SET.toastSec = 1; toast('t'); await new Promise(r => setTimeout(r, 1300)); const h = $('#toast').hidden; SET.toastSec = 6; return h; });
     ok('안내 메시지 표시 시간 설정', s13, s13);
 
+    // 14. 블록 기록장: 하루 기록이 통째로 빈 것으로 덮어써져도(어떤 방어도 거치지 않고) 다시 열면 블록이 돌아옴
+    const J = await open();
+    await J.evaluate(async () => { D.time.push({ id: 'T-j1', s: '18:00', e: '19:00', act: '기록장 블록', cat: '업무' }); schedule(); await flush(); await store.base.save(D.date, { date: D.date, time: [], plan: [], _sv: Date.now() + 1000 }); });
+    await J.close();
+    r = await fresh();
+    ok('기록장: 하루 기록이 비워져도 다시 열면 블록 복구', r[1].includes('기록장 블록') && r[1].includes('첫번째 창') && r[1].includes('바로 꺼짐'), r);
+
+    // 15. 기록장: 지운 블록은 다시 열어도 돌아오지 않음
+    const J2 = await open();
+    await J2.evaluate(async () => { D.time = D.time.filter(b => b.id !== 'T-j1'); schedule(); await flush(); });
+    await J2.close();
+    r = await fresh();
+    ok('기록장: 지운 블록은 다시 열어도 돌아오지 않음', !r[1].includes('기록장 블록'), r);
+
+    // 16. 기록장: 다른 창에서 지운 블록을 낡은 창이 되살리지 않음
+    const M1 = await open(), M2 = await open();
+    await M1.evaluate(async () => { D.time = D.time.filter(b => b.id !== 'T-x1'); schedule(); await flush(); });
+    await M2.evaluate(async () => { D.plan.push({ id: 'T-m2', s: '20:00', e: '21:00', act: '낡은 창 계획', cat: '업무' }); schedule(); await flush(); });
+    await M1.close(); await M2.close();
+    r = await fresh();
+    ok('기록장: 다른 창에서 지운 블록이 되살아나지 않음', !r[1].includes('첫번째 창') && r[2].includes('낡은 창 계획'), r);
+
+    // 17. 기록장: 고친 내용도 지켜짐 (낡은 사본이 예전 이름으로 덮어써도)
+    const E1 = await open();
+    await E1.evaluate(async () => { const b = D.time.find(x => x.id === 'T-t1'); const old = JSON.parse(JSON.stringify(await store.load(D.date))); b.act = '고친 이름'; schedule(); await flush(); old._sv = 1; await store.base.save(D.date, old); });
+    await E1.close();
+    r = await fresh();
+    ok('기록장: 고친 이름이 예전 사본에 덮이지 않음', r[1].includes('고친 이름'), r);
+
+    // 18. 기록장 정리(40건 넘으면 묶기) 뒤에도 같은 결과
+    const C1 = await open();
+    const s18 = await C1.evaluate(async () => { for (let i = 0; i < 45; i++) { const b = D.time.find(x => x.id === 'T-t1'); b.memo = 'm' + i; schedule(); await flush(); } const n0 = (await store.base.rangeKeys('ops:' + D.date + ':')).length; await openDay(D.date); await new Promise(r => setTimeout(r, 500)); const n1 = (await store.base.rangeKeys('ops:' + D.date + ':')).length; return { n0, n1, memo: D.time.find(x => x.id === 'T-t1').memo }; });
+    await C1.close();
+    ok('기록장 정리 후에도 내용 같음', s18.n0 > 40 && s18.n1 < s18.n0 && s18.memo === 'm44', s18);
+
     ok('점검 중 페이지 오류 없음', errs.length === 0, errs);
   } catch (e) {
     ok('점검 실행 중 예외', false, String(e && e.stack || e).slice(0, 500));
