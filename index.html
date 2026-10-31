@@ -16211,6 +16211,22 @@ async function syPutSafe(B,k,v){if(!k.startsWith('day:')||!v||typeof v!=='object
   return syPut(B,k,v)}
 {const _o=openDay;openDay=async function(d){try{staleGuardInstall()}catch(e){}return _o.apply(this,arguments)}}
 {const _f=flush0;flush0=async function(){try{staleGuardInstall()}catch(e){}return _f.apply(this,arguments)}}
+/* v390 ① 앱 버전 표시 · 새 버전 알림 (GitHub에서 마지막으로 성공한 빌드 번호와 비교) */
+var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/390})();
+const VRK='gj-verchk',VRURL='https://github.com/64hwarang-max/c/actions/workflows/build-apk.yml';
+const vrGet=()=>{try{return JSON.parse(localStorage.getItem(VRK)||'{}')}catch(e){return{}}};
+async function vrCheck(force){const c=vrGet();if(!force&&c.t&&Date.now()-c.t<6*36e5)return c;
+  try{const r=await fetch('https://api.github.com/repos/64hwarang-max/c/actions/workflows/build-apk.yml/runs?status=success&per_page=1',{cache:'no-store'});const j=await r.json();const w=(j.workflow_runs||[])[0];
+    const m=w&&String(w.display_title||'').match(/^v(\d+)/);const o={t:Date.now(),v:m?+m[1]:0,url:w&&w.html_url||VRURL,at:w&&w.updated_at||'',seen:c.seen||0};localStorage.setItem(VRK,JSON.stringify(o));return o}
+  catch(e){return Object.assign(c,{err:String(e&&e.message||e)})}}
+function vrRowHTML(){const c=vrGet();const nv=c.v>APPV;return `<div class="vrrow" id="vrrow"><div><b>🏷️ 이 앱 v${APPV}</b>${IS_NATIVE?'':'<small class="hint"> · 웹(클로드) 판</small>'}<br><small class="hint">${c.v?(nv?`🆕 새 버전 v${c.v} 준비됨${c.at?' · '+new Date(c.at).toLocaleString('ko-KR',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}):''}`:`✓ 최신입니다 (빌드 v${c.v})`):'최신 버전을 아직 확인하지 않았습니다'}</small></div><div class="vrbtn">${nv&&IS_NATIVE?`<button class="btn small" id="vrget">받기</button>`:''}<button class="del" id="vrchk">확인</button></div></div>`}
+function vrBind(R){const g=R.querySelector('#vrget');if(g)g.onclick=()=>{const c=vrGet();try{window.open(c.url||VRURL,'_blank')}catch(e){location.href=c.url||VRURL}toast('맨 아래 Artifacts의 growth-journal-apk-full을 받아 설치하십시오. 기록은 그대로 남습니다.')};
+  const k=R.querySelector('#vrchk');if(k)k.onclick=async()=>{k.textContent='확인 중…';const c=await vrCheck(true);const row=R.querySelector('#vrrow');if(row){row.outerHTML=vrRowHTML();vrBind(R)}if(c.err)toast('확인하지 못했습니다: '+c.err)}}
+{const _rv=renderViewCard;renderViewCard=function(){const r=_rv.apply(this,arguments);try{const C=$('#viewcard');if(C&&!C.querySelector('#vrrow')){C.insertAdjacentHTML('afterbegin',vrRowHTML());vrBind(C)}}catch(e){}return r}}
+/* 앱을 열 때(6시간마다) 확인 → 새 빌드가 있으면 한 번만 알림 */
+async function vrAuto(){if(!IS_NATIVE)return;const c=await vrCheck(false);if(c.v>APPV&&c.seen!==c.v){try{toastAct(`🆕 새 버전 v${c.v}이(가) 나왔습니다 (지금 v${APPV})`,'받기',()=>{try{window.open(c.url||VRURL,'_blank')}catch(e){}})}catch(e){}const o=vrGet();o.seen=c.v;try{localStorage.setItem(VRK,JSON.stringify(o))}catch(e){}}}
+setTimeout(()=>{vrAuto().catch(()=>{})},9000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)setTimeout(()=>vrAuto().catch(()=>{}),3000)});
+{const st=document.createElement('style');st.textContent=`.vrrow{display:flex;justify-content:space-between;align-items:center;gap:8px;border:1px solid var(--line);border-radius:10px;padding:9px 11px;margin:0 0 10px}.vrrow .vrbtn{display:flex;gap:6px;flex:none}`;document.head.appendChild(st)}
 </script>
 <!--BIBLE{--><!--}BIBLE-->
 <div id="miniov" class="miniov" hidden></div>

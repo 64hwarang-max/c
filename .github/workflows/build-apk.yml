@@ -12,6 +12,13 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
+      - name: 자동 점검 (하나라도 실패하면 APK를 만들지 않음)
+        run: |
+          mkdir -p /tmp/pw && (cd /tmp/pw && npm init -y >/dev/null 2>&1 && npm i playwright@1.56.0 >/dev/null 2>&1)
+          (cd /tmp/pw && npx playwright install --with-deps chromium >/dev/null 2>&1)
+          python3 -m http.server 8765 >/dev/null 2>&1 &
+          sleep 2
+          NODE_PATH=/tmp/pw/node_modules node tests/check.js
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
