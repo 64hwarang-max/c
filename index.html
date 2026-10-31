@@ -7402,9 +7402,11 @@ let SND={on:'',g:null,src:[],el:null,url:'',listen:'',mute:false,tok:0};const NB
 function noiseBuf(kind){const sr=actx.sampleRate,n=sr*8,f=Math.floor(sr*.05),b=actx.createBuffer(2,n,sr);for(let c=0;c<2;c++){const d=b.getChannelData(c);let l=0,b0=0,b1=0,b2=0;for(let i=0;i<n;i++){const w=Math.random()*2-1;if(kind==='brown'){l=(l+.02*w)/1.02;d[i]=l*3.5}else if(kind==='pink'){b0=.99765*b0+w*.099046;b1=.963*b1+w*.2965164;b2=.57*b2+w*1.0526913;d[i]=(b0+b1+b2+w*.1848)*.11}else d[i]=w*.4}
   for(let i=0;i<f;i++){const k=i/f;d[i]=d[i]*k+d[n-f+i]*(1-k)}}return b}
 const sndVol=()=>(SET.fcVol??60)/100;
+/* v396 소리를 음악 재생기(오디오 요소)로 내보내 화면이 꺼지거나 앱을 닫아도 이어지게 함 */
+function sndOut(){try{if(IS_NATIVE&&actx.createMediaStreamDestination){const d=actx.createMediaStreamDestination();const a=new Audio();a.srcObject=d.stream;a.loop=false;a.play().catch(()=>{});SND.el3=a;SND.d3=d;return d}}catch(e){}return actx.destination}
 async function sndPlay(kind){sndStop(true);if(!kind)return;unlockAudio();const tok=++SND.tok;SND.on=kind;SND.t0=Date.now();
   if(kind==='mine'){const u=await sndUrl();if(tok!==SND.tok)return;if(!u){SND.on='';toast('🎧 먼저 음원 파일을 불러오십시오.');return}const a=new Audio(u);a.loop=true;a.volume=sndVol();SND.el=a;try{await a.play()}catch(e){if(tok===SND.tok){SND.on='';SND.el=null}}sndMedia();return}
-  if(!actx){SND.on='';return}const g=actx.createGain();g.gain.value=0;g.connect(actx.destination);SND.g=g;
+  if(!actx){SND.on='';return}const g=actx.createGain();g.gain.value=0;g.connect(sndOut());SND.g=g;
   const loop=(k,dest,gain)=>{NBUF[k]=NBUF[k]||noiseBuf(k);const b=NBUF[k],x=actx.createBufferSource();x.buffer=b;x.loop=true;x.loopEnd=(b.length-Math.floor(actx.sampleRate*.05))/actx.sampleRate;const gg=actx.createGain();gg.gain.value=gain;x.connect(gg);gg.connect(dest);x.start();SND.src.push(x)};
   if(kind==='bin'){const B=binS();const base=+B.tone||200,bt=+B.p||12;const m=actx.createChannelMerger(2);const og=actx.createGain();og.gain.value=.35;m.connect(og);og.connect(g);
     const oL=actx.createOscillator(),oR=actx.createOscillator();oL.frequency.value=base;oR.frequency.value=base+bt;oL.connect(m,0,0);oR.connect(m,0,1);oL.start();oR.start();SND.src.push(oL,oR);if(B.bg)loop(B.bg,g,.14)}
@@ -7427,13 +7429,13 @@ async function sndPlay(kind){sndStop(true);if(!kind)return;unlockAudio();const t
 const sndMixVol=()=>Math.max(0,Math.min(1,(SET.fcMixVol??50)/100));
 function sndMixOn(kind){return!!SET.fcMix&&kind&&kind!=='mine'&&!(kind==='mc'&&(SET.fcMc||{}).bg==='mine')}
 async function sndMixStart(kind,tok){if(!sndMixOn(kind))return;const u=await sndUrl();if(!u||tok!==SND.tok)return;const a=new Audio(u);a.loop=true;a.volume=sndMixVol();SND.el2=a;a.play().catch(()=>{})}
-function sndStop(now){const g=SND.g,src=SND.src,el=SND.el;SND.on='';SND.g=null;SND.src=[];SND.el=null;if(el)el.pause();if(SND.el2){try{SND.el2.pause()}catch(e){}SND.el2=null}
+function sndStop(now){try{const e3=SND.el3,d3=SND.d3;SND.el3=null;SND.d3=null;if(e3)setTimeout(()=>{try{e3.pause();e3.srcObject=null}catch(x){}try{d3&&d3.disconnect()}catch(x){}},now?100:950)}catch(e){}const g=SND.g,src=SND.src,el=SND.el;SND.on='';SND.g=null;SND.src=[];SND.el=null;if(el)el.pause();if(SND.el2){try{SND.el2.pause()}catch(e){}SND.el2=null}
   if(g&&actx){const t=actx.currentTime;try{g.gain.cancelScheduledValues(t);g.gain.setValueAtTime(g.gain.value,t);g.gain.linearRampToValueAtTime(0,t+(now?.05:.8))}catch(e){}setTimeout(()=>{src.forEach(x=>{try{x.stop()}catch(e){}});try{g.disconnect()}catch(e){}},now?80:900)}}
 function sndWant(){if(FC&&FC.ph==='run'&&!FC.paused)return SND.mute?'':(SET.fcSnd||'');return SND.listen}
 function sndSync(){const w=sndWant();if(w!==SND.on)sndPlay(w)}
 function sndSetVol(){const v=sndVol();if(SND.el)SND.el.volume=v;if(SND.g&&actx)SND.g.gain.setTargetAtTime(v,actx.currentTime,.1)}
 async function sndUrl(){if(SND.url)return SND.url;try{const o=await store.getDoc('fcsound');if(o&&o.data){SND.url=o.data;return SND.url}}catch(e){}return''}
-function sndMedia(){try{if('mediaSession'in navigator&&window.MediaMetadata){const n=(SNDS.find(x=>x[0]===SND.on)||[])[1]||'';navigator.mediaSession.metadata=new MediaMetadata({title:SND.on==='mine'&&SET.fcSndName?SET.fcSndName:n.replace(/^\S+\s/,''),artist:APPN+' 집중'})}}catch(e){}}
+function sndMedia(){try{if('mediaSession'in navigator&&window.MediaMetadata){const n=(SNDS.find(x=>x[0]===SND.on)||[])[1]||'';navigator.mediaSession.metadata=new MediaMetadata({title:SND.on==='mine'&&SET.fcSndName?SET.fcSndName:n.replace(/^\S+\s/,''),artist:APPN+' 집중'});navigator.mediaSession.playbackState=SND.on?'playing':'none'}}catch(e){}}
 function sndPick(done){const i=document.createElement('input');i.type='file';i.accept='audio/*,.mp3,.m4a,.wav,.ogg,.aac';i.className='vh';document.body.appendChild(i);
   i.onchange=async()=>{const f=i.files[0];i.remove();if(!f)return;if(SND.on==='mine')sndStop(true);SND.url=URL.createObjectURL(f);SET.fcSnd='mine';SET.fcSndName=f.name;saveSet().catch(()=>{});let kept=false;
     if(f.size<(IS_NATIVE?60e6:8e5)){status('음원 저장 중…');try{await store.putDoc('fcsound',{kind:'sound',name:f.name,data:await toData(f)});kept=true}catch(e){}status('저장됨')}
@@ -10658,7 +10660,7 @@ function sndFgs(){try{if(!IS_NATIVE||!plugOK('MusicBridge'))return;const B=NP('M
 {const _sp=sndPlay;sndPlay=async function(k){const r=await _sp(k);sndFgs();return r}}
 {const _ss=sndStop;sndStop=function(n){_ss(n);setTimeout(sndFgs,400)}}
 document.addEventListener('visibilitychange',()=>{try{if(SND.on&&actx&&actx.state!=='running')actx.resume();if(SND.el&&SND.el.paused&&SND.on)SND.el.play().catch(()=>{});if(SND.on&&SND.on!=='mine'&&document.visibilityState==='visible')setTimeout(sndSync,200)}catch(e){}});
-setInterval(()=>{try{if(SND.on&&actx&&actx.state==='suspended')actx.resume()}catch(e){}},4000);
+setInterval(()=>{try{if(SND.on&&actx&&actx.state==='suspended')actx.resume();if(SND.on&&SND.el3&&SND.el3.paused)SND.el3.play().catch(()=>{})}catch(e){}},4000);
 /* ===================== v3.99: 반성 노트 · 몰입 세트 · 운동 종류 ===================== */
 (function(){const st=document.createElement('style');st.textContent=`
 .rxi{border:1px solid var(--line);border-radius:14px;padding:10px 12px;margin:8px 0;background:var(--paper)}.rxi.ok{background:color-mix(in srgb,#2e9e6b 6%,var(--paper));border-color:color-mix(in srgb,#2e9e6b 35%,var(--line))}
@@ -16221,7 +16223,7 @@ async function syPutSafe(B,k,v){if(!k.startsWith('day:')||!v||typeof v!=='object
 {const _o=openDay;openDay=async function(d){try{staleGuardInstall()}catch(e){}return _o.apply(this,arguments)}}
 {const _f=flush0;flush0=async function(){try{staleGuardInstall()}catch(e){}return _f.apply(this,arguments)}}
 /* v390 ① 앱 버전 표시 · 새 버전 알림 (GitHub에서 마지막으로 성공한 빌드 번호와 비교) */
-var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/395})();
+var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/396})();
 const VRK='gj-verchk',VRURL='https://github.com/64hwarang-max/c/actions/workflows/build-apk.yml';
 const vrGet=()=>{try{return JSON.parse(localStorage.getItem(VRK)||'{}')}catch(e){return{}}};
 async function vrCheck(force){const c=vrGet();if(!force&&c.t&&Date.now()-c.t<6*36e5)return c;
