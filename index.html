@@ -7402,10 +7402,19 @@ let SND={on:'',g:null,src:[],el:null,url:'',listen:'',mute:false,tok:0};const NB
 function noiseBuf(kind){const sr=actx.sampleRate,n=sr*8,f=Math.floor(sr*.05),b=actx.createBuffer(2,n,sr);for(let c=0;c<2;c++){const d=b.getChannelData(c);let l=0,b0=0,b1=0,b2=0;for(let i=0;i<n;i++){const w=Math.random()*2-1;if(kind==='brown'){l=(l+.02*w)/1.02;d[i]=l*3.5}else if(kind==='pink'){b0=.99765*b0+w*.099046;b1=.963*b1+w*.2965164;b2=.57*b2+w*1.0526913;d[i]=(b0+b1+b2+w*.1848)*.11}else d[i]=w*.4}
   for(let i=0;i<f;i++){const k=i/f;d[i]=d[i]*k+d[n-f+i]*(1-k)}}return b}
 const sndVol=()=>(SET.fcVol??60)/100;
+/* v397 내 음원: 끊겼다 다시 시작해도 처음부터가 아니라 멈춘 자리에서 이어서 재생 */
+const SNDPK='gj-sndpos';
+const sndPosGet=()=>{try{const o=JSON.parse(localStorage.getItem(SNDPK)||'{}');return o.n===(SET.fcSndName||'')?+o.p||0:0}catch(e){return 0}};
+const sndPosSet=p=>{try{localStorage.setItem(SNDPK,JSON.stringify({n:SET.fcSndName||'',p:Math.max(0,p||0)}))}catch(e){}};
+function sndAud(u){const a=new Audio(u);a.loop=true;const p0=sndPosGet();let last=0,ok=false;
+  const seek=()=>{if(ok)return;ok=true;if(p0>1&&isFinite(a.duration)&&p0<a.duration-1){try{a.currentTime=p0}catch(e){}}};
+  a.addEventListener('loadedmetadata',seek);a.addEventListener('canplay',seek);
+  a.addEventListener('timeupdate',()=>{if(!ok)return;const n=Date.now();if(n-last>1500){last=n;sndPosSet(a.currentTime)}});
+  a.addEventListener('pause',()=>{if(ok&&!a.ended)sndPosSet(a.currentTime)});return a}
 /* v396 소리를 음악 재생기(오디오 요소)로 내보내 화면이 꺼지거나 앱을 닫아도 이어지게 함 */
 function sndOut(){try{if(IS_NATIVE&&actx.createMediaStreamDestination){const d=actx.createMediaStreamDestination();const a=new Audio();a.srcObject=d.stream;a.loop=false;a.play().catch(()=>{});SND.el3=a;SND.d3=d;return d}}catch(e){}return actx.destination}
 async function sndPlay(kind){sndStop(true);if(!kind)return;unlockAudio();const tok=++SND.tok;SND.on=kind;SND.t0=Date.now();
-  if(kind==='mine'){const u=await sndUrl();if(tok!==SND.tok)return;if(!u){SND.on='';toast('🎧 먼저 음원 파일을 불러오십시오.');return}const a=new Audio(u);a.loop=true;a.volume=sndVol();SND.el=a;try{await a.play()}catch(e){if(tok===SND.tok){SND.on='';SND.el=null}}sndMedia();return}
+  if(kind==='mine'){const u=await sndUrl();if(tok!==SND.tok)return;if(!u){SND.on='';toast('🎧 먼저 음원 파일을 불러오십시오.');return}const a=sndAud(u);a.volume=sndVol();SND.el=a;try{await a.play()}catch(e){if(tok===SND.tok){SND.on='';SND.el=null}}sndMedia();return}
   if(!actx){SND.on='';return}const g=actx.createGain();g.gain.value=0;g.connect(sndOut());SND.g=g;
   const loop=(k,dest,gain)=>{NBUF[k]=NBUF[k]||noiseBuf(k);const b=NBUF[k],x=actx.createBufferSource();x.buffer=b;x.loop=true;x.loopEnd=(b.length-Math.floor(actx.sampleRate*.05))/actx.sampleRate;const gg=actx.createGain();gg.gain.value=gain;x.connect(gg);gg.connect(dest);x.start();SND.src.push(x)};
   if(kind==='bin'){const B=binS();const base=+B.tone||200,bt=+B.p||12;const m=actx.createChannelMerger(2);const og=actx.createGain();og.gain.value=.35;m.connect(og);og.connect(g);
@@ -7419,7 +7428,7 @@ async function sndPlay(kind){sndStop(true);if(!kind)return;unlockAudio();const t
     node.onaudioprocess=e=>{const L=e.outputBuffer.getChannelData(0),Rr=e.outputBuffer.getChannelData(1);const el=FC&&FC.ph==='run'?fcEl()*(FC.min>0?cum[cum.length-1]/(FC.min*60):1):(Date.now()-SND.t0)/1000;let k=0;while(k<st.length-1&&el>=cum[k])k++;const x=st[k];const pf=500/x[1];const off=x[0]&&M.lr?.5:0;
       for(let i=0;i<L.length;i++){ph+=f/sr;if(ph>=1)ph-=1;ep+=pf/sr;if(ep>=1)ep-=1;const t=Math.sin(6.283185307*ph);L[i]=t*E[(ep*1024)|0];let q=ep+off;if(q>=1)q-=1;Rr[i]=t*E[(q*1024)|0]}};
     SND.src.push({stop(){node.onaudioprocess=null;try{node.disconnect()}catch(e){}}});
-    if(M.bg==='mine'){const u=await sndUrl();if(u&&tok===SND.tok){const a=new Audio(u);a.loop=true;a.volume=Math.min(1,sndVol()*.6);SND.el=a;a.play().catch(()=>{})}}
+    if(M.bg==='mine'){const u=await sndUrl();if(u&&tok===SND.tok){const a=sndAud(u);a.volume=Math.min(1,sndVol()*.6);SND.el=a;a.play().catch(()=>{})}}
     else if(M.bg){if(M.bg==='rain'){const hp=actx.createBiquadFilter();hp.type='highpass';hp.frequency.value=500;hp.connect(g);loop('pink',hp,.7)}else loop(M.bg,g,M.bg==='white'?.25:.45)}}
   else if(kind==='brown')loop('brown',g,.9);
   else if(kind==='white'){const lp=actx.createBiquadFilter();lp.type='lowpass';lp.frequency.value=8000;lp.connect(g);loop('white',lp,.5)}
@@ -7428,7 +7437,7 @@ async function sndPlay(kind){sndStop(true);if(!kind)return;unlockAudio();const t
 /* 집중 소리 + 내 음원 함께 듣기 */
 const sndMixVol=()=>Math.max(0,Math.min(1,(SET.fcMixVol??50)/100));
 function sndMixOn(kind){return!!SET.fcMix&&kind&&kind!=='mine'&&!(kind==='mc'&&(SET.fcMc||{}).bg==='mine')}
-async function sndMixStart(kind,tok){if(!sndMixOn(kind))return;const u=await sndUrl();if(!u||tok!==SND.tok)return;const a=new Audio(u);a.loop=true;a.volume=sndMixVol();SND.el2=a;a.play().catch(()=>{})}
+async function sndMixStart(kind,tok){if(!sndMixOn(kind))return;const u=await sndUrl();if(!u||tok!==SND.tok)return;const a=sndAud(u);a.volume=sndMixVol();SND.el2=a;a.play().catch(()=>{})}
 function sndStop(now){try{const e3=SND.el3,d3=SND.d3;SND.el3=null;SND.d3=null;if(e3)setTimeout(()=>{try{e3.pause();e3.srcObject=null}catch(x){}try{d3&&d3.disconnect()}catch(x){}},now?100:950)}catch(e){}const g=SND.g,src=SND.src,el=SND.el;SND.on='';SND.g=null;SND.src=[];SND.el=null;if(el)el.pause();if(SND.el2){try{SND.el2.pause()}catch(e){}SND.el2=null}
   if(g&&actx){const t=actx.currentTime;try{g.gain.cancelScheduledValues(t);g.gain.setValueAtTime(g.gain.value,t);g.gain.linearRampToValueAtTime(0,t+(now?.05:.8))}catch(e){}setTimeout(()=>{src.forEach(x=>{try{x.stop()}catch(e){}});try{g.disconnect()}catch(e){}},now?80:900)}}
 function sndWant(){if(FC&&FC.ph==='run'&&!FC.paused)return SND.mute?'':(SET.fcSnd||'');return SND.listen}
@@ -7437,7 +7446,7 @@ function sndSetVol(){const v=sndVol();if(SND.el)SND.el.volume=v;if(SND.g&&actx)S
 async function sndUrl(){if(SND.url)return SND.url;try{const o=await store.getDoc('fcsound');if(o&&o.data){SND.url=o.data;return SND.url}}catch(e){}return''}
 function sndMedia(){try{if('mediaSession'in navigator&&window.MediaMetadata){const n=(SNDS.find(x=>x[0]===SND.on)||[])[1]||'';navigator.mediaSession.metadata=new MediaMetadata({title:SND.on==='mine'&&SET.fcSndName?SET.fcSndName:n.replace(/^\S+\s/,''),artist:APPN+' 집중'});navigator.mediaSession.playbackState=SND.on?'playing':'none'}}catch(e){}}
 function sndPick(done){const i=document.createElement('input');i.type='file';i.accept='audio/*,.mp3,.m4a,.wav,.ogg,.aac';i.className='vh';document.body.appendChild(i);
-  i.onchange=async()=>{const f=i.files[0];i.remove();if(!f)return;if(SND.on==='mine')sndStop(true);SND.url=URL.createObjectURL(f);SET.fcSnd='mine';SET.fcSndName=f.name;saveSet().catch(()=>{});let kept=false;
+  i.onchange=async()=>{const f=i.files[0];i.remove();if(!f)return;if(SND.on==='mine')sndStop(true);SND.url=URL.createObjectURL(f);SET.fcSnd='mine';SET.fcSndName=f.name;sndPosSet(0);saveSet().catch(()=>{});let kept=false;
     if(f.size<(IS_NATIVE?60e6:8e5)){status('음원 저장 중…');try{await store.putDoc('fcsound',{kind:'sound',name:f.name,data:await toData(f)});kept=true}catch(e){}status('저장됨')}
     toast(kept?`🎧 '${f.name}'을 저장했습니다. 다음에도 바로 들을 수 있습니다.`:`🎧 '${f.name}'을 불러왔습니다. 이 화면에서는 큰 음원을 보관할 수 없어, 창을 다시 열면 한 번 더 불러와야 합니다.`);done&&done()};i.click()}
 function sndPickHTML(){const k=SET.fcSnd||'';return`<p class="hint" style="margin:10px 0 0">집중 소리</p><div class="fsel">${SNDS.map(([v,l])=>`<button data-snd="${v}" class="${k===v?'on':''}">${l}</button>`).join('')}</div>
@@ -16223,7 +16232,7 @@ async function syPutSafe(B,k,v){if(!k.startsWith('day:')||!v||typeof v!=='object
 {const _o=openDay;openDay=async function(d){try{staleGuardInstall()}catch(e){}return _o.apply(this,arguments)}}
 {const _f=flush0;flush0=async function(){try{staleGuardInstall()}catch(e){}return _f.apply(this,arguments)}}
 /* v390 ① 앱 버전 표시 · 새 버전 알림 (GitHub에서 마지막으로 성공한 빌드 번호와 비교) */
-var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/396})();
+var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/397})();
 const VRK='gj-verchk',VRURL='https://github.com/64hwarang-max/c/actions/workflows/build-apk.yml';
 const vrGet=()=>{try{return JSON.parse(localStorage.getItem(VRK)||'{}')}catch(e){return{}}};
 async function vrCheck(force){const c=vrGet();if(!force&&c.t&&Date.now()-c.t<6*36e5)return c;
