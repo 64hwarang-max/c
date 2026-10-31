@@ -11529,7 +11529,7 @@ function wkAllDays(){const m=new Map();try{(cacheAll||new Map()).forEach((o,d)=>
 /* 종목별 최고 기록과 신기록 날짜 */
 function wkPR(){const best={},prs={},last={};wkAllDays().forEach(([d,o])=>{const today={};wkList(o).filter(x=>x.t==='weight').forEach(x=>{const k=(x.name||'').trim();if(!k)return;(x.sets||[]).forEach(s=>{const v=e1rm(s.w,s.r);if(!v)return;if(!today[k]||v>today[k].v)today[k]={v,w:+s.w||0,r:+s.r||0}});last[k]={d,x}});
   Object.entries(today).forEach(([k,t])=>{const b=best[k];if(b&&t.v>b.v+.01){(prs[d]=prs[d]||[]).push({k,w:t.w,r:t.r,prev:b})}if(!b||t.v>b.v)best[k]={...t,d}})});return{best,prs,last}}
-function wkMonthKm(ym){let s=0;wkAllDays().forEach(([d,o])=>{if(d.startsWith(ym))wkList(o).forEach(x=>{if(x.t==='cardio')s+=+x.km||0})});return Math.round(s*10)/10}
+function wkMonthKm(ym){/* v392: 워치로 가져온 달리기와 직접 적은 유산소를 같은 규칙(같은 날 워치 기록 우선)으로 합산 */try{return runStats(ym).km}catch(e){}let s=0;wkAllDays().forEach(([d,o])=>{if(d.startsWith(ym))wkList(o).forEach(x=>{if(x.t==='cardio')s+=+x.km||0})});return Math.round(s*10)/10}
 let WKF={t:'weight',up:'가슴',name:'',sets:[{w:'',r:''}],km:'',min:'',memo:'',cname:'러닝'};
 (function(){const st=document.createElement('style');st.textContent=`
 .wkaddx{display:flex;gap:6px;margin:6px 0}.wkaddx input{flex:1;min-width:0;font-size:.88rem}.wkxd{padding:2px 8px!important;font-size:.7rem!important;margin-left:-6px}
@@ -16215,7 +16215,7 @@ async function syPutSafe(B,k,v){if(!k.startsWith('day:')||!v||typeof v!=='object
 {const _o=openDay;openDay=async function(d){try{staleGuardInstall()}catch(e){}return _o.apply(this,arguments)}}
 {const _f=flush0;flush0=async function(){try{staleGuardInstall()}catch(e){}return _f.apply(this,arguments)}}
 /* v390 ① 앱 버전 표시 · 새 버전 알림 (GitHub에서 마지막으로 성공한 빌드 번호와 비교) */
-var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/391})();
+var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/392})();
 const VRK='gj-verchk',VRURL='https://github.com/64hwarang-max/c/actions/workflows/build-apk.yml';
 const vrGet=()=>{try{return JSON.parse(localStorage.getItem(VRK)||'{}')}catch(e){return{}}};
 async function vrCheck(force){const c=vrGet();if(!force&&c.t&&Date.now()-c.t<6*36e5)return c;
@@ -16276,6 +16276,24 @@ async function bjPrune(){if(!bjOn())return;try{const lim=addD(today(),-45);const
       if(L.length)BJSEEN[d]=Math.max(after,L[L.length-1].t);await bjRecord(o)}catch(e){console.warn('bj-flush',e)}}
   return _f.apply(this,arguments)}}
 setTimeout(()=>{bjPrune()},20000);
+/* v392 🏃 달린 거리: 하루별 · 이번 주 · 이번 달 · 주별 합계 (관리 › 운동 카드) */
+function runDayKm(from,to){const m={};const mons=new Set();for(let d=from;d<=to;d=addD(d,1))mons.add(d.slice(0,7));mons.forEach(ym=>runStats(ym).L.forEach(x=>{if(x.d>=from&&x.d<=to){const o=m[x.d]||(m[x.d]={km:0,n:0,min:0});o.km+=x.km;o.n++;o.min+=x.min}}));return m}
+const runKmR=v=>Math.round(v*10)/10;
+function runBarsHTML(from,to,cap){const M=runDayKm(from,to);const days=[];for(let d=from;d<=to;d=addD(d,1))days.push(d);const mx=Math.max(1,cap||0,...days.map(d=>(M[d]||{}).km||0));const T=today();
+  return `<div class="rnbars">${days.map(d=>{const v=(M[d]||{}).km||0;const wd='일월화수목금토'[parseD(d).getDay()];return `<div class="rnb${d===T?' td':''}" title="${md(d)} ${v?runKmR(v)+'km':'기록 없음'}"><i style="height:${v?Math.max(6,Math.round(v/mx*100)):0}%"></i><b>${v&&(days.length<=10||v>=3)?runKmR(v):''}</b><small>${days.length>10?(([1,5,10,15,20,25,30].includes(parseD(d).getDate())||d===T)?parseD(d).getDate():''):wd}</small></div>`}).join('')}</div>`}
+function runPeriodHTML(){const T=today(),m0=mondayOf(T),mE=addD(m0,6),ym=T.slice(0,7),first=ym+'-01',last=addD(ymd(new Date(+T.slice(0,4),+T.slice(5,7),1)),-1);
+  const W=runDayKm(m0,mE),wk=runKmR(Object.values(W).reduce((t,x)=>t+x.km,0)),wn=Object.values(W).reduce((t,x)=>t+x.n,0);
+  const pw=addD(m0,-7),PW=runDayKm(pw,addD(pw,6)),pwk=runKmR(Object.values(PW).reduce((t,x)=>t+x.km,0));
+  /* 이번 달 주별 합계 */
+  const MD=runDayKm(first,last);const weeks=[];for(let s=mondayOf(first);s<=last;s=addD(s,7)){let k=0;for(let i=0;i<7;i++){const d=addD(s,i);if(d>=first&&d<=last)k+=(MD[d]||{}).km||0}weeks.push([s,runKmR(k)])}
+  const t7=[];for(let i=6;i>=0;i--)t7.push(addD(T,-i));const R7=runDayKm(t7[0],T),k7=runKmR(Object.values(R7).reduce((t,x)=>t+x.km,0));
+  return `<div class="rnper"><div class="rngrid"><div><small>오늘</small><b>${runKmR((runDayKm(T,T)[T]||{}).km||0)}<em>km</em></b></div><div><small>이번 주 (월~)</small><b>${wk}<em>km</em></b><span>${wn}회${pwk?` · 지난주 ${pwk}km`:''}</span></div><div><small>최근 7일</small><b>${k7}<em>km</em></b></div></div>
+  <p class="hint" style="margin:8px 0 2px">📅 하루별 · 이번 주</p>${runBarsHTML(m0,mE)}
+  <p class="hint" style="margin:10px 0 2px">🗓️ 하루별 · 이번 달</p>${runBarsHTML(first,last)}
+  <p class="hint" style="margin:8px 0 0">주별 합계 · ${weeks.map(([s,k])=>`<b>${md(s)}~ ${k}km</b>`).join(' · ')}</p></div>`}
+{const _r=runCardHTML;runCardHTML=function(){let h=_r.apply(this,arguments);try{const add=runPeriodHTML();h=h.replace('<i class="xpl">',add+'<i class="xpl">')}catch(e){console.warn('run',e)}return h}}
+{const st=document.createElement('style');st.textContent=`.rnper{margin:8px 0 6px}.rngrid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.rngrid>div{border:1px solid var(--line);border-radius:8px;padding:7px 8px;display:flex;flex-direction:column}.rngrid small{color:var(--muted);font-size:.72rem}.rngrid b{font-size:1.3rem;line-height:1.2}.rngrid b em{font-size:.75rem;font-style:normal;font-weight:600;margin-left:2px}.rngrid span{color:var(--muted);font-size:.7rem}
+.rnbars{display:flex;align-items:flex-end;gap:2px;height:84px;margin:2px 0}.rnb{flex:1;min-width:0;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;position:relative}.rnb i{display:block;width:80%;background:#ff7043;border-radius:3px 3px 0 0;max-height:62%;min-height:0}.rnb b{font-size:.6rem;line-height:1;margin-bottom:1px;color:var(--ink);font-weight:600;height:10px}.rnb small{font-size:.6rem;color:var(--muted);line-height:1.3}.rnb.td small{color:#ff7043;font-weight:700}`;document.head.appendChild(st)}
 </script>
 <!--BIBLE{--><!--}BIBLE-->
 <div id="miniov" class="miniov" hidden></div>
