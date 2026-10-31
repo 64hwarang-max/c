@@ -8364,7 +8364,8 @@ async function hcSleepEve(d,sl){const S=hcSleepSpan(sl);if(S.ed!==d||S.sd===d)re
   await wcEdit(pd,o=>{o.time=Array.isArray(o.time)?o.time:[];o.hcT=o.hcT&&typeof o.hcT==='object'?o.hcT:{};const ex=o.time.find(b=>b.hcs===key);
     if(ex){if(ex.s!==S.b){ex.s=S.b;ex.e='00:00'}}else if(!o.hcT[key]&&S.b!=='00:00'){o.hcT[key]=1;o.time.push({id:uid(),s:S.b,e:'00:00',cat:'수면',act:'수면',area:'body',hcs:key,memo:'⌚ →'+S.w});o.time.sort((a,z)=>(a.s||'').localeCompare(z.s||''))}})}
 /* 달리기 거리: 워치가 공유한 이동거리(DistanceRecord) 중 운동 시간 안의 것을 더함 */
-function hcRunKm(r,x){if(!/달리|러닝/.test(x.type||''))return 0;const a=((r&&r.more&&r.more.dist)||[]).filter(z=>z.t>=x.s-6e4&&z.t<=x.e+12e4);const m=a.reduce((t,z)=>t+(+z.v||0),0);return Math.round(m/10)/100}
+function hcRunKm(r,x){if(!/달리|러닝/.test(x.type||''))return 0;/* v393: 거리 기록이 운동 시간과 겹친 만큼만 더함(기록이 운동보다 길거나 시작이 어긋나도 맞게) */const A=x.s-9e4,B=x.e+9e4;let m=0;((r&&r.more&&r.more.dist)||[]).forEach(z=>{const zs=+z.t||0,ze=+z.e||zs;if(ze<=zs){if(zs>=A&&zs<=B)m+=+z.v||0;return}const ov=Math.min(ze,B)-Math.max(zs,A);if(ov>0)m+=(+z.v||0)*Math.min(1,ov/(ze-zs))});return Math.round(m/10)/100}
+function hcDiagSave(r,st){try{const rn=(r.ex||[]).filter(x=>/달리|러닝/.test(x.type||''));SET.hcDiag={t:Date.now(),ex:(r.ex||[]).length,runs:rn.length,types:[...new Set((r.ex||[]).map(x=>(x.type||'')+(x.type==='기타'&&x.tc!=null?'#'+x.tc:'')))].slice(0,8),dist:((r.more&&r.more.dist)||[]).length,denied:(r.denied||[]).slice(0,8),gl:st&&st.gl?st.gl.length:null,distPerm:st&&st.gl?st.gl.includes('DistanceRecord'):null,exPerm:st&&st.gl?st.gl.includes('ExerciseSessionRecord'):null,rk:rn.map(x=>hcRunKm(r,x))};saveSet().catch(()=>{})}catch(e){}}
 function hcExAdd(o,x,r){const km=hcRunKm(r,x);const e0=o.ex.find(e=>e.hc&&e.hc===x.id);
   if(e0){if(km>0&&!(+e0.km>0)){e0.km=km;e0.detail=(e0.detail||'')+' · '+km+'km'}return 0}
   o.ex.push(Object.assign({id:uid(),type:x.type||'기타',min:String(Math.max(1,Math.round((x.e-x.s)/60000))),detail:`⌚ ${hhmm(new Date(x.s))}~${hhmm(new Date(x.e))}${x.title?' · '+x.title:''}${km>0?' · '+km+'km':''}`,int:0,hc:x.id||uid()},km>0?{km}:{}));return 1}
@@ -8372,8 +8373,9 @@ async function hcImport(manual){const H=HB();if(!H){if(manual)toast(IS_NATIVE?(N
   let st={};try{st=await H.status()}catch(e){}
   if(!st.available){if(manual)toast(st.sdk===2?'헬스 커넥트를 설치하거나 업데이트해야 합니다 (Play 스토어).':'이 휴대폰에서는 헬스 커넥트를 쓸 수 없습니다.');return}
   if(!st.granted){if(!manual)return;try{st=await H.request()}catch(e){st={}}if(!st||!st.granted){toast('헬스 커넥트 읽기 권한을 허용해야 가져올 수 있습니다.');renderWatchCard();return}}
+  if(manual&&st.gl&&!st.gl.includes('DistanceRecord')){toast('📏 거리 읽기 권한이 빠져 있습니다. 다음 화면에서 ‘거리’를 켜 주세요.');try{st=await H.request()||st}catch(e){}}
   const d1=today(),d0=addD(d1,-1);const start=parseD(d0).getTime()-6*3600e3,end=Date.now();
-  let r;try{r=await H.read({start,end})}catch(e){if(manual)toast('워치 기록을 읽지 못했습니다.');return}
+  let r;try{r=await H.read({start,end})}catch(e){if(manual)toast('워치 기록을 읽지 못했습니다.');return}hcDiagSave(r,st);
   const n={sl:0,ex:0,w:0,m:0,tb:0};
   for(const d of [d0,d1]){const ds=parseD(d).getTime();
     const sl=(r.sleep||[]).filter(x=>x.e>ds-6*3600e3&&x.e<=ds+14*3600e3).sort((a,b)=>(b.e-b.s)-(a.e-a.s))[0];
@@ -11516,7 +11518,8 @@ function runCardHTML(){const T=today(),ym=T.slice(0,7),py=ymd(new Date(+T.slice(
   <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">${IS_NATIVE?`<button type="button" class="del" data-runbf="1">⌚ 워치에서 이번 달 다시 읽기 (달리기·걸음)</button>`:''}<button type="button" class="del" data-rungoal="1">🎯 목표 km</button></div>
   <p class="hint" style="margin:6px 0 0">걷기 = 하루 총 이동거리 − 달린 거리. 달린 거리는 워치가 공유한 이동거리를 달리기 시간에 맞춰 더한 값이라 실제와 조금 다를 수 있습니다. 같은 날 직접 적은 것과 워치 기록이 같이 있으면 워치 기록만 셉니다.</p></div>`}
 async function runBackfill(){const H=HB();if(!H){toast('안드로이드 앱에서만 됩니다.');return}let st={};try{st=await H.status()}catch(e){}if(!st.available||!st.granted){toast('⌚ 설정 › 워치에서 헬스 커넥트 권한을 먼저 허용해 주세요.');return}
-  const ym=today().slice(0,7),start=parseD(ym+'-01').getTime()-6*3600e3,end=Date.now();let r;try{r=await H.read({start,end})}catch(e){toast('워치 기록을 읽지 못했습니다.');return}
+  if(st.gl&&!st.gl.includes('DistanceRecord')){toast('📏 거리 읽기 권한이 빠져 있습니다. 다음 화면에서 ‘거리’를 켜 주세요.');try{st=await H.request()||st}catch(e){}}
+  const ym=today().slice(0,7),start=parseD(ym+'-01').getTime()-6*3600e3,end=Date.now();let r;try{r=await H.read({start,end})}catch(e){toast('워치 기록을 읽지 못했습니다.');return}hcDiagSave(r,st);
   const by={};(r.ex||[]).forEach(x=>{if(!/달리|러닝/.test(x.type||''))return;const d=ymd(new Date(x.s));if(d.startsWith(ym))(by[d]=by[d]||[]).push(x)});let n=0;
   for(const d of Object.keys(by)){await wcEdit(d,o=>{o.ex=o.ex||[];by[d].forEach(x=>{if(hcExAdd(o,x,r))n++})})}
   let nd=0;for(let d=ym+'-01';d<=today();d=addD(d,1)){const hd=hcDay(r.more,parseD(d).getTime());if(hd){nd++;await wcEdit(d,o=>{o.hc2=Object.assign({},o.hc2||{},hd)})}}
@@ -16215,7 +16218,7 @@ async function syPutSafe(B,k,v){if(!k.startsWith('day:')||!v||typeof v!=='object
 {const _o=openDay;openDay=async function(d){try{staleGuardInstall()}catch(e){}return _o.apply(this,arguments)}}
 {const _f=flush0;flush0=async function(){try{staleGuardInstall()}catch(e){}return _f.apply(this,arguments)}}
 /* v390 ① 앱 버전 표시 · 새 버전 알림 (GitHub에서 마지막으로 성공한 빌드 번호와 비교) */
-var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/392})();
+var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/393})();
 const VRK='gj-verchk',VRURL='https://github.com/64hwarang-max/c/actions/workflows/build-apk.yml';
 const vrGet=()=>{try{return JSON.parse(localStorage.getItem(VRK)||'{}')}catch(e){return{}}};
 async function vrCheck(force){const c=vrGet();if(!force&&c.t&&Date.now()-c.t<6*36e5)return c;
@@ -16294,6 +16297,20 @@ function runPeriodHTML(){const T=today(),m0=mondayOf(T),mE=addD(m0,6),ym=T.slice
 {const _r=runCardHTML;runCardHTML=function(){let h=_r.apply(this,arguments);try{const add=runPeriodHTML();h=h.replace('<i class="xpl">',add+'<i class="xpl">')}catch(e){console.warn('run',e)}return h}}
 {const st=document.createElement('style');st.textContent=`.rnper{margin:8px 0 6px}.rngrid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.rngrid>div{border:1px solid var(--line);border-radius:8px;padding:7px 8px;display:flex;flex-direction:column}.rngrid small{color:var(--muted);font-size:.72rem}.rngrid b{font-size:1.3rem;line-height:1.2}.rngrid b em{font-size:.75rem;font-style:normal;font-weight:600;margin-left:2px}.rngrid span{color:var(--muted);font-size:.7rem}
 .rnbars{display:flex;align-items:flex-end;gap:2px;height:84px;margin:2px 0}.rnb{flex:1;min-width:0;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;position:relative}.rnb i{display:block;width:80%;background:#ff7043;border-radius:3px 3px 0 0;max-height:62%;min-height:0}.rnb b{font-size:.6rem;line-height:1;margin-bottom:1px;color:var(--ink);font-weight:600;height:10px}.rnb small{font-size:.6rem;color:var(--muted);line-height:1.3}.rnb.td small{color:#ff7043;font-weight:700}`;document.head.appendChild(st)}
+
+/* v393 달린 거리가 비어 있을 때 원인을 카드에 보여 줌 */
+{const _r=runCardHTML;runCardHTML=function(){let h=_r.apply(this,arguments);try{if(IS_NATIVE){const g=SET.hcDiag;let msg='',bad=false;
+  if(!g){msg='아직 워치에서 읽은 적이 없습니다. 아래 ‘다시 읽기’를 눌러 보십시오.'}
+  else{const when=new Date(g.t).toLocaleString('ko-KR',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'});const nz=(g.rk||[]).filter(v=>v>0).length;
+    if(g.exPerm===false){bad=true;msg='운동 읽기 권한이 없습니다.'}
+    else if(g.distPerm===false||(g.denied||[]).includes('DistanceRecord')){bad=true;msg='거리 읽기 권한이 빠져 있습니다 → 아래 ‘🔑 권한 다시 허용’에서 거리를 켜십시오.'}
+    else if(!g.runs){msg=`${when} 읽음 · 이번 달 ‘달리기’로 공유된 운동이 없습니다 (읽은 운동 ${g.ex}건${g.types&&g.types.length?' · 종류: '+g.types.join(', '):''}). 삼성 헬스에서 운동 종류를 달리기로 기록했는지, 헬스 커넥트 공유(운동)가 켜져 있는지 확인하십시오.`}
+    else if(!g.dist){bad=true;msg=`${when} 읽음 · 달리기 ${g.runs}회는 읽었지만 이동거리 기록이 0건입니다. 삼성 헬스 › 설정 › 헬스 커넥트에서 ‘거리’ 공유를 켜십시오.`}
+    else if(!nz){bad=true;msg=`${when} 읽음 · 달리기 ${g.runs}회, 이동거리 ${g.dist}건을 읽었지만 운동 시간과 겹치는 거리가 없습니다. 다시 읽기를 눌러도 같으면 알려 주십시오.`}
+    else msg=`${when} 읽음 · 달리기 ${g.runs}회 중 ${nz}회에 거리가 붙었습니다.`}
+  const box=`<div class="hint" style="margin:8px 0 0;padding:7px 9px;border:1px solid ${bad?'#d84315':'var(--line)'};border-radius:8px">⌚ 워치 읽기 점검 · ${esc(msg)}${bad||!g?' <button type="button" class="del" data-runperm="1" style="margin-top:4px">🔑 권한 다시 허용 후 읽기</button>':''}</div>`;
+  h=h.replace('<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">',box+'<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">')}}catch(e){console.warn('run-diag',e)}return h}}
+document.addEventListener('click',async e=>{const b=e.target.closest&&e.target.closest('[data-runperm]');if(!b)return;e.preventDefault();const H=HB();if(!H){toast('안드로이드 앱에서만 됩니다.');return}b.disabled=true;try{await H.request()}catch(x){}try{await runBackfill()}finally{b.disabled=false}});
 </script>
 <!--BIBLE{--><!--}BIBLE-->
 <div id="miniov" class="miniov" hidden></div>

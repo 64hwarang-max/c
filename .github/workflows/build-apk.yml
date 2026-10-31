@@ -3379,6 +3379,16 @@ jobs:
                               r.put("granted", any);
                               r.put("all", g.containsAll(perms()));
                               r.put("count", g.size());
+                              JSArray gl = new JSArray();
+                              for (String[] grp : new String[][] { CORE, EXTRA }) {
+                                  for (String n : grp) {
+                                      try {
+                                          Class c = rc(n);
+                                          if (c != null && g.contains(HealthPermission.Companion.getReadPermission(JvmClassMappingKt.getKotlinClass(c)))) gl.put(n);
+                                      } catch (Throwable t2) { }
+                                  }
+                              }
+                              r.put("gl", gl);
                           } catch (Throwable t) {
                               r.put("granted", false);
                               r.put("error", String.valueOf(t));
@@ -3530,13 +3540,14 @@ jobs:
               private void readMore(JSObject r, Instant a, Instant b, StringBuilder err) {
                   java.util.LinkedHashMap<String, JSArray> out = new java.util.LinkedHashMap<>();
                   java.util.LinkedHashSet<String> classes = new java.util.LinkedHashSet<>();
+                  JSArray denied = new JSArray();
                   for (String[] m : MORE) classes.add(m[1]);
                   classes.add("HeartRateRecord");
                   for (String cn : classes) {
                       Class cls = rc(cn);
                       if (cls == null) continue;
                       List recs;
-                      try { recs = readType(cls, a, b); } catch (Throwable t) { continue; }
+                      try { recs = readType(cls, a, b); } catch (Throwable t) { try { denied.put(cn); } catch (Throwable t3) { } continue; }
                       for (Object rec : recs) {
                           long ts = timeOf(rec), te = endOf(rec);
                           if (cn.equals("HeartRateRecord")) {
@@ -3592,6 +3603,7 @@ jobs:
                   JSObject mo = new JSObject();
                   for (java.util.Map.Entry<String, JSArray> en : out.entrySet()) mo.put(en.getKey(), en.getValue());
                   r.put("more", mo);
+                  try { r.put("denied", denied); } catch (Throwable t) { }
               }
 
               static void stages(Object rec, JSObject j) {
@@ -3654,6 +3666,7 @@ jobs:
                                   j.put("s", x.getStartTime().toEpochMilli());
                                   j.put("e", x.getEndTime().toEpochMilli());
                                   j.put("type", exName(x.getExerciseType()));
+                                  j.put("tc", x.getExerciseType());
                                   j.put("title", x.getTitle() == null ? "" : x.getTitle());
                                   j.put("src", x.getMetadata().getDataOrigin().getPackageName());
                                   ex.put(j);
