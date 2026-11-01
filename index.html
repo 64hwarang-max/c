@@ -15727,7 +15727,7 @@ async function plWkSync(){try{const old=document.querySelector('.plwk');const on
   if(!on){if(old)old.remove();return}const host=$('#pbody');if(!host)return;const mon=mondayOf(pAnchor||today());
   if(plWkSync.busy)return;plWkSync.busy=1;let M=plMap();try{M=new Map(await allMap());if(D)M.set(D.date,D)}catch(e){}plWkSync.busy=0;
   const h=plWkHTML(mon,M);let el=host.querySelector('.plwk');if(!el||el.dataset.sig!==h){const t=document.createElement('div');t.innerHTML=h;const n=t.firstElementChild;n.dataset.sig=h;if(el)el.replaceWith(n);el=n}
-  const wk1=host.querySelector('#wkcard .wkst1');const po=host.querySelector('#poocard');if(wk1&&typeof WKC!=='undefined'&&WKC.mon===mon){if(el.parentNode!==wk1)wk1.appendChild(el)}else if(po&&(SET.poView||'tbl')==='oct'&&pZoom!=='w'){const bt=po.querySelector(':scope>[data-wkflow]');if(el.parentNode!==po||(bt&&el.nextElementSibling!==bt)){bt?bt.before(el):po.appendChild(el)}}else{const wb=host.querySelector(':scope>.wbx');if(wb){const nb=wb.querySelector(':scope>.wbgo');if(el.parentNode!==wb||(nb&&el.nextElementSibling!==nb)){nb?nb.before(el):wb.appendChild(el)}}else el.remove()}}catch(e){plWkSync.busy=0;console.warn('plwk',e)}}
+  const wk1=host.querySelector('#wkcard .wkst1');const po=host.querySelector('#poocard');if(wk1&&typeof WKC!=='undefined'&&WKC.lv==='w'&&mondayOf(WKC.a||today())===mon){if(el.parentNode!==wk1)wk1.appendChild(el)}else if(po&&(SET.poView||'tbl')==='oct'&&pZoom!=='w'){const bt=po.querySelector(':scope>[data-wkflow]');if(el.parentNode!==po||(bt&&el.nextElementSibling!==bt)){bt?bt.before(el):po.appendChild(el)}}else{const wb=host.querySelector(':scope>.wbx');if(wb){const nb=wb.querySelector(':scope>.wbgo');if(el.parentNode!==wb||(nb&&el.nextElementSibling!==nb)){nb?nb.before(el):wb.appendChild(el)}}else el.remove()}}catch(e){plWkSync.busy=0;console.warn('plwk',e)}}
 DECO.add('요일×기둥',{wait:200,run:plWkSync});
 document.addEventListener('click',async e=>{const b=e.target.closest&&e.target.closest('[data-plday]');if(!b)return;e.preventDefault();e.stopPropagation();try{ZMD=0}catch(x){}await openDay(b.dataset.plday);go('day');try{renderDay()}catch(x){}},true);
 
@@ -16232,7 +16232,7 @@ async function syPutSafe(B,k,v){if(!k.startsWith('day:')||!v||typeof v!=='object
 {const _o=openDay;openDay=async function(d){try{staleGuardInstall()}catch(e){}return _o.apply(this,arguments)}}
 {const _f=flush0;flush0=async function(){try{staleGuardInstall()}catch(e){}return _f.apply(this,arguments)}}
 /* v390 ① 앱 버전 표시 · 새 버전 알림 (GitHub에서 마지막으로 성공한 빌드 번호와 비교) */
-var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/410})();
+var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/411})();
 const VRK='gj-verchk',VRURL='https://github.com/64hwarang-max/c/actions/workflows/build-apk.yml';
 const vrGet=()=>{try{return JSON.parse(localStorage.getItem(VRK)||'{}')}catch(e){return{}}};
 async function vrCheck(force){const c=vrGet();if(!force&&c.t&&Date.now()-c.t<6*36e5)return c;
@@ -16411,10 +16411,10 @@ function poTblHTML(M,d){const K=poKeys();const LS=shortOn();const lifeL=lifeCfg(
   const st=poStat(M,pZoom,d);
   return`<div class="pootw"><table class="poot"><thead><tr><th>기둥</th><th>장기</th>${LS.map(l=>`<th>${nm[l]}</th>`).join('')}<th>계획</th></tr></thead><tbody>${K.map(k=>`<tr><th data-poo="${k}">${AREA_E[k]||''} ${esc(areaName(k))}</th>${life(k)}${LS.map(l=>cell(k,l)).join('')}<td class="poh">${st.S[k].plan?hm(st.S[k].plan):'–'}</td></tr>`).join('')}</tbody></table></div>
    <p class="hint" style="margin:4px 0 0">칸을 누르면 그 기둥·기간의 목표를 보거나 더합니다. ‘계획’은 지금 고른 기간(${esc(perLabel(pZoom,perKey(pZoom,d)))})에 잡힌 시간입니다.</p>`}
-async function poHTML(){let M=cacheAll;try{M=await allMap()}catch(e){}const d=pAnchor||cur||today();let v=SET.poView||'tbl';if(pZoom==='w'&&v==='oct')v='tbl';const st=poStat(M,pZoom,d);
+async function poHTML(){let M=cacheAll;try{M=await allMap()}catch(e){}const d=pAnchor||cur||today();let v=SET.poView||'tbl';const st=poStat(M,pZoom,d);
   const empty=st.K.filter(k=>!st.S[k].gs.length).map(k=>areaName(k));const nm=({y:'1년',h:'6개월',q:'3개월',m:'1달',w:'1주'})[pZoom]||'';
-  return`<div class="card nocol" id="poocard" style="--k:#6c5ce7"><div class="w168h"><h3>🧭 기둥별 계획 <small class="hint">${esc(perLabel(pZoom,st.per))}</small></h3></div>
-   <div class="seg poseg" style="margin:6px 0"><button data-pov="tbl" class="${v==='tbl'?'on':''}">📋 목표</button>${pZoom==='w'?'':`<button data-pov="oct" class="${v==='oct'?'on':''}">🔷 시간 분배</button>`}<button data-pov="lnk" class="${v==='lnk'?'on':''}">🔗 연결</button></div>
+  return`<div class="card nocol ${poFd()?'pofd':''}" id="poocard" style="--k:#6c5ce7"><div class="w168h"><h3 data-pofold="1" style="cursor:pointer"><i class="pofi">${poFd()?'▸':'▾'}</i> 🧭 기둥별 계획 <small class="hint">${esc(perLabel(pZoom,st.per))}</small></h3></div>
+   <div class="seg poseg" style="margin:6px 0"><button data-pov="tbl" class="${v==='tbl'?'on':''}">📋 목표</button><button data-pov="oct" class="${v==='oct'?'on':''}">🔷 시간 분배</button><button data-pov="lnk" class="${v==='lnk'?'on':''}">🔗 연결</button></div>
    ${v==='oct'?poOctBody(st):v==='lnk'?lkHTML(d):poTblHTML(M,d)+poMoreHTML()}</div>`}
 function poOctBody(st){const K=st.K;let FOC=[];try{if(pZoom==='w')FOC=wkFocus(st.a)}catch(e){}const row=k=>{const s=st.S[k];const base=Math.max(s.tgt,s.plan,s.act,1);const w=v=>Math.min(100,Math.round(v/base*100));
     return`<button type="button" class="porow" data-poo="${k}"><span class="pon">${FOC.includes(k)?'⭐':''}${AREA_E[k]||''} ${esc(areaName(k))}</span><span class="pobar">${s.tgt?'<i class="t"></i>':''}<i class="p" style="width:${w(s.plan)}%"></i><i class="a" style="width:${w(s.act)}%"></i></span><small>${s.plan||s.act||s.tgt?`${s.plan?hm(s.plan):'0'} · ${s.act?hm(s.act):'0'}${s.tgt?` / ${Math.round(s.tgt/60)}시간`:''}`:'–'}</small></button>`};
@@ -16470,9 +16470,11 @@ document.addEventListener('click',e=>{const t=e.target.closest&&e.target.closest
   const g=GOALS.list.find(x=>x.id===(t.dataset.lkp||t.dataset.lkr||t.dataset.lkv));if(!g)return;const re=()=>{saveGoals();poPaint(true)};const d=pAnchor||cur||today();
   if(t.dataset.lkp){const C=lkCands(g,d);if(!C.length){toast('위 기간에 이을 목표가 없습니다. 표 보기에서 위 기간 목표를 먼저 더하십시오.');return}
     ntSheet(`⬆ ‘${g.title}’은(는) 어느 목표를 이루기 위한 것입니까?`,[...C.slice(0,30).map(x=>[`${lkLvN(x.lv)} · ${AREA_E[x.area]||''} ${x.title}${g.parent===x.id?' ✓':''}`,()=>{g.parent=x.id;re();toast('⬆ 위 목표에 이었습니다.')}]),['잇지 않음',()=>{g.parent=null;re()}]]);return}
-  if(t.dataset.lkr){const L=rlList();if(!L.length){toast('먼저 나 › 비전에서 역할을 추가하십시오.');return}
-    ntSheet(`🎭 ‘${g.title}’은(는) 어느 역할의 목표입니까?`,[...L.map(r=>[`${r.e||'🎭'} ${r.name}${g.role===r.id?' ✓':''}`,()=>{g.role=r.id;re()}]),['역할 표시 없음',()=>{delete g.role;re()}]]);return}
-  if(t.dataset.lkv){const V=lkVals();if(!V.length){toast('나 › 비전 › 비전 선언의 ‘핵심 가치’에 가치를 먼저 적으십시오 (쉼표로).');return}
+  if(t.dataset.lkr){const L=rlList();const mk=(n,e0,a0)=>{const r={id:uid(),name:String(n).slice(0,16),e:e0||'🎭',area:a0||'',stmt:'',ppl:[]};rlList().push(r);return r};
+    const sug=RL_SUG.filter(x=>!L.some(r=>r.name===x[0])).map(([n,e0,a0])=>[`➕ ${e0} ${n} (새 역할)`,()=>{const r=mk(n,e0,a0);g.role=r.id;re();toast(`🎭 ‘${n}’ 역할을 만들고 표시했습니다.`)}]);
+    const own=['✏️ 다른 역할 직접 적기',async()=>{const n=((await uiPrompt('역할 이름 (예: 아들, 소그룹 리더)',''))||'').trim();if(!n)return;const r=mk(n);g.role=r.id;re()}];
+    ntSheet(`🎭 ‘${g.title}’은(는) 어느 역할의 목표입니까?`,[...L.map(r=>[`${r.e||'🎭'} ${r.name}${g.role===r.id?' ✓':''}`,()=>{g.role=r.id;re()}]),...sug,own,...(g.role?[['역할 표시 없음',()=>{delete g.role;re()}]]:[])]);return}
+  if(t.dataset.lkv){const V=lkVals();if(!V.length){(async()=>{const v=((await uiPrompt('나의 핵심 가치를 쉼표로 적으십시오 (예: 신실, 사랑, 성장)',''))||'').trim();if(!v)return;GOALS.values=v;saveGoals();poPaint(true);toast('💎 핵심 가치를 저장했습니다. 다시 눌러 표시하십시오.')})();return}
     ntSheet(`💎 ‘${g.title}’은(는) 어떤 가치를 지킵니까? (누를 때마다 넣고 뺍니다)`,[...V.map(v=>[`${(g.vals||[]).includes(v)?'✓ ':''}${v}`,()=>{const s=new Set(g.vals||[]);s.has(v)?s.delete(v):s.add(v);g.vals=[...s];re()}]),['가치 표시 모두 지우기',()=>{delete g.vals;re()}]])}},true);
 (function(){const st=document.createElement('style');st.textContent=`#poocard .lkflow{display:flex;flex-wrap:wrap;gap:3px;align-items:center;font-size:.72rem;margin:4px 0}#poocard .lkflow span{border:1px solid var(--line);border-radius:999px;padding:2px 7px;background:var(--paper)}#poocard .lkflow span.no{color:#e5484d;border-color:#e5484d}#poocard .lkflow i{font-style:normal;color:var(--muted)}
 #poocard .lkvis{font-family:'Gowun Batang',serif;font-size:.9rem;margin:4px 0 6px;color:var(--ink)}#poocard .lkr{border-top:1px dashed var(--line);padding:7px 0}#poocard .lkr.bad{background:color-mix(in srgb,#e5484d 5%,transparent)}#poocard .lkt{display:flex;gap:6px;align-items:baseline}#poocard .lkt small{flex:none;color:var(--muted);font-size:.72rem;min-width:3.4em}#poocard .lkt b{font-size:.88rem;font-weight:600}
@@ -16528,8 +16530,8 @@ function wkAsHTML(nm,M,AS){const{T,A,days}=wkAsData(nm,M);const WD2=['일','월'
   return`<p class="wbsub">${md(nm)} ~ ${md(addD(nm,6))} · 기둥별 배정 시간</p><div class="wbas">${sum}</div><p class="mhead" style="margin-top:10px">🗓️ 날짜별 시간 배정</p>${rows}`}
 async function wkAsEdit(date,M,fn){let o=(D&&D.date===date)?D:(M.get(date)||norm(await store.load(date)||{date}));if(!Array.isArray(o.plan))o.plan=[];fn(o);o.plan.sort((a,b)=>(a.s||'99')<(b.s||'99')?-1:1);
   if(D&&o===D){schedule()}else{o._sv=Date.now();await store.save(date,o);try{gcPushDaySoon(o)}catch(e){}}M.set(date,o);try{if(cacheAll)cacheAll.set(date,o)}catch(e){}}
-function wkBindFlow(S,nm,per,M,getAS,setAS,draw){
-  const addG=k=>{const i=S.querySelector(`[data-wkpgi="${k}"]`);const v=(i&&i.value||'').trim();if(!v)return;GOALS.list.push({id:uid(),lv:'w',per,title:v,done:false,doneAt:'',parent:null,tasks:[],area:k,rank:0,kind:'once'});saveGoalsSoon();draw();setTimeout(()=>{const j=S.querySelector(`[data-wkpgi="${k}"]`);if(j)j.focus()},30)};
+function wkBindFlow(S,nm,per,M,getAS,setAS,draw,lvX){
+  const addG=k=>{const i=S.querySelector(`[data-wkpgi="${k}"]`);const v=(i&&i.value||'').trim();if(!v)return;GOALS.list.push({id:uid(),lv:lvX||'w',per,title:v,done:false,doneAt:'',parent:null,tasks:[],area:k,rank:0,kind:'once'});saveGoalsSoon();draw();setTimeout(()=>{const j=S.querySelector(`[data-wkpgi="${k}"]`);if(j)j.focus()},30)};
   S.querySelectorAll('[data-wkpga]').forEach(b=>b.onclick=()=>addG(b.dataset.wkpga));
   S.querySelectorAll('[data-wkpgi]').forEach(i=>i.onkeydown=e=>{if(e.key==='Enter'&&!e.isComposing){e.preventDefault();addG(i.dataset.wkpgi)}});
   S.querySelectorAll('[data-wkcat]').forEach(b=>b.onclick=async()=>{const k=b.dataset.wkcat;if(SET.cats.length>=MAXCAT){toast(`중분류는 ${MAXCAT}개까지 둘 수 있습니다.`);return}
@@ -16661,6 +16663,62 @@ wkFlowOpen=async function(step){WKC.mon=step===2?addD(wkMon(),7):wkMon();WKC.st=
 .wbtg label>input[type=number]{flex:0 0 5.5em!important;width:5.5em!important;min-width:0}.wbtg label>span{flex:1 1 auto!important;min-width:3.5em;word-break:keep-all;white-space:normal}`;document.head.appendChild(st)})();
 
 (function(){const st=document.createElement('style');st.textContent=`.mdbox .mdlist{border:1px solid var(--line);border-radius:14px;background:var(--paper);overflow:hidden}.mdbox .mdsum{display:flex;align-items:center;gap:8px;padding:10px 12px;background:rgba(127,127,127,.07);border-bottom:1px solid var(--line)}.mdbox .mdsum small{color:var(--muted);margin-left:auto}.mdbox .mdrows{display:grid!important;grid-template-columns:1fr 1fr!important;gap:0!important}.mdbox .mdlist .mdc.mdr{display:flex!important;flex-direction:row!important;align-items:center!important;justify-content:flex-start!important;gap:8px!important;width:auto!important;height:auto!important;aspect-ratio:auto!important;padding:9px 12px!important;border:0!important;border-bottom:1px solid var(--line)!important;border-radius:0!important;background:none!important;text-align:left!important;box-shadow:none!important;min-height:0!important}.mdbox .mdlist .mdc.mdr:nth-child(odd){border-right:1px solid var(--line)!important}.mdbox .mdc.mdr .mde{font-size:1.1rem;flex:none}.mdbox .mdc.mdr .mdt{flex:1;min-width:0;display:flex;flex-direction:column;align-items:flex-start}.mdbox .mdc.mdr .mdt b{font-size:.84rem;font-weight:600;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.mdbox .mdc.mdr .mdt small{font-size:.68rem;color:var(--muted);max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.mdbox .mdc.mdr em{font-style:normal;font-weight:700;font-size:.84rem;flex:none;margin:0}.mdbox .mdc.mdr .mdar{color:var(--muted);font-style:normal;flex:none}`;document.head.appendChild(st)})();
+
+/* ===== v411: 기간 카드 — 1주·1달·3개월·6개월·1년 모두 ① 돌아보기 ② 세우기 (배정 단계 없앰) · 중점 기둥 아이콘 · 기둥별 계획 접기 ===== */
+const PDN={w:'한 주',m:'한 달',q:'3개월',h:'6개월',y:'한 해'};
+const pdKey=(lv,a)=>lv==='w'?mondayOf(a):perKey(lv,a);
+function pdFocusGet(lv,a){const k=pdKey(lv,a);if(lv==='w')return(SET.wkFocus||{})[k]||[];if(lv==='m')return(SET.mFocus||{})[k]||[];return(SET.pFocus||{})[lv+':'+k]||[]}
+function pdFocusSet(lv,a,L){const k=pdKey(lv,a);if(lv==='w'){SET.wkFocus=SET.wkFocus||{};SET.wkFocus[k]=L}else if(lv==='m'){SET.mFocus=SET.mFocus||{};SET.mFocus[k]=L}else{SET.pFocus=SET.pFocus||{};SET.pFocus[lv+':'+k]=L}}
+function pdRevGet(lv,a){const k=pdKey(lv,a);return(lv==='w'?(SET.wkRev||{})[k]:(SET.pRev||{})[lv+':'+k])||{}}
+function pdRevMk(lv,a){const k=pdKey(lv,a);if(lv==='w'){SET.wkRev=SET.wkRev||{};return SET.wkRev[k]=SET.wkRev[k]||{}}SET.pRev=SET.pRev||{};return SET.pRev[lv+':'+k]=SET.pRev[lv+':'+k]||{}}
+function poFd(){try{return localStorage.getItem('gj-pofold')!=='0'}catch(e){return true}}
+document.addEventListener('click',e=>{const h=e.target.closest&&e.target.closest('#poocard [data-pofold]');if(!h)return;e.preventDefault();e.stopPropagation();const f=!poFd();try{localStorage.setItem('gj-pofold',f?'1':'0')}catch(x){}const c=$('#poocard');if(c){c.classList.toggle('pofd',f);const i=c.querySelector('.pofi');if(i)i.textContent=f?'▸':'▾'}},true);
+function wkcCtx(){try{if(curSection!=='plan'||PLM==='goal'||(typeof PLP!=='undefined'&&PLP))return false;return['w','m','q','h','y'].includes(qhKind())}catch(e){return false}}
+function pdPillarsHTML(lv,a,gs){const T=wkTarget(),G=SET.w168||{};const R=plpRange(lv,a);const wks=(Math.round((parseD(R.b)-parseD(R.a))/864e5)+1)/7;const pk=SCORE.map(x=>x[0]);
+  const cats=w168Cats();const grp={};cats.forEach(c=>{const x=w168Ar(c);if(x)(grp[x]=grp[x]||[]).push(c)});const W=lv==='w';const nm=({w:'이번 주',m:'이번 달',q:'이 분기',h:'이 반기',y:'올해'})[lv];
+  const blk=SCORE.map(([k])=>{const cs=grp[k]||[];const mine=gs.filter(g=>g.area===k);const th=T[k]?(W?Math.round(T[k]*10)/10+'h':'≈ '+Math.round(T[k]*wks)+'h'):'';
+    return`<div class="wbtg"><b>${AREA_E[k]||''} ${esc(areaName(k))} <small>${th}</small></b>
+     ${mine.map(g=>`<div class="wbg"><span>🎯 ${esc(g.title)}</span><button type="button" class="del" data-wkgd="${g.id}" aria-label="빼기">✕</button></div>`).join('')}
+     <div class="gl" style="margin:4px 0 6px"><input type="text" data-wkpgi="${k}" placeholder="${nm} 목표" enterkeyhint="done"><button class="btn small" data-wkpga="${k}">＋</button></div>
+     ${W?cs.map(c=>`<label><span>${esc(c)}</span><input type="number" inputmode="decimal" min="0" max="168" step="0.5" data-w168="${esc(c)}" value="${+G[c]||''}" placeholder="-"></label>`).join('')+`<button type="button" class="del" data-wkcat="${k}" style="margin-top:4px">＋ 중분류</button>`:''}</div>`}).join('');
+  const other=gs.filter(g=>!pk.includes(g.area));
+  return`<p class="mhead pdh">🎯 기둥별 목표${W?' · ⏳ 주간 시간':''}</p><div class="wbt2">${blk}</div>
+   ${other.length?`<p class="mhead" style="margin-top:8px">기타 목표</p>${other.map(g=>`<div class="wbg"><span>${esc(g.title)}</span><button type="button" class="del" data-wkgd="${g.id}" aria-label="빼기">✕</button></div>`).join('')}`:''}
+   <p class="hint" style="margin:6px 0 0">${W?`합계 ${Object.values(G).reduce((x,v)=>x+(+v||0),0)} / 168시간 · 시간은 매주 이어집니다`:`기둥 옆 시간은 주간 목표 시간 × ${Math.round(wks)}주입니다. 주간 시간은 1주에서 정합니다.`}</p>`}
+function wkcHTML(lv,a,M){const R=plpRange(lv,a),C=plpRange(lv,today());const st=WKC.st||(R.a>C.a?2:1);const nx=plpRange(lv,plpShift(lv,today(),1)),pv=plpRange(lv,plpShift(lv,today(),-1));
+  const rel=R.a===C.a?' · 지금':R.a===nx.a?' · 다음':R.a===pv.a?' · 지난':'';const Rv=pdRevGet(lv,a);let body='';
+  if(st===1){const b=(lv==='w'?wkBoardHTML(R.a,M,{nonav:1,noflow:1}):zbHTML(lv,a,M)).replace('class="card nocol wbx"','class="wkin"');
+    body=`<div class="wkst1">${b}</div><label class="f" style="margin-top:10px">📝 한 줄 돌아보기<textarea id="wkcline" rows="2" placeholder="잘된 것 · 아쉬운 것 · 깨달은 것">${esc(Rv.line||'')}</textarea></label>
+     <button type="button" class="btn" data-wkcdone="1" style="width:100%;margin-top:8px">${Rv.done?'✓ 마무리함 · ':'✓ 마무리 → '}다음 ${({w:'주',m:'달',q:'분기',h:'반기',y:'해'})[lv]} 세우기 ›</button>`}
+  else{const F=pdFocusGet(lv,a);const gs=(GOALS.list||[]).filter(g=>g.lv===lv&&g.per===perKey(lv,a)&&g.title);
+    body=`<p class="mhead pdh">⭐ 중점 기둥 <small class="hint">1~3개${lv==='w'?' · 점수·XP +0.5':lv==='m'?' · 점수·XP +0.3':''}</small></p><div class="chips pdfoc">${SCORE.map(([k])=>`<button type="button" class="chip fbtn ${F.includes(k)?'on':''}" data-wkcf="${k}" title="${esc(areaName(k))}" aria-label="${esc(areaName(k))}">${AREA_E[k]||esc(areaName(k))}</button>`).join('')}</div>
+     ${pdPillarsHTML(lv,a,gs)}`}
+  return`<div class="card nocol wbfl" id="wkcard" data-key="${lv+pdKey(lv,a)}" style="--k:#ff8a3d"><div class="wkch"><button type="button" class="iconbtn" data-wkcn="-1" aria-label="이전">‹</button><h3>🗓️ ${PDN[lv]} <small>${esc(R.label||perLabel(lv,perKey(lv,a)))}${rel}</small></h3><button type="button" class="iconbtn" data-wkcn="1" aria-label="다음">›</button></div>
+   <div class="wbsteps"><button type="button" class="${st===1?'on':''}" data-wkcs="1">① 돌아보기</button><button type="button" class="${st===2?'on':''}" data-wkcs="2">② 세우기</button></div>${body}</div>`}
+async function wkcPaint(force){try{const R=$('#pbody');if(!R)return;const ex=R.querySelector(':scope>#wkcard');if(!wkcCtx()){if(ex)ex.remove();return}
+  const lv=qhKind();const b0=pAnchor||today();const bk=lv+'|'+pdKey(lv,b0);if(WKC.base!==bk){WKC.base=bk;if(!WKC.keep||WKC.lv!==lv){WKC.a=b0;WKC.st=null}WKC.keep=0;WKC.lv=lv}if(!WKC.a)WKC.a=b0;
+  if(ex&&!force&&ex.dataset.key===lv+pdKey(lv,WKC.a))return;if(WKC.busy)return;WKC.busy=1;let M=new Map();try{M=await allMap()}catch(e){}WKC.busy=0;if(!wkcCtx())return;
+  const a=WKC.a;const t=document.createElement('div');t.innerHTML=wkcHTML(lv,a,M);const card=t.firstElementChild;wkcBind(card,lv,a,M);
+  const ex2=R.querySelector(':scope>#wkcard');if(ex2)ex2.replaceWith(card);else{const top=R.querySelector(':scope>.ptop');if(top)top.after(card);else R.prepend(card)}
+  try{plWkSync&&plWkSync()}catch(e){}}catch(e){WKC.busy=0;console.warn('wkc',e)}}
+function wkcBind(C,lv,a,M){const re=()=>wkcPaint(true);
+  C.querySelectorAll('[data-wkcn]').forEach(b=>b.onclick=()=>{WKC.a=plpShift(lv,a,+b.dataset.wkcn);WKC.st=null;re()});
+  C.querySelectorAll('[data-wkcs]').forEach(b=>b.onclick=()=>{WKC.st=+b.dataset.wkcs;re()});
+  C.querySelectorAll('[data-wkcf]').forEach(b=>b.onclick=()=>{let L=pdFocusGet(lv,a).slice();const k=b.dataset.wkcf;if(L.includes(k))L=L.filter(x=>x!==k);else{if(L.length>=3){toast('중점 기둥은 3개까지 고릅니다.');return}L.push(k)}pdFocusSet(lv,a,L);saveSet().catch(()=>{});try{XPC.k=''}catch(x){}re()});
+  C.querySelectorAll('[data-wkgd]').forEach(b=>b.onclick=()=>{GOALS.list=GOALS.list.filter(g=>g.id!==b.dataset.wkgd);saveGoalsSoon();re()});
+  C.querySelectorAll('[data-w168]').forEach(i=>i.addEventListener('change',()=>setTimeout(re,60)));
+  const ln=C.querySelector('#wkcline');if(ln)ln.oninput=()=>{pdRevMk(lv,a).line=ln.value.trim();saveSet().catch(()=>{})};
+  const dn=C.querySelector('[data-wkcdone]');if(dn)dn.onclick=()=>{const Rv=pdRevMk(lv,a);if(!Rv.done)Rv.done=today();saveSet().catch(()=>{});try{wkBanner()}catch(x){}WKC.a=plpShift(lv,a,1);WKC.st=2;re()};
+  wkBindFlow(C,plpRange(lv,a).a,perOf(lv,a),M,()=>null,()=>{},re,lv)}
+wkFlowOpen=async function(step){WKC.lv='w';WKC.a=step===2?addD(today(),7):today();WKC.st=step||1;WKC.keep=1;try{PLP=null}catch(e){}
+  if(curSection!=='plan'||PLM==='goal')go('plan');if(ZMP==null&&pZoom!=='w'){pZoom='w';pAnchor=today();try{await renderPlan()}catch(e){}}
+  setTimeout(async()=>{await wkcPaint(true);const c=$('#wkcard');if(c)c.scrollIntoView({block:'start',behavior:'smooth'})},350)};
+/* 연결 보기: 흐름 칩을 누르면 그 자리로 */
+document.addEventListener('click',e=>{const sp=e.target.closest&&e.target.closest('#poocard .lkflow span');if(!sp)return;const i=[...sp.parentNode.querySelectorAll('span')].indexOf(sp);if(i<=2)go('vision');else if(i===3)go('pmd');else{const b=document.querySelector('#poocard [data-pov="tbl"]');b&&b.click()}},true);
+(function(){const st=document.createElement('style');st.textContent=`#poocard.pofd>:not(.w168h){display:none!important}#poocard .pofi{font-style:normal;color:var(--muted);font-size:.8em}
+#wkcard .wkin [data-zbf]{display:none}#wkcard .pdh{margin-top:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#wkcard .pdfoc{display:flex;flex-wrap:nowrap;gap:4px}#wkcard .pdfoc .chip{flex:1 1 0;min-width:0;padding:7px 0;text-align:center;font-size:16px;line-height:1.2}
+#poocard .lkflow span{cursor:pointer}`;document.head.appendChild(st)})();
 </script>
 <!--BIBLE{--><!--}BIBLE-->
 <div id="miniov" class="miniov" hidden></div>
