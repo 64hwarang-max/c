@@ -16232,7 +16232,7 @@ async function syPutSafe(B,k,v){if(!k.startsWith('day:')||!v||typeof v!=='object
 {const _o=openDay;openDay=async function(d){try{staleGuardInstall()}catch(e){}return _o.apply(this,arguments)}}
 {const _f=flush0;flush0=async function(){try{staleGuardInstall()}catch(e){}return _f.apply(this,arguments)}}
 /* v390 ① 앱 버전 표시 · 새 버전 알림 (GitHub에서 마지막으로 성공한 빌드 번호와 비교) */
-var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/411})();
+var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/412})();
 const VRK='gj-verchk',VRURL='https://github.com/64hwarang-max/c/actions/workflows/build-apk.yml';
 const vrGet=()=>{try{return JSON.parse(localStorage.getItem(VRK)||'{}')}catch(e){return{}}};
 async function vrCheck(force){const c=vrGet();if(!force&&c.t&&Date.now()-c.t<6*36e5)return c;
@@ -16428,7 +16428,7 @@ function poMoreHTML(){let P=[],B=[];try{P=PROJ.list||[]}catch(e){}try{B=bkList()
   return`<div class="pomore"><button type="button" class="xlink" data-yrgo="work">🧩 프로젝트 ${P.length}개 ›</button><button type="button" class="xlink" data-yrgo="bucket">🪣 버킷리스트 ${B.length}개 ›</button><button type="button" class="xlink" data-pldet="1">🪜 목표 자세히 ›</button></div>`}
 async function poPaint(force){try{const R=$('#pbody');if(!R||curSection!=='plan'||PLM!=='plan'||ZMP!=null||(typeof PLP!=='undefined'&&PLP))return;const old=R.querySelector('#poocard');if(old&&!force){const w=R.querySelector(':scope>.wbx[data-zb]'),sl=old.querySelector('.poslot');if(w&&sl){w.classList.remove('zbc');sl.appendChild(w)}return}const top=R.querySelector('.ptop');if(!top)return;
   const h=await poHTML();if(curSection!=='plan')return;const t=document.createElement('div');t.innerHTML=h;const el=t.firstElementChild;try{yrgBind(el)}catch(e){}{const w=R.querySelector('.wbx[data-zb]');const sl=el.querySelector('.poslot');if(w&&sl){w.classList.remove('zbc');sl.appendChild(w)}}const o2=R.querySelector('#poocard');if(o2){o2.replaceWith(el);return}const nav=top.nextElementSibling&&top.nextElementSibling.matches('.wk,.pnav')?top.nextElementSibling:top;
-  const wk=R.querySelector(':scope>#wkcard');const yr=R.querySelector('.yrg');if(wk)wk.after(el);else if(yr&&yr.parentElement===R)yr.before(el);else nav.after(el)}catch(e){console.warn('poo',e)}}
+  const wk=R.querySelector(':scope>#wkcard');const yr=R.querySelector('.yrg');if(wk)wk.before(el);else if(yr&&yr.parentElement===R)yr.before(el);else nav.after(el)}catch(e){console.warn('poo',e)}}
 DECO.add('기둥 팔각형 계획',{root:'#pbody',deep:false,wait:150,run:()=>poPaint()});
 document.addEventListener('click',async e=>{const t=e.target.closest&&e.target.closest('[data-pov],[data-poo],[data-pot]');if(!t||!t.closest('#poocard'))return;
   if(t.dataset.pov){SET.poView=t.dataset.pov;saveSet().catch(()=>{});poPaint(true);return}
@@ -16685,7 +16685,7 @@ function pdPillarsHTML(lv,a,gs){const T=wkTarget(),G=SET.w168||{};const R=plpRan
   return`<p class="mhead pdh">🎯 기둥별 목표${W?' · ⏳ 주간 시간':''}</p><div class="wbt2">${blk}</div>
    ${other.length?`<p class="mhead" style="margin-top:8px">기타 목표</p>${other.map(g=>`<div class="wbg"><span>${esc(g.title)}</span><button type="button" class="del" data-wkgd="${g.id}" aria-label="빼기">✕</button></div>`).join('')}`:''}
    <p class="hint" style="margin:6px 0 0">${W?`합계 ${Object.values(G).reduce((x,v)=>x+(+v||0),0)} / 168시간 · 시간은 매주 이어집니다`:`기둥 옆 시간은 주간 목표 시간 × ${Math.round(wks)}주입니다. 주간 시간은 1주에서 정합니다.`}</p>`}
-function wkcHTML(lv,a,M){const R=plpRange(lv,a),C=plpRange(lv,today());const st=WKC.st||(R.a>C.a?2:1);const nx=plpRange(lv,plpShift(lv,today(),1)),pv=plpRange(lv,plpShift(lv,today(),-1));
+function wkcHTML(lv,a,M){const R=plpRange(lv,a),C=plpRange(lv,today());const st=WKC.st||(R.a>=C.a?2:1);const nx=plpRange(lv,plpShift(lv,today(),1)),pv=plpRange(lv,plpShift(lv,today(),-1));
   const rel=R.a===C.a?' · 지금':R.a===nx.a?' · 다음':R.a===pv.a?' · 지난':'';const Rv=pdRevGet(lv,a);let body='';
   if(st===1){const b=(lv==='w'?wkBoardHTML(R.a,M,{nonav:1,noflow:1}):zbHTML(lv,a,M)).replace('class="card nocol wbx"','class="wkin"');
     body=`<div class="wkst1">${b}</div><label class="f" style="margin-top:10px">📝 한 줄 돌아보기<textarea id="wkcline" rows="2" placeholder="잘된 것 · 아쉬운 것 · 깨달은 것">${esc(Rv.line||'')}</textarea></label>
@@ -16694,12 +16694,12 @@ function wkcHTML(lv,a,M){const R=plpRange(lv,a),C=plpRange(lv,today());const st=
     body=`<p class="mhead pdh">⭐ 중점 기둥 <small class="hint">1~3개${lv==='w'?' · 점수·XP +0.5':lv==='m'?' · 점수·XP +0.3':''}</small></p><div class="chips pdfoc">${SCORE.map(([k])=>`<button type="button" class="chip fbtn ${F.includes(k)?'on':''}" data-wkcf="${k}" title="${esc(areaName(k))}" aria-label="${esc(areaName(k))}">${AREA_E[k]||esc(areaName(k))}</button>`).join('')}</div>
      ${pdPillarsHTML(lv,a,gs)}`}
   return`<div class="card nocol wbfl" id="wkcard" data-key="${lv+pdKey(lv,a)}" style="--k:#ff8a3d"><div class="wkch"><button type="button" class="iconbtn" data-wkcn="-1" aria-label="이전">‹</button><h3>🗓️ ${PDN[lv]} <small>${esc(R.label||perLabel(lv,perKey(lv,a)))}${rel}</small></h3><button type="button" class="iconbtn" data-wkcn="1" aria-label="다음">›</button></div>
-   <div class="wbsteps"><button type="button" class="${st===1?'on':''}" data-wkcs="1">① 돌아보기</button><button type="button" class="${st===2?'on':''}" data-wkcs="2">② 세우기</button></div>${body}</div>`}
+   <div class="wbsteps"><button type="button" class="${st===2?'on':''}" data-wkcs="2">① 세우기</button><button type="button" class="${st===1?'on':''}" data-wkcs="1">② 돌아보기</button></div>${body}</div>`}
 async function wkcPaint(force){try{const R=$('#pbody');if(!R)return;const ex=R.querySelector(':scope>#wkcard');if(!wkcCtx()){if(ex)ex.remove();return}
   const lv=qhKind();const b0=pAnchor||today();const bk=lv+'|'+pdKey(lv,b0);if(WKC.base!==bk){WKC.base=bk;if(!WKC.keep||WKC.lv!==lv){WKC.a=b0;WKC.st=null}WKC.keep=0;WKC.lv=lv}if(!WKC.a)WKC.a=b0;
   if(ex&&!force&&ex.dataset.key===lv+pdKey(lv,WKC.a))return;if(WKC.busy)return;WKC.busy=1;let M=new Map();try{M=await allMap()}catch(e){}WKC.busy=0;if(!wkcCtx())return;
   const a=WKC.a;const t=document.createElement('div');t.innerHTML=wkcHTML(lv,a,M);const card=t.firstElementChild;wkcBind(card,lv,a,M);
-  const ex2=R.querySelector(':scope>#wkcard');if(ex2)ex2.replaceWith(card);else{const top=R.querySelector(':scope>.ptop');if(top)top.after(card);else R.prepend(card)}
+  const ex2=R.querySelector(':scope>#wkcard');if(ex2)ex2.replaceWith(card);else{const po=R.querySelector(':scope>#poocard');const top=R.querySelector(':scope>.ptop');if(po)po.after(card);else if(top)top.after(card);else R.prepend(card)}
   try{plWkSync&&plWkSync()}catch(e){}}catch(e){WKC.busy=0;console.warn('wkc',e)}}
 function wkcBind(C,lv,a,M){const re=()=>wkcPaint(true);
   C.querySelectorAll('[data-wkcn]').forEach(b=>b.onclick=()=>{WKC.a=plpShift(lv,a,+b.dataset.wkcn);WKC.st=null;re()});
