@@ -3207,7 +3207,7 @@ const PTYPE=['양육','전도','가족','교회','동료','지인'];
 const MKIND=['교제','양육','전도','업무','가족'];MKIND.push('통화');
 let PEOPLE={list:[]},pTimer=null,pOpen=null,pFilter='전체';
 const PPL={view:null,q:'',panel:'',st:{}};
-const pplView=()=>{if(!PPL.view){try{PPL.view=localStorage.getItem('pplview')||'rel'}catch(e){PPL.view='rel'}}return PPL.view};
+const pplView=()=>{if(!PPL.view){try{PPL.view=localStorage.getItem('pplview2')||'star'}catch(e){PPL.view='star'}}return PPL.view};
 const PCHO='ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎ',PCHF={'ㄲ':'ㄱ','ㄸ':'ㄷ','ㅃ':'ㅂ','ㅆ':'ㅅ','ㅉ':'ㅈ'};
 const pInit=n=>{const c=String(n||'').trim().charAt(0);if(!c)return'#';const k=c.charCodeAt(0);if(k>=0xAC00&&k<=0xD7A3){const h=PCHO[Math.floor((k-0xAC00)/588)];return PCHF[h]||h}if(/[a-z]/i.test(c))return c.toUpperCase();return'#'};
 const pInitCmp=(a,b)=>{const r=x=>/[ㄱ-ㅎ]/.test(x)?0:/[A-Z]/.test(x)?1:2;return r(a)-r(b)||a.localeCompare(b,'ko')};
@@ -3302,6 +3302,9 @@ async function renderPeople(){
   const bodyHTML=()=>{const q=(PPL.q||'').trim().toLowerCase();
     if(q){const L=all.filter(x=>((x.p.name||'')+' '+ptLabel(x.p).join(' ')).toLowerCase().includes(q)).sort(byName);return L.length?grid(L):'<p class="hint">검색 결과가 없습니다.</p>'}
     if(!all.length)return'<p class="hint">아직 사람이 없습니다. ＋ 를 눌러 추가하십시오.</p>';
+    if(pv==='star'){const ft=PPL.tag||'';const base=ft?all.filter(x=>ptHas(x.p,ft)):all;const CD={5:'2주마다',4:'한 달마다',3:'3개월마다',2:'6개월마다',1:'필요할 때'};
+      const chips=`<div class="chips" style="margin:2px 0 8px"><button class="chip fbtn ${ft?'':'on'}" data-ptf="">전체</button>${PT.map(t=>`<button class="chip fbtn ${ft===t.id?'on':''}" data-ptf="${esc(t.id)}">${esc(t.n)}</button>`).join('')}</div>`;
+      let h=chips;[5,4,3,2,1,0].forEach(n=>{const L=base.filter(x=>(+x.p.close||0)===n);if(!L.length)return;h+=fold('s:'+n,n?'★'.repeat(n):'☆',n?CD[n]:'별 미지정',L.length,grid(L.slice().sort(byName)),n>=3)});return h||chips+'<p class="hint">해당하는 사람이 없습니다.</p>'}
     if(pv==='name'){const g={};all.slice().sort(byName).forEach(x=>{const k=pInit(x.p.name);(g[k]=g[k]||[]).push(x)});return Object.keys(g).sort(pInitCmp).map(k=>fold('n:'+k,'🔤',k,g[k].length,grid(g[k]))).join('')}
     if(pv==='rel'){let h='';PT.forEach(t=>{const mem=all.filter(x=>ptHas(x.p,t.id));if(!mem.length)return;const ic=PT_EMO[t.n]||(/양육/.test(t.n)?'🌱':'📁');
         if(t.subs.length){const used=new Set();let inner='';t.subs.forEach(sb=>{const L=mem.filter(x=>(x.p.tags||[]).includes(t.id+'|'+sb));if(!L.length)return;L.forEach(x=>used.add(x.p.id));inner+=fold('r:'+t.id+'|'+sb,sb==='양육종료'?'🎓':'📂',sb,L.length,grid(L.sort(byName)),sb==='양육중')});
@@ -3314,11 +3317,11 @@ async function renderPeople(){
   const pn=PPL.panel;
   const panel=pn==='add'?`<div class="gl" style="margin:8px 0"><input type="text" id="pnew" placeholder="이름"><button class="btn small" id="padd">추가</button></div>`:pn==='map'?pMapHTML(m):pn==='due'?(pcDashHTML(m,'due')||'<p class="hint">3일 안에 연락할 사람이 없습니다.</p>'):pn==='pray'?(pcDashHTML(m,'pray')||'<p class="hint">올리는 기도가 없습니다.</p>'):'';
   const ib=(k,ic,t,n)=>`<button class="pib ${pn===k?'on':''}" data-ppn="${k}" aria-label="${t}" title="${t}">${ic}${n?`<sup>${n}</sup>`:''}</button>`;
-  R.innerHTML=`<div class="plbar"><div class="pseg">${[['rel','🏷','관계별 폴더'],['name','🔤','이름순 폴더'],['all','☰','전체 목록']].map(([k,ic,t])=>`<button class="${pv===k?'on':''}" data-pv="${k}" aria-label="${t}" title="${t}">${ic}</button>`).join('')}</div>${ib('add','＋','사람 추가')}${ib('due','📅','연락할 때',nDue||'')}${ib('pray','🙏','함께 올리는 기도',nPr||'')}${ib('map','🗺','관계 지도')}<button class="pib" id="pcall" aria-label="통화 간단 기록" title="통화 간단 기록">📞</button><button class="pib" id="pcimp2" aria-label="통화·문자 불러오기" title="통화·문자 불러오기">📲</button><button class="pib" data-ptm="1" aria-label="태그 관리" title="태그 관리">🏷️</button></div>
+  R.innerHTML=`<div class="plbar"><div class="pseg">${[['star','★','별 기준'],['rel','🏷','태그별 폴더'],['name','🔤','이름순 폴더'],['all','☰','전체 목록']].map(([k,ic,t])=>`<button class="${pv===k?'on':''}" data-pv="${k}" aria-label="${t}" title="${t}">${ic}</button>`).join('')}</div>${ib('add','＋','사람 추가')}${ib('due','📅','연락할 때',nDue||'')}${ib('pray','🙏','함께 올리는 기도',nPr||'')}${ib('map','🗺','관계 지도')}<button class="pib" id="pcall" aria-label="통화 간단 기록" title="통화 간단 기록">📞</button><button class="pib" id="pcimp2" aria-label="통화·문자 불러오기" title="통화·문자 불러오기">📲</button><button class="pib" data-ptm="1" aria-label="태그 관리" title="태그 관리">🏷️</button></div>
     <input type="search" id="pq" class="pq" placeholder="이름·태그 검색 (${all.length}명)" value="${esc(PPL.q)}">${panel}<div id="pbody">${bodyHTML()}</div>`;
-  const bindBody=()=>{R.querySelectorAll('#pbody [data-po]').forEach(b=>b.onclick=()=>{pOpen=b.dataset.po;renderPeople()});R.querySelectorAll('#pbody details.pfold').forEach(d=>d.addEventListener('toggle',()=>{PPL.st[d.dataset.pk]=d.open}))};
+  const bindBody=()=>{R.querySelectorAll('#pbody [data-ptf]').forEach(b=>b.onclick=()=>{PPL.tag=b.dataset.ptf;renderPeople()});R.querySelectorAll('#pbody [data-po]').forEach(b=>b.onclick=()=>{pOpen=b.dataset.po;renderPeople()});R.querySelectorAll('#pbody details.pfold').forEach(d=>d.addEventListener('toggle',()=>{PPL.st[d.dataset.pk]=d.open}))};
   bindBody();
-  R.querySelectorAll('[data-pv]').forEach(b=>b.onclick=()=>{PPL.view=b.dataset.pv;try{localStorage.setItem('pplview',PPL.view)}catch(e){}renderPeople()});
+  R.querySelectorAll('[data-pv]').forEach(b=>b.onclick=()=>{PPL.view=b.dataset.pv;try{localStorage.setItem('pplview2',PPL.view)}catch(e){}renderPeople()});
   R.querySelectorAll('[data-ppn]').forEach(b=>b.onclick=()=>{PPL.panel=PPL.panel===b.dataset.ppn?'':b.dataset.ppn;renderPeople()});
   {const q=R.querySelector('#pq');q.oninput=()=>{PPL.q=q.value;R.querySelector('#pbody').innerHTML=bodyHTML();bindBody()}}
   R.querySelectorAll('[data-pmn]').forEach(b=>b.onclick=()=>openPersonByName(b.dataset.pmn));
@@ -16232,7 +16235,7 @@ async function syPutSafe(B,k,v){if(!k.startsWith('day:')||!v||typeof v!=='object
 {const _o=openDay;openDay=async function(d){try{staleGuardInstall()}catch(e){}return _o.apply(this,arguments)}}
 {const _f=flush0;flush0=async function(){try{staleGuardInstall()}catch(e){}return _f.apply(this,arguments)}}
 /* v390 ① 앱 버전 표시 · 새 버전 알림 (GitHub에서 마지막으로 성공한 빌드 번호와 비교) */
-var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/425})();
+var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/426})();
 const VRK='gj-verchk',VRURL='https://github.com/64hwarang-max/c/actions/workflows/build-apk.yml';
 const vrGet=()=>{try{return JSON.parse(localStorage.getItem(VRK)||'{}')}catch(e){return{}}};
 async function vrCheck(force){const c=vrGet();if(!force&&c.t&&Date.now()-c.t<6*36e5)return c;
@@ -16932,6 +16935,39 @@ wkItemHTML=function(x,i,prs){if(x.t==='weight'&&x.mode==='time'){const tot=(x.se
 /* v425: 내역 — 반복 카드를 맨 아래로 */
 {const _rl=renderLedger;renderLedger=async function(){const r=await _rl.apply(this,arguments);try{if(fView==='ledger'){const F=$('#fbody');const fe=F&&F.querySelector('#fent');if(fe){[...fe.children].filter(x=>/반복 지출/.test((x.querySelector('h3')||x).textContent)&&!x.querySelector('#bqfin')).forEach(x=>F.appendChild(x))}}}catch(e){console.warn('lgrec',e)}return r}}
 {const _fe=finEntry;finEntry=async function(){const r=await _fe.apply(this,arguments);try{if(fView==='ledger'){const F=$('#fbody'),fe=F&&F.querySelector('#fent');if(fe)[...fe.children].filter(x=>/반복 지출/.test((x.querySelector('h3')||x).textContent)&&!x.querySelector('#bqfin')).forEach(x=>F.appendChild(x))}}catch(e){}return r}}
+
+/* ===== v426: 건강 하위 탭 — 현황 · 운동 · 식사 · 휴식 ===== */
+const CTABS=[['h','📊 현황'],['w','🏋️ 운동'],['m','🍚 식사'],['s','😴 휴식']];
+let CTAB=(()=>{try{return localStorage.getItem('gj-ctab')||'h'}catch(e){return'h'}})();
+function ctabSet(k){CTAB=k;try{localStorage.setItem('gj-ctab',k)}catch(e){}ctabPaint()}
+function ctabPaint(){const R=document.querySelector('#careBody');if(!R)return;const rec=R.querySelector('#carerec');if(!rec)return;
+  const tag=(el,k)=>{if(el)el.dataset.ct=k};
+  tag(R.querySelector('#mgcard'),'h');tag(R.querySelector('.plline'),'h');tag(R.querySelector('#carehold'),'h');tag(R.querySelector('#gocy'),'h');tag(R.querySelector('.datebar'),'a');
+  tag(rec,'a');rec.open=true;tag(rec.querySelector('.wkp'),'w');
+  rec.querySelectorAll('details.wkin').forEach(d=>{const k=d.dataset.k;tag(d,k==='meal'?'m':k==='sleep'?'s':k==='chg'?'h':'w')});
+  rec.querySelectorAll(':scope>.panel').forEach(p=>tag(p,/수면/.test(p.textContent.slice(0,30))?'s':'h'));
+  R.dataset.ctab=CTAB;
+  let bar=R.querySelector('#ctabs');if(!bar){bar=document.createElement('div');bar.id='ctabs';bar.className='seg';bar.style.setProperty('--k','#13b5b1');R.prepend(bar)}
+  bar.innerHTML=CTABS.map(([k,l])=>`<button type="button" data-ctb="${k}" class="${CTAB===k?'on':''}">${l}</button>`).join('');
+  bar.querySelectorAll('[data-ctb]').forEach(b=>b.onclick=()=>ctabSet(b.dataset.ctb));
+  let em=R.querySelector('#ctempty');const has=[...R.querySelectorAll('[data-ct]')].some(x=>x.dataset.ct===CTAB&&x.offsetParent!==null||x.dataset.ct===CTAB);
+  if(!em){em=document.createElement('p');em.id='ctempty';em.className='hint';R.append(em)}
+  em.textContent=CTAB==='s'&&!R.querySelector('[data-ct="s"]')?'수면은 오늘 탭의 수면 칸에 적으면 여기서 모아 봅니다.':'';}
+(function(){const st=document.createElement('style');st.textContent=`#ctabs{margin:0 0 10px}#careBody[data-ctab] [data-ct]{display:none!important}#careBody[data-ctab=h] [data-ct=h],#careBody[data-ctab=h] [data-ct=a],#careBody[data-ctab=w] [data-ct=w],#careBody[data-ctab=w] [data-ct=a],#careBody[data-ctab=m] [data-ct=m],#careBody[data-ctab=m] [data-ct=a],#careBody[data-ctab=s] [data-ct=s],#careBody[data-ctab=s] [data-ct=a],#careBody[data-ctab] .datebar[data-ct=a]{display:block!important}#careBody[data-ctab] #carerec[data-ct=a]>summary{display:none}#careBody[data-ctab] #carerec{padding-top:0}#careBody[data-ctab=h] #carerec,#careBody[data-ctab=s] #carerec{background:none;border:0;box-shadow:none;padding:0}#careBody[data-ctab=w] [data-ct=w].wkhid{display:block!important}`;document.head.appendChild(st)})();
+{const _rc=renderCare;renderCare=async function(){const r=await _rc.apply(this,arguments);try{ctabPaint()}catch(e){console.warn('ctab',e)}return r}}
+{const _ws=wkShow;wkShow=function(k){const t=k==='meal'?'m':k==='sleep'?'s':k==='meas'||k==='chg'?'h':'w';CTAB=t;try{localStorage.setItem('gj-ctab',t)}catch(e){}const r=_ws.apply(this,arguments);try{ctabPaint()}catch(e){}return r}}
+
+/* ===== v426: 관계 하위 탭 — 현황 · 사람 · 기록 ===== */
+const PTABS=[['h','📊 현황'],['p','👥 사람'],['r','📝 기록']];
+let PTAB=(()=>{try{return localStorage.getItem('gj-ptab')||'h'}catch(e){return'h'}})();
+function ptabSet(k){PTAB=k;try{localStorage.setItem('gj-ptab',k)}catch(e){}ptabPaint()}
+function ptabPaint(){const R=document.querySelector('#plist');if(!R)return;const old=R.querySelector('#ptabs');
+  if(typeof pOpen!=='undefined'&&pOpen){if(old)old.remove();delete R.dataset.ptab;R.querySelectorAll('[data-pt]').forEach(x=>delete x.dataset.pt);return}
+  [...R.children].forEach(x=>{if(x.id==='ptabs')return;x.dataset.pt=['plline','mgcard','pqtoday'].includes(x.id)||x.classList.contains('plline')?'h':x.id==='pcdashw'?'r':'p'});
+  R.dataset.ptab=PTAB;let bar=old;if(!bar){bar=document.createElement('div');bar.id='ptabs';bar.className='seg';bar.style.setProperty('--k','#d9467a');R.prepend(bar)}
+  bar.innerHTML=PTABS.map(([k,l])=>`<button type="button" data-ptb="${k}" class="${PTAB===k?'on':''}">${l}</button>`).join('');bar.querySelectorAll('[data-ptb]').forEach(b=>b.onclick=()=>ptabSet(b.dataset.ptb))}
+(function(){const st=document.createElement('style');st.textContent=`#ptabs{margin:0 0 10px}#plist[data-ptab] [data-pt]{display:none!important}#plist[data-ptab=h] [data-pt=h],#plist[data-ptab=p] [data-pt=p],#plist[data-ptab=r] [data-pt=r]{display:block!important}#plist[data-ptab=p] .plbar[data-pt=p]{display:flex!important}#plist>.plbar{height:auto!important;background:none!important;border-radius:0!important;overflow:visible!important}`;document.head.appendChild(st)})();
+{const _rp=renderPeople;renderPeople=async function(){const r=await _rp.apply(this,arguments);try{ptabPaint();setTimeout(ptabPaint,400)}catch(e){console.warn('ptab',e)}return r}}
 </script>
 <!--BIBLE{--><!--}BIBLE-->
 <div id="miniov" class="miniov" hidden></div>
