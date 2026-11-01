@@ -14360,6 +14360,7 @@ document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest
 /* v4.56j 💸 지출 내역: 어디에 얼마 썼는지(날짜순·분류별·쓴 곳별) · 오늘 화면에 오늘 지출 한 줄 */
 const LG={per:'w',anc:today(),by:'date',kind:'지출',open:null};
 function lgRange(){const a=LG.anc;if(LG.per==='d')return{a,b:a,label:`${md(a)} (${WD[parseD(a).getDay()]})`};if(LG.per==='w'){const s=mondayOf(a);return{a:s,b:addD(s,6),label:`${md(s)} ~ ${md(addD(s,6))}`}}
+  if(LG.per==='y'){const y=+a.slice(0,4);return{a:`${y}-01-01`,b:`${y}-12-31`,label:`${y}년`}}
   const y=+a.slice(0,4),m=+a.slice(5,7);const s=`${y}-${pad(m)}-01`,e=ymd(new Date(y,m,0));return{a:s,b:e,label:`${y}년 ${m}월`}}
 function lgData(M,R){const out=[];[...M.values()].forEach(o=>{if(!o||!o.date||o.date<R.a||o.date>R.b)return;(o.fin||[]).forEach((f,i)=>{const amt=+f.amt||0;if(!amt)return;let cat='미분류',top='미분류';try{if(f.acc){cat=accLabel(f)||'미분류';top=cat.split(' › ')[0]}}catch(e){}out.push({d:o.date,i,type:f.type||'지출',item:String(f.item||'').trim()||'(내용 없음)',cat,top,amt,rid:f.rid})})});return out}
 function lgWhere(s){return s.replace(/[\d,.]+\s*(원|만|천)?/g,'').replace(/\s+/g,' ').trim()||s}
@@ -14375,15 +14376,15 @@ async function renderLedger(){const F=$('#fbody');if(!F)return;let M;try{M=await
   else{const G=LG.by==='cat'?grp(x=>x.top):grp(x=>lgWhere(x.item));const mx=G[0].v;
     body=G.map(g=>{const op=LG.open===LG.by+'|'+g.k;return`<div class="lgg"><button class="lgh lgt" data-lgo="${esc(LG.by+'|'+g.k)}"><span>${op?'▾':'▸'} ${esc(g.k)} <small>${g.n}건</small></span><b>${won(g.v)} <small>${Math.round(g.v/sum*100)}%</small></b></button><div class="lgbar">${lgBar(g.v,mx)}</div>${op?g.rows.sort((a,b)=>a.d<b.d?1:-1).map(rowH).join(''):''}</div>`}).join('')}
   const topG=L.length?grp(x=>lgWhere(x.item))[0]:null;
-  F.innerHTML=`<div class="lgx"><div class="seg" style="--k:var(--c-fin);margin:0 0 8px">${[['d','하루'],['w','일주'],['m','한 달']].map(([k,l])=>`<button data-lgp="${k}" class="${LG.per===k?'on':''}">${l}</button>`).join('')}</div>
+  F.innerHTML=`<div class="lgx"><div class="seg" style="--k:var(--c-fin);margin:0 0 8px">${[['d','오늘'],['w','일주'],['m','한 달'],['y','일년']].map(([k,l])=>`<button data-lgp="${k}" class="${LG.per===k?'on':''}">${l}</button>`).join('')}</div>
    <div class="wk" style="margin-top:0"><button class="iconbtn" id="lgprev" aria-label="이전">‹</button><b style="font-family:'Gowun Batang',serif">${R.label}</b><button class="iconbtn" id="lgnext" aria-label="다음">›</button></div>
    <div class="card" style="--k:var(--c-fin)"><div class="tri"><div><small>쓴 돈</small><b class="up">${won(tot('지출'))}</b></div><div><small>나눔</small><b>${won(tot('나눔'))}</b></div><div><small>번 돈</small><b class="dn">${won(tot('수입'))}</b></div></div>
-    <p class="hint" style="margin:8px 0 0">${LG.kind==='수입'?'':`하루 평균 ${won(tot('지출')/days)} 쓰셨습니다.`}${topG&&LG.kind!=='수입'?` 가장 많이 쓴 곳은 <b>${esc(topG.k)}</b> ${won(topG.v)}(${Math.round(topG.v/sum*100)}%)입니다.`:''}</p>
+    <p class="hint" style="margin:8px 0 0">${LG.kind==='수입'?'':`${LG.per==='d'?'오늘':LG.per==='y'?'하루':'하루'} ${LG.per==='d'?'':'평균 '}${won(tot('지출')/days)} 쓰셨습니다.`}${topG&&LG.kind!=='수입'?` 가장 많이 쓴 곳은 <b>${esc(topG.k)}</b> ${won(topG.v)}(${Math.round(topG.v/sum*100)}%)입니다.`:''}</p>
     ${un.length?`<button class="lgun" data-lgd="${un[0].d}">⚠ 어디에 쓴 돈인지 정하지 않은 내역 ${un.length}건 · ${won(un.reduce((s,x)=>s+x.amt,0))} — 눌러서 분류하기 ›</button>`:''}</div>
    <div class="chips" style="margin:8px 0">${['지출','나눔','수입','전체'].map(k=>`<button class="chip fbtn ${LG.kind===k?'on':''}" data-lgk="${k}">${k}</button>`).join('')}</div>
    <div class="seg lgby" style="--k:var(--c-fin);margin:0 0 8px">${[['date','📅 날짜순'],['cat','🗂 분류별'],['where','📍 쓴 곳별']].map(([k,l])=>`<button data-lgb="${k}" class="${LG.by===k?'on':''}">${l}</button>`).join('')}</div>
    <div class="lgl">${body}</div><p class="hint" style="margin:10px 0 0">내역을 누르면 그날 재정 기록으로 가서 고칠 수 있습니다. 적는 곳: 📝 오늘 또는 닫는 시간 › 재정.</p></div>`;
-  const shift=k=>{const d=parseD(LG.anc);if(LG.per==='d')d.setDate(d.getDate()+k);else if(LG.per==='w')d.setDate(d.getDate()+7*k);else{d.setDate(1);d.setMonth(d.getMonth()+k)}LG.anc=ymd(d);LG.open=null;renderLedger()};
+  const shift=k=>{const d=parseD(LG.anc);if(LG.per==='d')d.setDate(d.getDate()+k);else if(LG.per==='w')d.setDate(d.getDate()+7*k);else if(LG.per==='y'){d.setDate(1);d.setFullYear(d.getFullYear()+k)}else{d.setDate(1);d.setMonth(d.getMonth()+k)}LG.anc=ymd(d);LG.open=null;renderLedger()};
   F.querySelector('#lgprev').onclick=()=>shift(-1);F.querySelector('#lgnext').onclick=()=>shift(1);
   F.querySelectorAll('[data-lgp]').forEach(b=>b.onclick=()=>{LG.per=b.dataset.lgp;LG.open=null;renderLedger()});F.querySelectorAll('[data-lgk]').forEach(b=>b.onclick=()=>{LG.kind=b.dataset.lgk;LG.open=null;renderLedger()});
   F.querySelectorAll('[data-lgb]').forEach(b=>b.onclick=()=>{LG.by=b.dataset.lgb;LG.open=null;renderLedger()});F.querySelectorAll('[data-lgo]').forEach(b=>b.onclick=()=>{LG.open=LG.open===b.dataset.lgo?null:b.dataset.lgo;renderLedger()});
@@ -16231,7 +16232,7 @@ async function syPutSafe(B,k,v){if(!k.startsWith('day:')||!v||typeof v!=='object
 {const _o=openDay;openDay=async function(d){try{staleGuardInstall()}catch(e){}return _o.apply(this,arguments)}}
 {const _f=flush0;flush0=async function(){try{staleGuardInstall()}catch(e){}return _f.apply(this,arguments)}}
 /* v390 ① 앱 버전 표시 · 새 버전 알림 (GitHub에서 마지막으로 성공한 빌드 번호와 비교) */
-var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/423})();
+var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/425})();
 const VRK='gj-verchk',VRURL='https://github.com/64hwarang-max/c/actions/workflows/build-apk.yml';
 const vrGet=()=>{try{return JSON.parse(localStorage.getItem(VRK)||'{}')}catch(e){return{}}};
 async function vrCheck(force){const c=vrGet();if(!force&&c.t&&Date.now()-c.t<6*36e5)return c;
@@ -16880,6 +16881,57 @@ async function renderBudgetTree(){const F=$('#fbody');if(!F)return;await flush()
 /* 내역 화면 맨 위에 수입·지출 입력 (예전 '오늘'의 입력 카드) */
 {const _rl=renderLedger;renderLedger=async function(){const r=await _rl.apply(this,arguments);try{if(fView==='ledger'){const F=$('#fbody');if(F&&F.isConnected&&!F.querySelector('#fent')){const d=document.createElement('div');d.id='fent';F.prepend(d);await finEntry(d)}}}catch(e){console.warn('fent',e)}return r}}
 (function(){const st=document.createElement('style');st.textContent=`.incd>summary{cursor:pointer;list-style:none;display:flex;align-items:center;gap:8px}.incd>summary::-webkit-details-marker{display:none}.incd>summary::after{content:"▾";margin-left:auto;color:var(--muted)}.incd[open]>summary::after{content:"▴"}.incd>.incpanel{margin:8px 0 0!important;box-shadow:none!important;border:0!important;padding:0!important;background:none!important}.incd>.incpanel>h2{display:none}.titem.ted{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;align-items:end;padding:8px}.titem.ted input[data-bi$="name"]{grid-column:1/-1}.titem.ted label{font-size:.72rem;color:var(--muted);display:flex;flex-direction:column;gap:2px}`;document.head.appendChild(st)})();
+
+/* ===== v424: 운동 기록 — 종류는 눌러 고르기 · 추가는 ＋ 아이콘 · 시간(플랭크)·맨몸(턱걸이) 운동 ===== */
+const WK_TIME_RE=/플랭크|월\s?싯|데드\s?행|버티기|홀드|브릿지|할로우/,WK_BW_RE=/턱걸이|풀업|친업|딥스|푸시업|팔굽|크런치|싯업|레그\s?레이즈|버피|행잉|맨몸|풀\s?업/;
+function wkMode(n){n=(n||'').trim();const m=(SET.wkm||{})[n];if(m)return m;return WK_TIME_RE.test(n)?'time':WK_BW_RE.test(n)?'bw':'wr'}
+function wkBodyKg(){try{const d=D&&D.meas&&parseFloat(D.meas.w);if(d>0)return d;let best=null;(cacheAll||new Map()).forEach((o,k)=>{const v=o&&o.meas&&parseFloat(o.meas.w);if(v>0&&k<=(D?D.date:today())&&(!best||k>=best.k))best={k,v}});return best?best.v:0}catch(e){return 0}}
+const wkFmtS=s=>{s=Math.round(+s||0);return s>=60?Math.floor(s/60)+':'+String(s%60).padStart(2,'0'):s+'초'};
+wkFormHTML=function(){const F=WKF;const P=wkPR();const nm=(F.name||'').trim();const lb=nm&&P.last[nm],bb=nm&&P.best[nm];
+  let h=`<div class="seg" style="--k:#13b5b1">${[['cardio','🏃 유산소'],['weight','🏋️ 웨이트'],['stretch','🧘 스트레칭']].map(([k,l])=>`<button type="button" data-wkt="${k}" class="${F.t===k?'on':''}">${l}</button>`).join('')}</div>`;
+  if(F.t==='cardio')h+=`<div class="chips">${wkCardio().map(x=>`<button type="button" class="chip fbtn ${F.cname===x?'on':''}" data-wkc="${esc(x)}">${esc(x)}</button>${(SET.wkc||[]).includes(x)&&!WK_CARDIO.includes(x)?`<button type="button" class="chip wkxd" data-wkcd="${esc(x)}" aria-label="${esc(x)} 빼기">✕</button>`:''}`).join('')}<button type="button" class="chip wkplus" data-wkcplus="1" aria-label="유산소 종류 추가">＋</button></div><div class="wkg2"><label class="f">거리 (km)<input type="number" step="0.1" min="0" inputmode="decimal" id="wkkm" value="${esc(F.km)}" placeholder="예: 5.2"></label><label class="f">시간 (분)<input type="number" min="0" inputmode="numeric" id="wkmin" value="${esc(F.min)}" placeholder="예: 30"></label></div>`;
+  else if(F.t==='weight'){const md0=nm?wkMode(nm):'';const bw=wkBodyKg();
+    h+=`<div class="chips wkparts">${Object.keys(WK_PART).map(k=>`<button type="button" class="chip fbtn ${F.up===k?'on':''}" data-wkup="${k}">${k}</button>`).join('')}</div>
+    <div class="chips" style="margin-top:6px">${wkParts(F.up).map(x=>{const mine=((SET.wkx||{})[F.up]||[]).includes(x)&&!(WK_PART[F.up]||[]).includes(x);return`<button type="button" class="chip ${F.name===x?'on':''}" data-wkn="${esc(x)}">${esc(x)}</button>${mine?`<button type="button" class="chip wkxd" data-wkxd="${esc(x)}" aria-label="${esc(x)} 목록에서 빼기">✕</button>`:''}`}).join('')}<button type="button" class="chip wkplus" data-wkxplus="1" aria-label="${esc(F.up)} 운동 추가">＋</button></div>
+    ${nm?`<div class="seg wkmode" style="--k:#13b5b1;margin:8px 0 4px">${[['wr','⚖️ 무게×횟수'],['time','⏱️ 시간'],['bw','🧍 맨몸']].map(([k,l])=>`<button type="button" data-wkmode="${k}" class="${md0===k?'on':''}">${l}</button>`).join('')}</div>`:'<p class="wkhint">운동을 눌러 고르십시오.</p>'}
+    ${lb||bb?`<p class="wkhint">${lb?`지난번 ${md(lb.d)}: ${(lb.x.sets||[]).map(s=>lb.x.mode==='time'?wkFmtS(s.s):lb.x.mode==='bw'?`맨몸${s.add?'+'+s.add+'kg':''}×${+s.r||0}`:`${+s.w||0}kg×${+s.r||0}`).join(', ')}`:''}${bb&&md0!=='time'?` · 최고 ${bb.w}kg×${bb.r}`:''}</p>`:''}
+    ${nm?(md0==='time'?`<div class="wkset wkt"><span>세트</span><span>시간 (초)</span><span></span></div>${F.sets.map((s,i)=>`<div class="wkset wkt"><span>${i+1}</span><input type="number" min="0" inputmode="numeric" data-wkss="${i}" value="${esc(s.s||'')}" placeholder="초 (예: 60)"><button type="button" class="del" data-wksx="${i}" ${F.sets.length<2?'disabled':''}>✕</button></div>`).join('')}`
+     :`${md0==='bw'?`<p class="wkhint">🧍 내 체중 ${bw?bw+'kg':'미입력 (몸 측정에 적으면 볼륨에 반영)'} 기준 · 추가 무게는 조끼·벨트를 달 때만 적습니다.</p>`:''}<div class="wkset"><span>세트</span><span>${md0==='bw'?'추가 kg':'무게 kg'}</span><span>횟수</span><span></span></div>${F.sets.map((s,i)=>`<div class="wkset"><span>${i+1}</span><input type="number" step="0.5" min="0" inputmode="decimal" data-wksw="${i}" value="${esc(s.w)}" placeholder="${md0==='bw'?'맨몸':'kg'}"><input type="number" min="0" inputmode="numeric" data-wksr="${i}" value="${esc(s.r)}" placeholder="회"><button type="button" class="del" data-wksx="${i}" ${F.sets.length<2?'disabled':''}>✕</button></div>`).join('')}`)
+     +`<button type="button" class="btn small ghost" id="wkaddset">＋ 세트 추가 (앞 세트 복사)</button>`:''}`}
+  else h+=`<div class="wkg2"><label class="f">시간 (분)<input type="number" min="0" inputmode="numeric" id="wkmin" value="${esc(F.min)}" placeholder="예: 15"></label><label class="f">부위·종류<input type="text" id="wkmemo" value="${esc(F.memo)}" placeholder="예: 햄스트링, 요가"></label></div>`;
+  return h+`<button type="button" class="btn" id="wksave" style="width:100%;margin-top:8px">기록 넣기</button>`};
+const _wkItem0=wkItemHTML;
+wkItemHTML=function(x,i,prs){if(x.t==='weight'&&x.mode==='time'){const tot=(x.sets||[]).reduce((a,s)=>a+(+s.s||0),0);return`<div class="wki"><i>⏱️</i><div><b>${esc(x.part||'')} · ${esc(x.name||'')}</b><small>${(x.sets||[]).map(s=>wkFmtS(s.s)).join(' · ')} · 합계 ${wkFmtS(tot)}</small></div><button class="del" data-wkdel="${i}">✕</button></div>`}
+  if(x.t==='weight'&&x.mode==='bw'){const vol=(x.sets||[]).reduce((a,s)=>a+(+s.w||0)*(+s.r||0),0);return`<div class="wki"><i>🧍</i><div><b>${esc(x.part||'')} · ${esc(x.name||'')}</b><small>${(x.sets||[]).map(s=>`맨몸${s.add?'+'+s.add+'kg':''}×${+s.r||0}`).join(' · ')}${x.bw?` · 체중 ${x.bw}kg`:''}${vol?` · 볼륨 ${Math.round(vol).toLocaleString()}kg`:''}</small></div><button class="del" data-wkdel="${i}">✕</button></div>`}
+  return _wkItem0.apply(this,arguments)};
+{const _b=wkBind;wkBind=function(R,re){_b.apply(this,arguments);const F=WKF;
+  const rd=()=>{const g=id=>{const x=R.querySelector('#'+id);return x?x.value:undefined};const v=g('wkkm');if(v!==undefined)F.km=v;const m=g('wkmin');if(m!==undefined)F.min=m;const me=g('wkmemo');if(me!==undefined)F.memo=me;
+    R.querySelectorAll('[data-wksw]').forEach(i=>{if(F.sets[+i.dataset.wksw])F.sets[+i.dataset.wksw].w=i.value});R.querySelectorAll('[data-wksr]').forEach(i=>{if(F.sets[+i.dataset.wksr])F.sets[+i.dataset.wksr].r=i.value});R.querySelectorAll('[data-wkss]').forEach(i=>{if(F.sets[+i.dataset.wkss])F.sets[+i.dataset.wkss].s=i.value})};
+  R.querySelectorAll('[data-wkt],[data-wkup],[data-wkn],[data-wkc]').forEach(b=>{const o=b.onclick;b.onclick=function(e){rd();return o&&o.call(this,e)}});
+  R.querySelectorAll('[data-wkmode]').forEach(b=>b.onclick=()=>{rd();const n=(F.name||'').trim();if(!n)return;SET.wkm=SET.wkm||{};SET.wkm[n]=b.dataset.wkmode;saveSet().catch(()=>{});re()});
+  R.querySelectorAll('[data-wksx]').forEach(b=>b.onclick=()=>{rd();F.sets.splice(+b.dataset.wksx,1);re()});
+  {const a=R.querySelector('#wkaddset');if(a)a.onclick=()=>{rd();const l=F.sets[F.sets.length-1]||{w:'',r:'',s:''};F.sets.push({...l});re()}}
+  {const b=R.querySelector('[data-wkxplus]');if(b)b.onclick=async()=>{rd();const v=((await uiPrompt(`${F.up} 운동 이름 (예: 케이블 로우)`,''))||'').trim().slice(0,30);if(!v)return;if(!wkParts(F.up).includes(v)){SET.wkx=SET.wkx||{};(SET.wkx[F.up]=SET.wkx[F.up]||[]).push(v);saveSet().catch(()=>{})}F.name=v;toast(`➕ ${F.up} › ${v}`);re()}}
+  {const b=R.querySelector('[data-wkcplus]');if(b)b.onclick=async()=>{rd();const v=((await uiPrompt('유산소 종류 (예: 클라이밍)',''))||'').trim().slice(0,20);if(!v)return;if(!wkCardio().includes(v)){SET.wkc=SET.wkc||[];SET.wkc.push(v);saveSet().catch(()=>{})}F.cname=v;toast(`➕ 유산소 ${v}`);re()}}
+  {const s=R.querySelector('#wksave');if(s)s.onclick=()=>{rd();D.wk=Array.isArray(D.wk)?D.wk:[];let x=null;
+    if(F.t==='cardio'){if(!(+F.km>0)&&!(+F.min>0)){toast('거리나 시간을 적으십시오.');return}x={id:uid(),t:'cardio',name:F.cname,km:+F.km||0,min:+F.min||0}}
+    else if(F.t==='weight'){const nm=(F.name||'').trim();if(!nm){toast('운동을 눌러 고르십시오.');return}const md0=wkMode(nm);let sets;
+      if(md0==='time'){sets=F.sets.filter(q=>+q.s>0).map(q=>({w:0,r:0,s:+q.s}));if(!sets.length){toast('시간(초)을 적으십시오.');return}x={id:uid(),t:'weight',part:F.up,name:nm,mode:'time',sets}}
+      else if(md0==='bw'){const bw=wkBodyKg();sets=F.sets.filter(q=>+q.r>0).map(q=>({w:Math.round(((bw||0)+(+q.w||0))*10)/10,r:+q.r||0,add:+q.w||0}));if(!sets.length){toast('횟수를 적으십시오.');return}x={id:uid(),t:'weight',part:F.up,name:nm,mode:'bw',bw:bw||0,sets}}
+      else{sets=F.sets.filter(q=>+q.r>0||+q.w>0).map(q=>({w:+q.w||0,r:+q.r||0}));if(!sets.length){toast('무게와 횟수를 적으십시오.');return}x={id:uid(),t:'weight',part:F.up,name:nm,sets}}
+      if(F.sl){x.sl=F.sl;F.sl=''}if(!wkParts(F.up).includes(nm)){SET.wkx=SET.wkx||{};(SET.wkx[F.up]=SET.wkx[F.up]||[]).push(nm);saveSet().catch(()=>{})}}
+    else{if(!(+F.min>0)){toast('시간을 적으십시오.');return}x={id:uid(),t:'stretch',min:+F.min||0,memo:F.memo}}
+    let prevT=0;if(x.mode==='time'){wkAllDays().forEach(([d,o])=>wkList(o).forEach(y=>{if(y.t==='weight'&&y.mode==='time'&&y.name===x.name)(y.sets||[]).forEach(q=>{if((+q.s||0)>prevT)prevT=+q.s})}))}
+    const before=wkPR();D.wk.push(x);schedule();try{XPC.k=''}catch(e){}const after=wkPR();
+    if(x.mode==='time'){const mx=Math.max(...x.sets.map(q=>q.s));toast(mx>prevT&&prevT?`🏆 신기록! ${x.name} ${wkFmtS(mx)} (이전 ${wkFmtS(prevT)})`:`⏱️ ${x.name} ${x.sets.map(q=>wkFmtS(q.s)).join(' · ')}`)}
+    else{const np=(after.prs[D.date]||[]).filter(p=>p.k===(x.name||'')&&!((before.prs[D.date]||[]).some(q=>q.k===p.k&&q.w===p.w&&q.r===p.r)));
+      if(np.length){const p=np[0];toast(`🏆 신기록! ${p.k} ${p.w}kg×${p.r} (이전 ${p.prev.w}kg×${p.prev.r})`)}else if(x.t==='cardio'){const ym=D.date.slice(0,7);toast(`🏃 ${x.km}km · 이번 달 ${wkMonthKm(ym)}/${+SET.kmGoal||100}km`)}else toast('💪 운동 기록을 넣었습니다.')}
+    F.km='';F.min='';F.memo='';if(F.t==='weight')F.sets=[{...(F.sets[F.sets.length-1]||{w:'',r:'',s:''})}];re()}}}}
+(function(){const st=document.createElement('style');st.textContent=`.wkparts{display:flex!important;flex-wrap:nowrap!important;gap:4px}.wkparts .chip{flex:1 1 0;min-width:0;padding:7px 0;text-align:center;white-space:nowrap}.chip.wkplus{font-weight:800;min-width:2.4em;padding:5px 10px;text-align:center;border-style:dashed}.wkset.wkt{grid-template-columns:2em 1fr 2em}.wkmode button{font-size:.8rem;padding:6px 2px}`;document.head.appendChild(st)})();
+
+/* v425: 내역 — 반복 카드를 맨 아래로 */
+{const _rl=renderLedger;renderLedger=async function(){const r=await _rl.apply(this,arguments);try{if(fView==='ledger'){const F=$('#fbody');const fe=F&&F.querySelector('#fent');if(fe){[...fe.children].filter(x=>/반복 지출/.test((x.querySelector('h3')||x).textContent)&&!x.querySelector('#bqfin')).forEach(x=>F.appendChild(x))}}}catch(e){console.warn('lgrec',e)}return r}}
+{const _fe=finEntry;finEntry=async function(){const r=await _fe.apply(this,arguments);try{if(fView==='ledger'){const F=$('#fbody'),fe=F&&F.querySelector('#fent');if(fe)[...fe.children].filter(x=>/반복 지출/.test((x.querySelector('h3')||x).textContent)&&!x.querySelector('#bqfin')).forEach(x=>F.appendChild(x))}}catch(e){}return r}}
 </script>
 <!--BIBLE{--><!--}BIBLE-->
 <div id="miniov" class="miniov" hidden></div>
