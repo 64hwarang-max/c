@@ -15019,10 +15019,9 @@ const MDX={
 ['plan','pillar','people','budget','note','vision'].forEach(k=>{delete MDX[k]});
 let CACHE_M=null;
 function mdBoxHTML(sec,D0){const cfg=MDX[sec];const f=!!MD.fold[sec];
-  const cell=(x,i)=>x?`<button type="button" class="mdc" data-mdi="${i}"><span class="mde">${x.e}</span><b>${esc(x.t)}</b>${x.v?`<em>${esc(x.v)}</em>`:''}${x.s?`<small>${esc(x.s)}</small>`:''}</button>`:'<span class="mdc mdn"></span>';
-  const cs=D0.cells;const ctr=`<div class="mdc mdctr"><span class="mde">${D0.c.e}</span><b>${esc(D0.c.t)}</b>${D0.c.s?`<small>${esc(D0.c.s)}</small>`:''}</div>`;
-  const g=[cell(cs[0],0),cell(cs[1],1),cell(cs[2],2),cell(cs[3],3),ctr,cell(cs[4],4),cell(cs[5],5),cell(cs[6],6),cell(cs[7],7)].join('');
-  return`<div class="mdhd"><b>🔲 ${esc(cfg.title)} 만다라트</b><button type="button" data-mdfold="1">${f?'펴기 ▾':'접기 ▴'}</button></div>${f?'':`<div class="mdg">${g}</div>`}`}
+  const row=(x,i)=>x?`<button type="button" class="mdc mdr" data-mdi="${i}"><span class="mde">${x.e}</span><span class="mdt"><b>${esc(x.t)}</b>${x.s?`<small>${esc(x.s)}</small>`:''}</span>${x.v?`<em>${esc(x.v)}</em>`:'<i class="mdar">›</i>'}</button>`:'';
+  const cs=D0.cells;const head=`<div class="mdsum"><span class="mde">${D0.c.e}</span><b>${esc(D0.c.t)}</b>${D0.c.s?`<small>${esc(D0.c.s)}</small>`:''}</div>`;
+  return`<div class="mdhd"><b>${esc(cfg.title)} 바로가기</b><button type="button" data-mdfold="1">${f?'펴기 ▾':'접기 ▴'}</button></div>${f?'':`<div class="mdlist">${head}<div class="mdrows">${cs.map(row).join('')}</div></div>`}`}
 function mdSync(){try{const sec=curSection;const cfg=MDX[sec];document.querySelectorAll('.mdbox').forEach(b=>{if(!cfg||b.dataset.sec!==sec)b.remove()});if(!cfg)return;
   if(cfg.when&&!cfg.when()){document.querySelectorAll('.mdbox').forEach(b=>b.remove());return}
   const host=document.querySelector(cfg.host);if(!host||!host.offsetParent&&host.getClientRects().length===0)return;
@@ -16233,7 +16232,7 @@ async function syPutSafe(B,k,v){if(!k.startsWith('day:')||!v||typeof v!=='object
 {const _o=openDay;openDay=async function(d){try{staleGuardInstall()}catch(e){}return _o.apply(this,arguments)}}
 {const _f=flush0;flush0=async function(){try{staleGuardInstall()}catch(e){}return _f.apply(this,arguments)}}
 /* v390 ① 앱 버전 표시 · 새 버전 알림 (GitHub에서 마지막으로 성공한 빌드 번호와 비교) */
-var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/409})();
+var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/410})();
 const VRK='gj-verchk',VRURL='https://github.com/64hwarang-max/c/actions/workflows/build-apk.yml';
 const vrGet=()=>{try{return JSON.parse(localStorage.getItem(VRK)||'{}')}catch(e){return{}}};
 async function vrCheck(force){const c=vrGet();if(!force&&c.t&&Date.now()-c.t<6*36e5)return c;
@@ -16660,6 +16659,8 @@ wkFlowOpen=async function(step){WKC.mon=step===2?addD(wkMon(),7):wkMon();WKC.st=
 #wkcard .wkch{display:flex;align-items:center;gap:6px;margin-bottom:8px}#wkcard .wkch h3{flex:1;text-align:center;margin:0}#wkcard .wkch h3 small{display:block;font-size:.78rem;color:var(--muted);font-weight:600}
 #wkcard .wkin{display:block}#wkcard .plwk{margin:10px 0 4px;padding-top:8px;border-top:1px solid var(--line)}#wkcard .wkin>.wbxh{display:none}#wkcard .wkin .wbgo{display:none}
 .wbtg label>input[type=number]{flex:0 0 5.5em!important;width:5.5em!important;min-width:0}.wbtg label>span{flex:1 1 auto!important;min-width:3.5em;word-break:keep-all;white-space:normal}`;document.head.appendChild(st)})();
+
+(function(){const st=document.createElement('style');st.textContent=`.mdbox .mdlist{border:1px solid var(--line);border-radius:14px;background:var(--paper);overflow:hidden}.mdbox .mdsum{display:flex;align-items:center;gap:8px;padding:10px 12px;background:rgba(127,127,127,.07);border-bottom:1px solid var(--line)}.mdbox .mdsum small{color:var(--muted);margin-left:auto}.mdbox .mdrows{display:grid!important;grid-template-columns:1fr 1fr!important;gap:0!important}.mdbox .mdlist .mdc.mdr{display:flex!important;flex-direction:row!important;align-items:center!important;justify-content:flex-start!important;gap:8px!important;width:auto!important;height:auto!important;aspect-ratio:auto!important;padding:9px 12px!important;border:0!important;border-bottom:1px solid var(--line)!important;border-radius:0!important;background:none!important;text-align:left!important;box-shadow:none!important;min-height:0!important}.mdbox .mdlist .mdc.mdr:nth-child(odd){border-right:1px solid var(--line)!important}.mdbox .mdc.mdr .mde{font-size:1.1rem;flex:none}.mdbox .mdc.mdr .mdt{flex:1;min-width:0;display:flex;flex-direction:column;align-items:flex-start}.mdbox .mdc.mdr .mdt b{font-size:.84rem;font-weight:600;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.mdbox .mdc.mdr .mdt small{font-size:.68rem;color:var(--muted);max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.mdbox .mdc.mdr em{font-style:normal;font-weight:700;font-size:.84rem;flex:none;margin:0}.mdbox .mdc.mdr .mdar{color:var(--muted);font-style:normal;flex:none}`;document.head.appendChild(st)})();
 </script>
 <!--BIBLE{--><!--}BIBLE-->
 <div id="miniov" class="miniov" hidden></div>
