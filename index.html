@@ -384,8 +384,8 @@ nav.main button,.subnav button,.favtile{-webkit-user-select:none;user-select:non
 .cal.z-q{grid-template-columns:1fr}
 .mg{background:var(--paper);border:1px solid var(--line);border-radius:6px;padding:6px}
 .mgt{border:0;background:none;font:inherit;font-weight:700;color:var(--pen);padding:0 2px 4px;cursor:pointer}
-.mgw,.mgd{display:grid;grid-template-columns:repeat(7,1fr)}
-.mgw span{text-align:center;font-size:.62rem;color:var(--muted)}
+.mgw,.mgd,.mg .mgtw{display:grid;grid-template-columns:repeat(7,1fr)}
+.mg .mgtw span,.mgw span{text-align:center;font-size:.62rem;color:var(--muted)}
 .cd{position:relative;border:0;background:none;font:inherit;color:var(--ink);padding:3px 0;cursor:pointer;border-radius:4px;min-height:22px}
 .cd b{font-weight:400;font-size:.72rem}
 .z-q .cd b,.z-h .cd b{font-size:.8rem}
@@ -5151,7 +5151,7 @@ async function updateWidget(){const WB=NP('WidgetBridge');if(!WB)return;try{
 
 /* ---------- planner (계획) ---------- */
 /* ---------- 🔍 보기 범위 슬라이더: 1일 → 9일 → 2~8주 → 1년 (오늘·계획 공통) ---------- */
-const ZMS=[...[1,2,3,4,5,6,7,8,9].map(n=>['d',n,n+'일']),...[1,2,3,4].map(n=>['w',n,n+'주']),['m',1,'1달'],['m',2,'2달'],['m',3,'3달'],['m',6,'6달'],['y',1,'1년']];
+const ZMS=[...[1,2,3,4,5,6,7,8,9].map(n=>['d',n,n+'일']),...[1,2,3,4].map(n=>['w',n,n+'주']),['m',1,'1달'],['m',2,'2달'],['m',3,'3달'],['m',6,'6달'],['y',1,'1년'],...[3,5,10,15,20,30,50,100].map(n=>['Y',n,n+'년'])];
 let ZMD=0,ZMP=null,ZMA=today(),ZMSEQ=0,ZMSEQP=0;
 const zmLeg=z=>({w:9,m:13,q:15,h:16,y:17}[z]??13);
 const zmCtx=()=>curSection==='plan'?'plan':curSection==='day'?'day':'';
@@ -5160,7 +5160,7 @@ const zmAnc=c=>c==='day'?ZMA:pAnchor;
 const zmDoc=d=>d===D.date?D:((cacheAll&&cacheAll.get(d))||null);
 const zmWk=x=>{const d=new Date(Date.UTC(x.getFullYear(),x.getMonth(),x.getDate()));const k=d.getUTCDay()||7;d.setUTCDate(d.getUTCDate()+4-k);const y0=new Date(Date.UTC(d.getUTCFullYear(),0,1));return Math.ceil(((d-y0)/864e5+1)/7)};
 function zmDays(i,a){const[k,n]=ZMS[i];if(k!=='d')return[];const s=n===7?mondayOf(a):a;return[...Array(n)].map((_,j)=>addD(s,j))}
-function zmRange(i,a){const[k,n]=ZMS[i];if(k==='d'){const ds=zmDays(i,a);return n===1?`${md(ds[0])} (${WD[parseD(ds[0]).getDay()]})`:`${md(ds[0])} ~ ${md(ds[n-1])}`}if(k==='w'){const m=mondayOf(a);return`${md(m)} ~ ${md(addD(m,n*7-1))}`}const b=parseD(a);if(k==='m'){if(n===1)return`${b.getFullYear()}년 ${b.getMonth()+1}월`;const e=new Date(b.getFullYear(),b.getMonth()+n-1,1);return`${b.getFullYear()}년 ${b.getMonth()+1}월 ~ ${e.getFullYear()!==b.getFullYear()?e.getFullYear()+'년 ':''}${e.getMonth()+1}월`}return`${b.getFullYear()}년`}
+function zmRange(i,a){const[k,n]=ZMS[i];if(k==='d'){const ds=zmDays(i,a);return n===1?`${md(ds[0])} (${WD[parseD(ds[0]).getDay()]})`:`${md(ds[0])} ~ ${md(ds[n-1])}`}if(k==='w'){const m=mondayOf(a);return`${md(m)} ~ ${md(addD(m,n*7-1))}`}const b=parseD(a);if(k==='m'){if(n===1)return`${b.getFullYear()}년 ${b.getMonth()+1}월`;const e=new Date(b.getFullYear(),b.getMonth()+n-1,1);return`${b.getFullYear()}년 ${b.getMonth()+1}월 ~ ${e.getFullYear()!==b.getFullYear()?e.getFullYear()+'년 ':''}${e.getMonth()+1}월`}if(k==='Y'){const y0=zmY0(a,n);return`${y0}년 ~ ${y0+n-1}년`}return`${b.getFullYear()}년`}
 const repVis=a=>SET.hideRep?(a||[]).filter(b=>!b.rid):(a||[]);
 function repHideToggle(){SET.hideRep=!SET.hideRep;saveSet().catch(()=>{});toast(SET.hideRep?'🔁 반복 일정을 숨겼습니다. 한 번만 있는 일정만 보입니다. (위젯도 같이)':'🔁 반복 일정을 다시 보여 줍니다.');try{zmBarSync()}catch(e){}try{if(!$('#v-plan').hidden)renderPlan();else if(!$('#v-day').hidden)renderDay()}catch(e){}widgetSoon()}
 const repHideBtn=()=>`<button class="rephide ${SET.hideRep?'on':''}" data-rephide="1" aria-pressed="${!!SET.hideRep}" title="반복 일정 숨기기">${SET.hideRep?'🔁 반복 숨김':'🔁 반복 보임'}</button>`;
@@ -5208,12 +5208,13 @@ function zmGrid(i,a){const ds=zmDays(i,a),n=ds.length,T=today();const hp=n===1?4
 function zmBody(i,a){const[k,n]=ZMS[i];const b=parseD(a);let V;
   if(k==='d')V=zmGrid(i,a);else if(k==='w')V=zmWeeks(a,n);else if(k==='m'&&n<=3)V=zmMon(a,n);
   else if(k==='m'){V=`<div class="cal z-h">${[...Array(n)].map((_,q)=>{const d=new Date(b.getFullYear(),b.getMonth()+q,1);return monthGrid(d.getFullYear(),d.getMonth(),false)}).join('')}</div>`}
+  else if(k==='Y')V=zmYears(a,n);
   else V=`<div class="cal z-y">${[...Array(12)].map((_,m)=>monthGrid(b.getFullYear(),m,false)).join('')}</div>`;
   return`<div class="zmv">${V}</div>`}
 function zmBind(R,c){R.querySelectorAll('[data-pd]').forEach(b=>b.onclick=async()=>{const d=b.dataset.pd;ZMD=0;if(c==='plan'){await dayTl(d)}else{await openDay(d);window.scrollTo(0,0)}});
   R.querySelectorAll('[data-pm]').forEach(b=>b.onclick=()=>{const a=b.dataset.pm+'-01';const wi=ZMS.findIndex(z=>z[0]==='m'&&z[1]===1);if(c==='day'){ZMA=a;ZMD=wi}else{pAnchor=a;ZMP=wi}zmRender(c)})}
 function zmRender(c){c==='day'?renderDay():renderPlan();try{zmBarSync()}catch(e){}}
-function zmShift(c,dir){const i=zmIdx(c),[k,n]=ZMS[i];let a=zmAnc(c);if(k==='d')a=addD(a,dir*n);else if(k==='w')a=addD(mondayOf(a),dir*7*n);else if(k==='m'){const d=parseD(a);a=ymd(new Date(d.getFullYear(),d.getMonth()+dir*n,1))}else{const d=parseD(a);d.setFullYear(d.getFullYear()+dir);a=ymd(d)}if(c==='day')ZMA=a;else pAnchor=a;zmRender(c)}
+function zmShift(c,dir){const i=zmIdx(c),[k,n]=ZMS[i];let a=zmAnc(c);if(k==='d')a=addD(a,dir*n);else if(k==='w')a=addD(mondayOf(a),dir*7*n);else if(k==='m'){const d=parseD(a);a=ymd(new Date(d.getFullYear(),d.getMonth()+dir*n,1))}else{const d=parseD(a);d.setFullYear(d.getFullYear()+dir*(k==='Y'?n:1));a=ymd(d)}if(c==='day')ZMA=a;else pAnchor=a;zmRender(c)}
 async function zmDay(){const my=++ZMSEQ;try{await allMap()}catch(e){}if(my!==ZMSEQ||ZMD<=0)return;const V=$('#v-day');V.classList.add('zmon');const a=ZMA;const lb=$('#dlabel');lb.classList.remove('notoday');lb.textContent=zmRange(ZMD,a);
   const B=$('#dayBody');B.innerHTML=zmBody(ZMD,a)+`<div class="zbtn"><button id="zhol">🎌 휴일 관리</button><button id="zday" style="margin-left:auto">1일 보기로</button></div>`;hydrate(B);zmBind(B,'day');$('#zhol').onclick=openHolMgr;$('#zday').onclick=()=>zmSet(0)}
 async function zmPlan(R){const my=++ZMSEQP;try{await allMap()}catch(e){}if(my!==ZMSEQP||ZMP==null)return;const i=ZMP,a=pAnchor;
@@ -11088,7 +11089,7 @@ function mgFold(R){{const y=R.querySelector('.yrg'),pc=R.querySelector('.pcc');i
 function qhCardHTML(lv){const d=pAnchor||today();const per=perKey(lv,d);const gs=goalsAt(lv,per);const nm=lv==='q'?'3개월':'6개월';
   return`<div class="card nocol pcc pcq" data-qh="${lv}" style="--k:${lv==='q'?'#10b981':'#8b5cf6'}"><h3>🗓️ ${nm} 계획 <small>${perLabel(lv,per)}</small></h3>
   <p class="fl">🎯 ${nm} 목표</p><div class="plgl">${gs.map(g=>`<label class="plgi ${g.done?'dn':''}"><input type="checkbox" data-plgd="${g.id}" ${g.done?'checked':''}><span>${AREA_E[g.area]||''} ${esc(g.title)}</span></label>`).join('')}<button type="button" class="plad" data-qhadd="${lv}" data-qhd="${d}">＋ 목표</button></div></div>`}
-function qhKind(){if(ZMP!=null&&ZMS[ZMP]){const z=ZMS[ZMP];return z[0]==='m'?(z[1]===3?'q':z[1]===6?'h':'m'):z[0]}return pZoom}
+function qhKind(){if(ZMP!=null&&ZMS[ZMP]){const z=ZMS[ZMP];return z[0]==='m'?(z[1]===3?'q':z[1]===6?'h':'m'):z[0]==='Y'?'y':z[0]}return pZoom}
 function qhSwap(){try{if(curSection!=='plan'||PLM==='goal')return;const R=$('#pbody');if(!R)return;R.querySelectorAll('.pcc.pcq').forEach(e=>e.remove());const k=qhKind();const m=R.querySelector('.pcc.pcm');
   const w168=R.querySelector('.w168');
   if(k!=='y'&&w168&&w168.dataset.qhh){w168.style.display='';delete w168.dataset.qhh}
@@ -16228,7 +16229,7 @@ async function syPutSafe(B,k,v){if(!k.startsWith('day:')||!v||typeof v!=='object
 {const _o=openDay;openDay=async function(d){try{staleGuardInstall()}catch(e){}return _o.apply(this,arguments)}}
 {const _f=flush0;flush0=async function(){try{staleGuardInstall()}catch(e){}return _f.apply(this,arguments)}}
 /* v390 ① 앱 버전 표시 · 새 버전 알림 (GitHub에서 마지막으로 성공한 빌드 번호와 비교) */
-var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/416})();
+var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/417})();
 const VRK='gj-verchk',VRURL='https://github.com/64hwarang-max/c/actions/workflows/build-apk.yml';
 const vrGet=()=>{try{return JSON.parse(localStorage.getItem(VRK)||'{}')}catch(e){return{}}};
 async function vrCheck(force){const c=vrGet();if(!force&&c.t&&Date.now()-c.t<6*36e5)return c;
@@ -16545,7 +16546,7 @@ function mgRanges(){const T=today(),w=mondayOf(T),y=T.slice(0,4),ym=T.slice(0,7)
 function mgDocs(){const m=new Map(cacheAll||[]);if(D)m.set(D.date,D);return[...m.values()].filter(o=>o&&o.date).sort((a,b)=>a.date<b.date?-1:1)}
 const mgIn=(o,r)=>o.date>=r[1]&&o.date<=r[2];
 const mgN=(v,u,d)=>v?`${(Math.round(v*(d||1))/(d||1)).toLocaleString()}${u||''}`:'–';
-function mgTbl(rows){return`<div class="mgtw"><table class="mgtab"><thead><tr><th></th><th>주</th><th>월</th><th>연</th><th>누적</th></tr></thead><tbody>${rows.map(r=>`<tr><th>${r[0]}</th>${r[1].map(v=>`<td>${v}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`}
+function mgTbl(rows){return`<div class="mgtbw"><table class="mgtab"><thead><tr><th></th><th>주</th><th>월</th><th>연</th><th>누적</th></tr></thead><tbody>${rows.map(r=>`<tr><th>${r[0]}</th>${r[1].map(v=>`<td>${v}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`}
 function mgRun(docs){const L=[];docs.forEach(o=>{let hk=0;(o.ex||[]).forEach(e=>{if(RUNRE.test(e.type||'')){L.push({d:o.date,km:+e.km||0,min:+e.min||0});if(+e.km>0)hk++}});if(!hk)(o.wk||[]).forEach(x=>{if(x.t==='cardio'&&RUNRE.test(x.name||''))L.push({d:o.date,km:+x.km||0,min:+x.min||0})})});return L}
 function mgWt(docs){let sets=0,vol=0;const days=new Set();docs.forEach(o=>wkList(o).forEach(x=>{if(x.t!=='weight')return;(x.sets||[]).forEach(z=>{const v=(+z.w||0)*(+z.r||0);if(v>0||+z.r>0){sets++;vol+=v;days.add(o.date)}})}));return{sets,vol,days:days.size}}
 function mgHealthHTML(){const R=mgRanges(),docs=mgDocs();
@@ -16592,7 +16593,7 @@ function mgPut(host,html){if(!host)return;const o=host.querySelector(':scope>#mg
 {const _rb=renderFinToday;renderFinToday=async function(){const r=await _rb.apply(this,arguments);try{if(fView==='today'){const h=await mgFinHTML();if(fView==='today')mgPut($('#fbody'),h)}}catch(e){console.warn('mgf',e)}return r}}
 {const _rp=renderPeople;renderPeople=async function(){const r=await _rp.apply(this,arguments);try{if(!pOpen)mgPut($('#plist'),mgPeopleHTML())}catch(e){console.warn('mgp',e)}return r}}
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-mgasset]');if(!b)return;e.preventDefault();fView='assets';bEdit=false;renderBudget()},true);
-(function(){const st=document.createElement('style');st.textContent='.mgc>summary{list-style:none;cursor:pointer}.mgc>summary::-webkit-details-marker{display:none}.mgc>summary h3{margin:0 0 6px}.mgtw{display:block;overflow-x:auto}.mgc .mgtabab{width:100%;min-width:0;table-layout:fixed;border-collapse:collapse;font-size:.82rem}.mgc .mgtabab th,.mgc .mgtabab td{padding:5px 3px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap;writing-mode:horizontal-tb;color:inherit;font-weight:600;background:none}.mgc .mgtabab thead th{color:var(--muted);font-size:.72rem}.mgc .mgtabab th:first-child{width:34%;text-align:left;white-space:normal;font-weight:700}.mgrec{font-size:.88rem;margin:3px 0}.mgrec small{color:var(--muted)}';document.head.appendChild(st)})();
+(function(){const st=document.createElement('style');st.textContent='.mgc>summary{list-style:none;cursor:pointer}.mgc>summary::-webkit-details-marker{display:none}.mgc>summary h3{margin:0 0 6px}.mgtbw{display:block;overflow-x:auto}.mgc .mgtabab{width:100%;min-width:0;table-layout:fixed;border-collapse:collapse;font-size:.82rem}.mgc .mgtabab th,.mgc .mgtabab td{padding:5px 3px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap;writing-mode:horizontal-tb;color:inherit;font-weight:600;background:none}.mgc .mgtabab thead th{color:var(--muted);font-size:.72rem}.mgc .mgtabab th:first-child{width:34%;text-align:left;white-space:normal;font-weight:700}.mgrec{font-size:.88rem;margin:3px 0}.mgrec small{color:var(--muted)}';document.head.appendChild(st)})();
 
 /* ===== v408: 기둥 화면 — 목표 ↔ 계획 연결·수정 (목표별 시간 배정, 계획에 목표 붙이기, 이름·상위·삭제) ===== */
 document.addEventListener('click',async e=>{const t=e.target.closest&&e.target.closest('[data-plgt],[data-plge],[data-plgp],[data-plgx],[data-plpb]');if(!t||!t.closest('.plp'))return;e.preventDefault();e.stopPropagation();
@@ -16756,7 +16757,7 @@ function pdMergedHTML(lv,a,gs){const O=yrgOpen();const op=k=>O[k]===false?'':(O[
 
 /* ===== v416: 오늘 탭의 며칠·주·달 보기에도 같은 기간 카드 ===== */
 function wkcDayCtx(){try{return curSection==='day'&&ZMD>0&&!!ZMS[ZMD]}catch(e){return false}}
-function wkcDayKind(){const z=ZMS[ZMD];return z[0]==='d'?'w':z[0]==='m'?(z[1]===3?'q':z[1]===6?'h':'m'):z[0]}
+function wkcDayKind(){const z=ZMS[ZMD];return z[0]==='Y'?'y':z[0]==='d'?'w':z[0]==='m'?(z[1]===3?'q':z[1]===6?'h':'m'):z[0]}
 async function wkcPaintDay(force){try{const R=$('#dayBody');if(!R)return;const ex=R.querySelector(':scope>#wkcard');if(!wkcDayCtx()){if(ex)ex.remove();return}
   const lv=wkcDayKind();const b0=ZMA||today();const bk='D'+lv+'|'+pdKey(lv,b0);if(WKC.base!==bk){WKC.base=bk;WKC.a=b0;WKC.st=null;WKC.lv=lv}if(!WKC.a)WKC.a=b0;
   if(ex&&!force&&ex.dataset.key===lv+pdKey(lv,WKC.a))return;if(WKC.busy)return;WKC.busy=1;let M=new Map();try{M=await allMap()}catch(e){}WKC.busy=0;if(!wkcDayCtx())return;
@@ -16765,6 +16766,14 @@ async function wkcPaintDay(force){try{const R=$('#dayBody');if(!R)return;const e
 {const _o=wkcPaint;wkcPaint=function(force){return curSection==='day'?wkcPaintDay(force):_o.apply(this,arguments)}}
 DECO.add('오늘 기간 카드',{root:'#dayBody',deep:false,wait:140,run:()=>wkcPaintDay()});
 (function(){const st=document.createElement('style');st.textContent=`#dayBody:has(>#wkcard) .yrg,#dayBody:has(>#wkcard)>.wbx,#dayBody:has(>#wkcard) .pcc,#dayBody:has(>#wkcard)>details.pextra{display:none!important}#dayBody>#wkcard{margin-bottom:10px}`;document.head.appendChild(st)})();
+
+/* ===== v417: 조그 다이얼 — 1년 이후 3·5·10·15·20·30·50·100년 ===== */
+function zmY0(a,n){const y=parseD(a).getFullYear();return n>=10?Math.floor(y/n)*n:y}
+function zmYears(a,n){const y0=zmY0(a,n),Ty=+today().slice(0,4);const cols=n<=5?n:n<=15?5:10;
+  const gy={};try{(GOALS.list||[]).forEach(g=>{if(!g.title||g.done)return;const m=/^(\d{4})/.exec(String(g.per||''));if(m)gy[m[1]]=(gy[m[1]]||0)+1})}catch(e){}
+  return`<div class="zyr" style="--zc:${cols}">${[...Array(n)].map((_,j)=>{const y=y0+j;return`<button type="button" class="zyc ${y===Ty?'td':''}" data-py="${y}"><b>${n>=50?String(y).slice(2):y}</b>${gy[y]?`<small>🎯${gy[y]}</small>`:''}</button>`}).join('')}</div><p class="hint" style="margin:6px 2px">연도를 누르면 그 해 1년 보기로 갑니다.${n>=50?' (숫자는 연도 끝 두 자리)':''}</p>`}
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-py]');if(!b)return;e.preventDefault();e.stopPropagation();const c=zmCtx();if(!c)return;const wi=ZMS.findIndex(z=>z[0]==='y'&&z[1]===1);const a=b.dataset.py+'-01-01';if(c==='day'){ZMA=a;ZMD=wi}else{pAnchor=a;ZMP=wi}zmRender(c)},true);
+(function(){const st=document.createElement('style');st.textContent=`.zyr{display:grid;grid-template-columns:repeat(var(--zc),1fr);gap:6px}.zyc{border:1px solid var(--line);background:var(--paper);border-radius:8px;padding:8px 0;font:inherit;color:var(--ink);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;min-height:46px}.zyc b{font-weight:600;font-size:.86rem}.zyc small{font-size:.62rem;color:var(--muted)}.zyc.td{border-color:var(--pen);background:var(--pen-soft);color:var(--pen)}`;document.head.appendChild(st)})();
 </script>
 <!--BIBLE{--><!--}BIBLE-->
 <div id="miniov" class="miniov" hidden></div>
