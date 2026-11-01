@@ -15022,7 +15022,7 @@ function mdBoxHTML(sec,D0){const cfg=MDX[sec];const f=!!MD.fold[sec];
 function mdSync(){try{const sec=curSection;const cfg=MDX[sec];document.querySelectorAll('.mdbox').forEach(b=>{if(!cfg||b.dataset.sec!==sec)b.remove()});if(!cfg)return;
   if(cfg.when&&!cfg.when()){document.querySelectorAll('.mdbox').forEach(b=>b.remove());return}
   const host=document.querySelector(cfg.host);if(!host||!host.offsetParent&&host.getClientRects().length===0)return;
-  const D0=cfg.build();if(!D0){return}MD.cells=D0.cells;MD.sec=sec;const html=mdBoxHTML(sec,D0);let box=host.querySelector(':scope > .mdbox');
+  const D0=cfg.build();if(!D0){return}MD.cells=D0.cells;MD.sec=sec;const html=mdBoxHTML(sec,D0);let box=host.querySelector('.mdbox');
   if(!box){box=document.createElement('div');box.className='mdbox';box.dataset.sec=sec;box.innerHTML=html;(cfg.place||((h,b)=>{if(h.firstElementChild!==b)h.prepend(b)}))(host,box)}
   else{if(box.dataset.sig!==html){box.innerHTML=html}(cfg.place||((h,b)=>{if(h.firstElementChild!==b)h.prepend(b)}))(host,box)}
   box.dataset.sig=html}catch(e){console.warn('md',e)}}
@@ -16229,7 +16229,7 @@ async function syPutSafe(B,k,v){if(!k.startsWith('day:')||!v||typeof v!=='object
 {const _o=openDay;openDay=async function(d){try{staleGuardInstall()}catch(e){}return _o.apply(this,arguments)}}
 {const _f=flush0;flush0=async function(){try{staleGuardInstall()}catch(e){}return _f.apply(this,arguments)}}
 /* v390 ① 앱 버전 표시 · 새 버전 알림 (GitHub에서 마지막으로 성공한 빌드 번호와 비교) */
-var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/421})();
+var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/422})();
 const VRK='gj-verchk',VRURL='https://github.com/64hwarang-max/c/actions/workflows/build-apk.yml';
 const vrGet=()=>{try{return JSON.parse(localStorage.getItem(VRK)||'{}')}catch(e){return{}}};
 async function vrCheck(force){const c=vrGet();if(!force&&c.t&&Date.now()-c.t<6*36e5)return c;
@@ -16593,7 +16593,7 @@ function mgPut(host,html){if(!host)return;const o=host.querySelector(':scope>#mg
 {const _rb=renderFinToday;renderFinToday=async function(){const r=await _rb.apply(this,arguments);try{if(fView==='today'){const h=await mgFinHTML();if(fView==='today')mgPut($('#fbody'),h)}}catch(e){console.warn('mgf',e)}return r}}
 {const _rp=renderPeople;renderPeople=async function(){const r=await _rp.apply(this,arguments);try{if(!pOpen)mgPut($('#plist'),mgPeopleHTML())}catch(e){console.warn('mgp',e)}return r}}
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-mgasset]');if(!b)return;e.preventDefault();fView='assets';bEdit=false;renderBudget()},true);
-(function(){const st=document.createElement('style');st.textContent='.mgc>summary{list-style:none;cursor:pointer}.mgc>summary::-webkit-details-marker{display:none}.mgc>summary h3{margin:0 0 6px}.mgtbw{display:block;overflow-x:auto}.mgc .mgtabab{width:100%;min-width:0;table-layout:fixed;border-collapse:collapse;font-size:.82rem}.mgc .mgtabab th,.mgc .mgtabab td{padding:5px 3px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap;writing-mode:horizontal-tb;color:inherit;font-weight:600;background:none}.mgc .mgtabab thead th{color:var(--muted);font-size:.72rem}.mgc .mgtabab th:first-child{width:34%;text-align:left;white-space:normal;font-weight:700}.mgrec{font-size:.88rem;margin:3px 0}.mgrec small{color:var(--muted)}';document.head.appendChild(st)})();
+(function(){const st=document.createElement('style');st.textContent='.mgc>summary{list-style:none;cursor:pointer}.mgc>summary::-webkit-details-marker{display:none}.mgc>summary h3{margin:0 0 6px}.mgtbw{display:block;overflow-x:auto}.mgc .mgtab{width:100%;min-width:0;table-layout:fixed;border-collapse:collapse;font-size:.82rem}.mgc .mgtab th,.mgc .mgtab td{padding:5px 3px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap;writing-mode:horizontal-tb;color:inherit;font-weight:600;background:none}.mgc .mgtab thead th{color:var(--muted);font-size:.72rem}.mgc .mgtab th:first-child{width:34%;text-align:left;white-space:normal;font-weight:700}.mgrec{font-size:.88rem;margin:3px 0}.mgrec small{color:var(--muted)}';document.head.appendChild(st)})();
 
 /* ===== v408: 기둥 화면 — 목표 ↔ 계획 연결·수정 (목표별 시간 배정, 계획에 목표 붙이기, 이름·상위·삭제) ===== */
 document.addEventListener('click',async e=>{const t=e.target.closest&&e.target.closest('[data-plgt],[data-plge],[data-plgp],[data-plgx],[data-plpb]');if(!t||!t.closest('.plp'))return;e.preventDefault();e.stopPropagation();
@@ -16840,6 +16840,11 @@ setGrid=function(k,scroll){if(k==='map'){openSiteMap(true);return}if(k==='pmd'){
 (function(){const st=document.createElement('style');st.textContent=`.sgrid.sgtop2{grid-template-columns:1fr 1fr!important;gap:10px!important}.sgi.sgbig{padding:20px 8px!important;gap:6px!important;border-radius:18px!important}.sgi.sgbig i{font-size:2rem!important}.sgi.sgbig span{font-size:.95rem!important;font-weight:700}.sgi.sgbig small{font-size:.7rem;color:var(--muted);text-align:center;line-height:1.3}`;document.head.appendChild(st)})();
 
 {const _o=openSection;openSection=function(v){try{if(v==='export'&&curSection!=='export'&&(sgCat||sgCur))setTimeout(()=>setGrid('home'),0)}catch(e){}return _o.apply(this,arguments)}}
+
+/* ===== v422: 건강·재정·관계 — 현황 표와 바로가기를 한 카드로 ===== */
+{['care','budget','people'].forEach(k=>{if(MDX[k])MDX[k].place=(h,b)=>{const m=h.querySelector('#mgcard');if(m){if(b.parentNode!==m)m.appendChild(b)}else if(h.firstElementChild!==b)h.prepend(b)}});
+ const _m=mgPut;mgPut=function(){const r=_m.apply(this,arguments);try{mdSync()}catch(e){}return r}}
+(function(){const st=document.createElement('style');st.textContent=`.mgc>.mdbox{margin:12px 0 0;border-top:1px solid var(--line);padding-top:10px}.mgc>.mdbox .mdlist{border-radius:12px}#careBody>.plline,#bbody>.plline,#plist>.plline{display:none!important}`;document.head.appendChild(st)})();
 </script>
 <!--BIBLE{--><!--}BIBLE-->
 <div id="miniov" class="miniov" hidden></div>
