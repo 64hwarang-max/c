@@ -16232,7 +16232,7 @@ async function syPutSafe(B,k,v){if(!k.startsWith('day:')||!v||typeof v!=='object
 {const _o=openDay;openDay=async function(d){try{staleGuardInstall()}catch(e){}return _o.apply(this,arguments)}}
 {const _f=flush0;flush0=async function(){try{staleGuardInstall()}catch(e){}return _f.apply(this,arguments)}}
 /* v390 ① 앱 버전 표시 · 새 버전 알림 (GitHub에서 마지막으로 성공한 빌드 번호와 비교) */
-var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/399})();
+var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/400})();
 const VRK='gj-verchk',VRURL='https://github.com/64hwarang-max/c/actions/workflows/build-apk.yml';
 const vrGet=()=>{try{return JSON.parse(localStorage.getItem(VRK)||'{}')}catch(e){return{}}};
 async function vrCheck(force){const c=vrGet();if(!force&&c.t&&Date.now()-c.t<6*36e5)return c;
@@ -16414,9 +16414,9 @@ function poTblHTML(M,d){const K=poKeys();const LS=shortOn();const lifeL=lifeCfg(
 async function poHTML(){let M=cacheAll;try{M=await allMap()}catch(e){}const d=pAnchor||cur||today();const v=SET.poView||'oct';const st=poStat(M,pZoom,d);
   const empty=st.K.filter(k=>!st.S[k].gs.length).map(k=>areaName(k));const nm=({y:'1년',h:'6개월',q:'3개월',m:'1달',w:'1주'})[pZoom]||'';
   return`<div class="card nocol" id="poocard" style="--k:#6c5ce7"><div class="w168h"><h3>🧭 기둥별 계획 <small class="hint">${esc(perLabel(pZoom,st.per))}</small></h3></div>
-   <div class="seg poseg" style="margin:6px 0"><button data-pov="oct" class="${v==='oct'?'on':''}">🔷 팔각형</button><button data-pov="tbl" class="${v==='tbl'?'on':''}">📋 기둥×기간 표</button></div>
+   <div class="seg poseg" style="margin:6px 0"><button data-pov="oct" class="${v==='oct'?'on':''}">🔷 팔각형</button><button data-pov="tbl" class="${v==='tbl'?'on':''}">📋 기둥×기간</button><button data-pov="lnk" class="${v==='lnk'?'on':''}">🔗 연결</button></div>
    ${v==='oct'?`${poOctSVG(st)}<div class="poleg"><span><i style="background:#6c5ce7"></i>계획 시간</span><span><i style="background:#2e9e6b"></i>실제 시간</span>${st.K.some(k=>st.S[k].tgt)?'<span><i class="dsh"></i>목표 시간(바깥 칸)</span>':''}</div>
-    <p class="hint" style="margin:4px 0 0">${nm} 목표 · 진행률을 꼭짓점에 적었습니다. 기둥 이름을 누르면 그 기둥의 목표·계획·할 일이 펼쳐집니다.${empty.length?` <b style="color:#e5484d">목표가 없는 기둥: ${empty.map(esc).join(', ')}</b>`:''}</p>`:poTblHTML(M,d)}</div>`}
+    <p class="hint" style="margin:4px 0 0">${nm} 목표 · 진행률을 꼭짓점에 적었습니다. 기둥 이름을 누르면 그 기둥의 목표·계획·할 일이 펼쳐집니다.${empty.length?` <b style="color:#e5484d">목표가 없는 기둥: ${empty.map(esc).join(', ')}</b>`:''}</p>`:v==='lnk'?lkHTML(d):poTblHTML(M,d)}</div>`}
 async function poPaint(){try{const R=$('#pbody');if(!R||curSection!=='plan'||PLM!=='plan'||ZMP!=null||(typeof PLP!=='undefined'&&PLP))return;if(R.querySelector('#poocard'))return;const top=R.querySelector('.ptop');if(!top)return;
   const h=await poHTML();if(R.querySelector('#poocard')||curSection!=='plan')return;const t=document.createElement('div');t.innerHTML=h;const el=t.firstElementChild;const nav=top.nextElementSibling&&top.nextElementSibling.matches('.wk,.pnav')?top.nextElementSibling:top;
   const yr=R.querySelector('.yrg');if(yr&&yr.parentElement===R)yr.before(el);else nav.after(el)}catch(e){console.warn('poo',e)}}
@@ -16436,6 +16436,39 @@ document.addEventListener('click',async e=>{const t=e.target.closest&&e.target.c
 #poocard .poosvg{width:100%;max-width:380px;display:block;margin:0 auto}#poocard .poleg{display:flex;gap:12px;justify-content:center;font-size:.76rem;color:var(--muted)}#poocard .poleg i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:4px;vertical-align:-1px}#poocard .poleg i.dsh{background:none;border:1.5px dashed #888}
 #poocard .pootw{overflow-x:auto;margin:4px -6px 0}#poocard .poot{border-collapse:collapse;width:100%;font-size:.74rem;table-layout:fixed}#poocard .poot th:first-child{width:3.9em}#poocard .poot th,#poocard .poot td{border:1px solid var(--line);padding:4px 3px;vertical-align:top;text-align:left}#poocard .poot thead th{background:color-mix(in srgb,var(--k) 10%,var(--paper));text-align:center;font-size:.72rem}
 #poocard .poot tbody th{font-size:.7rem;cursor:pointer;word-break:keep-all;line-height:1.25}#poocard .poot td{cursor:pointer}#poocard .poot td b{display:inline-block;min-width:1.2em;color:var(--k);margin-right:2px}#poocard .poot td span{display:-webkit-box;-webkit-line-clamp:3;word-break:break-all;-webkit-box-orient:vertical;overflow:hidden;font-size:.72rem}#poocard .poot td.emp{color:var(--muted);text-align:center;background:color-mix(in srgb,#e5484d 4%,var(--paper))}#poocard .poot td.poh{text-align:center;cursor:default;font-weight:700;font-size:.66rem}#poocard .poot th,#poocard .poot td{padding:3px 2px!important}`;document.head.appendChild(st)})();
+
+/* ===== v400 ① 비전 → 정체성·가치 → 역할 → 기둥 → 장기 → 단기: 목표마다 ‘위 목표 · 역할 · 가치’ 연결 ===== */
+const lkVals=()=>String(GOALS.values||'').split(/[,，·\/]/).map(x=>x.trim()).filter(Boolean);
+const LKN={y:'1년',h:'6개월',q:'3개월',m:'1달',w:'1주',S:'언젠가'};const lkLvN=lv=>LKN[lv]||(LVX[lv]?LVX[lv].n.replace(' 후',''):lv);
+function lkGoals(d){const L=[];const lifeL=lifeCfg().map(x=>x.k);GOALS.list.forEach(g=>{if(!g.title||g.done)return;if(lifeL.includes(g.lv)||g.lv==='S'){L.push(g);return}if(shortOn().includes(g.lv)&&g.per===perKey(g.lv,d))L.push(g)});
+  return L.sort((a,b)=>LVORD.indexOf(a.lv)-LVORD.indexOf(b.lv))}
+function lkTop(g){if(g.lv==='S'||g.lv===lifeCfg().map(x=>x.k)[0])return true;/* 위 기간에 목표가 하나도 없으면 이 목표가 맨 위 */return!lkCands(g,pAnchor||cur||today()).length}
+function lkChain(g){const out=[],seen=new Set([g.id]);let p=g.parent&&GOALS.list.find(x=>x.id===g.parent);while(p&&!seen.has(p.id)&&out.length<6){out.push(p);seen.add(p.id);p=p.parent&&GOALS.list.find(x=>x.id===p.parent)}return out}
+function lkCands(g,d){const i=LVORD.indexOf(g.lv);const lifeL=lifeCfg().map(x=>x.k);return GOALS.list.filter(x=>x.id!==g.id&&x.title&&!x.done&&LVORD.indexOf(x.lv)>=0&&LVORD.indexOf(x.lv)<i&&x.lv!=='S'&&(lifeL.includes(x.lv)||x.per===perKey(x.lv,d)))
+  .sort((a,b)=>((b.area===g.area)-(a.area===g.area))||(LVORD.indexOf(b.lv)-LVORD.indexOf(a.lv)))}
+function lkHTML(d){const G=lkGoals(d);const V=lkVals();const RL=rlList();const vis=String(GOALS.vision||'').split(/\n/).map(x=>x.trim()).filter(Boolean)[0]||'';const idn=String(GOALS.ident||'').split(/\n/).filter(x=>x.trim()).length;
+  const need=G.filter(g=>!lkTop(g));const par=need.filter(g=>g.parent&&GOALS.list.some(x=>x.id===g.parent)).length;const rol=G.filter(g=>g.role&&RL.some(r=>r.id===g.role)).length;const val=G.filter(g=>(g.vals||[]).length).length;
+  const pc=(a,b)=>b?Math.round(a/b*100):0;
+  const head=`<div class="lkflow"><span class="${vis?'':'no'}">✨ 비전${vis?'':' ✕'}</span><i>→</i><span class="${idn||V.length?'':'no'}">🪪 정체성·💎 가치 ${V.length}</span><i>→</i><span class="${RL.length?'':'no'}">🎭 역할 ${RL.length}</span><i>→</i><span>🏛️ 기둥 ${poKeys().length}</span><i>→</i><span>🏔️ 장기</span><i>→</i><span>🎯 단기</span></div>
+   ${vis?`<p class="lkvis">“${esc(vis)}”</p>`:'<p class="hint" style="margin:4px 0">비전 선언이 비어 있습니다. 나 › 비전에서 먼저 적으십시오.</p>'}
+   <div class="tri"><div><small>위 목표에 연결</small><b>${pc(par,need.length)}%</b></div><div><small>역할 표시</small><b>${pc(rol,G.length)}%</b></div><div><small>가치 표시</small><b>${pc(val,G.length)}%</b></div></div>
+   <p class="hint" style="margin:4px 0 6px">지금 기간의 목표와 장기 목표를 위에서 아래로 놓았습니다. 맨 위 기간을 뺀 목표는 바로 위 기간의 목표 하나에 잇고, 어느 역할의 일인지, 어떤 가치를 지키는지 표시합니다.</p>`;
+  const row=g=>{const ch=lkChain(g);const r=g.role&&RL.find(x=>x.id===g.role);const vs=(g.vals||[]).filter(v=>V.includes(v));const bad=!lkTop(g)&&!ch.length;
+    return`<div class="lkr ${bad?'bad':''}"><div class="lkt"><small>${esc(lkLvN(g.lv))}</small><b>${AREA_E[g.area]||''} ${esc(g.title)}</b></div>
+     ${ch.length?`<div class="lkch">${ch.map(x=>`↑ ${esc(lkLvN(x.lv))} ${esc(x.title)}`).join(' ')}</div>`:''}
+     <div class="lkb">${lkTop(g)?'<span class="lktop">맨 위 목표</span>':`<button data-lkp="${g.id}" class="${ch.length?'':'need'}">⬆ ${ch.length?'위 목표 바꾸기':'위 목표 잇기'}</button>`}<button data-lkr="${g.id}" class="${r?'on':''}">${r?`${r.e||'🎭'} ${esc(r.name)}`:'🎭 역할'}</button><button data-lkv="${g.id}" class="${vs.length?'on':''}">💎 ${vs.length?vs.map(esc).join('·'):'가치'}</button></div></div>`};
+  return head+(G.length?G.map(row).join(''):'<p class="hint">지금 기간의 목표가 없습니다. 팔각형·표 보기에서 기둥별 목표를 먼저 더하십시오.</p>')}
+document.addEventListener('click',e=>{const t=e.target.closest&&e.target.closest('[data-lkp],[data-lkr],[data-lkv]');if(!t||!t.closest('#poocard'))return;e.stopPropagation();
+  const g=GOALS.list.find(x=>x.id===(t.dataset.lkp||t.dataset.lkr||t.dataset.lkv));if(!g)return;const re=()=>{saveGoals();const c=$('#poocard');if(c)c.remove();poPaint()};const d=pAnchor||cur||today();
+  if(t.dataset.lkp){const C=lkCands(g,d);if(!C.length){toast('위 기간에 이을 목표가 없습니다. 표 보기에서 위 기간 목표를 먼저 더하십시오.');return}
+    ntSheet(`⬆ ‘${g.title}’은(는) 어느 목표를 이루기 위한 것입니까?`,[...C.slice(0,30).map(x=>[`${lkLvN(x.lv)} · ${AREA_E[x.area]||''} ${x.title}${g.parent===x.id?' ✓':''}`,()=>{g.parent=x.id;re();toast('⬆ 위 목표에 이었습니다.')}]),['잇지 않음',()=>{g.parent=null;re()}]]);return}
+  if(t.dataset.lkr){const L=rlList();if(!L.length){toast('먼저 나 › 비전에서 역할을 추가하십시오.');return}
+    ntSheet(`🎭 ‘${g.title}’은(는) 어느 역할의 목표입니까?`,[...L.map(r=>[`${r.e||'🎭'} ${r.name}${g.role===r.id?' ✓':''}`,()=>{g.role=r.id;re()}]),['역할 표시 없음',()=>{delete g.role;re()}]]);return}
+  if(t.dataset.lkv){const V=lkVals();if(!V.length){toast('나 › 비전 › 비전 선언의 ‘핵심 가치’에 가치를 먼저 적으십시오 (쉼표로).');return}
+    ntSheet(`💎 ‘${g.title}’은(는) 어떤 가치를 지킵니까? (누를 때마다 넣고 뺍니다)`,[...V.map(v=>[`${(g.vals||[]).includes(v)?'✓ ':''}${v}`,()=>{const s=new Set(g.vals||[]);s.has(v)?s.delete(v):s.add(v);g.vals=[...s];re()}]),['가치 표시 모두 지우기',()=>{delete g.vals;re()}]])}},true);
+(function(){const st=document.createElement('style');st.textContent=`#poocard .lkflow{display:flex;flex-wrap:wrap;gap:3px;align-items:center;font-size:.72rem;margin:4px 0}#poocard .lkflow span{border:1px solid var(--line);border-radius:999px;padding:2px 7px;background:var(--paper)}#poocard .lkflow span.no{color:#e5484d;border-color:#e5484d}#poocard .lkflow i{font-style:normal;color:var(--muted)}
+#poocard .lkvis{font-family:'Gowun Batang',serif;font-size:.9rem;margin:4px 0 6px;color:var(--ink)}#poocard .lkr{border-top:1px dashed var(--line);padding:7px 0}#poocard .lkr.bad{background:color-mix(in srgb,#e5484d 5%,transparent)}#poocard .lkt{display:flex;gap:6px;align-items:baseline}#poocard .lkt small{flex:none;color:var(--muted);font-size:.72rem;min-width:3.4em}#poocard .lkt b{font-size:.88rem;font-weight:600}
+#poocard .lkch{font-size:.72rem;color:var(--muted);margin:2px 0 0 3.8em}#poocard .lkb{display:flex;gap:4px;flex-wrap:wrap;margin:4px 0 0 3.8em}#poocard .lkb button{border:1px solid var(--line);background:var(--paper);color:var(--muted);border-radius:999px;padding:3px 9px;font:inherit;font-size:.74rem;cursor:pointer}#poocard .lkb button.on{color:var(--ink);border-color:var(--k)}#poocard .lkb button.need{color:#e5484d;border-color:#e5484d}#poocard .lkb .lktop{font-size:.72rem;color:#2e9e6b;padding:3px 4px}`;document.head.appendChild(st)})();
 </script>
 <!--BIBLE{--><!--}BIBLE-->
 <div id="miniov" class="miniov" hidden></div>
