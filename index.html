@@ -5456,7 +5456,7 @@ function repText(r){if(!r||!r.type)return'반복 안 함';const n=Math.max(1,+r.
   else{const a=parseD(r.start);t=(n===1?'매년 ':`${n}년마다 `)+`${a.getMonth()+1}월 ${a.getDate()}일`}
   return t+(r.end?` · ${md(r.end)}까지`:'')}
 const repRules=()=>Array.isArray(SET.planRep)?SET.planRep:(SET.planRep=[]);
-const repBlock=(r,d)=>({id:uid(),s:r.s,e:r.e,act:r.act||'',cat:r.cat||'업무',who:r.who||'',...(r.sub?{sub:r.sub}:{}),...(r.area?{area:r.area}:{}),...(r.loc?{loc:r.loc}:{}),...(r.goal?{goal:r.goal}:{}),...(r.memo?{memo:r.memo}:{}),rid:r.id});
+const repBlock=(r,d)=>({id:uid(),s:r.s,e:r.e,act:r.act||'',cat:r.cat||'업무',who:r.who||'',...(r.amt?{amt:r.amt,amtm:r.amtm||'',bacc:r.bacc||''}:{}),...(r.sub?{sub:r.sub}:{}),...(r.area?{area:r.area}:{}),...(r.loc?{loc:r.loc}:{}),...(r.goal?{goal:r.goal}:{}),...(r.memo?{memo:r.memo}:{}),rid:r.id});
 /* 한 날짜 문서에 반복 일정을 채운다 (지운 것은 되살리지 않고, 없어진 규칙의 앞으로 일정은 걷어 낸다) */
 function repApply(o){if(!o||!o.date)return false;let ch=false;const T=today(),R=repRules();o.rm=Array.isArray(o.rm)?o.rm:[];
   if(o.date>=T){const n0=o.plan.length;o.plan=o.plan.filter(b=>!b.rid||R.some(r=>r.id===b.rid));if(o.plan.length!==n0)ch=true}
@@ -16232,7 +16232,7 @@ async function syPutSafe(B,k,v){if(!k.startsWith('day:')||!v||typeof v!=='object
 {const _o=openDay;openDay=async function(d){try{staleGuardInstall()}catch(e){}return _o.apply(this,arguments)}}
 {const _f=flush0;flush0=async function(){try{staleGuardInstall()}catch(e){}return _f.apply(this,arguments)}}
 /* v390 ① 앱 버전 표시 · 새 버전 알림 (GitHub에서 마지막으로 성공한 빌드 번호와 비교) */
-var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/397})();
+var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/398})();
 const VRK='gj-verchk',VRURL='https://github.com/64hwarang-max/c/actions/workflows/build-apk.yml';
 const vrGet=()=>{try{return JSON.parse(localStorage.getItem(VRK)||'{}')}catch(e){return{}}};
 async function vrCheck(force){const c=vrGet();if(!force&&c.t&&Date.now()-c.t<6*36e5)return c;
@@ -16334,6 +16334,56 @@ document.addEventListener('click',async e=>{const b=e.target.closest&&e.target.c
   window.addEventListener('touchmove',e=>{if(!z||e.touches.length!==1)return;const t=e.touches[0],dx=t.clientX-z.x,dy=t.clientY-z.y;if(!z.on){if(Math.abs(dx)>10&&Math.abs(dx)>Math.abs(dy)*.5)z.on=true;else if(Math.abs(dy)>24&&Math.abs(dy)>Math.abs(dx)*2.5&&!z.inb){window.BBZ=false;z=null;return}}
     if(z&&z.on){z.b.scrollLeft=z.sl-dx;if(e.cancelable)e.preventDefault()}},{capture:true,passive:false});
   const end=()=>{z=null;setTimeout(()=>{window.BBZ=false},350)};window.addEventListener('touchend',end,{capture:true,passive:true});window.addEventListener('touchcancel',end,{capture:true,passive:true})})();
+
+/* ===== v398 일정 ↔ 예산: 계획·반복 일정의 예상 비용을 예산 항목에 맞추고, 예정 지출을 미리 보고, 그날 실제 지출·경조사로 기록 ===== */
+const pexAmt=x=>parseAmt(String(x&&x.amt||''))||0;
+function pexAccGuess(b){if(b.bacc)return b.bacc;try{const c=classify([b.act,b.amtm].filter(Boolean).join(' '));if(c&&c.v)return c.v}catch(e){}return''}
+function pexAccName(v){if(!v)return'미분류';const[a,bi]=v.split('|');try{return accLabel({acc:a,bi:bi||''})||'미분류'}catch(e){return'미분류'}}
+async function pexList(a,b){let m;try{m=new Map(await allMap())}catch(e){m=new Map(cacheAll||[])}if(D)m.set(D.date,D);const L=[],seen=new Set(),T=today();
+  for(const o of m.values()){if(!o||!o.date||o.date<a||o.date>b)continue;(o.plan||[]).forEach(p=>{const amt=pexAmt(p);if(p.rid)seen.add(p.rid+'|'+o.date);if(!amt)return;
+    const done=!!p.paid||(o.time||[]).some(t=>t&&t.from===p.id);L.push({d:o.date,id:p.id,t:p.act||p.cat||'',amt,memo:p.amtm||'',acc:pexAccGuess(p),who:p.who||'',done,rid:p.rid||''})})}
+  repRules().forEach(r=>{const amt=pexAmt(r);if(!amt)return;for(let d=a>T?a:T;d<=b;d=addD(d,1)){if(!repOn(r,d)||seen.has(r.id+'|'+d))continue;const o=m.get(d);if(o&&(o.rm||[]).includes(r.id))continue;L.push({d,t:r.act||'',amt,memo:r.amtm||'',acc:r.bacc||'',who:r.who||'',done:false,rid:r.id,virt:1})}});
+  return L.sort((x,y)=>x.d<y.d?-1:x.d>y.d?1:0)}
+/* 블록 편집: 💳 칸에 예산 항목 고르기 */
+{const _d=drawBlockEditor;drawBlockEditor=function(){const r=_d.apply(this,arguments);try{if(!bES)return r;const O=$('#blockedit');const pn=O&&O.querySelector('.bepan[data-pn="amt"]');if(!pn||pn.querySelector('#bbacc'))return r;const b=bES.b;
+  const v=b.bacc||'';const g=v||pexAccGuess(b);const w=document.createElement('label');w.className='f';w.style.marginTop='6px';
+  w.innerHTML=`예산 항목<select id="bbacc">${accOptions(g)}</select><small class="hint" id="bbaccH">${bES.kind==='plan'?'이 일정의 예상 비용이 재정 › 대비의 ‘예정 지출’에 모입니다. 실행으로 옮기면 이 항목의 지출로 기록됩니다.':'지출로 기록할 예산 항목입니다.'}${b.rid&&bES.kind==='plan'?' 반복 일정이면 저장할 때 매번 같은 금액으로 할지 묻습니다.':''}</small>`;
+  pn.appendChild(w);const sel=w.querySelector('select');if(!v&&g)b.bacc=g;sel.onchange=()=>{bES.b.bacc=sel.value}}catch(e){console.warn('pex-be',e)}return r}}
+/* 실제 지출: 고른 예산 항목으로, 함께한 사람이 있으면 경조사 내역에도 */
+function pexGiftKind(t,acc){t=String(t||'');if(/축의|결혼/.test(t))return'축의금';if(/조의|부의|부고|장례|조문/.test(t))return'조의금';if(/생신|생일|돌잔치|돌\b/.test(t))return'돌·생일';if(/선물/.test(t))return'선물';if(/병문안|문병/.test(t))return'병문안';return acc&&acc.startsWith('people|')?'기타':''}
+{const _s=syncSpend;syncSpend=function(src,kind,text){const r=_s.apply(this,arguments);try{if(!src||!src.id)return r;const f=linkedFin(src.id);
+  if(f&&src.bacc&&(f.auto||!f.acc||f.bacc!==src.bacc)){const[a,bi]=src.bacc.split('|');f.acc=a;f.bi=bi||'';f.cat=(findItem(a,bi||'').i||{}).name||'';f.auto=false;f.bacc=src.bacc}
+  const amt=pexAmt(src);const kd=pexGiftKind([src.act,src.amtm].join(' '),src.bacc||'');
+  if(kind==='time'&&src.who&&kd){const names=splitNames(src.who);const ps=names.map(n=>PEOPLE.list.find(p=>p.name===n)).filter(Boolean);
+    if(ps.length){const per=Math.round(amt/ps.length);let ch=false;ps.forEach(P=>{P.gifts=P.gifts||[];const g=P.gifts.find(x=>x.bid===src.id);
+      if(!amt){if(g){P.gifts.splice(P.gifts.indexOf(g),1);ch=true}return}
+      if(g){if(g.amt!==per||g.kind!==kd){g.amt=per;g.kind=kd;ch=true}}else{P.gifts.push({id:uid(),d:D.date,kind:kd,dir:'보냄',amt:per,memo:src.act||'',bid:src.id});P.updated=today();ch=true}});if(ch)savePeople()}}}catch(e){console.warn('pex-sp',e)}return r}}
+/* 반복 일정: 한 번 고친 금액을 매번 같게 */
+{const _a=applyBlock;applyBlock=function(){const k=bES&&bES.kind,b=bES&&bES.b;const r=_a.apply(this,arguments);try{if(r&&k==='plan'&&b&&b.rid){const R=repRules().find(x=>x.id===b.rid);
+  if(R&&(String(R.amt||'')!==String(b.amt||'')||String(R.bacc||'')!==String(b.bacc||''))&&(b.amt||R.amt)){const rid=b.rid,v={amt:b.amt||'',amtm:b.amtm||'',bacc:b.bacc||''},from=D.date;
+    setTimeout(()=>toastAct(`🔁 ‘${R.act||'반복 일정'}’ ${b.amt?won(pexAmt(b))+'을':'금액 없음을'} 매번 같게 할까요?`,'매번 같게',async()=>{Object.assign(R,v);if(!v.amt){delete R.amt;delete R.amtm;delete R.bacc}saveSet().catch(()=>{});
+      let n=0;try{const m=await allMap();for(const o of m.values()){if(!o||o.date<from)continue;let ch=false;(o.plan||[]).forEach(p=>{if(p.rid===rid){Object.assign(p,v);ch=true}});if(ch){n++;if(o===D)schedule();else await store.save(o.date,o)}}}catch(e){}
+      toast(`🔁 앞으로의 ‘${R.act||'반복 일정'}’ ${n}건에 같은 금액을 넣었습니다.`)}),300)}}}catch(e){console.warn('pex-rep',e)}return r}}
+/* 재정 › 대비: 📅 일정에 잡힌 예정 지출 */
+async function pexCardHTML(){const T=today(),mo=T.slice(0,7);const end=addD(T,365);const L=await pexList(mo+'-01',end);
+  const thisM=L.filter(x=>x.d.startsWith(mo)),pend=thisM.filter(x=>!x.done&&x.d>=T);const W=pend.reduce((s,x)=>s+x.amt,0);
+  let bud=0,sp=0;try{const P=plan();bud=P.accounts.reduce((s,a)=>s+accMon(a),0);const m=new Map(cacheAll||[]);if(D)m.set(D.date,D);sp=spendList(m,d=>d.startsWith(mo)).filter(x=>{const{i}=findItem(x.acc,x.bi);return!(i&&isAnnual(i))}).reduce((s,x)=>s+x.amt,0)}catch(e){}
+  const left=bud-sp,after=left-W;
+  const row=x=>`<div class="pexr ${x.done?'dn':''}"><small>${md(x.d)}</small><span>${esc(x.t)}${x.who?` <i>· ${esc(x.who)}</i>`:''}${x.memo?` <i>· ${esc(x.memo)}</i>`:''}<em>${esc(pexAccName(x.acc))}${x.virt?' · 반복':''}</em></span><b>${won(x.amt)}</b>${x.done?'<u>기록됨</u>':''}</div>`;
+  const byM={};L.filter(x=>!x.done&&x.d>=T).forEach(x=>{const k=x.d.slice(0,7);(byM[k]=byM[k]||[]).push(x)});const ms=[];for(let i=0;i<12;i++){const dt=new Date(+T.slice(0,4),+T.slice(5,7)-1+i,1);ms.push(dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0'))}
+  const mt=ms.map(k=>[k,(byM[k]||[]).reduce((s,x)=>s+x.amt,0)]);const mx=Math.max(1,...mt.map(x=>x[1]));const tot=mt.reduce((s,x)=>s+x[1],0);
+  const big=mt.map((x,i)=>[...x,i]).filter(x=>x[2]>0&&x[1]>=Math.max(300000,(tot/12)*1.6)).slice(0,3);
+  return`<div class="card nocol" id="pexcard" style="--k:var(--c-fin,#2e9e6b)"><h3>📅 일정에 잡힌 예정 지출</h3>
+   <div class="tri"><div><small>이번 달 남은 예정</small><b>${won(W)}</b></div><div><small>이번 달 남은 예산</small><b>${bud?won(left):'—'}</b></div><div><small>예정 반영 후</small><b class="${bud&&after<0?'up':''}">${bud?won(after):'—'}</b></div></div>
+   ${bud&&after<0?`<p class="hint" style="color:var(--c-mis);margin:4px 0">⚠️ 이번 달 일정 비용이 남은 예산보다 ${won(-after)} 많습니다.</p>`:''}
+   ${thisM.length?thisM.map(row).join(''):'<p class="hint" style="margin:6px 0">이번 달 일정에 적은 비용이 없습니다.</p>'}
+   <details class="pexy"><summary>앞으로 12개월 · ${won(tot)}</summary><div class="pexbars">${mt.map(([k,v])=>`<div title="${k} ${won(v)}"><i style="height:${Math.round(v/mx*100)}%"></i><small>${+k.slice(5)}월</small></div>`).join('')}</div>
+    ${big.map(([k,v,,i])=>`<p class="hint" style="margin:4px 0">💡 ${+k.slice(5)}월에 ${won(v)} (${(byM[k]||[]).map(x=>esc(x.t)).slice(0,3).join(', ')}) — ${i?`지금부터 매달 ${won(Math.ceil(v/(i+1)/1000)*1000)}씩 모으면 됩니다.`:'이번 달입니다.'}</p>`).join('')}
+    ${L.filter(x=>!x.done&&x.d>=T&&!x.d.startsWith(mo)).slice(0,30).map(row).join('')}</details>
+   <p class="hint" style="margin:6px 0 0">계획 블록이나 반복 일정을 눌러 💳 예산 칸에 금액과 예산 항목을 적으면 여기 모입니다. 그날 ‘실행도 동일’로 옮기면 지출로 기록되고, 함께한 사람이 있으면 그 사람의 경조사 내역에도 남습니다.</p></div>`}
+{const _rb=renderBudget;renderBudget=async function(){const r=await _rb.apply(this,arguments);try{if(fView==='budget'){const F=$('#fbody');if(F&&!F.querySelector('#pexcard')){const h=await pexCardHTML();if(fView==='budget'&&!F.querySelector('#pexcard')){const t=document.createElement('div');t.innerHTML=h;const seg=F.querySelector('.fvsub');(seg?seg.after.bind(seg):F.prepend.bind(F))(t.firstElementChild)}}}}catch(e){console.warn('pex',e)}return r}}
+(function(){const st=document.createElement('style');st.textContent=`#pexcard .pexr{display:flex;gap:8px;align-items:baseline;padding:6px 0;border-top:1px dashed var(--line);font-size:.88rem}#pexcard .pexr small{flex:none;color:var(--muted);min-width:4.2em}#pexcard .pexr span{flex:1;min-width:0}#pexcard .pexr i{font-style:normal;color:var(--muted);font-size:.8rem}#pexcard .pexr em{display:block;font-style:normal;font-size:.72rem;color:var(--muted)}#pexcard .pexr b{flex:none}#pexcard .pexr u{flex:none;text-decoration:none;font-size:.7rem;color:#2e9e6b}#pexcard .pexr.dn{opacity:.6}
+#pexcard .pexbars{display:flex;align-items:flex-end;gap:4px;height:90px;margin:8px 0}#pexcard .pexbars div{flex:1;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center}#pexcard .pexbars i{display:block;width:100%;min-height:2px;background:var(--c-fin,#2e9e6b);border-radius:3px 3px 0 0;opacity:.75}#pexcard .pexbars small{font-size:.6rem;color:var(--muted)}#pexcard .pexy summary{cursor:pointer;font-weight:700;margin-top:8px}`;document.head.appendChild(st)})();
 </script>
 <!--BIBLE{--><!--}BIBLE-->
 <div id="miniov" class="miniov" hidden></div>
