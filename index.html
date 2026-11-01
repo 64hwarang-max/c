@@ -5168,7 +5168,7 @@ document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-rephide]');if(b){e.preventDefault();repHideToggle()}});
 function zmInfo(d){const o=zmDoc(d);return{tk:TASKS.items.filter(t=>t.due===d&&!t.done),pl:o?repVis(o.plan):[],tm:o?(o.time||[]):[],ph:o&&o.photos?o.photos.length:0,p0:o&&o.photos&&o.photos[0]?o.photos[0].ph:null}}
 function zmWeeks(a,n){const mon=mondayOf(a),T=today();const ch=Math.max(60,Math.floor(Math.max(260,innerHeight-385)/n));const wrap=n<=2;const cap=Math.max(1,Math.floor((ch-18)/(wrap?21:12.5)));
-  let h=`<div class="mg full zw zwk ${wrap?'zwrap':''}" style="--ch:${ch}px"><div class="mgw">${['월','화','수','목','금','토','일'].map(x=>`<span>${x}</span>`).join('')}</div><div class="mgd">`;
+  let h=`<div class="mg full zw zwk ${wrap?'zwrap':''}" style="--ch:${ch}px"><div class="mgtw">${['월','화','수','목','금','토','일'].map(x=>`<span>${x}</span>`).join('')}</div><div class="mgd">`;
   for(let r=0;r<n;r++)for(let c=0;c<7;c++){const d=addD(mon,r*7+c),x=parseD(d),I=zmInfo(d),hn=holName(d);
     const ev=[...(hn?[`<i class="ev hol">${esc(hn)}</i>`]:[]),...(GEV[d]||[]).map(e=>`<i class="ev gc">${esc(e.title)}</i>`),...(zmMode(d)==='time'?[]:I.pl).map(q=>`<i class="ev" style="--c:${catColor(q.cat)}">${wrap&&q.s?`<u>${q.s}</u>`:''}${esc(q.act||q.cat)}</i>`),...(zmMode(d)==='plan'?[]:I.tm.filter(q=>q.s)).map(q=>`<i class="ev evac" style="--c:${catColor(q.cat)}">✓${wrap?`<u>${q.s}</u>`:''}${esc(q.act||q.cat)}</i>`),...I.tk.map(t=>`<i class="ev tk">☐ ${esc(t.title)}</i>`)];
     const k=ev.length>cap?cap-1:cap;
@@ -5177,7 +5177,7 @@ function zmWeeks(a,n){const mon=mondayOf(a),T=today();const ch=Math.max(60,Math.
 function zmMon(a,n){const b=parseD(a),T=today();const mons=[...Array(n)].map((_,k)=>new Date(b.getFullYear(),b.getMonth()+k,1));
   const rowsOf=d=>Math.ceil((((d.getDay()+6)%7)+new Date(d.getFullYear(),d.getMonth()+1,0).getDate())/7);
   const tot=mons.reduce((t,d)=>t+rowsOf(d),0),avail=Math.max(240,innerHeight-(n===1?385:345)-(n>1?n*24:0)),ch=Math.max(28,Math.floor(avail/tot)),cap=Math.max(0,Math.floor((ch-17)/12.5));
-  const wk=`<div class="mgw">${['월','화','수','목','금','토','일'].map(x=>`<span>${x}</span>`).join('')}</div>`;
+  const wk=`<div class="mgtw">${['월','화','수','목','금','토','일'].map(x=>`<span>${x}</span>`).join('')}</div>`;
   const one=d0=>{const y=d0.getFullYear(),m=d0.getMonth(),R=rowsOf(d0);const mon=mondayOf(ymd(d0));let h=`<div class="mg full zw ${n>1?'zw'+n:''}" style="--ch:${ch}px">${n>1?`<button class="mgt" data-pm="${y}-${pad(m+1)}">${y!==b.getFullYear()?y+'년 ':''}${m+1}월</button>`:''}${n===1||d0===mons[0]?wk:''}<div class="mgd">`;
     for(let r=0;r<R;r++)for(let c=0;c<7;c++){const d=addD(mon,r*7+c),x=parseD(d),out=x.getMonth()!==m;
       if(out&&n>1){h+='<span></span>';continue}
@@ -5265,7 +5265,7 @@ function openHolMgr(){const S=$('#sheet');S.hidden=false;const Y=+(pAnchor||toda
     S.querySelectorAll('[data-hlx]').forEach(b=>b.onclick=async()=>{SET.hols.splice(+b.dataset.hlx,1);HCACHE={};await saveSet().catch(()=>{});draw()})};draw()}
 function dInfo(d){const o=cacheAll&&cacheAll.get(d);return{tk:[...TASKS.items.filter(t=>t.due===d&&!t.done),...cycDue().filter(x=>x.next===d).map(x=>({title:(x.c.emo||'🔁')+' '+cyName(x.c),time:''}))],pl:o?repVis(o.plan):[],ph:o&&o.photos?o.photos.length:0,p0:o&&o.photos&&o.photos[0]?o.photos[0].ph:null,rec:o?hasAny(o):false}}
 function monthGrid(y,m,full){const days=new Date(y,m+1,0).getDate(),off=(new Date(y,m,1).getDay()+6)%7,T=today();
-  let h=`<div class="mg ${full?'full':''}">${full?'':`<button class="mgt" data-pm="${y}-${pad(m+1)}">${m+1}월</button>`}<div class="mgw">${['월','화','수','목','금','토','일'].map(x=>`<span>${x}</span>`).join('')}</div><div class="mgd">`;
+  let h=`<div class="mg ${full?'full':''}">${full?'':`<button class="mgt" data-pm="${y}-${pad(m+1)}">${m+1}월</button>`}<div class="mgtw">${['월','화','수','목','금','토','일'].map(x=>`<span>${x}</span>`).join('')}</div><div class="mgd">`;
   for(let i=0;i<off;i++)h+='<span></span>';
   for(let dd=1;dd<=days;dd++){const d=`${y}-${pad(m+1)}-${pad(dd)}`;const I=dInfo(d);const wd=(off+dd-1)%7;
     const hn=holName(d);h+=`<button class="cd ${d===T?'td':''} ${d===cur?'sel':''} ${wd===6?'sun':wd===5?'sat':''} ${hn?'hol':''}" data-pd="${d}" ${hn?`title="${esc(hn)}"`:''}><b>${dd}</b>${full?`${hn?`<i class="ev hol">${esc(hn)}</i>`:''}${I.p0?imgTag(I.p0,'alt="" class="cph"')+(I.ph>1?`<i class="cphn">📷${I.ph}</i>`:''):''}${(GEV[d]||[]).slice(0,2).map(e=>`<i class="ev gc">${esc(e.title)}</i>`).join('')}${I.pl.slice(0,2).map(b=>`<i class="ev" style="--c:${catColor(b.cat)}">${esc(b.act||b.cat)}</i>`).join('')}${I.tk.slice(0,2).map(t=>`<i class="ev tk">☐ ${esc(t.title)}</i>`).join('')}${I.pl.length+I.tk.length>4?`<i class="ev more">+${I.pl.length+I.tk.length-4}</i>`:''}`:`${I.pl.length||I.tk.length||(GEV[d]||[]).length?'<em class="dt"></em>':I.rec?'<em class="dt r"></em>':''}`}</button>`}
@@ -16229,7 +16229,7 @@ async function syPutSafe(B,k,v){if(!k.startsWith('day:')||!v||typeof v!=='object
 {const _o=openDay;openDay=async function(d){try{staleGuardInstall()}catch(e){}return _o.apply(this,arguments)}}
 {const _f=flush0;flush0=async function(){try{staleGuardInstall()}catch(e){}return _f.apply(this,arguments)}}
 /* v390 ① 앱 버전 표시 · 새 버전 알림 (GitHub에서 마지막으로 성공한 빌드 번호와 비교) */
-var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/406})();
+var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/407})();
 const VRK='gj-verchk',VRURL='https://github.com/64hwarang-max/c/actions/workflows/build-apk.yml';
 const vrGet=()=>{try{return JSON.parse(localStorage.getItem(VRK)||'{}')}catch(e){return{}}};
 async function vrCheck(force){const c=vrGet();if(!force&&c.t&&Date.now()-c.t<6*36e5)return c;
@@ -16538,6 +16538,60 @@ function wkBindFlow(S,nm,per,M,getAS,setAS,draw){
     await wkAsEdit(d,M,o=>{o.plan.push({id:uid(),s:s0,e,act:c,cat:c,who:''})});draw()});
   S.querySelectorAll('[data-wkasx]').forEach(b=>b.onclick=async()=>{const[d,id]=b.dataset.wkasx.split('|');await wkAsEdit(d,M,o=>{o.plan=o.plan.filter(x=>x.id!==id)});draw()})}
 (function(){const st=document.createElement('style');st.textContent='.wbfl .wbd{border:1px solid var(--line);border-radius:10px;padding:6px 8px;margin:6px 0}.wbfl .wbdh{display:flex;align-items:center;gap:6px}.wbfl .wbdh .del{margin-left:auto}.wbfl .wbdb{display:flex;gap:8px;align-items:center;font-size:.9rem;padding:2px 0}.wbfl .wbdb span:first-child{color:var(--muted);font-variant-numeric:tabular-nums}.wbfl .wbdb .del{margin-left:auto}.wbfl .wbdf{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:6px}.wbfl .wbdf select{flex:1 1 100%}.wbfl .wbdf input[type=time]{width:110px}.wbfl .wbdf input[type=number]{width:64px}.wbfl .wbas{margin-top:6px}.wbfl .wbtg .gl input{flex:1;width:auto;text-align:left}';document.head.appendChild(st)})();
+
+/* ===== v407: 관리 첫 화면 현황 — 건강(러닝·웨이트·최고기록) · 재정(수입지출·자산) · 관계, 주·월·연·누적 ===== */
+function mgRanges(){const T=today(),w=mondayOf(T),y=T.slice(0,4),ym=T.slice(0,7);return[['주',w,addD(w,6)],['월',ym+'-01',ym+'-31'],['연',y+'-01-01',y+'-12-31'],['누적','0000-00-00','9999-99-99']]}
+function mgDocs(){const m=new Map(cacheAll||[]);if(D)m.set(D.date,D);return[...m.values()].filter(o=>o&&o.date).sort((a,b)=>a.date<b.date?-1:1)}
+const mgIn=(o,r)=>o.date>=r[1]&&o.date<=r[2];
+const mgN=(v,u,d)=>v?`${(Math.round(v*(d||1))/(d||1)).toLocaleString()}${u||''}`:'–';
+function mgTbl(rows){return`<div class="mgtw"><table class="mgtab"><thead><tr><th></th><th>주</th><th>월</th><th>연</th><th>누적</th></tr></thead><tbody>${rows.map(r=>`<tr><th>${r[0]}</th>${r[1].map(v=>`<td>${v}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`}
+function mgRun(docs){const L=[];docs.forEach(o=>{let hk=0;(o.ex||[]).forEach(e=>{if(RUNRE.test(e.type||'')){L.push({d:o.date,km:+e.km||0,min:+e.min||0});if(+e.km>0)hk++}});if(!hk)(o.wk||[]).forEach(x=>{if(x.t==='cardio'&&RUNRE.test(x.name||''))L.push({d:o.date,km:+x.km||0,min:+x.min||0})})});return L}
+function mgWt(docs){let sets=0,vol=0;const days=new Set();docs.forEach(o=>wkList(o).forEach(x=>{if(x.t!=='weight')return;(x.sets||[]).forEach(z=>{const v=(+z.w||0)*(+z.r||0);if(v>0||+z.r>0){sets++;vol+=v;days.add(o.date)}})}));return{sets,vol,days:days.size}}
+function mgHealthHTML(){const R=mgRanges(),docs=mgDocs();
+  const run=R.map(r=>{const L=mgRun(docs.filter(o=>mgIn(o,r)));return{n:L.length,km:L.reduce((t,x)=>t+x.km,0),min:L.reduce((t,x)=>t+x.min,0)}});
+  const wt=R.map(r=>mgWt(docs.filter(o=>mgIn(o,r))));
+  const rows=[['🏃 러닝 거리',run.map(x=>mgN(x.km,'km',10))],['🏃 러닝 횟수',run.map(x=>mgN(x.n,'회'))],['🏃 러닝 시간',run.map(x=>x.min?runHM(x.min):'–')],
+    ['🏋️ 운동한 날',wt.map(x=>mgN(x.days,'일'))],['🏋️ 세트 수',wt.map(x=>mgN(x.sets,'세트'))],['🏋️ 볼륨',wt.map(x=>x.vol?(x.vol>=10000?(x.vol/1000).toFixed(1)+'t':Math.round(x.vol).toLocaleString()+'kg'):'–')]];
+  /* 최고 기록 */
+  const all=mgRun(docs);const far=all.reduce((b,x)=>x.km>(b?b.km:0)?x:b,null);const pace=all.filter(x=>x.km>=1&&x.min>0).reduce((b,x)=>{const p=x.min/x.km;return !b||p<b.p?{p,x}:b},null);const lng=all.filter(x=>x.min>0).reduce((b,x)=>x.min>(b?b.min:0)?x:b,null);
+  const pc=p=>`${Math.floor(p)}'${String(Math.round((p%1)*60)).padStart(2,'0')}"/km`;
+  let dv=null;docs.forEach(o=>{const w=mgWt([o]);if(w.vol>(dv?dv.vol:0))dv={d:o.date,vol:w.vol}});
+  let top=[];try{top=Object.entries(wkPR().best).sort((a,b)=>b[1].v-a[1].v).slice(0,5)}catch(e){}
+  const rec=[far&&far.km>0?`🏃 최장 거리 <b>${far.km}km</b> <small>${md(far.d)}</small>`:'',pace?`⚡ 최고 페이스 <b>${pc(pace.p)}</b> <small>${md(pace.x.d)} · ${pace.x.km}km</small>`:'',lng?`⏱ 최장 시간 <b>${runHM(lng.min)}</b> <small>${md(lng.d)}</small>`:'',dv?`🏋️ 하루 최대 볼륨 <b>${Math.round(dv.vol).toLocaleString()}kg</b> <small>${md(dv.d)}</small>`:'',
+    ...top.map(([k,b])=>`💪 ${esc(k)} <b>${Math.round(b.w*10)/10}kg × ${b.r}</b> <small>추정 1RM ${Math.round(b.v)}kg · ${md(b.d)}</small>`)].filter(Boolean);
+  return`<details class="card nocol mgc" id="mgcard" open style="--k:#43a047"><summary><h3>🩺 건강 현황 <small class="hint">러닝 · 웨이트</small></h3></summary>${mgTbl(rows)}
+   <p class="mhead" style="margin:10px 0 4px">🏆 최고 기록</p>${rec.length?rec.map(x=>`<div class="mgrec">${x}</div>`).join(''):'<p class="hint">러닝·웨이트 기록이 쌓이면 최고 기록이 나옵니다.</p>'}</details>`}
+async function mgFinHTML(){const m=await allMap();const R=mgRanges(),docs=mgDocs();const P=plan();
+  const sum=(r,t)=>docs.filter(o=>mgIn(o,r)).reduce((a,o)=>a+(o.fin||[]).filter(f=>f.type===t).reduce((s,f)=>s+(+f.amt||0),0),0);
+  const sp=R.map(r=>sum(r,'지출')),inc=R.map(r=>sum(r,'수입')),gv=R.map(r=>sum(r,'나눔'));
+  const f=v=>v?won(v):'–';const net=inc.map((v,i)=>v-sp[i]);
+  const rows=[['💸 지출',sp.map(f)],['💵 수입',inc.map(f)],['🙏 나눔',gv.map(f)],['➕ 수입−지출',net.map((v,i)=>inc[i]||sp[i]?`<b class="${v<0?'up':'dn'}">${v<0?'−':''}${won(Math.abs(v))}</b>`:'–')]];
+  const ym=today().slice(0,7);const na=x=>{const q=findItem(x.acc,x.bi);return!(q.i&&isAnnual(q.i))};const msp=spendList(m,d=>d.startsWith(ym)).filter(na).reduce((a,x)=>a+x.amt,0);const mb=P.accounts.reduce((a,x)=>a+accMon(x),0);
+  try{if(!window.__mgA){await loadAssets();window.__mgA=1}}catch(e){}
+  const t=assetTotals();const sn=(ASSET.snaps||[]).slice().sort((a,b)=>a.m<b.m?-1:1);const prev=sn.filter(x=>x.m<ym).pop();const dn=prev?t.net-prev.net:null;
+  const byCat={};ASSET.items.filter(x=>x.type==='asset').forEach(x=>byCat[x.cat]=(byCat[x.cat]||0)+(+x.amt||0));const cats=Object.entries(byCat).sort((a,b)=>b[1]-a[1]).slice(0,4);
+  return`<details class="card nocol mgc" id="mgcard" open style="--k:var(--c-fin)"><summary><h3>💰 재정 현황 <small class="hint">수입·지출 · 자산</small></h3></summary>${mgTbl(rows)}
+   ${mb?`<p class="hint" style="margin:6px 0 0">이번 달 예산 ${won(mb)} 중 ${won(msp)} 사용 (${Math.round(msp/mb*100)}%) · ${mb-msp>=0?`<b class="dn">${won(mb-msp)} 남음</b>`:`<b class="up">${won(msp-mb)} 초과</b>`}</p>`:''}
+   <p class="mhead" style="margin:12px 0 4px">🏦 자산 현황</p>
+   ${ASSET.items.length?`<div class="tri"><div><small>순자산</small><b>${won(t.net)}</b></div><div><small>자산</small><b>${won(t.as)}</b></div><div><small>부채</small><b class="up">${won(t.ds)}</b></div></div>
+    ${dn!=null?`<p class="hint" style="margin:6px 0 0">지난달 말 대비 <b class="${dn<0?'up':'dn'}">${dn<0?'−':'+'}${won(Math.abs(dn))}</b></p>`:''}
+    ${cats.length?`<div class="mgrec" style="margin-top:6px">${cats.map(([c,v])=>`${esc(c)} <b>${t.as?Math.round(v/t.as*100):0}%</b>`).join(' · ')}</div>`:''}`:'<p class="hint">재산 탭에서 자산과 부채를 적으면 순자산이 여기 나옵니다.</p>'}
+   <button type="button" class="del" data-mgasset="1" style="margin-top:6px">🏦 자산 자세히 ›</button></details>`}
+function mgPeopleHTML(){const R=mgRanges(),docs=mgDocs();const names=o=>{const out=[];(o.meet||[]).forEach(x=>splitNames(x.who).forEach(n=>out.push(n)));if(o.nurture&&o.nurture.done)splitNames(o.nurture.who).forEach(n=>out.push(n));return out};
+  const cnt=R.map(r=>{let n=0;const who=new Set();docs.filter(o=>mgIn(o,r)).forEach(o=>{n+=(o.meet||[]).length+(o.nurture&&o.nurture.done?1:0);names(o).forEach(x=>who.add(x))});return{n,w:who.size}});
+  const gift=R.map(r=>{let out=0,inn=0;PEOPLE.list.forEach(p=>(p.gifts||[]).forEach(g=>{if(g.d>=r[1]&&g.d<=r[2]){if(g.dir==='받음')inn+=+g.amt||0;else out+=+g.amt||0}}));return{out,inn}});
+  const rows=[['🤝 만남·교제 기록',cnt.map(x=>mgN(x.n,'건'))],['👥 만난 사람',cnt.map(x=>mgN(x.w,'명'))],['🎁 경조사 보냄',gift.map(x=>x.out?won(x.out):'–')],['🎁 경조사 받음',gift.map(x=>x.inn?won(x.inn):'–')]];
+  const m=new Map(docs.map(o=>[o.date,o]));const T=today();const cold=PEOPLE.list.map(p=>{let last=null;try{last=contacts(p.name,m)[0]?.d||null}catch(e){}return{p,gap:last?Math.round((parseD(T)-parseD(last))/864e5):null}}).filter(x=>x.gap==null||x.gap>=30).sort((a,b)=>(b.gap==null?9999:b.gap)-(a.gap==null?9999:a.gap));
+  const bd=PEOPLE.list.map(p=>({p,d:bdaySoon(p.bday)})).filter(x=>x.d!=null).sort((a,b)=>a.d-b.d);
+  return`<details class="card nocol mgc" id="mgcard" open style="--k:var(--c-meet)"><summary><h3>🤝 관계 현황 <small class="hint">${PEOPLE.list.length}명</small></h3></summary>${mgTbl(rows)}
+   ${bd.length?`<div class="mgrec" style="margin-top:8px">🎂 다가오는 생일 ${bd.slice(0,4).map(x=>`<b>${esc(x.p.name)}</b> <small>${x.d?x.d+'일 뒤':'오늘'}</small>`).join(' · ')}</div>`:''}
+   ${cold.length?`<div class="mgrec" style="margin-top:6px">⏳ 30일 넘게 연락이 없는 사람 <b>${cold.length}명</b> <small>${cold.slice(0,4).map(x=>esc(x.p.name)+(x.gap==null?'':' '+x.gap+'일')).join(' · ')}</small></div>`:''}</details>`}
+function mgPut(host,html){if(!host)return;const o=host.querySelector(':scope>#mgcard');const open=o?o.open:true;if(o)o.remove();host.insertAdjacentHTML('afterbegin',html);const n=host.querySelector(':scope>#mgcard');if(n&&!open)n.open=false}
+{const _rc=renderCare;renderCare=async function(){const r=await _rc.apply(this,arguments);try{mgPut($('#careBody'),mgHealthHTML())}catch(e){console.warn('mgh',e)}return r}}
+{const _rb=renderFinToday;renderFinToday=async function(){const r=await _rb.apply(this,arguments);try{if(fView==='today'){const h=await mgFinHTML();if(fView==='today')mgPut($('#fbody'),h)}}catch(e){console.warn('mgf',e)}return r}}
+{const _rp=renderPeople;renderPeople=async function(){const r=await _rp.apply(this,arguments);try{if(!pOpen)mgPut($('#plist'),mgPeopleHTML())}catch(e){console.warn('mgp',e)}return r}}
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-mgasset]');if(!b)return;e.preventDefault();fView='assets';bEdit=false;renderBudget()},true);
+(function(){const st=document.createElement('style');st.textContent='.mgc>summary{list-style:none;cursor:pointer}.mgc>summary::-webkit-details-marker{display:none}.mgc>summary h3{margin:0 0 6px}.mgtw{display:block;overflow-x:auto}.mgc .mgtabab{width:100%;min-width:0;table-layout:fixed;border-collapse:collapse;font-size:.82rem}.mgc .mgtabab th,.mgc .mgtabab td{padding:5px 3px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap;writing-mode:horizontal-tb;color:inherit;font-weight:600;background:none}.mgc .mgtabab thead th{color:var(--muted);font-size:.72rem}.mgc .mgtabab th:first-child{width:34%;text-align:left;white-space:normal;font-weight:700}.mgrec{font-size:.88rem;margin:3px 0}.mgrec small{color:var(--muted)}';document.head.appendChild(st)})();
 </script>
 <!--BIBLE{--><!--}BIBLE-->
 <div id="miniov" class="miniov" hidden></div>
