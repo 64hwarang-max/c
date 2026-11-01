@@ -14991,7 +14991,7 @@ const mdTasks=()=>{try{return TASKS.items.filter(t=>!t.done).length}catch(e){ret
 const MDX={
  plan:{host:'#pbody',title:'계획',build:()=>({c:{e:'🗓️',t:'이번 주',s:`할 일 ${mdTasks()}개`},cells:[
    {e:'🎯',t:'목표',go:()=>go('pgoal')},{e:'📋',t:'할 일',s:mdTasks()?mdTasks()+'개':'',go:()=>go('task')},{e:'🧩',t:'프로젝트',go:()=>go('work')},
-   {e:'🔁',t:'루틴·습관',go:()=>go('routine')},{e:'⏱️',t:'짜투리',go:()=>go('gap')},{e:'🧭',t:'이번 주 균형',go:()=>mdJump(/균형/,document.querySelector('#pbody'))},
+   {e:'🔁',t:'루틴·습관',go:()=>go('routine')},{e:'⏱️',t:'짜투리',go:()=>go('gap')},{e:'🧭',t:'이번 주 균형',go:()=>{try{SET.poView='oct';saveSet().catch(()=>{})}catch(e){}mdJump(/균형|기둥별 계획/,document.querySelector('#pbody'))}},
    {e:'🪜',t:'단기',go:()=>go('short')},{e:'🔭',t:'돌아보기',go:()=>go('rv2')}]})},
  pillar:{host:'#pilbody',title:'관리',build:()=>({c:{e:'🧰',t:'삶의 기둥',s:'돌보는 곳'},cells:[
    {e:'📖',t:'성경·기도',go:()=>go('bible')},{e:'🤝',t:'관계관리',go:()=>go('people')},{e:'💰',t:'재정',go:()=>go('budget')},
@@ -15727,7 +15727,7 @@ async function plWkSync(){try{const old=document.querySelector('.plwk');const on
   if(!on){if(old)old.remove();return}const host=$('#pbody');if(!host)return;const mon=mondayOf(pAnchor||today());
   if(plWkSync.busy)return;plWkSync.busy=1;let M=plMap();try{M=new Map(await allMap());if(D)M.set(D.date,D)}catch(e){}plWkSync.busy=0;
   const h=plWkHTML(mon,M);let el=host.querySelector('.plwk');if(!el||el.dataset.sig!==h){const t=document.createElement('div');t.innerHTML=h;const n=t.firstElementChild;n.dataset.sig=h;if(el)el.replaceWith(n);el=n}
-  const wb=host.querySelector(':scope>.wbx');if(wb){const nb=wb.querySelector(':scope>.wbgo');if(el.parentNode!==wb||(nb&&el.nextElementSibling!==nb)){nb?nb.before(el):wb.appendChild(el)}}else el.remove()}catch(e){plWkSync.busy=0;console.warn('plwk',e)}}
+  const po=host.querySelector('#poocard');if(po&&(SET.poView||'tbl')==='oct'){const bt=po.querySelector(':scope>[data-wkflow]');if(el.parentNode!==po||(bt&&el.nextElementSibling!==bt)){bt?bt.before(el):po.appendChild(el)}}else{const wb=host.querySelector(':scope>.wbx');if(wb){const nb=wb.querySelector(':scope>.wbgo');if(el.parentNode!==wb||(nb&&el.nextElementSibling!==nb)){nb?nb.before(el):wb.appendChild(el)}}else el.remove()}}catch(e){plWkSync.busy=0;console.warn('plwk',e)}}
 DECO.add('요일×기둥',{wait:200,run:plWkSync});
 document.addEventListener('click',async e=>{const b=e.target.closest&&e.target.closest('[data-plday]');if(!b)return;e.preventDefault();e.stopPropagation();try{ZMD=0}catch(x){}await openDay(b.dataset.plday);go('day');try{renderDay()}catch(x){}},true);
 
@@ -15797,7 +15797,7 @@ function pplSheet(kind){const m=mdM(),T=today(),wa=mondayOf(T),ym=T.slice(0,7);c
 (function(){const st=document.createElement('style');st.textContent=`.csheet #cshb>.panel[data-ch="meas"]>h2,.csheet #cshb>.panel[data-ch="sleep"]>h2{display:none}.csheet #cshb>.panel,.csheet #cshb>.card{border:0!important;box-shadow:none!important;margin:0 0 10px!important;padding:6px 0!important;background:none!important}
 .pslr{display:flex;flex-direction:column;align-items:flex-start;width:100%;text-align:left;border:0;border-bottom:1px solid var(--line);background:none;color:var(--ink);font:inherit;padding:8px 2px;cursor:pointer}.pslr small{color:var(--muted);font-size:.8rem}`;document.head.appendChild(st)})();
 /* v372: 요일별 기둥 실행은 균형판 카드 안으로 */
-(function(){const st=document.createElement('style');st.textContent='.wbx .plwk{margin:10px 0 4px;padding-top:8px;border-top:1px solid var(--line)}.wbx .plwk>summary{cursor:pointer;font-weight:700;font-size:.92rem;list-style:none;padding:2px 0}.wbx .plwk>summary::-webkit-details-marker{display:none}.wbx .plwk>summary::before{content:"▾ ";color:var(--muted)}.wbx .plwk:not([open])>summary::before{content:"▸ "}';document.head.appendChild(st)})();
+(function(){const st=document.createElement('style');st.textContent='.wbx .plwk,#poocard .plwk{margin:10px 0 4px;padding-top:8px;border-top:1px solid var(--line)}.wbx .plwk>summary,#poocard .plwk>summary{cursor:pointer;font-weight:700;font-size:.92rem;list-style:none;padding:2px 0}.wbx .plwk>summary::-webkit-details-marker{display:none}.wbx .plwk>summary::before{content:"▾ ";color:var(--muted)}.wbx .plwk:not([open])>summary::before{content:"▸ "}';document.head.appendChild(st)})();
 
 
 /* ===== v373: 습관·루틴은 한 메뉴에만 (메뉴 지도에서 ‘루틴·습관’이 놓인 곳) ===== */
@@ -16232,7 +16232,7 @@ async function syPutSafe(B,k,v){if(!k.startsWith('day:')||!v||typeof v!=='object
 {const _o=openDay;openDay=async function(d){try{staleGuardInstall()}catch(e){}return _o.apply(this,arguments)}}
 {const _f=flush0;flush0=async function(){try{staleGuardInstall()}catch(e){}return _f.apply(this,arguments)}}
 /* v390 ① 앱 버전 표시 · 새 버전 알림 (GitHub에서 마지막으로 성공한 빌드 번호와 비교) */
-var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/403})();
+var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/404})();
 const VRK='gj-verchk',VRURL='https://github.com/64hwarang-max/c/actions/workflows/build-apk.yml';
 const vrGet=()=>{try{return JSON.parse(localStorage.getItem(VRK)||'{}')}catch(e){return{}}};
 async function vrCheck(force){const c=vrGet();if(!force&&c.t&&Date.now()-c.t<6*36e5)return c;
@@ -16416,8 +16416,8 @@ async function poHTML(){let M=cacheAll;try{M=await allMap()}catch(e){}const d=pA
   return`<div class="card nocol" id="poocard" style="--k:#6c5ce7"><div class="w168h"><h3>🧭 기둥별 계획 <small class="hint">${esc(perLabel(pZoom,st.per))}</small></h3></div>
    <div class="seg poseg" style="margin:6px 0"><button data-pov="tbl" class="${v==='tbl'?'on':''}">📋 목표</button><button data-pov="oct" class="${v==='oct'?'on':''}">🔷 시간 분배</button><button data-pov="lnk" class="${v==='lnk'?'on':''}">🔗 연결</button></div>
    ${v==='oct'?poOctBody(st):v==='lnk'?lkHTML(d):poTblHTML(M,d)+poMoreHTML()}</div>`}
-function poOctBody(st){const K=st.K;const row=k=>{const s=st.S[k];const base=Math.max(s.tgt,s.plan,s.act,1);const w=v=>Math.min(100,Math.round(v/base*100));
-    return`<button type="button" class="porow" data-poo="${k}"><span class="pon">${AREA_E[k]||''} ${esc(areaName(k))}</span><span class="pobar">${s.tgt?'<i class="t"></i>':''}<i class="p" style="width:${w(s.plan)}%"></i><i class="a" style="width:${w(s.act)}%"></i></span><small>${s.plan||s.act||s.tgt?`${s.plan?hm(s.plan):'0'} · ${s.act?hm(s.act):'0'}${s.tgt?` / ${Math.round(s.tgt/60)}시간`:''}`:'–'}</small></button>`};
+function poOctBody(st){const K=st.K;let FOC=[];try{if(pZoom==='w')FOC=wkFocus(st.a)}catch(e){}const row=k=>{const s=st.S[k];const base=Math.max(s.tgt,s.plan,s.act,1);const w=v=>Math.min(100,Math.round(v/base*100));
+    return`<button type="button" class="porow" data-poo="${k}"><span class="pon">${FOC.includes(k)?'⭐':''}${AREA_E[k]||''} ${esc(areaName(k))}</span><span class="pobar">${s.tgt?'<i class="t"></i>':''}<i class="p" style="width:${w(s.plan)}%"></i><i class="a" style="width:${w(s.act)}%"></i></span><small>${s.plan||s.act||s.tgt?`${s.plan?hm(s.plan):'0'} · ${s.act?hm(s.act):'0'}${s.tgt?` / ${Math.round(s.tgt/60)}시간`:''}`:'–'}</small></button>`};
   const low=K.filter(k=>st.S[k].tgt).map(k=>[k,st.S[k].plan/st.S[k].tgt]).sort((a,b)=>a[1]-b[1])[0];
   return`${poOctSVG(st)}<div class="poleg"><span><i style="background:#6c5ce7"></i>계획</span><span><i style="background:#2e9e6b"></i>실제</span>${K.some(k=>st.S[k].tgt)?'<span><i class="dsh"></i>목표 시간</span>':''}</div>
    <div class="porows"><div class="porh"><span>기둥</span><span></span><small>계획 · 실제 / 목표</small></div>${K.map(row).join('')}</div>
