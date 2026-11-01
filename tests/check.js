@@ -94,7 +94,7 @@ const ok = (name, pass, info) => { results.push({ name, pass: !!pass, info }); c
     ok('하단 탭 화면이 모두 열림 (' + secs.join(',') + ')', secs.length >= 4 && !goErr && errs.length === e0, { goErr, errs: errs.slice(e0) });
 
     // 11. 비전·역할 화면
-    const s11 = await S.evaluate(async () => { go('pillar'); openSection('vision'); await new Promise(r => setTimeout(r, 600)); return { vc: !!document.querySelector('#vcbar'), rl: !!document.querySelector('#rlbox') }; });
+    const s11 = await S.evaluate(async () => { go('pillar'); openSection('vision'); await new Promise(r => setTimeout(r, 600)); const rb = document.querySelector('[data-vsel="role"]'); if (rb) { rb.click(); await new Promise(r => setTimeout(r, 600)); } return { vc: !!document.querySelector('#vcbar'), rl: !!document.querySelector('#rlbox') }; });
     ok('비전 화면: 대화 단추·역할 카드', s11.vc && s11.rl, s11);
 
     // 12. 큐티 첫 화면
