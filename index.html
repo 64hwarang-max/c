@@ -14410,7 +14410,7 @@ function plpAgg(R,M,k){let A=0,S=0,N=0,nd=0;let d=R.a;const end=R.b>today()?toda
     if(k==='body'){const sl=o.sleep&&o.sleep.bed&&o.sleep.wake?wkDur({s:o.sleep.bed,e:o.sleep.wake}):(+(o.sleep||{}).hours||0)*60;if(sl)A+=sl}if(any)nd++}d=addD(d,1)}
   return{A,avg:N?Math.round(S/N*10)/10:0,nd}}
 function plpDays(R){return Math.round((parseD(R.b)-parseD(R.a))/864e5)+1}
-function plpHTML(k,M){const p=PLPP,R=plpRange(p,PLPA),P0=plpRange(p,plpShift(p,PLPA,-1));const cur=plpAgg(R,M,k),prev=plpAgg(P0,M,k);const T=wkTarget();const tgtAll=(T[k]||0)*60*plpDays(R)/7;const el=R.a>today()?0:Math.round((parseD(R.b>today()?today():R.b)-parseD(R.a))/864e5)+1;const tgt=R.b>today()?(T[k]||0)*60*el/7:tgtAll;const pc=tgt?Math.min(100,Math.round(cur.A/tgt*100)):0;
+function plpHTML(k,M){PLPP='w';const p=PLPP,R=plpRange(p,PLPA),P0=plpRange(p,plpShift(p,PLPA,-1));const cur=plpAgg(R,M,k),prev=plpAgg(P0,M,k);const T=wkTarget();const tgtAll=(T[k]||0)*60*plpDays(R)/7;const el=R.a>today()?0:Math.round((parseD(R.b>today()?today():R.b)-parseD(R.a))/864e5)+1;const tgt=R.b>today()?(T[k]||0)*60*el/7:tgtAll;const pc=tgt?Math.min(100,Math.round(cur.A/tgt*100)):0;
   const d=prev.avg&&cur.avg?Math.round((cur.avg-prev.avg)*10)/10:0;const nm=`${AREA_E[k]||''} ${areaName(k)}`;const pcl=ZOOMS.find(z=>z[0]===p)[1];
   const pctG=g=>{try{return Math.round(prog(g)*100)}catch(e){return 0}};
   const gs=goalsAt(p,perKey(p,PLPA)).filter(g=>g.title&&g.area===k);
@@ -14425,15 +14425,11 @@ function plpHTML(k,M){const p=PLPP,R=plpRange(p,PLPA),P0=plpRange(p,plpShift(p,P
   const items=pcItems().filter(x=>x.a===k).map(it=>({it,i:pcInfo(it)})).sort((a,b)=>(a.i.left??9999)-(b.i.left??9999));
   const ppl=k==='rel'?PEOPLE.list.map(P=>({P,i:cadInfo(P,M)})).filter(x=>x.i).sort((a,b)=>a.i.left-b.i.left):[];
   const col=l=>l==null?'var(--muted)':l<0?'#e5484d':l<=14?'#d9822b':'var(--muted)';
-  return`<div class="plp"><div class="chips plpz" style="margin:8px 0 0">${ZOOMS.map(([z,l])=>`<button class="chip fbtn ${p===z?'on':''}" data-plpp="${z}">${l}</button>`).join('')}</div>
+  return`<div class="plp">
    <div class="wk" style="margin-top:8px"><button class="iconbtn" data-plps="-1" aria-label="이전">‹</button><b style="font-family:'Gowun Batang',serif">${nm} · ${R.label}</b><button class="iconbtn" data-plps="1" aria-label="다음">›</button></div>
    <div class="card nocol" style="--k:#0ea5e9"><h3>⏱ 시간 · 점수</h3><div class="tri"><div><small>실제 시간</small><b>${cur.A?hm(cur.A):'0'}</b></div><div><small>${R.b>today()?'오늘까지 목표':'목표 시간'}</small><b>${tgt?hm(Math.round(tgt)):'–'}</b></div><div><small>평균 점수</small><b>${cur.avg?cur.avg.toFixed(1):'–'}${d?` <em class="${d>0?'up':'dn'}" style="font-size:.7rem;font-style:normal">${d>0?'▲':'▼'}${Math.abs(d)}</em>`:''}</b></div></div>
     ${tgt?`<div class="lgbar" style="margin:8px 0 2px"><i class="lgb" style="width:${pc}%;background:${pc>=100?'#2e9e6b':'#0ea5e9'}"></i></div><p class="hint" style="margin:0">목표의 ${Math.round(cur.A/tgt*100)}% · 기록한 날 ${cur.nd}일${R.b>today()?` · 기간 전체 목표 ${hm(Math.round(tgtAll))}`:''}${prev.A?` · 앞 ${pcl}은 ${hm(prev.A)}`:''}</p>`:`<p class="hint" style="margin:6px 0 0">이 기둥의 주간 목표 시간이 없습니다. 한 주 마무리 › 다음 주 세우기에서 정합니다.</p>`}</div>
-   <div class="card nocol" style="--k:#ff8a3d"><h3>🎯 ${pcl} 목표 <small class="hint">${perLabel(p,perKey(p,PLPA))}</small></h3>
-    ${gs.length?gs.map(g=>{const q=lkd[g.id];const par=g.parent&&GOALS.list.find(x=>x.id===g.parent);return`<div class="plkl"><button type="button" class="plpr" data-plpg="1"><span>${esc(g.title)}</span><b>${pctG(g)}%</b></button><div class="lgbar"><i class="lgb" style="width:${pctG(g)}%;background:var(--acc)"></i></div>
-     <div class="plga"><small>${par?`⬆ ${esc(par.title)}`:'⬆ 상위 목표 없음'} · ${q?`🗓️ 계획 ${q.n}개 ${hm(q.m)}`:'🗓️ 연결된 계획 없음'}</small><span><button type="button" class="del" data-plgt="${g.id}">＋ 시간</button><button type="button" class="del" data-plge="${g.id}" aria-label="이름 고치기">✏️</button><button type="button" class="del" data-plgp="${g.id}" aria-label="상위 목표">🔗</button><button type="button" class="del" data-plgx="${g.id}" aria-label="삭제">🗑</button></span></div></div>`}).join(''):'<p class="hint" style="margin:2px 0 6px">이 기간에 이 기둥의 목표가 없습니다.</p>'}
-    <div class="gl" style="margin-top:6px"><input type="text" id="plpgi" placeholder="${pcl} 목표 추가 (예: ${({spirit:'새벽기도 주 5번',rel:'부모님 찾아뵙기',fin:'월 저축 100만원',body:'주 3번 운동',work:'교안 3편 완성',grow:'책 1권',habit:'아침 루틴 정착',mind:'감정 일기 주 3번'})[k]||''})"><button class="btn small" id="plpga">＋</button></div>
-    ${others.length?`<details style="margin-top:8px"><summary class="hint">다른 기간 목표 ${others.reduce((s,x)=>s+x.gs.length,0)}개</summary>${others.map(x=>`<p class="mhead" style="margin:6px 0 2px">${x.n}</p>${x.gs.map(g=>`<div class="plpr"><span>${esc(g.title)}</span><b>${pctG(g)}%</b></div>`).join('')}`).join('')}</details>`:''}</div>
+   ${plpAllHTML(k,lkd,pctG)}
    <div class="card nocol" style="--k:#6c5ce7"><h3>🗓️ 이 기간 계획 <small class="hint">${bl.length}개 · ${hm(blMin)}${unl?` · 목표 없는 계획 ${unl}개`:''}</small></h3>${bshow.length?bshow.map(x=>{const gg=x.b.goal&&GOALS.list.find(g=>g.id===x.b.goal);return`<button type="button" class="plpr" data-plpb="${x.d}|${x.b.id}"><span><small>${md(x.d)} (${WD[parseD(x.d).getDay()]}) ${esc(x.b.s)}~${esc(x.b.e||'')}</small><br>${esc(x.b.act||x.b.cat||'')}</span><em style="font-style:normal;font-size:.78rem;color:${gg?'#6c5ce7':'#d9822b'}">${gg?'🎯 '+esc(gg.title):'목표 연결 ›'}</em></button>`}).join('')+(bl.length>bshow.length?`<p class="hint" style="margin:4px 0 0">앞으로 ${bshow.length}개만 보입니다.</p>`:''):'<p class="hint" style="margin:2px 0">이 기간에 이 기둥의 계획 블록이 없습니다.</p>'}</div>
    <div class="card nocol" style="--k:#1f6e6a"><h3>📋 할 일 · 🧩 프로젝트</h3>${tasks.map(t=>`<div class="plpr"><span>☐ ${esc(t.title)}${t.due?` <small>~${md(t.due)}</small>`:''}</span></div>`).join('')}${prs.map(x=>{let v=0;try{v=Math.round(projPct(x)*100)}catch(e){}return`<div class="plpr"><span>🧩 ${esc(x.title)}</span><b>${v}%</b></div>`}).join('')}${tasks.length||prs.length?'':'<p class="hint" style="margin:2px 0">이 기둥에 연결된 할 일·프로젝트가 없습니다.</p>'}</div>
    <div class="card nocol" style="--k:#d9822b"><h3>🏛️ 관리 항목 <small class="hint">주기마다 챙기기</small></h3>${ppl.slice(0,6).map(({P,i})=>`<div class="plpr"><span>👥 ${esc(P.name)} <small>${esc((CADS.find(c=>c[0]===i.c)||[0,''])[1])}</small></span><em style="color:${col(i.left)};font-style:normal;font-weight:700">${i.left<0?-i.left+'일 지남':i.left===0?'오늘':'D-'+i.left}</em></div>`).join('')}
@@ -16232,7 +16228,7 @@ async function syPutSafe(B,k,v){if(!k.startsWith('day:')||!v||typeof v!=='object
 {const _o=openDay;openDay=async function(d){try{staleGuardInstall()}catch(e){}return _o.apply(this,arguments)}}
 {const _f=flush0;flush0=async function(){try{staleGuardInstall()}catch(e){}return _f.apply(this,arguments)}}
 /* v390 ① 앱 버전 표시 · 새 버전 알림 (GitHub에서 마지막으로 성공한 빌드 번호와 비교) */
-var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/412})();
+var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/413})();
 const VRK='gj-verchk',VRURL='https://github.com/64hwarang-max/c/actions/workflows/build-apk.yml';
 const vrGet=()=>{try{return JSON.parse(localStorage.getItem(VRK)||'{}')}catch(e){return{}}};
 async function vrCheck(force){const c=vrGet();if(!force&&c.t&&Date.now()-c.t<6*36e5)return c;
@@ -16719,6 +16715,23 @@ document.addEventListener('click',e=>{const sp=e.target.closest&&e.target.closes
 #wkcard .wkin [data-zbf]{display:none}#wkcard .pdh{margin-top:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #wkcard .pdfoc{display:flex;flex-wrap:nowrap;gap:4px}#wkcard .pdfoc .chip{flex:1 1 0;min-width:0;padding:7px 0;text-align:center;font-size:16px;line-height:1.2}
 #poocard .lkflow span{cursor:pointer}`;document.head.appendChild(st)})();
+
+/* ===== v413: 기둥 화면 — 평생 목표부터 1주 목표까지 한 화면에 (접기 가능) ===== */
+function plpFold(){try{return JSON.parse(localStorage.getItem('gj-plpfold')||'{}')||{}}catch(e){return{}}}
+function plpAllHTML(k,lkd,pctG){const lifeK=(typeof lifeCfg==='function'?lifeCfg().map(x=>x.k):[]);const LV=[...lifeK,'S','y','h','q','m','w'].filter((x,i,a)=>a.indexOf(x)===i&&(x==='S'||x==='w'||x==='m'||x==='q'||x==='h'||x==='y'||lifeK.includes(x)));
+  const F=plpFold();const T=today();const ph={S:'언젠가 이루고 싶은 것',y:'올해 목표',h:'이번 반기 목표',q:'이번 분기 목표',m:'이번 달 목표',w:'이번 주 목표'};
+  const rowG=g=>{const q=lkd[g.id];const par=g.parent&&GOALS.list.find(x=>x.id===g.parent);let pc=0;try{pc=pctG(g)}catch(e){}return`<div class="plkl"><button type="button" class="plpr" data-plpg="1"><span>${esc(g.title)}</span><b>${pc}%</b></button><div class="lgbar"><i class="lgb" style="width:${pc}%;background:var(--acc)"></i></div>
+     <div class="plga"><small>${par?`⬆ ${esc(par.title)}`:'⬆ 상위 목표 없음'} · ${q?`🗓️ 계획 ${q.n}개 ${hm(q.m)}`:'🗓️ 연결된 계획 없음'}</small><span>${LVX&&LVX[g.lv]||g.lv==='S'?'':`<button type="button" class="del" data-plgt="${g.id}">＋ 시간</button>`}<button type="button" class="del" data-plge="${g.id}" aria-label="이름 고치기">✏️</button><button type="button" class="del" data-plgp="${g.id}" aria-label="상위 목표">🔗</button><button type="button" class="del" data-plgx="${g.id}" aria-label="삭제">🗑</button></span></div></div>`};
+  const sec=lv=>{const per=perOf(lv,PLPA);const gs=GOALS.list.filter(g=>g.title&&g.area===k&&g.lv===lv&&(g.per===per||lv==='S'||LVX&&LVX[lv]));const open=F[lv]===undefined?(lv==='w'||lv==='m'||gs.length>0):!F[lv];
+    const nm=lkLvN(lv);const pl=(lv==='S'||(LVX&&LVX[lv]))?'':perLabel(lv,perKey(lv,PLPA));
+    return`<div class="plsec ${open?'':'fd'}"><button type="button" class="plsh" data-plsf="${lv}"><i>${open?'▾':'▸'}</i><b>${esc(nm)}</b>${pl?`<small>${esc(pl)}</small>`:''}<em>${gs.length?gs.length+'개':'–'}</em></button>
+     ${open?`<div class="plsb">${gs.map(rowG).join('')||'<p class="hint" style="margin:2px 0 6px">아직 없습니다.</p>'}<div class="gl" style="margin-top:4px"><input type="text" data-plsi="${lv}" placeholder="${ph[lv]||nm+' 목표'}" enterkeyhint="done"><button class="btn small" data-plsa="${lv}">＋</button></div></div>`:''}</div>`};
+  return`<div class="card nocol" style="--k:#ff8a3d"><h3>🎯 ${esc(areaName(k))} 목표 <small class="hint">평생 → 1주</small></h3>${LV.map(sec).join('')}</div>`}
+document.addEventListener('click',e=>{const f=e.target.closest&&e.target.closest('.plp [data-plsf]');if(f){e.preventDefault();e.stopPropagation();const F=plpFold();const lv=f.dataset.plsf;const sec=f.closest('.plsec');const open=!sec.classList.contains('fd');F[lv]=open;try{localStorage.setItem('gj-plpfold',JSON.stringify(F))}catch(x){}plpPaint();return}
+  const b=e.target.closest&&e.target.closest('.plp [data-plsa]');if(!b)return;e.preventDefault();e.stopPropagation();const lv=b.dataset.plsa;const i=document.querySelector(`.plp [data-plsi="${lv}"]`);const t=((i&&i.value)||'').trim();if(!t)return;
+  GOALS.list.push({id:uid(),lv,per:perOf(lv,PLPA),title:t,done:false,doneAt:'',parent:null,tasks:[],area:PLP,rank:0,kind:'once'});saveGoals();plpPaint()},true);
+document.addEventListener('keydown',e=>{const i=e.target.closest&&e.target.closest('.plp [data-plsi]');if(!i||e.key!=='Enter'||e.isComposing)return;e.preventDefault();const b=document.querySelector(`.plp [data-plsa="${i.dataset.plsi}"]`);b&&b.click()},true);
+(function(){const st=document.createElement('style');st.textContent=`.plp .plsec{border-top:1px solid var(--line)}.plp .plsec:first-of-type{border-top:0}.plp .plsh{display:flex;align-items:baseline;gap:6px;width:100%;padding:9px 0;border:0;background:none;color:var(--ink);font:inherit;text-align:left;cursor:pointer}.plp .plsh i{font-style:normal;color:var(--muted);width:1em}.plp .plsh small{color:var(--muted);font-size:.74rem}.plp .plsh em{margin-left:auto;font-style:normal;color:var(--muted);font-size:.8rem}.plp .plsb{padding:0 0 8px 1em}`;document.head.appendChild(st)})();
 </script>
 <!--BIBLE{--><!--}BIBLE-->
 <div id="miniov" class="miniov" hidden></div>
