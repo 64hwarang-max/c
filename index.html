@@ -16235,7 +16235,7 @@ async function syPutSafe(B,k,v){if(!k.startsWith('day:')||!v||typeof v!=='object
 {const _o=openDay;openDay=async function(d){try{staleGuardInstall()}catch(e){}return _o.apply(this,arguments)}}
 {const _f=flush0;flush0=async function(){try{staleGuardInstall()}catch(e){}return _f.apply(this,arguments)}}
 /* v390 ① 앱 버전 표시 · 새 버전 알림 (GitHub에서 마지막으로 성공한 빌드 번호와 비교) */
-var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/427})();
+var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/428})();
 const VRK='gj-verchk',VRURL='https://github.com/64hwarang-max/c/actions/workflows/build-apk.yml';
 const vrGet=()=>{try{return JSON.parse(localStorage.getItem(VRK)||'{}')}catch(e){return{}}};
 async function vrCheck(force){const c=vrGet();if(!force&&c.t&&Date.now()-c.t<6*36e5)return c;
@@ -17070,6 +17070,39 @@ function pilBind(R,k){R.querySelectorAll('[data-pltb]').forEach(b=>b.onclick=()=
 .plhb{display:grid;grid-template-columns:minmax(0,1fr) 38% 4.2em;gap:8px;align-items:center;font-size:.88rem;margin:5px 0}.plhb i{height:8px;border-radius:5px;background:color-mix(in srgb,var(--line) 70%,transparent);overflow:hidden}.plhb i b{display:block;height:100%;background:var(--acc)}.plhb small{color:var(--muted);text-align:right}
 .plrow{display:flex;gap:8px;padding:6px 2px;border-bottom:1px dashed var(--line)}.plrow i{font-style:normal}.plrow small{color:var(--muted);font-size:.76rem}.plrow p{margin:2px 0 0;font-size:.9rem;line-height:1.45;white-space:pre-wrap}
 .plform .panel{margin:8px 0 0}.plsheet .plform{margin-top:4px}`;document.head.appendChild(st)})();
+
+/* ===== v428: 1년 미만 보기(1주~6달)는 모두 시간표(계획·실제 비교) · 기둥별 목표는 접고 눌러서 시간 배분 ===== */
+{const _zd=zmDays;zmDays=function(i,a){const z=ZMS[i];if(!z)return[];const[k,n]=z;
+  if(k==='w'){const s=mondayOf(a);return[...Array(n*7)].map((_,j)=>addD(s,j))}
+  if(k==='m'&&n<=6){const b=parseD(a);const s=ymd(new Date(b.getFullYear(),b.getMonth(),1)),e=ymd(new Date(b.getFullYear(),b.getMonth()+n,0));const L=[];for(let d=s;d<=e;d=addD(d,1))L.push(d);return L}
+  return _zd.apply(this,arguments)}}
+function zgCompact(h,n){if(n<=9)return h;const lv=n<=14?1:n<=31?2:3;
+  h=h.replace('<div class="zgrid" style="--n:'+n+'">',`<div class="zgrid zmany zm${lv}" style="--n:${n}">`);
+  h=h.replace(/<div class="tgh"><span><\/span>([\s\S]*?)<\/div><div class="tgad">/,(m,hd)=>{const hd2=hd.replace(/<button class="([^"]*)" data-pd="(\d{4}-\d{2}-\d{2})">[\s\S]*?<\/button>/g,(m2,cl,d)=>{const x=parseD(d),dd=x.getDate(),mon=x.getDay()===1;
+      let lab='';if(lv===1)lab=`<small>${WD[x.getDay()]}</small><b>${dd}</b>`;else if(lv===2)lab=`<b>${dd}</b>`;else if(dd===1)lab=`<b class="zml">${x.getMonth()+1}월</b>`;
+      return`<button class="${cl}${mon?' mon':''}${dd===1?' d1':''}" data-pd="${d}">${lab}</button>`});return`<div class="tgh"><span></span>${hd2}</div><div class="tgad">`});
+  h=h.replace(/<button class="tgcol ([^"]*)" data-pd="(\d{4}-\d{2}-\d{2})"/g,(m,cl,d)=>{const x=parseD(d);return`<button class="tgcol ${cl}${x.getDay()===1?' mon':''}${x.getDate()===1?' d1':''}" data-pd="${d}"`});
+  return h}
+{const _zb=zmBody;zmBody=function(i,a){const z=ZMS[i];if(z&&(z[0]==='w'||(z[0]==='m'&&z[1]<=6))){const n=zmDays(i,a).length;return`<div class="zmv">${zgCompact(zmGrid(i,a),n)}</div>`}
+  const r=_zb.apply(this,arguments);if(z&&z[0]==='d'&&z[1]>9)return r;return r}}
+/* 계획 탭 기본 보기(1주·1달·3개월·6개월)도 같은 시간표로 */
+{const _rp=renderPlan;renderPlan=async function(){try{if(ZMP==null&&['w','m','q','h'].includes(pZoom)&&typeof PLM!=='undefined'&&PLM!=='goal')ZMP=zmLeg(pZoom)}catch(e){}return _rp.apply(this,arguments)}}
+(function(){const st=document.createElement('style');st.textContent=`.zmany .tgad{display:none}.zmany .tgbk{font-size:0;padding:0}.zmany .tgac{width:2px}
+.zm2 .tgh b{font-size:.56rem}.zm2 .tgh .td b{padding:0 2px;border-radius:6px}.zm1 .tgh b{font-size:.76rem}.zm1 .tgh .td b{padding:0 3px}
+.zm3 .tgh{overflow:visible}.zm3 .tgh button{overflow:visible;padding:4px 0}.zm3 .tgh b.zml{font-size:.6rem;white-space:nowrap;color:var(--ink)}.zm3 .tgcol{border-left:0}.zm3 .tgcol.mon{border-left:1px dotted color-mix(in srgb,var(--line) 80%,transparent)}.zm3 .tgcol.d1{border-left:1px solid var(--muted)}.zm3 .tgh .td b{background:none;color:var(--pen)}.zm3 .tgpl{right:0}.zm3 .zs-both .tgpl{right:50%}
+.zm2 .tgcol{border-left-color:color-mix(in srgb,var(--line) 60%,transparent)}.zm2 .tgcol.mon,.zm1 .tgcol.mon{border-left:1px solid var(--muted)}.zmany .tgpl{right:0}.zmany .zs-both .tgpl{right:50%}`;document.head.appendChild(st)})();
+
+/* 기둥별 목표: 기둥 이름 + 목표만 보이고, 기둥을 누르면 목표 추가·시간 배분이 펼쳐짐 */
+const WBTO=(()=>{try{return new Set(JSON.parse(localStorage.getItem('gj-wbto')||'[]'))}catch(e){return new Set()}})();
+{const _pp=pdPillarsHTML;pdPillarsHTML=function(lv,a,gs){let h=_pp.apply(this,arguments);
+  h=h.replace(/<div class="wbtg"><b>([^<]*)<small>([^<]*)<\/small><\/b>([\s\S]*?)(<div class="gl")/g,(m,nm,th,goals,gl)=>{const k=(SCORE.find(([kk])=>nm.includes(areaName(kk)))||[''])[0];const op=WBTO.has(k);
+    return`<div class="wbtg wbf ${op?'op':''}" data-wbk="${k}"><button type="button" class="wbth" data-wbtf="${k}"><b>${nm}<small>${th}</small></b><i>${op?'▴':'▾'}</i></button>${goals}<div class="wbte">${gl}`});
+  h=h.replace(/(<button type="button" class="del" data-wkcat="[^"]*" style="margin-top:4px">＋ 중분류<\/button>)<\/div>/g,'$1</div></div>');
+  return h}}
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-wbtf]');if(!b)return;e.preventDefault();e.stopPropagation();const k=b.dataset.wbtf,g=b.closest('.wbtg');const op=!g.classList.contains('op');g.classList.toggle('op',op);const i=b.querySelector('i');if(i)i.textContent=op?'▴':'▾';
+  if(op)WBTO.add(k);else WBTO.delete(k);try{localStorage.setItem('gj-wbto',JSON.stringify([...WBTO]))}catch(x){}},true);
+(function(){const st=document.createElement('style');st.textContent=`.wbtg.wbf{padding-top:4px;padding-bottom:4px}.wbtg.wbf .wbth{display:flex;align-items:center;width:100%;border:0;background:none;padding:6px 0;font:inherit;color:var(--ink);cursor:pointer;text-align:left}.wbtg.wbf .wbth b{flex:1;display:flex;gap:6px;align-items:baseline}.wbtg.wbf .wbth small{color:var(--muted);font-weight:500}.wbtg.wbf .wbth i{font-style:normal;color:var(--muted);font-size:.8rem}
+.wbtg.wbf:not(.op) .wbte{display:none}.wbtg.wbf .wbg{padding:3px 0}`;document.head.appendChild(st)})();
 </script>
 <!--BIBLE{--><!--}BIBLE-->
 <div id="miniov" class="miniov" hidden></div>
