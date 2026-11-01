@@ -14047,22 +14047,18 @@ DECO.add('주간 보드',{wait:120,run:()=>wkBoardPaint()});
 
 /* 일요일 저녁: 이번 주 돌아보기 → 다음 주 세우기 (한 번에) */
 async function wkFlowOpen(step){const S=$('#sheet');S.hidden=false;let M=new Map();try{M=await allMap()}catch(e){}
-  const mon=wkMon(),nm=addD(mon,7);SET.wkRev=SET.wkRev||{};const R=SET.wkRev[mon]=SET.wkRev[mon]||{};let st=step||1;
+  const mon=wkMon(),nm=addD(mon,7);SET.wkRev=SET.wkRev||{};const R=SET.wkRev[mon]=SET.wkRev[mon]||{};let st=step||1,AS=null;
   const draw=()=>{const T=wkTarget(),G=SET.w168||{};const F=(SET.wkFocus||{})[nm]||[];const per=perOf('w',nm);const gs=(GOALS.list||[]).filter(g=>g.lv==='w'&&g.per===per);
     const cats=w168Cats();const grp={};cats.forEach(c=>{const a=w168Ar(c);if(a)(grp[a]=grp[a]||[]).push(c)});
     S.innerHTML=`<div class="sheetbox wbfl" role="dialog" aria-label="주간 돌아보기와 다음 주 세우기"><div class="shead"><b>🗓️ 한 주 마무리</b><button class="del" id="wkx">닫기</button></div>
-     <div class="wbsteps"><button type="button" class="${st===1?'on':''}" data-wkst="1">① 이번 주 돌아보기</button><button type="button" class="${st===2?'on':''}" data-wkst="2">② 다음 주 세우기</button></div>
+     <div class="wbsteps"><button type="button" class="${st===1?'on':''}" data-wkst="1">① 돌아보기</button><button type="button" class="${st===2?'on':''}" data-wkst="2">② 목표 세우기</button><button type="button" class="${st===3?'on':''}" data-wkst="3">③ 시간 배정</button></div>
      ${st===1?`${wkBoardHTML(mon,M,{nonav:1,noflow:1})}
        <label class="f" style="margin-top:10px">📝 이번 주 한 줄 돌아보기<textarea id="wkline" rows="2" placeholder="잘된 것 · 아쉬운 것 · 깨달은 것">${esc(R.line||'')}</textarea></label>
        <button class="btn" id="wknext" style="width:100%;margin-top:8px">다음 주 세우기 ›</button>`
-     :`<p class="wbsub">${md(nm)} ~ ${md(addD(nm,6))}</p>
+     :st===3?wkAsHTML(nm,M,AS):`<p class="wbsub">${md(nm)} ~ ${md(addD(nm,6))}</p>
        <p class="mhead">⭐ 다음 주 중점 기둥 <small class="hint">(1~2개)</small></p><div class="chips">${SCORE.map(([k])=>`<button type="button" class="chip fbtn ${F.includes(k)?'on':''}" data-wkf="${k}">${AREA_E[k]||''} ${esc(areaName(k))}</button>`).join('')}</div>
-       <p class="mhead" style="margin-top:12px">🎯 다음 주 목표</p>${gs.map(g=>`<div class="wbg"><span>${AREA_E[g.area]||''} ${esc(g.title)}</span><button type="button" class="del" data-wkgd="${g.id}" aria-label="빼기">✕</button></div>`).join('')||'<p class="hint" style="margin:2px 0">아직 없습니다.</p>'}
-       <div class="gl" style="margin-top:6px"><input type="text" id="wkgi" placeholder="예: 가족과 저녁 3번 · 책 2권"><button class="btn small" id="wkga">＋</button></div>
-       <p class="mhead" style="margin-top:12px">⏳ 기둥별 목표 시간 <small class="hint">(한 주 시간 · 매주 이어짐)</small></p>
-       <div class="wbt2">${SCORE.map(([k])=>{const cs=grp[k]||[];if(!cs.length)return'';return`<div class="wbtg"><b>${AREA_E[k]||''} ${esc(areaName(k))} <small>${T[k]?Math.round(T[k]*10)/10+'h':''}</small></b>${cs.map(c=>`<label><span>${esc(c)}</span><input type="number" inputmode="decimal" min="0" max="168" step="0.5" data-w168="${esc(c)}" value="${+G[c]||''}" placeholder="-"></label>`).join('')}</div>`}).join('')}</div>
-       <p class="hint" style="margin:6px 0 0">합계 ${Object.values(G).reduce((a,v)=>a+(+v||0),0)} / 168시간</p>
-       <div class="row" style="margin-top:10px"><button class="btn ghost" data-wkst="1">‹ 돌아보기</button><button class="btn" id="wkdone" style="flex:1">✓ 한 주 마무리</button></div>`}</div>`;
+       ${wkPillarsHTML(nm,gs,grp,T,G)}
+       <div class="row" style="margin-top:10px"><button class="btn ghost" data-wkst="1">‹ 돌아보기</button><button class="btn ghost" data-wkst="3">시간 배정 ›</button><button class="btn" id="wkdone" style="flex:1">✓ 마무리</button></div>`}${st===3?`<div class="row" style="margin-top:10px"><button class="btn ghost" data-wkst="2">‹ 목표</button><button class="btn" id="wkdone" style="flex:1">✓ 한 주 마무리</button></div>`:''}</div>`;
     const close=()=>{S.hidden=true;S.innerHTML='';try{document.querySelectorAll('.wbx').forEach(x=>x.dataset.stale='1');wkBoardPaint()}catch(e){}};
     $('#wkx').onclick=close;S.onclick=e=>{if(e.target===S)close()};
     const ln=$('#wkline');if(ln)ln.oninput=()=>{R.line=ln.value.trim();saveSet().catch(()=>{})};
@@ -14072,6 +14068,7 @@ async function wkFlowOpen(step){const S=$('#sheet');S.hidden=false;let M=new Map
     const ga=$('#wkga');if(ga)ga.onclick=add;const gi=$('#wkgi');if(gi)gi.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();add()}};
     S.querySelectorAll('[data-wkgd]').forEach(b=>b.onclick=()=>{GOALS.list=GOALS.list.filter(g=>g.id!==b.dataset.wkgd);saveGoalsSoon();draw()});
     S.querySelectorAll('[data-w168]').forEach(i=>i.addEventListener('change',()=>setTimeout(draw,50)));
+    wkBindFlow(S,nm,per,M,()=>AS,v=>{AS=v},draw);
     const dn=$('#wkdone');if(dn)dn.onclick=()=>{R.done=today();saveSet().catch(()=>{});close();toast('🗓️ 한 주를 마무리하고 다음 주를 세웠습니다.')}};
   draw()}
 /* 일요일 저녁(17시~) · 월요일 오전엔 돌아가는 카드에 알림 */
@@ -16232,7 +16229,7 @@ async function syPutSafe(B,k,v){if(!k.startsWith('day:')||!v||typeof v!=='object
 {const _o=openDay;openDay=async function(d){try{staleGuardInstall()}catch(e){}return _o.apply(this,arguments)}}
 {const _f=flush0;flush0=async function(){try{staleGuardInstall()}catch(e){}return _f.apply(this,arguments)}}
 /* v390 ① 앱 버전 표시 · 새 버전 알림 (GitHub에서 마지막으로 성공한 빌드 번호와 비교) */
-var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/405})();
+var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/406})();
 const VRK='gj-verchk',VRURL='https://github.com/64hwarang-max/c/actions/workflows/build-apk.yml';
 const vrGet=()=>{try{return JSON.parse(localStorage.getItem(VRK)||'{}')}catch(e){return{}}};
 async function vrCheck(force){const c=vrGet();if(!force&&c.t&&Date.now()-c.t<6*36e5)return c;
@@ -16504,6 +16501,43 @@ function gapPick(g){const it=[];const nm=b=>b.act||b.cat||'일정';
   it.push(['⬜ 그냥 비워 두기',()=>{D.gapIgn=D.gapIgn||[];D.gapIgn.push(g.s+'-'+g.e);gapDone()}]);
   ntSheet(`${g.s} ~ ${g.e} (${hm(g.m)}) 을(를) 어떻게 할까요?`,it)}
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-gapfill]');if(!b)return;e.preventDefault();e.stopPropagation();gapOpen()},true);
+
+/* ===== v406: 다음 주 세우기 — 기둥별 목표 · 중분류 추가 · 주간 시간 배정 ===== */
+function wkPillarsHTML(nm,gs,grp,T,G){const pk=SCORE.map(x=>x[0]);const other=gs.filter(g=>!pk.includes(g.area));
+  const blk=SCORE.map(([k])=>{const cs=grp[k]||[];const mine=gs.filter(g=>g.area===k);
+    return`<div class="wbtg"><b>${AREA_E[k]||''} ${esc(areaName(k))} <small>${T[k]?Math.round(T[k]*10)/10+'h':''}</small></b>
+     ${mine.map(g=>`<div class="wbg"><span>🎯 ${esc(g.title)}</span><button type="button" class="del" data-wkgd="${g.id}" aria-label="빼기">✕</button></div>`).join('')}
+     <div class="gl" style="margin:4px 0 6px"><input type="text" data-wkpgi="${k}" placeholder="이 기둥의 다음 주 목표" enterkeyhint="done"><button class="btn small" data-wkpga="${k}">＋</button></div>
+     ${cs.map(c=>`<label><span>${esc(c)}</span><input type="number" inputmode="decimal" min="0" max="168" step="0.5" data-w168="${esc(c)}" value="${+G[c]||''}" placeholder="-"></label>`).join('')}
+     <button type="button" class="del" data-wkcat="${k}" style="margin-top:4px">＋ 중분류</button></div>`}).join('');
+  return`<p class="mhead" style="margin-top:12px">🎯 기둥별 목표 · ⏳ 목표 시간 <small class="hint">(시간은 한 주 기준 · 매주 이어짐)</small></p>
+   <div class="wbt2">${blk}</div>
+   ${other.length?`<p class="mhead" style="margin-top:8px">기타 목표</p>${other.map(g=>`<div class="wbg"><span>${esc(g.title)}</span><button type="button" class="del" data-wkgd="${g.id}" aria-label="빼기">✕</button></div>`).join('')}`:''}
+   <p class="hint" style="margin:6px 0 0">합계 ${Object.values(G).reduce((a,v)=>a+(+v||0),0)} / 168시간</p>`}
+function wkAsData(nm,M){const T=wkTarget();const A={};const days=[];for(let i=0;i<7;i++){const d=addD(nm,i);const o=(D&&D.date===d)?D:M.get(d);const pl=((o&&o.plan)||[]).filter(b=>b&&b.s&&b.e).slice().sort((a,b)=>a.s<b.s?-1:1);pl.forEach(b=>{const k=poBA(b);if(k)A[k]=(A[k]||0)+poMin(b)});days.push({d,pl})}return{T,A,days}}
+function wkAsHTML(nm,M,AS){const{T,A,days}=wkAsData(nm,M);const WD2=['일','월','화','수','목','금','토'];
+  const sum=SCORE.map(([k])=>{const t=(T[k]||0)*60,a=A[k]||0;if(!t&&!a)return'';const pc=t?Math.min(100,Math.round(a/t*100)):100;return`<div class="wbr"><span class="wbn">${AREA_E[k]||''} ${esc(areaName(k))}</span><span class="wbt"><i style="width:${pc}%;background:${t&&a>t?'#e67e22':'#6c5ce7'}"></i></span><small>${hm(a)}${t?` / ${Math.round(t/60*10)/10}h`:''}</small></div>`}).join('')||'<p class="hint">② 다음 주 세우기에서 기둥별 목표 시간을 정하면 여기서 얼마나 배정했는지 보입니다.</p>';
+  const opts=SCORE.map(([k])=>{const L=(SET.cats||[]).map(c=>c.name).filter(n=>n!=='흘려보냄'&&catArea(n)===k);if(!L.length)return'';return`<optgroup label="${AREA_E[k]||''} ${esc(areaName(k))}">${L.map(n=>`<option value="${esc(n)}">${esc(n)}${(SET.w168||{})[n]?` (주 ${SET.w168[n]}h)`:''}</option>`).join('')}</optgroup>`}).join('');
+  const rows=days.map(({d,pl})=>{const dt=parseD(d);const open=AS===d;const last=pl.length?pl[pl.length-1].e:'09:00';
+    return`<div class="wbd"><div class="wbdh"><b>${dt.getMonth()+1}/${dt.getDate()} (${WD2[dt.getDay()]})</b>${holName(d)?`<small class="holt">${esc(holName(d))}</small>`:''}<button type="button" class="del" data-wkas="${d}">${open?'닫기':'＋ 배정'}</button></div>
+     ${pl.length?pl.map(b=>`<div class="wbdb"><span>${b.s}~${b.e}</span><span>${esc(b.act||b.cat||'일정')}</span><button type="button" class="del" data-wkasx="${d}|${b.id}" aria-label="빼기">✕</button></div>`).join(''):'<p class="hint" style="margin:2px 0">비어 있음</p>'}
+     ${open?`<div class="wbdf"><select data-wkasc>${opts}</select><input type="time" data-wkass value="${last}"><input type="number" data-wkash min="0.5" max="12" step="0.5" value="1" inputmode="decimal"><span>시간</span><button type="button" class="btn small" data-wkasok="${d}">추가</button></div>`:''}</div>`}).join('');
+  return`<p class="wbsub">${md(nm)} ~ ${md(addD(nm,6))} · 기둥별 배정 시간</p><div class="wbas">${sum}</div><p class="mhead" style="margin-top:10px">🗓️ 날짜별 시간 배정</p>${rows}`}
+async function wkAsEdit(date,M,fn){let o=(D&&D.date===date)?D:(M.get(date)||norm(await store.load(date)||{date}));if(!Array.isArray(o.plan))o.plan=[];fn(o);o.plan.sort((a,b)=>(a.s||'99')<(b.s||'99')?-1:1);
+  if(D&&o===D){schedule()}else{o._sv=Date.now();await store.save(date,o);try{gcPushDaySoon(o)}catch(e){}}M.set(date,o);try{if(cacheAll)cacheAll.set(date,o)}catch(e){}}
+function wkBindFlow(S,nm,per,M,getAS,setAS,draw){
+  const addG=k=>{const i=S.querySelector(`[data-wkpgi="${k}"]`);const v=(i&&i.value||'').trim();if(!v)return;GOALS.list.push({id:uid(),lv:'w',per,title:v,done:false,doneAt:'',parent:null,tasks:[],area:k,rank:0,kind:'once'});saveGoalsSoon();draw();setTimeout(()=>{const j=S.querySelector(`[data-wkpgi="${k}"]`);if(j)j.focus()},30)};
+  S.querySelectorAll('[data-wkpga]').forEach(b=>b.onclick=()=>addG(b.dataset.wkpga));
+  S.querySelectorAll('[data-wkpgi]').forEach(i=>i.onkeydown=e=>{if(e.key==='Enter'&&!e.isComposing){e.preventDefault();addG(i.dataset.wkpgi)}});
+  S.querySelectorAll('[data-wkcat]').forEach(b=>b.onclick=async()=>{const k=b.dataset.wkcat;if(SET.cats.length>=MAXCAT){toast(`중분류는 ${MAXCAT}개까지 둘 수 있습니다.`);return}
+    const n=((await uiPrompt(`‘${areaName(k)}’ 아래 새 중분류 이름`,''))||'').trim().slice(0,20);if(!n)return;if(catObj(n)){toast(`‘${n}’ 이름의 중분류가 이미 있습니다.`);return}
+    const used=SET.cats.map(c=>c.color);const pal=typeof CPAL!=='undefined'?CPAL:['#3949ab'];SET.cats.push({name:n,color:pal.find(x=>!used.includes(x))||pal[0],area:k});await saveSet().catch(()=>{});draw()});
+  S.querySelectorAll('[data-wkas]').forEach(b=>b.onclick=()=>{setAS(getAS()===b.dataset.wkas?null:b.dataset.wkas);draw()});
+  S.querySelectorAll('[data-wkasok]').forEach(b=>b.onclick=async()=>{const d=b.dataset.wkasok,box=b.closest('.wbdf');const c=box.querySelector('[data-wkasc]').value,s0=box.querySelector('[data-wkass]').value,h=+box.querySelector('[data-wkash]').value;if(!c||!s0||!(h>0)){toast('분류·시작 시각·시간을 확인해 주십시오.');return}
+    const e=addMin(s0,Math.round(h*60));if(e<=s0){toast('자정을 넘기지 않게 시작 시각이나 시간을 줄여 주십시오.');return}
+    await wkAsEdit(d,M,o=>{o.plan.push({id:uid(),s:s0,e,act:c,cat:c,who:''})});draw()});
+  S.querySelectorAll('[data-wkasx]').forEach(b=>b.onclick=async()=>{const[d,id]=b.dataset.wkasx.split('|');await wkAsEdit(d,M,o=>{o.plan=o.plan.filter(x=>x.id!==id)});draw()})}
+(function(){const st=document.createElement('style');st.textContent='.wbfl .wbd{border:1px solid var(--line);border-radius:10px;padding:6px 8px;margin:6px 0}.wbfl .wbdh{display:flex;align-items:center;gap:6px}.wbfl .wbdh .del{margin-left:auto}.wbfl .wbdb{display:flex;gap:8px;align-items:center;font-size:.9rem;padding:2px 0}.wbfl .wbdb span:first-child{color:var(--muted);font-variant-numeric:tabular-nums}.wbfl .wbdb .del{margin-left:auto}.wbfl .wbdf{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:6px}.wbfl .wbdf select{flex:1 1 100%}.wbfl .wbdf input[type=time]{width:110px}.wbfl .wbdf input[type=number]{width:64px}.wbfl .wbas{margin-top:6px}.wbfl .wbtg .gl input{flex:1;width:auto;text-align:left}';document.head.appendChild(st)})();
 </script>
 <!--BIBLE{--><!--}BIBLE-->
 <div id="miniov" class="miniov" hidden></div>
