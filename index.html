@@ -14530,7 +14530,7 @@ function zbHTML(k,a,M){const[s,e]=zbRange(k,a),[ps,pe]=zbRange(k,addD(s,-1));con
    <p class="wbcap">실선 ${esc(lab)} · ${hasP?`점선 직전 ${ZBU[k]} · `:''}하루 점수의 ${ZBU[k]} 평균 · 목표 시간은 ${el<(Math.round((parseD(e)-parseD(s))/864e5)+1)?'오늘까지':'기간 전체'}로 환산</p>
    <div class="wbhd"><span>기둥</span><span>실제 시간 / 목표</span><span></span><span>평균</span></div>${rows}${dg.length?`<p class="wbdg">🧭 ${dg.join(' · ')}</p>`:''}</div>`}
 let ZBB=0;
-async function zbPaint(){const c=zbCtx();document.querySelectorAll('.wbx').forEach(x=>{if(!c||!c.host||!c.host.contains(x))x.remove()});if(!c||!c.host||c.k==null)return;const H=c.host;
+async function zbPaint(){if(curSection==='plan'&&PLM==='plan'&&ZMP==null&&!(typeof PLP!=='undefined'&&PLP)){document.querySelectorAll('#pbody .wbx,#pbody .yrg').forEach(x=>x.remove());return}const c=zbCtx();document.querySelectorAll('.wbx').forEach(x=>{if(!c||!c.host||!c.host.contains(x))x.remove()});if(!c||!c.host||c.k==null)return;const H=c.host;
   H.querySelectorAll('.yrg:not([data-zg])').forEach(e=>e.remove());
   const gk=c.k+'|'+c.a;let G=H.querySelector(':scope>.yrg[data-zg]');if(G&&G.dataset.zg!==gk){G.remove();G=null}
   if(!G){const t=document.createElement('div');t.innerHTML=yrgHTML('y',c.a);G=t.firstElementChild;if(G){G.dataset.zg=gk;const pt=H.querySelector(':scope>.ptop');if(pt)pt.after(G);else H.prepend(G);yrgBind(G)}}
@@ -16232,7 +16232,7 @@ async function syPutSafe(B,k,v){if(!k.startsWith('day:')||!v||typeof v!=='object
 {const _o=openDay;openDay=async function(d){try{staleGuardInstall()}catch(e){}return _o.apply(this,arguments)}}
 {const _f=flush0;flush0=async function(){try{staleGuardInstall()}catch(e){}return _f.apply(this,arguments)}}
 /* v390 ① 앱 버전 표시 · 새 버전 알림 (GitHub에서 마지막으로 성공한 빌드 번호와 비교) */
-var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/401})();
+var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/402})();
 const VRK='gj-verchk',VRURL='https://github.com/64hwarang-max/c/actions/workflows/build-apk.yml';
 const vrGet=()=>{try{return JSON.parse(localStorage.getItem(VRK)||'{}')}catch(e){return{}}};
 async function vrCheck(force){const c=vrGet();if(!force&&c.t&&Date.now()-c.t<6*36e5)return c;
@@ -16392,8 +16392,8 @@ function poRange(lv,d){const x=parseD(d),y=x.getFullYear(),m=x.getMonth();const 
 const poKeys=()=>SCORE.map(x=>x[0]).filter(k=>k!=='routine');
 const poBA=b=>b&&(b.area!=null&&b.area!==''?b.area:catArea(b.cat));
 const poMin=b=>b&&b.s&&b.e?mins(b.s,b.e):0;
-function poStat(M,lv,d){const[a,b]=poRange(lv,d);const per=perKey(lv,d);const K=poKeys();const H=SET.areaHrs||{};const wk=(Math.round((parseD(b)-parseD(a))/864e5)+1)/7;const S={};
-  K.forEach(k=>{const gs=goalsAt(lv,per).filter(g=>g.title&&g.area===k);let pr=0;try{pr=gs.length?gs.reduce((s,g)=>s+prog(g),0)/gs.length:0}catch(e){}S[k]={gs,pr,plan:0,act:0,tgt:(+H[k]||0)*60*wk}});
+function poStat(M,lv,d){const[a,b]=poRange(lv,d);const per=perKey(lv,d);const K=poKeys();const H=SET.areaHrs||{};const wk=(Math.round((parseD(b)-parseD(a))/864e5)+1)/7;const S={};let WT={};try{WT=wkTarget()}catch(e){}
+  K.forEach(k=>{const gs=goalsAt(lv,per).filter(g=>g.title&&g.area===k);let pr=0;try{pr=gs.length?gs.reduce((s,g)=>s+prog(g),0)/gs.length:0}catch(e){}S[k]={gs,pr,plan:0,act:0,tgt:(+WT[k]||+H[k]||0)*60*wk}});
   const m=new Map(M||[]);if(D)m.set(D.date,D);for(const o of m.values()){if(!o||!o.date||o.date<a||o.date>b)continue;(o.plan||[]).forEach(x=>{const k=poBA(x);if(S[k])S[k].plan+=poMin(x)});(o.time||[]).forEach(x=>{const k=poBA(x);if(S[k])S[k].act+=poMin(x)})}
   return{a,b,per,S,K}}
 function poOctSVG(st){const K=st.K,n=K.length,cx=160,cy=150,R=100;const mx=Math.max(60,...K.map(k=>Math.max(st.S[k].tgt,st.S[k].plan,st.S[k].act)));
@@ -16402,8 +16402,8 @@ function poOctSVG(st){const K=st.K,n=K.length,cx=160,cy=150,R=100;const mx=Math.
   let g='';[.25,.5,.75,1].forEach(q=>{g+=`<polygon points="${K.map((k,i)=>pt(i,R*q).join(',')).join(' ')}" fill="none" stroke="var(--line)" stroke-width="1"/>`});K.forEach((k,i)=>{const[x,y]=pt(i,R);g+=`<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" stroke="var(--line)"/>`});
   const tg=K.some(k=>st.S[k].tgt)?`<polygon points="${poly(k=>st.S[k].tgt?1:0)}" fill="none" stroke="#888" stroke-dasharray="4 3" stroke-width="1.5"/>`:'';
   const pl=`<polygon points="${poly(k=>st.S[k].plan/den(k))}" fill="#6c5ce7" fill-opacity=".22" stroke="#6c5ce7" stroke-width="2"/>`;const ac=`<polygon points="${poly(k=>st.S[k].act/den(k))}" fill="#2e9e6b" fill-opacity=".18" stroke="#2e9e6b" stroke-width="2"/>`;
-  const lab=K.map((k,i)=>{const[x,y]=pt(i,R+30);const s=st.S[k];const gp=s.gs.length?`목표 ${s.gs.length} · ${Math.round(s.pr*100)}%`:'목표 없음';const tp=s.tgt?`계획 ${Math.round(s.plan/s.tgt*100)}% · 실제 ${Math.round(s.act/s.tgt*100)}%`:(s.plan?`계획 ${hm(s.plan)}`:'');const anc=x<cx-8?'end':x>cx+8?'start':'middle';
-    return`<g class="pooL" data-poo="${k}" style="cursor:pointer"><text x="${x}" y="${y-4}" text-anchor="${anc}" font-size="12" font-weight="700" fill="var(--ink)">${AREA_E[k]||''}${esc(areaName(k))}</text><text x="${x}" y="${y+10}" text-anchor="${anc}" font-size="10" fill="${s.gs.length?'var(--muted)':'#e5484d'}">${gp}</text>${tp?`<text x="${x}" y="${y+22}" text-anchor="${anc}" font-size="9.5" fill="var(--muted)">${tp}</text>`:''}</g>`}).join('');
+  const lab=K.map((k,i)=>{const[x,y]=pt(i,R+30);const s=st.S[k];const gp=s.gs.length?`목표 ${s.gs.length} · ${Math.round(s.pr*100)}%`:'–';const tp=s.tgt?`계획 ${Math.round(s.plan/s.tgt*100)}% · 실제 ${Math.round(s.act/s.tgt*100)}%`:(s.plan?`계획 ${hm(s.plan)}`:'');const anc=x<cx-8?'end':x>cx+8?'start':'middle';
+    return`<g class="pooL" data-poo="${k}" style="cursor:pointer"><text x="${x}" y="${y-4}" text-anchor="${anc}" font-size="12" font-weight="700" fill="var(--ink)">${AREA_E[k]||''}${esc(areaName(k))}</text><text x="${x}" y="${y+10}" text-anchor="${anc}" font-size="10" fill="var(--muted)">${gp}</text></g>`}).join('');
   return`<svg viewBox="-14 -4 348 316" class="poosvg" role="img" aria-label="기둥별 계획 팔각형">${g}${tg}${pl}${ac}${lab}</svg>`}
 function poTblHTML(M,d){const K=poKeys();const LS=shortOn();const lifeL=lifeCfg().map(x=>x.k);const nm={y:'1년',h:'6개월',q:'3개월',m:'1달',w:'1주'};
   const cell=(k,lv)=>{const gs=goalsAt(lv,perKey(lv,d)).filter(g=>g.title&&g.area===k);return`<td class="${gs.length?'':'emp'}" data-pot="${k}|${lv}">${gs.length?`<b>${gs.length}</b><span>${esc(gs[0].title)}</span>`:'＋'}</td>`};
@@ -16414,10 +16414,20 @@ function poTblHTML(M,d){const K=poKeys();const LS=shortOn();const lifeL=lifeCfg(
 async function poHTML(){let M=cacheAll;try{M=await allMap()}catch(e){}const d=pAnchor||cur||today();const v=SET.poView||'oct';const st=poStat(M,pZoom,d);
   const empty=st.K.filter(k=>!st.S[k].gs.length).map(k=>areaName(k));const nm=({y:'1년',h:'6개월',q:'3개월',m:'1달',w:'1주'})[pZoom]||'';
   return`<div class="card nocol" id="poocard" style="--k:#6c5ce7"><div class="w168h"><h3>🧭 기둥별 계획 <small class="hint">${esc(perLabel(pZoom,st.per))}</small></h3></div>
-   <div class="seg poseg" style="margin:6px 0"><button data-pov="oct" class="${v==='oct'?'on':''}">🧭 균형</button><button data-pov="tbl" class="${v==='tbl'?'on':''}">📋 기둥×기간</button><button data-pov="lnk" class="${v==='lnk'?'on':''}">🔗 연결</button></div>
-   <div class="poslot" ${v==='oct'?'':'hidden'}></div>${v==='oct'?(empty.length?`<p class="hint pohint">${nm} 목표가 없는 기둥: ${empty.map(esc).join(', ')} · <button type="button" class="xlink" data-pov="tbl" style="margin:0">기둥×기간에서 더하기 ›</button></p>`:''):v==='lnk'?lkHTML(d):poTblHTML(M,d)}</div>`}
+   <div class="seg poseg" style="margin:6px 0"><button data-pov="oct" class="${v==='oct'?'on':''}">🔷 시간 분배</button><button data-pov="tbl" class="${v==='tbl'?'on':''}">📋 목표</button><button data-pov="lnk" class="${v==='lnk'?'on':''}">🔗 연결</button></div>
+   ${v==='oct'?poOctBody(st):v==='lnk'?lkHTML(d):poTblHTML(M,d)+poMoreHTML()}</div>`}
+function poOctBody(st){const K=st.K;const row=k=>{const s=st.S[k];const base=Math.max(s.tgt,s.plan,s.act,1);const w=v=>Math.min(100,Math.round(v/base*100));
+    return`<button type="button" class="porow" data-poo="${k}"><span class="pon">${AREA_E[k]||''} ${esc(areaName(k))}</span><span class="pobar">${s.tgt?'<i class="t"></i>':''}<i class="p" style="width:${w(s.plan)}%"></i><i class="a" style="width:${w(s.act)}%"></i></span><small>${s.plan||s.act||s.tgt?`${s.plan?hm(s.plan):'0'} · ${s.act?hm(s.act):'0'}${s.tgt?` / ${Math.round(s.tgt/60)}시간`:''}`:'–'}</small></button>`};
+  const low=K.filter(k=>st.S[k].tgt).map(k=>[k,st.S[k].plan/st.S[k].tgt]).sort((a,b)=>a[1]-b[1])[0];
+  return`${poOctSVG(st)}<div class="poleg"><span><i style="background:#6c5ce7"></i>계획</span><span><i style="background:#2e9e6b"></i>실제</span>${K.some(k=>st.S[k].tgt)?'<span><i class="dsh"></i>목표 시간</span>':''}</div>
+   <div class="porows"><div class="porh"><span>기둥</span><span></span><small>계획 · 실제 / 목표</small></div>${K.map(row).join('')}</div>
+   ${low&&low[1]<.7?`<p class="hint" style="margin:6px 0 0">🧭 계획이 목표 시간보다 가장 모자란 기둥은 <b>${AREA_E[low[0]]||''} ${esc(areaName(low[0]))}</b>(목표의 ${Math.round(low[1]*100)}%)입니다.</p>`:''}
+   ${K.some(k=>st.S[k].tgt)?'':'<p class="hint" style="margin:6px 0 0">기둥별 목표 시간은 ‘한 주 돌아보기 · 다음 주 세우기’에서 정합니다.</p>'}
+   ${pZoom==='w'?'<button class="btn small ghost" data-wkflow="1" style="width:100%;margin-top:8px">🗓️ 이번 주 돌아보기 · 다음 주 세우기</button>':''}`}
+function poMoreHTML(){let P=[],B=[];try{P=PROJ.list||[]}catch(e){}try{B=bkList()}catch(e){}
+  return`<div class="pomore"><button type="button" class="xlink" data-yrgo="work">🧩 프로젝트 ${P.length}개 ›</button><button type="button" class="xlink" data-yrgo="bucket">🪣 버킷리스트 ${B.length}개 ›</button><button type="button" class="xlink" data-pldet="1">🪜 목표 자세히 ›</button></div>`}
 async function poPaint(force){try{const R=$('#pbody');if(!R||curSection!=='plan'||PLM!=='plan'||ZMP!=null||(typeof PLP!=='undefined'&&PLP))return;const old=R.querySelector('#poocard');if(old&&!force){const w=R.querySelector(':scope>.wbx[data-zb]'),sl=old.querySelector('.poslot');if(w&&sl){w.classList.remove('zbc');sl.appendChild(w)}return}const top=R.querySelector('.ptop');if(!top)return;
-  const h=await poHTML();if(curSection!=='plan')return;const t=document.createElement('div');t.innerHTML=h;const el=t.firstElementChild;{const w=R.querySelector('.wbx[data-zb]');const sl=el.querySelector('.poslot');if(w&&sl){w.classList.remove('zbc');sl.appendChild(w)}}const o2=R.querySelector('#poocard');if(o2){o2.replaceWith(el);return}const nav=top.nextElementSibling&&top.nextElementSibling.matches('.wk,.pnav')?top.nextElementSibling:top;
+  const h=await poHTML();if(curSection!=='plan')return;const t=document.createElement('div');t.innerHTML=h;const el=t.firstElementChild;try{yrgBind(el)}catch(e){}{const w=R.querySelector('.wbx[data-zb]');const sl=el.querySelector('.poslot');if(w&&sl){w.classList.remove('zbc');sl.appendChild(w)}}const o2=R.querySelector('#poocard');if(o2){o2.replaceWith(el);return}const nav=top.nextElementSibling&&top.nextElementSibling.matches('.wk,.pnav')?top.nextElementSibling:top;
   const yr=R.querySelector('.yrg');if(yr&&yr.parentElement===R)yr.before(el);else nav.after(el)}catch(e){console.warn('poo',e)}}
 DECO.add('기둥 팔각형 계획',{root:'#pbody',deep:false,wait:150,run:()=>poPaint()});
 document.addEventListener('click',async e=>{const t=e.target.closest&&e.target.closest('[data-pov],[data-poo],[data-pot]');if(!t||!t.closest('#poocard'))return;
@@ -16431,8 +16441,7 @@ document.addEventListener('click',async e=>{const t=e.target.closest&&e.target.c
     const gs=goalsAt(lv,perKey(lv,d)).filter(g=>g.title&&g.area===k);if(gs.length){PLP=k;PLPA=d;PLPP=lv;plpPaint();scrollTo({top:0});return}
     const v=((await uiPrompt(`${AREA_E[k]||''} ${areaName(k)} · ${perLabel(lv,perKey(lv,d))} 목표`))||'').trim();if(!v)return;
     GOALS.list.push({id:uid(),lv,per:perOf(lv,d),title:v,done:false,doneAt:'',parent:null,tasks:[],area:k,rank:0,kind:'once'});saveGoalsSoon();poPaint(true)}},true);
-(function(){const st=document.createElement('style');st.textContent=`.seg.pzoom,.chips.plpz{flex-direction:row-reverse;justify-content:flex-end}
-#poocard .poosvg{width:100%;max-width:380px;display:block;margin:0 auto}#poocard .poleg{display:flex;gap:12px;justify-content:center;font-size:.76rem;color:var(--muted)}#poocard .poleg i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:4px;vertical-align:-1px}#poocard .poleg i.dsh{background:none;border:1.5px dashed #888}
+(function(){const st=document.createElement('style');st.textContent=`#poocard .poosvg{width:100%;max-width:380px;display:block;margin:0 auto}#poocard .poleg{display:flex;gap:12px;justify-content:center;font-size:.76rem;color:var(--muted)}#poocard .poleg i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:4px;vertical-align:-1px}#poocard .poleg i.dsh{background:none;border:1.5px dashed #888}
 #poocard .pootw{overflow-x:auto;margin:4px -6px 0}#poocard .poot{border-collapse:collapse;width:100%;font-size:.74rem;table-layout:fixed}#poocard .poot th:first-child{width:3.9em}#poocard .poot th,#poocard .poot td{border:1px solid var(--line);padding:4px 3px;vertical-align:top;text-align:left}#poocard .poot thead th{background:color-mix(in srgb,var(--k) 10%,var(--paper));text-align:center;font-size:.72rem}
 #poocard .poot tbody th{font-size:.7rem;cursor:pointer;word-break:keep-all;line-height:1.25}#poocard .poot td{cursor:pointer}#poocard .poot td b{display:inline-block;min-width:1.2em;color:var(--k);margin-right:2px}#poocard .poot td span{display:-webkit-box;-webkit-line-clamp:3;word-break:break-all;-webkit-box-orient:vertical;overflow:hidden;font-size:.72rem}#poocard .poot td.emp{color:var(--muted);text-align:center;background:color-mix(in srgb,#e5484d 4%,var(--paper))}#poocard .poot td.poh{text-align:center;cursor:default;font-weight:700;font-size:.66rem}#poocard .poot th,#poocard .poot td{padding:3px 2px!important}`;document.head.appendChild(st)})();
 
@@ -16469,6 +16478,10 @@ document.addEventListener('click',e=>{const t=e.target.closest&&e.target.closest
 #poocard .lkvis{font-family:'Gowun Batang',serif;font-size:.9rem;margin:4px 0 6px;color:var(--ink)}#poocard .lkr{border-top:1px dashed var(--line);padding:7px 0}#poocard .lkr.bad{background:color-mix(in srgb,#e5484d 5%,transparent)}#poocard .lkt{display:flex;gap:6px;align-items:baseline}#poocard .lkt small{flex:none;color:var(--muted);font-size:.72rem;min-width:3.4em}#poocard .lkt b{font-size:.88rem;font-weight:600}
 #poocard .lkch{font-size:.72rem;color:var(--muted);margin:2px 0 0 3.8em}#poocard .lkb{display:flex;gap:4px;flex-wrap:wrap;margin:4px 0 0 3.8em}#poocard .lkb button{border:1px solid var(--line);background:var(--paper);color:var(--muted);border-radius:999px;padding:3px 9px;font:inherit;font-size:.74rem;cursor:pointer}#poocard .lkb button.on{color:var(--ink);border-color:var(--k)}#poocard .lkb button.need{color:#e5484d;border-color:#e5484d}#poocard .lkb .lktop{font-size:.72rem;color:#2e9e6b;padding:3px 4px}`;document.head.appendChild(st)})();
 (function(){const st=document.createElement('style');st.textContent=`#poocard .poslot .wbx{border:0!important;box-shadow:none!important;background:none!important;padding:0!important;margin:0!important}#poocard .poslot .wbx .wbxh h3{display:none}#poocard .poslot .wbx [data-zbf]{display:none}#poocard .poslot .wbx .wbxh{justify-content:center}#poocard .pohint{margin:6px 0 0}`;document.head.appendChild(st)})();
+(function(){const st=document.createElement('style');st.textContent=`#poocard .porows{margin-top:8px}#poocard .porh{display:grid;grid-template-columns:5.6em 1fr auto;gap:8px;font-size:.7rem;color:var(--muted);padding:0 0 2px}
+#poocard .porow{display:grid;grid-template-columns:5.6em 1fr auto;gap:8px;align-items:center;width:100%;border:0;border-top:1px solid var(--line);background:none;color:var(--ink);font:inherit;text-align:left;padding:7px 0;cursor:pointer}#poocard .pon{font-size:.84rem;white-space:nowrap}#poocard .porow small{font-size:.72rem;color:var(--muted);white-space:nowrap}
+#poocard .pobar{position:relative;height:8px;border-radius:4px;background:color-mix(in srgb,var(--line) 70%,transparent);overflow:hidden}#poocard .pobar i{position:absolute;left:0;top:0;bottom:0;border-radius:4px}#poocard .pobar i.t{right:0;background:none;border:1px dashed #999}#poocard .pobar i.p{background:#6c5ce7;opacity:.45}#poocard .pobar i.a{background:#2e9e6b;top:2px;bottom:2px}
+#poocard .pomore{display:flex;gap:12px;flex-wrap:wrap;margin-top:8px}#pbody:has(#poocard)>.w168{display:none}`;document.head.appendChild(st)})();
 </script>
 <!--BIBLE{--><!--}BIBLE-->
 <div id="miniov" class="miniov" hidden></div>
