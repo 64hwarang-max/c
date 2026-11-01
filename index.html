@@ -14536,12 +14536,12 @@ async function zbPaint(){const c=zbCtx();document.querySelectorAll('.wbx').forEa
   if(!G){const t=document.createElement('div');t.innerHTML=yrgHTML('y',c.a);G=t.firstElementChild;if(G){G.dataset.zg=gk;const pt=H.querySelector(':scope>.ptop');if(pt)pt.after(G);else H.prepend(G);yrgBind(G)}}
   let mon=null,key=c.k+'|'+c.a;if(c.k==='w'){mon=mondayOf(c.a);if(WKB.view&&WKB.view.ctx===curSection&&WKB.view.base===mon)mon=WKB.view.mon;else WKB.view=null;key='w|'+mon}else{const[s]=zbRange(c.k,c.a);key=c.k+'|'+s}
   H.querySelectorAll(':scope>.wbx:not([data-zb])').forEach(x=>x.remove());
-  const ex=H.querySelector(':scope>.wbx[data-zb]');if(ex&&ex.dataset.zb===key&&!ex.dataset.stale)return;if(ZBB)return;ZBB=1;
+  const ex=H.querySelector('.wbx[data-zb]');if(ex&&ex.dataset.zb===key&&!ex.dataset.stale){const sl=H.querySelector('#poocard .poslot');if(sl&&ex.parentElement!==sl)sl.appendChild(ex);return}if(ZBB)return;ZBB=1;
   let M=new Map();try{M=await allMap()}catch(e){}ZBB=0;
   const c2=zbCtx();if(!c2||c2.host!==H||!H.isConnected||c2.k!==c.k)return;
   const html=c.k==='w'?wkBoardHTML(mon,M):zbHTML(c.k,c.a,M);const t=document.createElement('div');t.innerHTML=html;const el=t.firstElementChild;el.dataset.zb=key;
   const sm=el.querySelector('.wbxh h3');const col=!!yrgOpen().zbc;if(sm)sm.insertAdjacentHTML('beforeend',`<button type="button" class="wbfold" data-zbf="1">${col?'펼치기 ▾':'접기 ▴'}</button>`);el.classList.toggle('zbc',col);
-  H.querySelectorAll(':scope>.wbx').forEach(x=>x.remove());const g2=H.querySelector(':scope>.yrg[data-zg]'),px=H.querySelector(':scope>details.pextra[data-k="w"]');if(px)px.after(el);else if(g2)g2.after(el);else{const pt=H.querySelector(':scope>.ptop');if(pt)pt.after(el);else H.prepend(el)}}
+  H.querySelectorAll('.wbx').forEach(x=>x.remove());{const sl=H.querySelector('#poocard .poslot');if(sl){el.classList.remove('zbc');sl.appendChild(el);return}}const g2=H.querySelector(':scope>.yrg[data-zg]'),px=H.querySelector(':scope>details.pextra[data-k="w"]');if(px)px.after(el);else if(g2)g2.after(el);else{const pt=H.querySelector(':scope>.ptop');if(pt)pt.after(el);else H.prepend(el)}}
 wkBoardPaint=function(){return zbPaint()};
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-zbf]');if(!b)return;e.preventDefault();e.stopPropagation();const O=yrgOpen();O.zbc=!O.zbc;document.querySelectorAll('.wbx[data-zb]').forEach(x=>{x.classList.toggle('zbc',O.zbc);const f=x.querySelector('[data-zbf]');if(f)f.textContent=O.zbc?'펼치기 ▾':'접기 ▴'});saveSet().catch(()=>{})},true);
 yrgPaint=HK.w('yrgPaint','5:구간 목표·균형',yrgPaint,_y=>function(){const r=_y.apply(this,arguments);try{zbPaint()}catch(e){console.warn('zb',e)}return r});
@@ -16232,7 +16232,7 @@ async function syPutSafe(B,k,v){if(!k.startsWith('day:')||!v||typeof v!=='object
 {const _o=openDay;openDay=async function(d){try{staleGuardInstall()}catch(e){}return _o.apply(this,arguments)}}
 {const _f=flush0;flush0=async function(){try{staleGuardInstall()}catch(e){}return _f.apply(this,arguments)}}
 /* v390 ① 앱 버전 표시 · 새 버전 알림 (GitHub에서 마지막으로 성공한 빌드 번호와 비교) */
-var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/400})();
+var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/401})();
 const VRK='gj-verchk',VRURL='https://github.com/64hwarang-max/c/actions/workflows/build-apk.yml';
 const vrGet=()=>{try{return JSON.parse(localStorage.getItem(VRK)||'{}')}catch(e){return{}}};
 async function vrCheck(force){const c=vrGet();if(!force&&c.t&&Date.now()-c.t<6*36e5)return c;
@@ -16414,24 +16414,23 @@ function poTblHTML(M,d){const K=poKeys();const LS=shortOn();const lifeL=lifeCfg(
 async function poHTML(){let M=cacheAll;try{M=await allMap()}catch(e){}const d=pAnchor||cur||today();const v=SET.poView||'oct';const st=poStat(M,pZoom,d);
   const empty=st.K.filter(k=>!st.S[k].gs.length).map(k=>areaName(k));const nm=({y:'1년',h:'6개월',q:'3개월',m:'1달',w:'1주'})[pZoom]||'';
   return`<div class="card nocol" id="poocard" style="--k:#6c5ce7"><div class="w168h"><h3>🧭 기둥별 계획 <small class="hint">${esc(perLabel(pZoom,st.per))}</small></h3></div>
-   <div class="seg poseg" style="margin:6px 0"><button data-pov="oct" class="${v==='oct'?'on':''}">🔷 팔각형</button><button data-pov="tbl" class="${v==='tbl'?'on':''}">📋 기둥×기간</button><button data-pov="lnk" class="${v==='lnk'?'on':''}">🔗 연결</button></div>
-   ${v==='oct'?`${poOctSVG(st)}<div class="poleg"><span><i style="background:#6c5ce7"></i>계획 시간</span><span><i style="background:#2e9e6b"></i>실제 시간</span>${st.K.some(k=>st.S[k].tgt)?'<span><i class="dsh"></i>목표 시간(바깥 칸)</span>':''}</div>
-    <p class="hint" style="margin:4px 0 0">${nm} 목표 · 진행률을 꼭짓점에 적었습니다. 기둥 이름을 누르면 그 기둥의 목표·계획·할 일이 펼쳐집니다.${empty.length?` <b style="color:#e5484d">목표가 없는 기둥: ${empty.map(esc).join(', ')}</b>`:''}</p>`:v==='lnk'?lkHTML(d):poTblHTML(M,d)}</div>`}
-async function poPaint(){try{const R=$('#pbody');if(!R||curSection!=='plan'||PLM!=='plan'||ZMP!=null||(typeof PLP!=='undefined'&&PLP))return;if(R.querySelector('#poocard'))return;const top=R.querySelector('.ptop');if(!top)return;
-  const h=await poHTML();if(R.querySelector('#poocard')||curSection!=='plan')return;const t=document.createElement('div');t.innerHTML=h;const el=t.firstElementChild;const nav=top.nextElementSibling&&top.nextElementSibling.matches('.wk,.pnav')?top.nextElementSibling:top;
+   <div class="seg poseg" style="margin:6px 0"><button data-pov="oct" class="${v==='oct'?'on':''}">🧭 균형</button><button data-pov="tbl" class="${v==='tbl'?'on':''}">📋 기둥×기간</button><button data-pov="lnk" class="${v==='lnk'?'on':''}">🔗 연결</button></div>
+   <div class="poslot" ${v==='oct'?'':'hidden'}></div>${v==='oct'?(empty.length?`<p class="hint pohint">${nm} 목표가 없는 기둥: ${empty.map(esc).join(', ')} · <button type="button" class="xlink" data-pov="tbl" style="margin:0">기둥×기간에서 더하기 ›</button></p>`:''):v==='lnk'?lkHTML(d):poTblHTML(M,d)}</div>`}
+async function poPaint(force){try{const R=$('#pbody');if(!R||curSection!=='plan'||PLM!=='plan'||ZMP!=null||(typeof PLP!=='undefined'&&PLP))return;const old=R.querySelector('#poocard');if(old&&!force){const w=R.querySelector(':scope>.wbx[data-zb]'),sl=old.querySelector('.poslot');if(w&&sl){w.classList.remove('zbc');sl.appendChild(w)}return}const top=R.querySelector('.ptop');if(!top)return;
+  const h=await poHTML();if(curSection!=='plan')return;const t=document.createElement('div');t.innerHTML=h;const el=t.firstElementChild;{const w=R.querySelector('.wbx[data-zb]');const sl=el.querySelector('.poslot');if(w&&sl){w.classList.remove('zbc');sl.appendChild(w)}}const o2=R.querySelector('#poocard');if(o2){o2.replaceWith(el);return}const nav=top.nextElementSibling&&top.nextElementSibling.matches('.wk,.pnav')?top.nextElementSibling:top;
   const yr=R.querySelector('.yrg');if(yr&&yr.parentElement===R)yr.before(el);else nav.after(el)}catch(e){console.warn('poo',e)}}
 DECO.add('기둥 팔각형 계획',{root:'#pbody',deep:false,wait:150,run:()=>poPaint()});
 document.addEventListener('click',async e=>{const t=e.target.closest&&e.target.closest('[data-pov],[data-poo],[data-pot]');if(!t||!t.closest('#poocard'))return;
-  if(t.dataset.pov){SET.poView=t.dataset.pov;saveSet().catch(()=>{});const c=$('#poocard');if(c)c.remove();poPaint();return}
+  if(t.dataset.pov){SET.poView=t.dataset.pov;saveSet().catch(()=>{});poPaint(true);return}
   if(t.dataset.poo){PLP=t.dataset.poo;PLPA=pAnchor||today();try{PLPP=pZoom}catch(x){}plpPaint();scrollTo({top:0});return}
   if(t.dataset.pot){const[k,lv]=t.dataset.pot.split('|');const d=pAnchor||cur||today();
     if(lv==='L'){const gs=GOALS.list.filter(g=>g.title&&g.area===k&&(lifeCfg().some(x=>x.k===g.lv)||g.lv==='S'));if(gs.length){gSub='ladder';PLDET=1;openSection('goal');scrollTo({top:0});return}
       const L=[...lifeCfg().map(x=>[x.k,LVX[x.k]?LVX[x.k].n:x.y+'년 후']),['S','언젠가']];const v=((await uiPrompt(`${AREA_E[k]||''} ${areaName(k)} 장기 목표`))||'').trim();if(!v)return;
       const lv2=await new Promise(res=>{const S=$('#sheet');S.hidden=false;S.innerHTML=`<div class="sheetbox"><div class="shead"><b>어느 기간의 목표인가요?</b><button class="del" id="pokx">취소</button></div><div class="chips">${L.map(([x,l])=>`<button class="chip fbtn" data-pok="${x}">${esc(l)}</button>`).join('')}</div></div>`;const done=x=>{S.hidden=true;S.innerHTML='';res(x)};$('#pokx').onclick=()=>done(null);S.querySelectorAll('[data-pok]').forEach(b=>b.onclick=()=>done(b.dataset.pok))});
-      if(!lv2)return;GOALS.list.push({id:uid(),lv:lv2,per:perOf(lv2,today()),title:v,done:false,doneAt:'',parent:null,tasks:[],area:k,rank:0,kind:'once'});saveGoalsSoon();const c=$('#poocard');if(c)c.remove();poPaint();return}
+      if(!lv2)return;GOALS.list.push({id:uid(),lv:lv2,per:perOf(lv2,today()),title:v,done:false,doneAt:'',parent:null,tasks:[],area:k,rank:0,kind:'once'});saveGoalsSoon();poPaint(true);return}
     const gs=goalsAt(lv,perKey(lv,d)).filter(g=>g.title&&g.area===k);if(gs.length){PLP=k;PLPA=d;PLPP=lv;plpPaint();scrollTo({top:0});return}
     const v=((await uiPrompt(`${AREA_E[k]||''} ${areaName(k)} · ${perLabel(lv,perKey(lv,d))} 목표`))||'').trim();if(!v)return;
-    GOALS.list.push({id:uid(),lv,per:perOf(lv,d),title:v,done:false,doneAt:'',parent:null,tasks:[],area:k,rank:0,kind:'once'});saveGoalsSoon();const c=$('#poocard');if(c)c.remove();poPaint()}},true);
+    GOALS.list.push({id:uid(),lv,per:perOf(lv,d),title:v,done:false,doneAt:'',parent:null,tasks:[],area:k,rank:0,kind:'once'});saveGoalsSoon();poPaint(true)}},true);
 (function(){const st=document.createElement('style');st.textContent=`.seg.pzoom,.chips.plpz{flex-direction:row-reverse;justify-content:flex-end}
 #poocard .poosvg{width:100%;max-width:380px;display:block;margin:0 auto}#poocard .poleg{display:flex;gap:12px;justify-content:center;font-size:.76rem;color:var(--muted)}#poocard .poleg i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:4px;vertical-align:-1px}#poocard .poleg i.dsh{background:none;border:1.5px dashed #888}
 #poocard .pootw{overflow-x:auto;margin:4px -6px 0}#poocard .poot{border-collapse:collapse;width:100%;font-size:.74rem;table-layout:fixed}#poocard .poot th:first-child{width:3.9em}#poocard .poot th,#poocard .poot td{border:1px solid var(--line);padding:4px 3px;vertical-align:top;text-align:left}#poocard .poot thead th{background:color-mix(in srgb,var(--k) 10%,var(--paper));text-align:center;font-size:.72rem}
@@ -16459,7 +16458,7 @@ function lkHTML(d){const G=lkGoals(d);const V=lkVals();const RL=rlList();const v
      <div class="lkb">${lkTop(g)?'<span class="lktop">맨 위 목표</span>':`<button data-lkp="${g.id}" class="${ch.length?'':'need'}">⬆ ${ch.length?'위 목표 바꾸기':'위 목표 잇기'}</button>`}<button data-lkr="${g.id}" class="${r?'on':''}">${r?`${r.e||'🎭'} ${esc(r.name)}`:'🎭 역할'}</button><button data-lkv="${g.id}" class="${vs.length?'on':''}">💎 ${vs.length?vs.map(esc).join('·'):'가치'}</button></div></div>`};
   return head+(G.length?G.map(row).join(''):'<p class="hint">지금 기간의 목표가 없습니다. 팔각형·표 보기에서 기둥별 목표를 먼저 더하십시오.</p>')}
 document.addEventListener('click',e=>{const t=e.target.closest&&e.target.closest('[data-lkp],[data-lkr],[data-lkv]');if(!t||!t.closest('#poocard'))return;e.stopPropagation();
-  const g=GOALS.list.find(x=>x.id===(t.dataset.lkp||t.dataset.lkr||t.dataset.lkv));if(!g)return;const re=()=>{saveGoals();const c=$('#poocard');if(c)c.remove();poPaint()};const d=pAnchor||cur||today();
+  const g=GOALS.list.find(x=>x.id===(t.dataset.lkp||t.dataset.lkr||t.dataset.lkv));if(!g)return;const re=()=>{saveGoals();poPaint(true)};const d=pAnchor||cur||today();
   if(t.dataset.lkp){const C=lkCands(g,d);if(!C.length){toast('위 기간에 이을 목표가 없습니다. 표 보기에서 위 기간 목표를 먼저 더하십시오.');return}
     ntSheet(`⬆ ‘${g.title}’은(는) 어느 목표를 이루기 위한 것입니까?`,[...C.slice(0,30).map(x=>[`${lkLvN(x.lv)} · ${AREA_E[x.area]||''} ${x.title}${g.parent===x.id?' ✓':''}`,()=>{g.parent=x.id;re();toast('⬆ 위 목표에 이었습니다.')}]),['잇지 않음',()=>{g.parent=null;re()}]]);return}
   if(t.dataset.lkr){const L=rlList();if(!L.length){toast('먼저 나 › 비전에서 역할을 추가하십시오.');return}
@@ -16469,6 +16468,7 @@ document.addEventListener('click',e=>{const t=e.target.closest&&e.target.closest
 (function(){const st=document.createElement('style');st.textContent=`#poocard .lkflow{display:flex;flex-wrap:wrap;gap:3px;align-items:center;font-size:.72rem;margin:4px 0}#poocard .lkflow span{border:1px solid var(--line);border-radius:999px;padding:2px 7px;background:var(--paper)}#poocard .lkflow span.no{color:#e5484d;border-color:#e5484d}#poocard .lkflow i{font-style:normal;color:var(--muted)}
 #poocard .lkvis{font-family:'Gowun Batang',serif;font-size:.9rem;margin:4px 0 6px;color:var(--ink)}#poocard .lkr{border-top:1px dashed var(--line);padding:7px 0}#poocard .lkr.bad{background:color-mix(in srgb,#e5484d 5%,transparent)}#poocard .lkt{display:flex;gap:6px;align-items:baseline}#poocard .lkt small{flex:none;color:var(--muted);font-size:.72rem;min-width:3.4em}#poocard .lkt b{font-size:.88rem;font-weight:600}
 #poocard .lkch{font-size:.72rem;color:var(--muted);margin:2px 0 0 3.8em}#poocard .lkb{display:flex;gap:4px;flex-wrap:wrap;margin:4px 0 0 3.8em}#poocard .lkb button{border:1px solid var(--line);background:var(--paper);color:var(--muted);border-radius:999px;padding:3px 9px;font:inherit;font-size:.74rem;cursor:pointer}#poocard .lkb button.on{color:var(--ink);border-color:var(--k)}#poocard .lkb button.need{color:#e5484d;border-color:#e5484d}#poocard .lkb .lktop{font-size:.72rem;color:#2e9e6b;padding:3px 4px}`;document.head.appendChild(st)})();
+(function(){const st=document.createElement('style');st.textContent=`#poocard .poslot .wbx{border:0!important;box-shadow:none!important;background:none!important;padding:0!important;margin:0!important}#poocard .poslot .wbx .wbxh h3{display:none}#poocard .poslot .wbx [data-zbf]{display:none}#poocard .poslot .wbx .wbxh{justify-content:center}#poocard .pohint{margin:6px 0 0}`;document.head.appendChild(st)})();
 </script>
 <!--BIBLE{--><!--}BIBLE-->
 <div id="miniov" class="miniov" hidden></div>
