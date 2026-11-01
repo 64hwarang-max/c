@@ -16232,7 +16232,7 @@ async function syPutSafe(B,k,v){if(!k.startsWith('day:')||!v||typeof v!=='object
 {const _o=openDay;openDay=async function(d){try{staleGuardInstall()}catch(e){}return _o.apply(this,arguments)}}
 {const _f=flush0;flush0=async function(){try{staleGuardInstall()}catch(e){}return _f.apply(this,arguments)}}
 /* v390 ① 앱 버전 표시 · 새 버전 알림 (GitHub에서 마지막으로 성공한 빌드 번호와 비교) */
-var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/398})();
+var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/399})();
 const VRK='gj-verchk',VRURL='https://github.com/64hwarang-max/c/actions/workflows/build-apk.yml';
 const vrGet=()=>{try{return JSON.parse(localStorage.getItem(VRK)||'{}')}catch(e){return{}}};
 async function vrCheck(force){const c=vrGet();if(!force&&c.t&&Date.now()-c.t<6*36e5)return c;
@@ -16384,6 +16384,58 @@ async function pexCardHTML(){const T=today(),mo=T.slice(0,7);const end=addD(T,36
 {const _rb=renderBudget;renderBudget=async function(){const r=await _rb.apply(this,arguments);try{if(fView==='budget'){const F=$('#fbody');if(F&&!F.querySelector('#pexcard')){const h=await pexCardHTML();if(fView==='budget'&&!F.querySelector('#pexcard')){const t=document.createElement('div');t.innerHTML=h;const seg=F.querySelector('.fvsub');(seg?seg.after.bind(seg):F.prepend.bind(F))(t.firstElementChild)}}}}catch(e){console.warn('pex',e)}return r}}
 (function(){const st=document.createElement('style');st.textContent=`#pexcard .pexr{display:flex;gap:8px;align-items:baseline;padding:6px 0;border-top:1px dashed var(--line);font-size:.88rem}#pexcard .pexr small{flex:none;color:var(--muted);min-width:4.2em}#pexcard .pexr span{flex:1;min-width:0}#pexcard .pexr i{font-style:normal;color:var(--muted);font-size:.8rem}#pexcard .pexr em{display:block;font-style:normal;font-size:.72rem;color:var(--muted)}#pexcard .pexr b{flex:none}#pexcard .pexr u{flex:none;text-decoration:none;font-size:.7rem;color:#2e9e6b}#pexcard .pexr.dn{opacity:.6}
 #pexcard .pexbars{display:flex;align-items:flex-end;gap:4px;height:90px;margin:8px 0}#pexcard .pexbars div{flex:1;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center}#pexcard .pexbars i{display:block;width:100%;min-height:2px;background:var(--c-fin,#2e9e6b);border-radius:3px 3px 0 0;opacity:.75}#pexcard .pexbars small{font-size:.6rem;color:var(--muted)}#pexcard .pexy summary{cursor:pointer;font-weight:700;margin-top:8px}`;document.head.appendChild(st)})();
+
+/* ===== v399 계획 화면: 1년을 맨 앞으로 · 🧭 기둥 팔각형 계획 · 기둥×기간 표 ===== */
+function poRange(lv,d){const x=parseD(d),y=x.getFullYear(),m=x.getMonth();const L=(a,b)=>[ymd(a),ymd(b)];
+  if(lv==='w'){const a=mondayOf(d);return[a,addD(a,6)]}if(lv==='m')return L(new Date(y,m,1),new Date(y,m+1,0));
+  if(lv==='q'){const q=Math.floor(m/3)*3;return L(new Date(y,q,1),new Date(y,q+3,0))}if(lv==='h'){const h=m<6?0:6;return L(new Date(y,h,1),new Date(y,h+6,0))}return L(new Date(y,0,1),new Date(y,11,31))}
+const poKeys=()=>SCORE.map(x=>x[0]).filter(k=>k!=='routine');
+const poBA=b=>b&&(b.area!=null&&b.area!==''?b.area:catArea(b.cat));
+const poMin=b=>b&&b.s&&b.e?mins(b.s,b.e):0;
+function poStat(M,lv,d){const[a,b]=poRange(lv,d);const per=perKey(lv,d);const K=poKeys();const H=SET.areaHrs||{};const wk=(Math.round((parseD(b)-parseD(a))/864e5)+1)/7;const S={};
+  K.forEach(k=>{const gs=goalsAt(lv,per).filter(g=>g.title&&g.area===k);let pr=0;try{pr=gs.length?gs.reduce((s,g)=>s+prog(g),0)/gs.length:0}catch(e){}S[k]={gs,pr,plan:0,act:0,tgt:(+H[k]||0)*60*wk}});
+  const m=new Map(M||[]);if(D)m.set(D.date,D);for(const o of m.values()){if(!o||!o.date||o.date<a||o.date>b)continue;(o.plan||[]).forEach(x=>{const k=poBA(x);if(S[k])S[k].plan+=poMin(x)});(o.time||[]).forEach(x=>{const k=poBA(x);if(S[k])S[k].act+=poMin(x)})}
+  return{a,b,per,S,K}}
+function poOctSVG(st){const K=st.K,n=K.length,cx=160,cy=150,R=100;const mx=Math.max(60,...K.map(k=>Math.max(st.S[k].tgt,st.S[k].plan,st.S[k].act)));
+  const nt=Math.max(60,...K.filter(k=>!st.S[k].tgt).map(k=>Math.max(st.S[k].plan,st.S[k].act)));const den=k=>st.S[k].tgt||nt;/* 축마다 목표 시간을 바깥 칸(100%)으로 */
+  const pt=(i,r)=>{const t=-Math.PI/2+i*2*Math.PI/n;return[cx+Math.cos(t)*r,cy+Math.sin(t)*r]};const poly=f=>K.map((k,i)=>pt(i,Math.max(.02,Math.min(1.15,f(k)))*R).map(v=>v.toFixed(1)).join(',')).join(' ');
+  let g='';[.25,.5,.75,1].forEach(q=>{g+=`<polygon points="${K.map((k,i)=>pt(i,R*q).join(',')).join(' ')}" fill="none" stroke="var(--line)" stroke-width="1"/>`});K.forEach((k,i)=>{const[x,y]=pt(i,R);g+=`<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" stroke="var(--line)"/>`});
+  const tg=K.some(k=>st.S[k].tgt)?`<polygon points="${poly(k=>st.S[k].tgt?1:0)}" fill="none" stroke="#888" stroke-dasharray="4 3" stroke-width="1.5"/>`:'';
+  const pl=`<polygon points="${poly(k=>st.S[k].plan/den(k))}" fill="#6c5ce7" fill-opacity=".22" stroke="#6c5ce7" stroke-width="2"/>`;const ac=`<polygon points="${poly(k=>st.S[k].act/den(k))}" fill="#2e9e6b" fill-opacity=".18" stroke="#2e9e6b" stroke-width="2"/>`;
+  const lab=K.map((k,i)=>{const[x,y]=pt(i,R+30);const s=st.S[k];const gp=s.gs.length?`목표 ${s.gs.length} · ${Math.round(s.pr*100)}%`:'목표 없음';const tp=s.tgt?`계획 ${Math.round(s.plan/s.tgt*100)}% · 실제 ${Math.round(s.act/s.tgt*100)}%`:(s.plan?`계획 ${hm(s.plan)}`:'');const anc=x<cx-8?'end':x>cx+8?'start':'middle';
+    return`<g class="pooL" data-poo="${k}" style="cursor:pointer"><text x="${x}" y="${y-4}" text-anchor="${anc}" font-size="12" font-weight="700" fill="var(--ink)">${AREA_E[k]||''}${esc(areaName(k))}</text><text x="${x}" y="${y+10}" text-anchor="${anc}" font-size="10" fill="${s.gs.length?'var(--muted)':'#e5484d'}">${gp}</text>${tp?`<text x="${x}" y="${y+22}" text-anchor="${anc}" font-size="9.5" fill="var(--muted)">${tp}</text>`:''}</g>`}).join('');
+  return`<svg viewBox="-14 -4 348 316" class="poosvg" role="img" aria-label="기둥별 계획 팔각형">${g}${tg}${pl}${ac}${lab}</svg>`}
+function poTblHTML(M,d){const K=poKeys();const LS=shortOn();const lifeL=lifeCfg().map(x=>x.k);const nm={y:'1년',h:'6개월',q:'3개월',m:'1달',w:'1주'};
+  const cell=(k,lv)=>{const gs=goalsAt(lv,perKey(lv,d)).filter(g=>g.title&&g.area===k);return`<td class="${gs.length?'':'emp'}" data-pot="${k}|${lv}">${gs.length?`<b>${gs.length}</b><span>${esc(gs[0].title)}</span>`:'＋'}</td>`};
+  const life=k=>{const gs=GOALS.list.filter(g=>g.title&&g.area===k&&(lifeL.includes(g.lv)||g.lv==='S'));return`<td class="${gs.length?'':'emp'}" data-pot="${k}|L">${gs.length?`<b>${gs.length}</b><span>${esc(gs[0].title)}</span>`:'＋'}</td>`};
+  const st=poStat(M,pZoom,d);
+  return`<div class="pootw"><table class="poot"><thead><tr><th>기둥</th><th>장기</th>${LS.map(l=>`<th>${nm[l]}</th>`).join('')}<th>계획</th></tr></thead><tbody>${K.map(k=>`<tr><th data-poo="${k}">${AREA_E[k]||''} ${esc(areaName(k))}</th>${life(k)}${LS.map(l=>cell(k,l)).join('')}<td class="poh">${st.S[k].plan?hm(st.S[k].plan):'–'}</td></tr>`).join('')}</tbody></table></div>
+   <p class="hint" style="margin:4px 0 0">칸을 누르면 그 기둥·기간의 목표를 보거나 더합니다. ‘계획’은 지금 고른 기간(${esc(perLabel(pZoom,perKey(pZoom,d)))})에 잡힌 시간입니다.</p>`}
+async function poHTML(){let M=cacheAll;try{M=await allMap()}catch(e){}const d=pAnchor||cur||today();const v=SET.poView||'oct';const st=poStat(M,pZoom,d);
+  const empty=st.K.filter(k=>!st.S[k].gs.length).map(k=>areaName(k));const nm=({y:'1년',h:'6개월',q:'3개월',m:'1달',w:'1주'})[pZoom]||'';
+  return`<div class="card nocol" id="poocard" style="--k:#6c5ce7"><div class="w168h"><h3>🧭 기둥별 계획 <small class="hint">${esc(perLabel(pZoom,st.per))}</small></h3></div>
+   <div class="seg poseg" style="margin:6px 0"><button data-pov="oct" class="${v==='oct'?'on':''}">🔷 팔각형</button><button data-pov="tbl" class="${v==='tbl'?'on':''}">📋 기둥×기간 표</button></div>
+   ${v==='oct'?`${poOctSVG(st)}<div class="poleg"><span><i style="background:#6c5ce7"></i>계획 시간</span><span><i style="background:#2e9e6b"></i>실제 시간</span>${st.K.some(k=>st.S[k].tgt)?'<span><i class="dsh"></i>목표 시간(바깥 칸)</span>':''}</div>
+    <p class="hint" style="margin:4px 0 0">${nm} 목표 · 진행률을 꼭짓점에 적었습니다. 기둥 이름을 누르면 그 기둥의 목표·계획·할 일이 펼쳐집니다.${empty.length?` <b style="color:#e5484d">목표가 없는 기둥: ${empty.map(esc).join(', ')}</b>`:''}</p>`:poTblHTML(M,d)}</div>`}
+async function poPaint(){try{const R=$('#pbody');if(!R||curSection!=='plan'||PLM!=='plan'||ZMP!=null||(typeof PLP!=='undefined'&&PLP))return;if(R.querySelector('#poocard'))return;const top=R.querySelector('.ptop');if(!top)return;
+  const h=await poHTML();if(R.querySelector('#poocard')||curSection!=='plan')return;const t=document.createElement('div');t.innerHTML=h;const el=t.firstElementChild;const nav=top.nextElementSibling&&top.nextElementSibling.matches('.wk,.pnav')?top.nextElementSibling:top;
+  const yr=R.querySelector('.yrg');if(yr&&yr.parentElement===R)yr.before(el);else nav.after(el)}catch(e){console.warn('poo',e)}}
+DECO.add('기둥 팔각형 계획',{root:'#pbody',deep:false,wait:150,run:()=>poPaint()});
+document.addEventListener('click',async e=>{const t=e.target.closest&&e.target.closest('[data-pov],[data-poo],[data-pot]');if(!t||!t.closest('#poocard'))return;
+  if(t.dataset.pov){SET.poView=t.dataset.pov;saveSet().catch(()=>{});const c=$('#poocard');if(c)c.remove();poPaint();return}
+  if(t.dataset.poo){PLP=t.dataset.poo;PLPA=pAnchor||today();try{PLPP=pZoom}catch(x){}plpPaint();scrollTo({top:0});return}
+  if(t.dataset.pot){const[k,lv]=t.dataset.pot.split('|');const d=pAnchor||cur||today();
+    if(lv==='L'){const gs=GOALS.list.filter(g=>g.title&&g.area===k&&(lifeCfg().some(x=>x.k===g.lv)||g.lv==='S'));if(gs.length){gSub='ladder';PLDET=1;openSection('goal');scrollTo({top:0});return}
+      const L=[...lifeCfg().map(x=>[x.k,LVX[x.k]?LVX[x.k].n:x.y+'년 후']),['S','언젠가']];const v=((await uiPrompt(`${AREA_E[k]||''} ${areaName(k)} 장기 목표`))||'').trim();if(!v)return;
+      const lv2=await new Promise(res=>{const S=$('#sheet');S.hidden=false;S.innerHTML=`<div class="sheetbox"><div class="shead"><b>어느 기간의 목표인가요?</b><button class="del" id="pokx">취소</button></div><div class="chips">${L.map(([x,l])=>`<button class="chip fbtn" data-pok="${x}">${esc(l)}</button>`).join('')}</div></div>`;const done=x=>{S.hidden=true;S.innerHTML='';res(x)};$('#pokx').onclick=()=>done(null);S.querySelectorAll('[data-pok]').forEach(b=>b.onclick=()=>done(b.dataset.pok))});
+      if(!lv2)return;GOALS.list.push({id:uid(),lv:lv2,per:perOf(lv2,today()),title:v,done:false,doneAt:'',parent:null,tasks:[],area:k,rank:0,kind:'once'});saveGoalsSoon();const c=$('#poocard');if(c)c.remove();poPaint();return}
+    const gs=goalsAt(lv,perKey(lv,d)).filter(g=>g.title&&g.area===k);if(gs.length){PLP=k;PLPA=d;PLPP=lv;plpPaint();scrollTo({top:0});return}
+    const v=((await uiPrompt(`${AREA_E[k]||''} ${areaName(k)} · ${perLabel(lv,perKey(lv,d))} 목표`))||'').trim();if(!v)return;
+    GOALS.list.push({id:uid(),lv,per:perOf(lv,d),title:v,done:false,doneAt:'',parent:null,tasks:[],area:k,rank:0,kind:'once'});saveGoalsSoon();const c=$('#poocard');if(c)c.remove();poPaint()}},true);
+(function(){const st=document.createElement('style');st.textContent=`.seg.pzoom,.chips.plpz{flex-direction:row-reverse;justify-content:flex-end}
+#poocard .poosvg{width:100%;max-width:380px;display:block;margin:0 auto}#poocard .poleg{display:flex;gap:12px;justify-content:center;font-size:.76rem;color:var(--muted)}#poocard .poleg i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:4px;vertical-align:-1px}#poocard .poleg i.dsh{background:none;border:1.5px dashed #888}
+#poocard .pootw{overflow-x:auto;margin:4px -6px 0}#poocard .poot{border-collapse:collapse;width:100%;font-size:.74rem;table-layout:fixed}#poocard .poot th:first-child{width:3.9em}#poocard .poot th,#poocard .poot td{border:1px solid var(--line);padding:4px 3px;vertical-align:top;text-align:left}#poocard .poot thead th{background:color-mix(in srgb,var(--k) 10%,var(--paper));text-align:center;font-size:.72rem}
+#poocard .poot tbody th{font-size:.7rem;cursor:pointer;word-break:keep-all;line-height:1.25}#poocard .poot td{cursor:pointer}#poocard .poot td b{display:inline-block;min-width:1.2em;color:var(--k);margin-right:2px}#poocard .poot td span{display:-webkit-box;-webkit-line-clamp:3;word-break:break-all;-webkit-box-orient:vertical;overflow:hidden;font-size:.72rem}#poocard .poot td.emp{color:var(--muted);text-align:center;background:color-mix(in srgb,#e5484d 4%,var(--paper))}#poocard .poot td.poh{text-align:center;cursor:default;font-weight:700;font-size:.66rem}#poocard .poot th,#poocard .poot td{padding:3px 2px!important}`;document.head.appendChild(st)})();
 </script>
 <!--BIBLE{--><!--}BIBLE-->
 <div id="miniov" class="miniov" hidden></div>
