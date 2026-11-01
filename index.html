@@ -16235,7 +16235,7 @@ async function syPutSafe(B,k,v){if(!k.startsWith('day:')||!v||typeof v!=='object
 {const _o=openDay;openDay=async function(d){try{staleGuardInstall()}catch(e){}return _o.apply(this,arguments)}}
 {const _f=flush0;flush0=async function(){try{staleGuardInstall()}catch(e){}return _f.apply(this,arguments)}}
 /* v390 ① 앱 버전 표시 · 새 버전 알림 (GitHub에서 마지막으로 성공한 빌드 번호와 비교) */
-var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/428})();
+var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/429})();
 const VRK='gj-verchk',VRURL='https://github.com/64hwarang-max/c/actions/workflows/build-apk.yml';
 const vrGet=()=>{try{return JSON.parse(localStorage.getItem(VRK)||'{}')}catch(e){return{}}};
 async function vrCheck(force){const c=vrGet();if(!force&&c.t&&Date.now()-c.t<6*36e5)return c;
@@ -17103,6 +17103,128 @@ document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest
   if(op)WBTO.add(k);else WBTO.delete(k);try{localStorage.setItem('gj-wbto',JSON.stringify([...WBTO]))}catch(x){}},true);
 (function(){const st=document.createElement('style');st.textContent=`.wbtg.wbf{padding-top:4px;padding-bottom:4px}.wbtg.wbf .wbth{display:flex;align-items:center;width:100%;border:0;background:none;padding:6px 0;font:inherit;color:var(--ink);cursor:pointer;text-align:left}.wbtg.wbf .wbth b{flex:1;display:flex;gap:6px;align-items:baseline}.wbtg.wbf .wbth small{color:var(--muted);font-weight:500}.wbtg.wbf .wbth i{font-style:normal;color:var(--muted);font-size:.8rem}
 .wbtg.wbf:not(.op) .wbte{display:none}.wbtg.wbf .wbg{padding:3px 0}`;document.head.appendChild(st)})();
+
+/* ===== v429: 마음관리 › 🌱 마음 훈련 — 감정 나눠 적기 · 반복 패턴 찾기 · 대응 연습 · 명상 ===== */
+const MBODY=['가슴 답답','심장 두근','어깨·목 긴장','머리 아픔','속 불편','얼굴 화끈','손 떨림','기운 없음','잠 안 옴'];
+const MDIST=[['흑백 논리',/항상|절대|전혀|완전히|하나도|모두 다/],['지나친 일반화',/맨날|늘 |또 |매번|언제나/],['마음 읽기',/생각하면 어떡|날 .{0,8}(생각|여기|볼)|싫어하는 것 같/],['최악 예상',/망했|망할|끝장|최악|어떡하지|큰일/],['당위 생각',/해야 ?(한다|해|만)|하면 안 ?돼|되어야/],['자기 비난',/내 탓|내가 망|무능|한심|못났|바보/]];
+const MSTOP=new Set(['그리고','그런데','하지만','오늘','어제','내가','나는','너무','정말','그냥','조금','있었다','했다','하는','해서','때문에','같다','같은','있는','없는','에서','으로']);
+const MF={sit:'',th:'',ev:'',emo:[],lv:5,body:[],bodyT:'',act:'',alt:''};let MSUB=(()=>{try{return localStorage.getItem('gj-msub')||'log'}catch(e){return'log'}})();let MPER=30;
+const mindSet=()=>{SET.mind=SET.mind||{};SET.mind.net=SET.mind.net||{exp:'',core:'',mid:''};SET.mind.plans=SET.mind.plans||[];return SET.mind};
+function mDocs(days){const m=new Map(cacheAll||[]);if(D)m.set(D.date,D);const a=addD(today(),-(days-1));return[...m.values()].filter(o=>o&&o.date>=a&&o.date<=today()).sort((x,y)=>x.date<y.date?-1:1)}
+function mPattern(days){const docs=mDocs(days);const E=[];docs.forEach(o=>(o.cbt||[]).forEach(x=>E.push({...x,d:o.date})));
+  const emo={},body={},wd={},dist={};E.forEach(x=>{(x.emo||[]).forEach(t=>{emo[t]=emo[t]||{n:0,s:0};emo[t].n++;emo[t].s+=+x.lv||0});(x.body||[]).forEach(t=>body[t]=(body[t]||0)+1);
+    String(x.sit||'').split(/[\s,.!?·~()]+/).map(w=>w.replace(/(에서|에게|으로|이랑|하고|까지|부터|은|는|이|가|을|를|에|와|과|도|만|의)$/,'')).filter(w=>w.length>=2&&!MSTOP.has(w)).forEach(w=>wd[w]=(wd[w]||0)+1);
+    MDIST.forEach(([n,re])=>{if(re.test(String(x.th||'')))dist[n]=(dist[n]||0)+1})});
+  const srt=o=>Object.entries(o).sort((a,b)=>(b[1].n||b[1])-(a[1].n||a[1]));
+  const med=docs.reduce((a,o)=>a+(o.medit||[]).reduce((s,q)=>s+(+q.min||0),0),0);
+  return{E,emo:srt(emo),body:srt(body),wd:srt(wd).filter(x=>x[1]>=2).slice(0,8),dist:srt(dist),med}}
+function mLogHTML(){const F=MF;const L=(D.cbt||[]);
+  return`<div class="card nocol mtr" style="--k:#9b6bff"><h3>🧩 감정 나눠 적기 <small class="hint">${md(D.date)}${D.date===today()?' · 오늘':''}</small></h3><p class="hint" style="margin:0 0 8px">감정은 생각·몸의 반응·행동과 섞여서 떠오릅니다. 하나씩 떼어서 적어 봅니다.</p>
+   <label class="fl">① 상황 <small class="hint">언제, 어디서, 무슨 일이</small></label><textarea rows="2" data-mf="sit" placeholder="예: 보고서를 보낸 뒤 오타 두 개를 발견했다">${esc(F.sit)}</textarea>
+   <label class="fl">② 생각 <small class="hint">그 순간 떠오른 말 그대로</small></label><textarea rows="2" data-mf="th" placeholder="예: 부장님이 나를 대충 하는 사람으로 보겠지">${esc(F.th)}</textarea>
+   <label class="fl">└ 그렇게 생각한 근거는? <small class="hint">사실만</small></label><textarea rows="2" data-mf="ev" placeholder="예: 지난번에도 수정 요청을 받았다 / 아직 아무 말도 듣지 않았다">${esc(F.ev)}</textarea>
+   <label class="fl">③ 감정 <small class="hint">여러 개 고를 수 있음</small></label><div class="chips">${[...EMOS,...F.emo.filter(t=>!EMOS.includes(t))].map(t=>`<button type="button" class="chip fbtn ${F.emo.includes(t)?'on':''}" data-mfe="${esc(t)}">${esc(t)}</button>`).join('')}<button type="button" class="chip wkplus" data-mfe2="1" aria-label="감정 추가">＋</button></div>
+   <div class="mlv"><span>세기</span><input type="range" min="1" max="10" step="1" data-mf="lv" value="${F.lv}"><b>${F.lv}</b></div>
+   <label class="fl">④ 몸의 반응</label><div class="chips">${MBODY.map(t=>`<button type="button" class="chip fbtn ${F.body.includes(t)?'on':''}" data-mfb="${esc(t)}">${esc(t)}</button>`).join('')}</div><input type="text" data-mf="bodyT" value="${esc(F.bodyT)}" placeholder="그 밖의 반응 (선택)" style="margin-top:6px">
+   <label class="fl">⑤ 행동 <small class="hint">그래서 무엇을 했나</small></label><textarea rows="2" data-mf="act" placeholder="예: 정정 메일을 두 번 보냈다">${esc(F.act)}</textarea>
+   <label class="fl">⑥ 다르게 본다면 <small class="hint">친구가 같은 일을 겪었다면 뭐라고 말해 줄까</small></label><textarea rows="2" data-mf="alt" placeholder="예: 오타는 누구나 낸다. 바로 고친 것이 더 중요하다">${esc(F.alt)}</textarea>
+   <button type="button" class="btn" data-mfsave="1" style="width:100%;margin-top:10px">기록 넣기</button>
+   ${L.length?`<p class="mhead" style="margin-top:12px">이날 적은 기록 ${L.length}개</p>${L.map((x,i)=>mItemHTML(x,i,true)).join('')}`:''}</div>`}
+function mItemHTML(x,i,del){const tg=MDIST.filter(([,re])=>re.test(String(x.th||''))).map(([n])=>n);
+  return`<div class="mitem">${del?`<button class="del" data-mfx="${i}" aria-label="지우기" style="float:right">✕</button>`:''}<small>${x.at||''}${x.d?' · '+md(x.d):''}</small>
+   ${x.sit?`<p><b>상황</b> ${esc(x.sit)}</p>`:''}${x.th?`<p><b>생각</b> ${esc(x.th)}${tg.length?` <em class="mdt">${tg.map(esc).join(' · ')}</em>`:''}</p>`:''}${x.ev?`<p><b>근거</b> ${esc(x.ev)}</p>`:''}
+   ${(x.emo||[]).length?`<p><b>감정</b> ${x.emo.map(esc).join(', ')} <small>(${x.lv}/10)</small></p>`:''}${(x.body||[]).length||x.bodyT?`<p><b>몸</b> ${[...(x.body||[]),x.bodyT].filter(Boolean).map(esc).join(', ')}</p>`:''}
+   ${x.act?`<p><b>행동</b> ${esc(x.act)}</p>`:''}${x.alt?`<p class="malt"><b>다르게 보기</b> ${esc(x.alt)}</p>`:''}</div>`}
+function mPatHTML(){const P=mPattern(MPER);const N=mindSet().net;const bar=(l,v,mx,t)=>`<div class="plhb"><span>${esc(l)}</span><i><b style="width:${Math.round(v/mx*100)}%"></b></i><small>${t}</small></div>`;
+  const plans=mindSet().plans;
+  return`<div class="card nocol mtr" style="--k:#9b6bff"><h3>🔁 반복되는 패턴·트리거</h3><div class="chips" style="margin:0 0 8px">${[[30,'최근 30일'],[90,'90일'],[365,'1년']].map(([n,l])=>`<button type="button" class="chip fbtn ${MPER===n?'on':''}" data-mper="${n}">${l}</button>`).join('')}</div>
+   ${!P.E.length?'<p class="hint">감정 나눠 적기가 쌓이면 자주 느끼는 감정, 몸의 반응, 자주 나오는 상황 낱말, 생각 습관이 여기 모입니다.</p>':`
+   <p class="mhead">💗 자주 느낀 감정 <small class="hint">${P.E.length}번 기록</small></p>${P.emo.slice(0,5).map(([t,o])=>bar(t,o.n,P.emo[0][1].n,`${o.n}번 · 세기 ${(o.s/o.n).toFixed(1)}`)).join('')}
+   ${P.wd.length?`<p class="mhead">📍 자주 나온 상황 낱말 <small class="hint">트리거 후보</small></p><div class="chips">${P.wd.map(([w,n])=>`<span class="chip">${esc(w)} ${n}</span>`).join('')}</div>`:''}
+   ${P.dist.length?`<p class="mhead">🧠 생각 습관 <small class="hint">생각 칸에서 찾은 말버릇</small></p>${P.dist.map(([t,n])=>bar(t,n,P.dist[0][1],n+'번')).join('')}`:''}
+   ${P.body.length?`<p class="mhead">🫀 몸의 반응</p><div class="chips">${P.body.slice(0,6).map(([t,n])=>`<span class="chip">${esc(t)} ${n}</span>`).join('')}</div>`:''}`}
+   <p class="mhead" style="margin-top:12px">🕸️ 생각 그물 <small class="hint">기록을 보며 천천히 채웁니다</small></p>
+   <div class="mnet">${[['exp','핵심 경험','예: 무언가를 잘했을 때만 칭찬을 받았다'],['core','핵심 믿음','예: 나는 부족하다'],['mid','중간 믿음 (규칙)','예: 실수 없이 해내야 인정받는다']].map(([k,l,ph],i)=>`${i?'<i class="mnar">↓</i>':''}<label><small>${l}</small><input type="text" data-mnet="${k}" value="${esc(N[k]||'')}" placeholder="${ph}"></label>`).join('')}<i class="mnar">↓</i><div class="mnauto"><small>자동으로 드는 생각 (최근 기록)</small>${P.E.slice(-2).reverse().map(x=>`<p>${esc(x.th||'—')}</p>`).join('')||'<p class="hint">—</p>'}</div></div>
+   ${plans.length?`<p class="mhead" style="margin-top:10px">💪 정해 둔 대응</p>${plans.map(q=>`<p class="qh">⚡ ${esc(q.trig)} → <b>${esc(q.resp)}</b></p>`).join('')}`:''}</div>`}
+let MPIE={t:'',f:[{n:'',p:''}]};
+function mPieSvg(f){const C=['#2d3436','#3b82f6','#5ec4d4','#f5c542','#f08a24','#9b6bff','#e17055','#00b894'];let a=0;const tot=f.reduce((s,x)=>s+(+x.p||0),0)||1;
+  const seg=f.filter(x=>+x.p>0).map((x,i)=>{const b=a+(+x.p)/tot*360;const s=`${C[i%C.length]} ${a}deg ${b}deg`;a=b;return s});return{bg:seg.length?`conic-gradient(${seg.join(',')})`:'var(--line)',C,tot}}
+function mCopeHTML(){const Pl=mindSet().plans;const g=mPieSvg(MPIE.f);const sumP=MPIE.f.reduce((s,x)=>s+(+x.p||0),0);
+  return`<div class="card nocol mtr" style="--k:#9b6bff"><h3>💪 휩쓸리지 않는 대응 연습</h3>
+   <p class="mhead">🥧 책임 나눠 보기 <small class="hint">모두 내 탓이라고 느낄 때</small></p>
+   <input type="text" data-mpt="1" value="${esc(MPIE.t)}" placeholder="자책하는 생각 (예: 내가 프로젝트를 망쳤다)">
+   <p class="hint" style="margin:6px 0">그 일에 영향을 준 요인을 모두 적고, 각각 몇 %인지 나눕니다. 내 몫은 마지막에 적습니다.</p>
+   ${MPIE.f.map((x,i)=>`<div class="mpr"><i style="background:${g.C[i%g.C.length]}"></i><input type="text" data-mpn="${i}" value="${esc(x.n)}" placeholder="요인 (예: 마감이 촉박했다)"><input type="number" inputmode="numeric" min="0" max="100" data-mpp="${i}" value="${esc(x.p)}" placeholder="%"><button class="del" data-mpx="${i}" ${MPIE.f.length<2?'disabled':''}>✕</button></div>`).join('')}
+   <button type="button" class="btn small ghost" data-mpa="1">＋ 요인 추가</button>
+   <div class="mpie"><div class="mdon" style="background:${g.bg}"><span>${esc(MPIE.t||'자책하는 생각')}</span></div><small class="hint">합계 ${sumP}%${sumP&&sumP!==100?' · 100%로 맞추면 정확해집니다':''}</small></div>
+   <button type="button" class="btn small" data-mps="1">이날 기록에 저장</button>
+   ${(D.mpie||[]).map((q,i)=>`<p class="qh">🥧 ${esc(q.t)} · ${q.f.map(x=>`${esc(x.n)} ${x.p}%`).join(', ')} <button class="del" data-mpd="${i}">✕</button></p>`).join('')}
+   <p class="mhead" style="margin-top:14px">⚡ 같은 패턴이 오면 이렇게 <small class="hint">대응 계획</small></p>
+   ${Pl.map((q,i)=>`<div class="mpl"><span>⚡ ${esc(q.trig)}</span><b>→ ${esc(q.resp)}</b><button class="del" data-mplx="${i}">✕</button></div>`).join('')||'<p class="hint" style="margin:0 0 6px">아직 없습니다.</p>'}
+   <input type="text" data-mplt="1" placeholder="이럴 때 (예: 실수를 발견하고 자책이 올라올 때)"><input type="text" data-mplr="1" placeholder="이렇게 한다 (예: 숨 세 번 · 고칠 것 하나만 적기)" style="margin-top:6px"><button type="button" class="btn small" data-mpla="1" style="margin-top:6px">대응 추가</button></div>`}
+const MBR={box:['상자 호흡 4·4·4·4',[['들이쉬기',4],['멈추기',4],['내쉬기',4],['멈추기',4]]],c478:['4·7·8 호흡',[['들이쉬기',4],['멈추기',7],['내쉬기',8]]],slow:['길게 내쉬기 4·6',[['들이쉬기',4],['내쉬기',6]]]};
+const MIMG={river:['🍃 생각의 강','떠오르는 생각을 나뭇잎 위에 올려 강물에 띄워 보냅니다. 붙잡지도, 밀어내지도 않습니다.'],sky:['☁️ 생각의 하늘','생각과 감정을 하늘을 지나가는 구름으로 바라봅니다. 나는 구름이 아니라 하늘입니다.'],train:['🚉 생각의 역','생각은 역에 들어왔다 떠나는 기차입니다. 올라타지 않고 플랫폼에서 지켜봅니다.']};
+let MED={br:'slow',img:'sky',min:3,run:null};
+function mMedHTML(){const P=mPattern(7);
+  return`<div class="card nocol mtr" style="--k:#9b6bff"><h3>🍃 명상으로 흘려보내기 <small class="hint">이번 7일 ${P.med}분</small></h3>
+   <p class="mhead">떠올릴 그림</p><div class="seg mseg">${Object.entries(MIMG).map(([k,[l]])=>`<button type="button" data-mimg="${k}" class="${MED.img===k?'on':''}">${l}</button>`).join('')}</div><p class="hint" style="margin:6px 0">${MIMG[MED.img][1]}</p>
+   <p class="mhead">호흡</p><div class="chips">${Object.entries(MBR).map(([k,[l]])=>`<button type="button" class="chip fbtn ${MED.br===k?'on':''}" data-mbr="${k}">${l}</button>`).join('')}</div>
+   <p class="mhead">시간</p><div class="chips">${[1,3,5,10].map(n=>`<button type="button" class="chip fbtn ${MED.min===n?'on':''}" data-mmin="${n}">${n}분</button>`).join('')}</div>
+   <div class="mbreath ${MED.img}"><div class="mcirc" id="mcirc"><b id="mph">준비</b><small id="mct"></small></div><p class="hint" id="mleft" style="text-align:center;margin:6px 0 0"></p></div>
+   <button type="button" class="btn" id="mgo" style="width:100%">${MED.run?'⏸ 그만하기':'▶ 시작'}</button>
+   ${(D.medit||[]).length?`<p class="hint" style="margin:8px 0 0">이날 명상: ${(D.medit||[]).map(q=>`${q.min}분 ${esc(MIMG[q.img]?MIMG[q.img][0]:'')}`).join(' · ')}</p>`:''}</div>`}
+function mMedStop(save){const r=MED.run;if(!r)return;clearInterval(r.t);MED.run=null;const done=Math.round((Date.now()-r.st)/60000);if(save&&done>=1){D.medit=Array.isArray(D.medit)?D.medit:[];D.medit.push({min:done,img:MED.img,br:MED.br,at:new Date().toTimeString().slice(0,5)});schedule();toast(`🍃 명상 ${done}분을 기록했습니다.`)}}
+function mMedStart(){const ph=MBR[MED.br][1];const tot=MED.min*60;const st=Date.now();let i=0,left=ph[0][1];const C=document.getElementById('mcirc');
+  const paint=()=>{const P=document.getElementById('mph'),T=document.getElementById('mct'),L=document.getElementById('mleft'),c=document.getElementById('mcirc');if(!c){mMedStop(true);return}
+    const[n,s]=ph[i];P.textContent=n;T.textContent=left;c.dataset.ph=n==='들이쉬기'?'in':n==='내쉬기'?'out':'hold';c.style.transitionDuration=s+'s';
+    const r=Math.max(0,tot-Math.round((Date.now()-st)/1000));L.textContent=`남은 시간 ${Math.floor(r/60)}:${pad(r%60)}`;if(r<=0){mMedStop(true);const b=document.getElementById('mgo');if(b)b.textContent='▶ 다시 시작';P.textContent='끝';T.textContent='';c.dataset.ph='hold'}};
+  MED.run={st,t:setInterval(()=>{left--;if(left<=0){i=(i+1)%ph.length;left=ph[i][1];try{navigator.vibrate&&navigator.vibrate(30)}catch(e){}}paint()},1000)};paint()}
+async function renderMind(R){const head=R.querySelector('.pltab');const s=`<div class="seg msub" style="--k:#9b6bff">${[['log','🧩 나눠 적기'],['pat','🔁 패턴'],['cope','💪 대응'],['med','🍃 명상']].map(([k,l])=>`<button type="button" data-msub="${k}" class="${MSUB===k?'on':''}">${l}</button>`).join('')}</div>`;
+  if(!D||D.date!==today())await openDay(today());if(MSUB!=='med')mMedStop(true);
+  try{await allMap()}catch(e){}
+  const body=MSUB==='pat'?mPatHTML():MSUB==='cope'?mCopeHTML():MSUB==='med'?mMedHTML():mLogHTML();
+  R.innerHTML=(head?head.outerHTML:'')+s+body;pilBind(R,'mind');mBind(R)}
+function mBind(R){const re=()=>renderPil('mind');const F=MF;
+  R.querySelectorAll('[data-msub]').forEach(b=>b.onclick=()=>{MSUB=b.dataset.msub;try{localStorage.setItem('gj-msub',MSUB)}catch(e){}re()});
+  R.querySelectorAll('[data-mf]').forEach(i=>i.oninput=()=>{F[i.dataset.mf]=i.dataset.mf==='lv'?+i.value:i.value;if(i.dataset.mf==='lv'){const b=i.parentNode.querySelector('b');if(b)b.textContent=i.value}});
+  R.querySelectorAll('[data-mfe]').forEach(b=>b.onclick=()=>{const t=b.dataset.mfe;F.emo=F.emo.includes(t)?F.emo.filter(x=>x!==t):[...F.emo,t];b.classList.toggle('on')});
+  R.querySelectorAll('[data-mfb]').forEach(b=>b.onclick=()=>{const t=b.dataset.mfb;F.body=F.body.includes(t)?F.body.filter(x=>x!==t):[...F.body,t];b.classList.toggle('on')});
+  {const b=R.querySelector('[data-mfe2]');if(b)b.onclick=async()=>{const v=((await uiPrompt('감정 이름 (예: 초조, 억울함)',''))||'').trim().slice(0,12);if(v&&!F.emo.includes(v)){F.emo.push(v);re()}}}
+  {const b=R.querySelector('[data-mfsave]');if(b)b.onclick=()=>{if(!F.sit.trim()&&!F.th.trim()&&!F.emo.length){toast('상황이나 생각, 감정 중 하나는 적어 주십시오.');return}D.cbt=Array.isArray(D.cbt)?D.cbt:[];
+    D.cbt.push({id:uid(),at:new Date().toTimeString().slice(0,5),sit:F.sit.trim(),th:F.th.trim(),ev:F.ev.trim(),emo:F.emo.slice(),lv:F.lv,body:F.body.slice(),bodyT:F.bodyT.trim(),act:F.act.trim(),alt:F.alt.trim()});
+    if(F.emo.length){D.emo=D.emo||{tags:[],lv:0,text:''};F.emo.forEach(t=>{if(EMOS.includes(t)&&!D.emo.tags.includes(t))D.emo.tags.push(t)})}
+    schedule();Object.assign(MF,{sit:'',th:'',ev:'',emo:[],lv:5,body:[],bodyT:'',act:'',alt:''});toast('🧩 감정 기록을 넣었습니다.');re()}}
+  R.querySelectorAll('[data-mfx]').forEach(b=>b.onclick=async()=>{if(!await uiConfirm('이 기록을 지울까요?'))return;D.cbt.splice(+b.dataset.mfx,1);schedule();re()});
+  R.querySelectorAll('[data-mper]').forEach(b=>b.onclick=()=>{MPER=+b.dataset.mper;re()});
+  R.querySelectorAll('[data-mnet]').forEach(i=>i.oninput=()=>{mindSet().net[i.dataset.mnet]=i.value;clearTimeout(i._t);i._t=setTimeout(()=>saveSet().catch(()=>{}),500)});
+  const rp=()=>{const t=R.querySelector('[data-mpt]');if(t)MPIE.t=t.value;R.querySelectorAll('[data-mpn]').forEach(i=>MPIE.f[+i.dataset.mpn].n=i.value);R.querySelectorAll('[data-mpp]').forEach(i=>MPIE.f[+i.dataset.mpp].p=i.value)};
+  R.querySelectorAll('[data-mpp],[data-mpt],[data-mpn]').forEach(i=>i.oninput=()=>{rp();const g=mPieSvg(MPIE.f);const dn=R.querySelector('.mdon');if(dn){dn.style.background=g.bg;dn.querySelector('span').textContent=MPIE.t||'자책하는 생각'}const sm=R.querySelector('.mpie small');if(sm){const t=MPIE.f.reduce((x,y)=>x+(+y.p||0),0);sm.textContent=`합계 ${t}%`+(t&&t!==100?' · 100%로 맞추면 정확해집니다':'')}});
+  {const b=R.querySelector('[data-mpa]');if(b)b.onclick=()=>{rp();MPIE.f.push({n:'',p:''});re()}}
+  R.querySelectorAll('[data-mpx]').forEach(b=>b.onclick=()=>{rp();MPIE.f.splice(+b.dataset.mpx,1);re()});
+  {const b=R.querySelector('[data-mps]');if(b)b.onclick=()=>{rp();const f=MPIE.f.filter(x=>x.n.trim()&&+x.p>0).map(x=>({n:x.n.trim(),p:+x.p}));if(!MPIE.t.trim()||!f.length){toast('자책하는 생각과 요인·%를 적어 주십시오.');return}D.mpie=Array.isArray(D.mpie)?D.mpie:[];D.mpie.push({t:MPIE.t.trim(),f});schedule();MPIE={t:'',f:[{n:'',p:''}]};toast('🥧 저장했습니다.');re()}}
+  R.querySelectorAll('[data-mpd]').forEach(b=>b.onclick=()=>{D.mpie.splice(+b.dataset.mpd,1);schedule();re()});
+  {const b=R.querySelector('[data-mpla]');if(b)b.onclick=()=>{const t=R.querySelector('[data-mplt]').value.trim(),r=R.querySelector('[data-mplr]').value.trim();if(!t||!r){toast('트리거와 대응을 모두 적어 주십시오.');return}mindSet().plans.push({id:uid(),trig:t,resp:r});saveSet().catch(()=>{});re()}}
+  R.querySelectorAll('[data-mplx]').forEach(b=>b.onclick=()=>{mindSet().plans.splice(+b.dataset.mplx,1);saveSet().catch(()=>{});re()});
+  R.querySelectorAll('[data-mimg]').forEach(b=>b.onclick=()=>{if(MED.run)return;MED.img=b.dataset.mimg;re()});R.querySelectorAll('[data-mbr]').forEach(b=>b.onclick=()=>{if(MED.run)return;MED.br=b.dataset.mbr;re()});R.querySelectorAll('[data-mmin]').forEach(b=>b.onclick=()=>{if(MED.run)return;MED.min=+b.dataset.mmin;re()});
+  {const b=R.querySelector('#mgo');if(b)b.onclick=()=>{if(MED.run){mMedStop(true);re()}else{b.textContent='⏸ 그만하기';mMedStart()}}}}
+/* 마음관리 화면에 4번째 칸 '🌱 마음 훈련' */
+{const _rp=renderPil;renderPil=async function(k){if(k==='mind'&&PILST.mind==='t'){const R=document.getElementById('pmnbody');if(R){R.innerHTML=`<div class="seg pltab" style="--k:var(--acc)">${[...PILTB,['t','🌱 훈련']].map(([t,l])=>`<button type="button" data-pltb="${t}" class="${t==='t'?'on':''}">${l}</button>`).join('')}</div>`;return renderMind(R)}}
+  const r=await _rp.apply(this,arguments);if(k==='mind'){try{mMedStop(true);const R=document.getElementById('pmnbody');const tb=R&&R.querySelector('.pltab');if(tb&&!tb.querySelector('[data-pltb="t"]')){tb.insertAdjacentHTML('beforeend','<button type="button" data-pltb="t">🌱 훈련</button>');pilBind(R,'mind')}}catch(e){}}return r}}
+/* 현황·돌아보기에 감정 나눠 적기·명상 */
+{const _pd=pilData;pilData=function(k,objs,R){const r=_pd.apply(this,arguments);if(k!=='mind')return r;try{const n=objs.reduce((a,o)=>a+(o.cbt||[]).length,0),m=objs.reduce((a,o)=>a+(o.medit||[]).reduce((s,q)=>s+(+q.min||0),0),0);r.T.push(['🧩 감정 나눠 적기',n+'번'],['🍃 명상',hm(m)]);
+  objs.forEach(o=>{(o.cbt||[]).forEach(x=>r.L.push({d:o.date,ic:'🧩',l:'감정 나눠 적기 · '+(x.emo||[]).join(', ')+(x.lv?` (${x.lv}/10)`:''),t:[x.sit&&'상황: '+x.sit,x.th&&'생각: '+x.th,x.alt&&'다르게: '+x.alt].filter(Boolean).join('\n')}));(o.medit||[]).forEach(q=>r.L.push({d:o.date,ic:'🍃',l:'명상 '+q.min+'분',t:MIMG[q.img]?MIMG[q.img][0]:''}))})}catch(e){}return r}}
+/* 오늘 마음관리 시트에서 바로 가기 */
+{const _pf=pilFormFill;pilFormFill=async function(el,k){const r=await _pf.apply(this,arguments);if(k==='mind'&&el&&el.isConnected&&!el.querySelector('[data-gomtr]')){el.insertAdjacentHTML('beforeend','<div class="row" style="gap:6px;flex-wrap:wrap;margin-top:8px"><button class="btn small ghost" data-gomtr="log">🧩 감정 나눠 적기</button><button class="btn small ghost" data-gomtr="med">🍃 명상</button></div>')}return r}}
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-gomtr]');if(!b)return;e.preventDefault();try{const S=$('#sheet');S.hidden=true;S.innerHTML=''}catch(x){}MSUB=b.dataset.gomtr;PILST.mind='t';try{localStorage.setItem('gj-pilst',JSON.stringify(PILST))}catch(x){}go('pmn')},true);
+(function(){const st=document.createElement('style');st.textContent=`.msub{margin:0 0 10px}.msub button{font-size:.82rem;padding:7px 2px}.mtr .fl{margin-top:10px}.mtr textarea,.mtr input[type=text]{width:100%}
+.mlv{display:flex;align-items:center;gap:8px;margin:8px 0 0}.mlv input{flex:1}.mlv span{font-size:.82rem;color:var(--muted)}.mlv b{width:1.6em;text-align:right}
+.mitem{border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin:6px 0;font-size:.88rem}.mitem p{margin:3px 0;line-height:1.45}.mitem p b{color:var(--muted);font-size:.78rem;margin-right:4px}.mitem .malt{color:#6c5ce7}.mdt{font-style:normal;font-size:.72rem;background:color-mix(in srgb,#9b6bff 15%,transparent);border-radius:6px;padding:0 5px;margin-left:4px}
+.mnet{display:flex;flex-direction:column;align-items:stretch;gap:2px}.mnet label{display:block;background:color-mix(in srgb,#9b6bff 8%,var(--paper));border-radius:10px;padding:6px 8px}.mnet label small,.mnauto small{display:block;text-align:center;font-weight:700;color:#6c5ce7;font-size:.74rem;margin-bottom:3px}.mnet input{text-align:center}.mnar{font-style:normal;text-align:center;color:var(--muted)}.mnauto{background:color-mix(in srgb,#9b6bff 8%,var(--paper));border-radius:10px;padding:6px 8px;text-align:center}.mnauto p{margin:2px 0;font-size:.86rem}
+.mpr{display:grid;grid-template-columns:12px minmax(0,1fr) 4.2em 2em;gap:6px;align-items:center;margin:4px 0}.mpr i{width:12px;height:12px;border-radius:3px}.mpr input[type=number]{text-align:right}
+.mpie{display:flex;flex-direction:column;align-items:center;gap:6px;margin:10px 0}.mdon{width:180px;height:180px;border-radius:50%;display:flex;align-items:center;justify-content:center;position:relative}.mdon::before{content:"";position:absolute;inset:32px;border-radius:50%;background:var(--paper)}.mdon span{position:relative;max-width:104px;text-align:center;font-size:.8rem;font-weight:700;line-height:1.3;word-break:keep-all}
+.mpl{display:flex;gap:6px;align-items:baseline;flex-wrap:wrap;padding:5px 0;border-bottom:1px dashed var(--line);font-size:.88rem}.mpl b{flex:1;min-width:0}
+.mseg button{font-size:.8rem;padding:7px 2px}.mbreath{display:flex;flex-direction:column;align-items:center;padding:18px 0 10px;margin:10px 0;border-radius:14px;background:linear-gradient(180deg,#bfe3ff,#eaf6ff)}.mbreath.river{background:linear-gradient(180deg,#d7f5e3,#bfe8f5)}.mbreath.train{background:linear-gradient(180deg,#f3ead7,#e8eef5)}
+.mcirc{width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,.85);box-shadow:0 0 0 10px rgba(255,255,255,.35);display:flex;flex-direction:column;align-items:center;justify-content:center;transform:scale(.75);transition:transform 4s ease-in-out;color:#2d3436}.mcirc[data-ph=in]{transform:scale(1.15)}.mcirc[data-ph=out]{transform:scale(.7)}.mcirc b{font-size:1rem}.mcirc small{font-size:1.4rem;font-weight:700}`;document.head.appendChild(st)})();
 </script>
 <!--BIBLE{--><!--}BIBLE-->
 <div id="miniov" class="miniov" hidden></div>
