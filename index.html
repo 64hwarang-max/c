@@ -16137,7 +16137,7 @@ function rlEdit(id){const r=rlList().find(x=>x.id===id);if(!r)return;const S=$('
   $('#rlok').onclick=()=>{r.name=($('#rln').value.trim()||r.name).slice(0,16);r.e=$('#rle').value.trim()||'🎭';r.area=$('#rla').value;r.stmt=$('#rls').value.trim().slice(0,200);r.ppl=splitNames($('#rlp').value).slice(0,20);saveGoals();toast('🎭 ‘'+r.name+'’ 역할을 저장했습니다.');close()};
   $('#rldel').onclick=async()=>{if(!await uiConfirm(`‘${r.name}’ 역할을 지울까요?\n(블록·목표 기록은 그대로 남습니다)`))return;GOALS.roles=rlList().filter(x=>x.id!==r.id);saveGoals();close()}}
 function rlBoxSync(){try{if(typeof gSub==='undefined'||gSub!=='vision')return;const R=$('#glist');if(!R||R.querySelector(':scope>#rlbox'))return;
-  const d=document.createElement('div');d.id='rlbox';d.className='card nocol rlbox';d.innerHTML=rlBoxHTML();const vb=R.querySelector(':scope>#vcbar');if(vb)vb.after(d);else R.prepend(d);rlBind(d)}catch(e){console.warn('roles',e)}}
+  const d=document.createElement('div');d.id='rlbox';d.className='card nocol rlbox';d.innerHTML=rlBoxHTML();d.id==='rlbox'&&rlFd()&&d.classList.add('rlf');const vb=R.querySelector(':scope>#vcbar');if(vb)vb.after(d);else R.prepend(d);rlBind(d)}catch(e){console.warn('roles',e)}}
 {renderGoals=HK.w('renderGoals','17:역할',renderGoals,_rg=>function(){const r=_rg.apply(this,arguments);try{if(r&&r.then)r.then(rlBoxSync);else rlBoxSync()}catch(e){}return r});}
 /* 비전 대화에도 역할 선언을 함께 찾기 */
 {const _st=vcState;vcState=function(){const L=rlList();return _st.apply(this,arguments)+`\n역할 선언: ${L.length?L.map(r=>`${r.name}=${tx(r.stmt)?r.stmt:'(없음)'}`).join(' / '):'(역할 없음)'}`}
@@ -16229,7 +16229,7 @@ async function syPutSafe(B,k,v){if(!k.startsWith('day:')||!v||typeof v!=='object
 {const _o=openDay;openDay=async function(d){try{staleGuardInstall()}catch(e){}return _o.apply(this,arguments)}}
 {const _f=flush0;flush0=async function(){try{staleGuardInstall()}catch(e){}return _f.apply(this,arguments)}}
 /* v390 ① 앱 버전 표시 · 새 버전 알림 (GitHub에서 마지막으로 성공한 빌드 번호와 비교) */
-var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/417})();
+var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/418})();
 const VRK='gj-verchk',VRURL='https://github.com/64hwarang-max/c/actions/workflows/build-apk.yml';
 const vrGet=()=>{try{return JSON.parse(localStorage.getItem(VRK)||'{}')}catch(e){return{}}};
 async function vrCheck(force){const c=vrGet();if(!force&&c.t&&Date.now()-c.t<6*36e5)return c;
@@ -16774,6 +16774,17 @@ function zmYears(a,n){const y0=zmY0(a,n),Ty=+today().slice(0,4);const cols=n<=5?
   return`<div class="zyr" style="--zc:${cols}">${[...Array(n)].map((_,j)=>{const y=y0+j;return`<button type="button" class="zyc ${y===Ty?'td':''}" data-py="${y}"><b>${n>=50?String(y).slice(2):y}</b>${gy[y]?`<small>🎯${gy[y]}</small>`:''}</button>`}).join('')}</div><p class="hint" style="margin:6px 2px">연도를 누르면 그 해 1년 보기로 갑니다.${n>=50?' (숫자는 연도 끝 두 자리)':''}</p>`}
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-py]');if(!b)return;e.preventDefault();e.stopPropagation();const c=zmCtx();if(!c)return;const wi=ZMS.findIndex(z=>z[0]==='y'&&z[1]===1);const a=b.dataset.py+'-01-01';if(c==='day'){ZMA=a;ZMD=wi}else{pAnchor=a;ZMP=wi}zmRender(c)},true);
 (function(){const st=document.createElement('style');st.textContent=`.zyr{display:grid;grid-template-columns:repeat(var(--zc),1fr);gap:6px}.zyc{border:1px solid var(--line);background:var(--paper);border-radius:8px;padding:8px 0;font:inherit;color:var(--ink);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;min-height:46px}.zyc b{font-weight:600;font-size:.86rem}.zyc small{font-size:.62rem;color:var(--muted)}.zyc.td{border-color:var(--pen);background:var(--pen-soft);color:var(--pen)}`;document.head.appendChild(st)})();
+
+/* ===== v418: 비전 화면 정리 — 대화 버튼 한 줄 · 나의 역할 접기 · 타일 작게 ===== */
+function rlFd(){try{return localStorage.getItem('gj-rlfold')!=='0'}catch(e){return true}}
+{const _r=rlBoxHTML;rlBoxHTML=function(){let h=_r.apply(this,arguments);const f=rlFd();const L=rlList();
+  h=h.replace(/^<div class="rlhd">.*?<\/div>/s,`<div class="rlhd" data-rlfold="1"><b>🎭 나의 역할 <small>${L.length}개</small></b><span class="rlch">${f&&L.length?L.map(r=>esc(r.e||'🎭')+' '+esc(r.name)).join(' · '):''}</span><i class="rlfi">${f?'▸':'▾'}</i></div>`);
+  return h}}
+document.addEventListener('click',e=>{const h=e.target.closest&&e.target.closest('#rlbox [data-rlfold]');if(!h)return;e.preventDefault();e.stopPropagation();const f=!rlFd();try{localStorage.setItem('gj-rlfold',f?'1':'0')}catch(x){}const d=$('#rlbox');if(d){d.innerHTML=rlBoxHTML();d.classList.toggle('rlf',f);rlBind(d)}},true);
+(function(){const st=document.createElement('style');st.textContent=`.vcbar button{flex-direction:row!important;align-items:center!important;padding:8px 12px!important;margin:0 0 8px!important}.vcbar button small{display:none}.vcbar button b{font-size:.9rem}.vcbar button::after{content:"›";margin-left:auto;color:var(--muted)}
+#rlbox .rlhd{display:flex!important;flex-direction:row!important;align-items:center!important;justify-content:flex-start!important;text-align:left!important;gap:8px;cursor:pointer;margin:0}#rlbox .rlhd b{white-space:nowrap;flex:none}#rlbox .rlhd .hint{display:none}#rlbox .rlhd b small{color:var(--muted);font-weight:500;font-size:.76rem}#rlbox .rlch{flex:1;min-width:0;color:var(--muted);font-size:.78rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#rlbox .rlfi{font-style:normal;color:var(--muted);margin-left:auto}
+#rlbox.rlf{padding-top:10px!important;padding-bottom:10px!important}#rlbox.rlf>:not(.rlhd){display:none!important}
+.vtiles .tgi{min-height:60px!important;padding:6px 4px!important;gap:2px!important}.vtiles .tgi i{font-size:1.3rem!important}`;document.head.appendChild(st)})();
 </script>
 <!--BIBLE{--><!--}BIBLE-->
 <div id="miniov" class="miniov" hidden></div>
