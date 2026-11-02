@@ -16235,7 +16235,7 @@ async function syPutSafe(B,k,v){if(!k.startsWith('day:')||!v||typeof v!=='object
 {const _o=openDay;openDay=async function(d){try{staleGuardInstall()}catch(e){}return _o.apply(this,arguments)}}
 {const _f=flush0;flush0=async function(){try{staleGuardInstall()}catch(e){}return _f.apply(this,arguments)}}
 /* v390 ① 앱 버전 표시 · 새 버전 알림 (GitHub에서 마지막으로 성공한 빌드 번호와 비교) */
-var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/434})();
+var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/435})();
 const VRK='gj-verchk',VRURL='https://github.com/64hwarang-max/c/actions/workflows/build-apk.yml';
 const vrGet=()=>{try{return JSON.parse(localStorage.getItem(VRK)||'{}')}catch(e){return{}}};
 async function vrCheck(force){const c=vrGet();if(!force&&c.t&&Date.now()-c.t<6*36e5)return c;
@@ -17098,6 +17098,7 @@ const WBTO=(()=>{try{return new Set(JSON.parse(localStorage.getItem('gj-wbto')||
   h=h.replace(/<div class="wbtg"><b>([^<]*)<small>([^<]*)<\/small><\/b>([\s\S]*?)(<div class="gl")/g,(m,nm,th,goals,gl)=>{const k=(SCORE.find(([kk])=>nm.includes(areaName(kk)))||[''])[0];const op=WBTO.has(k);
     return`<div class="wbtg wbf ${op?'op':''}" data-wbk="${k}"><button type="button" class="wbth" data-wbtf="${k}"><b>${nm}<small>${th}</small></b><i>${op?'▴':'▾'}</i></button>${goals}<div class="wbte">${gl}`});
   h=h.replace(/(<button type="button" class="del" data-wkcat="[^"]*" style="margin-top:4px">＋ 중분류<\/button>)<\/div>/g,'$1</div></div>');
+  h=h.replace(/(data-wkpga="[^"]*">＋<\/button><\/div>\s*)<\/div>/g,'$1</div></div>');
   return h}}
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-wbtf]');if(!b)return;e.preventDefault();e.stopPropagation();const k=b.dataset.wbtf,g=b.closest('.wbtg');const op=!g.classList.contains('op');g.classList.toggle('op',op);const i=b.querySelector('i');if(i)i.textContent=op?'▴':'▾';
   if(op)WBTO.add(k);else WBTO.delete(k);try{localStorage.setItem('gj-wbto',JSON.stringify([...WBTO]))}catch(x){}},true);
