@@ -16235,7 +16235,7 @@ async function syPutSafe(B,k,v){if(!k.startsWith('day:')||!v||typeof v!=='object
 {const _o=openDay;openDay=async function(d){try{staleGuardInstall()}catch(e){}return _o.apply(this,arguments)}}
 {const _f=flush0;flush0=async function(){try{staleGuardInstall()}catch(e){}return _f.apply(this,arguments)}}
 /* v390 ① 앱 버전 표시 · 새 버전 알림 (GitHub에서 마지막으로 성공한 빌드 번호와 비교) */
-var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/431})();
+var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/432})();
 const VRK='gj-verchk',VRURL='https://github.com/64hwarang-max/c/actions/workflows/build-apk.yml';
 const vrGet=()=>{try{return JSON.parse(localStorage.getItem(VRK)||'{}')}catch(e){return{}}};
 async function vrCheck(force){const c=vrGet();if(!force&&c.t&&Date.now()-c.t<6*36e5)return c;
@@ -17251,6 +17251,43 @@ function memoStamp(){const n=new Date();return`${md(ymd(n))}(${WD[n.getDay()]}) 
 document.addEventListener('focusin',e=>{const t=e.target;if(!t||t.tagName!=='TEXTAREA'||MEMO_SKIP.has(t.id)||t.readOnly||t.disabled||t.dataset.nostamp)return;if(t.value.trim())return;
   if(t.closest('#sheet .shead,.bdpop'))return;const s=memoStamp();t.value=s;t.dataset.stamp=s;try{t.setSelectionRange(s.length,s.length)}catch(x){}t.dispatchEvent(new Event('input',{bubbles:true}))},true);
 document.addEventListener('focusout',e=>{const t=e.target;if(!t||t.tagName!=='TEXTAREA'||!t.dataset.stamp)return;if(t.value.trim()===t.dataset.stamp.trim()){t.value='';t.dispatchEvent(new Event('input',{bubbles:true}))}delete t.dataset.stamp},true);
+
+/* ===== v432: 오늘 머리 정리 — 알림(요약·쓴 돈 포함) · 도구줄+기둥 · 스케줄창(날짜 이동 포함) 순서 ===== */
+const TLB=[['dbt','gmap','🗺️','지도'],['dbt','glink','⭐','즐겨찾기'],['dbt','gsearch','🔍','검색'],['sp'],['cvi','start','🚀','시작'],['cvi','fr','🎯','몰입·루틴'],['cvi','gap','⏱️','짜투리'],['cvi','pm','📊','평가'],['pil','x','🏛️','기둥']];
+function tlbHTML(){return TLB.map(([t,k,e,l])=>t==='sp'?'<span class="tlsp"></span>':t==='pil'?`<button type="button" class="tlb ${document.body.classList.contains('pilopen')?'on':''}" data-tlpil="1" aria-label="기둥" title="삶의 기둥"><i>${e}</i><small>${l}</small></button>`:`<button type="button" class="tlb" data-${t}="${k}" aria-label="${l}" title="${l}"><i>${e}</i><small>${l}</small></button>`).join('')+(typeof simOn==='function'&&simOn()?'<button type="button" class="tlb" data-tlzm="1" aria-label="여러 날 보기" title="여러 날 보기"><i>📆</i><small>여러 날</small></button>':'')}
+function dayHeadArrange(){try{const V=document.getElementById('v-day');if(!V||!V.classList.contains('cvg'))return;
+  /* ① 도구줄 */
+  let tr=V.querySelector(':scope>#toolrow');const dayB=V.querySelector(':scope>#dayBody');
+  if(!tr){tr=document.createElement('div');tr.id='toolrow';tr.className='toolrow'}
+  const sig=tlbHTML()+(document.body.classList.contains('pilopen')?'1':'0');if(tr.dataset.sig!==sig){tr.innerHTML=tlbHTML();tr.dataset.sig=sig}
+  if(dayB&&tr.nextElementSibling!==dayB)dayB.before(tr);
+  /* ② 날짜 이동 → 스케줄창 남은 시간 옆 */
+  const st=V.querySelector('#dayBody .sched .stool');const dl=document.getElementById('dlabel');
+  if(st&&dl){const tt=(dl.textContent||'').trim();const m=/(\d+\/\d+\s*\(.\))/.exec(tt);const lab=m?(tt.slice(0,m.index).trim().slice(0,3)?tt.slice(0,m.index).trim().slice(0,3)+' ':'')+m[1]:tt.slice(0,10);const td=dl.classList.contains('cvtd');
+    let dn=st.querySelector(':scope>.dnav2');const h=`<button type="button" class="dnb" data-dn="-1" aria-label="전날">‹</button><button type="button" class="dnl ${td?'td':''}" data-dn="l" aria-label="날짜 선택">${esc(lab)}</button><button type="button" class="dnb" data-dn="1" aria-label="다음날">›</button>`;
+    if(!dn){dn=document.createElement('span');dn.className='dnav2';st.prepend(dn)}if(dn.dataset.sig!==h){dn.innerHTML=h;dn.dataset.sig=h}}
+  /* ③ 알림창에 띠들 넣기 */
+  const D1=V.querySelector('#dash');const afc=D1&&D1.querySelector('.topcard .afc');
+  const src=[...(D1?D1.querySelectorAll(':scope>.banner'):[]),...(dayB?dayB.querySelectorAll(':scope>.fnbar'):[])];
+  if(afc){const items=src.map((e,i)=>({k:e.classList.contains('fnbar')?'fn':'b'+i,h:e.innerHTML.replace(/\s+/g,' ').trim()}));const sg=items.map(x=>x.k+x.h).join('|');
+    if(afc.dataset.bmsig!==sg){afc.querySelectorAll(':scope>[data-bm]').forEach(x=>x.remove());const first=afc.children[0];
+      const html=items.map(x=>`<div class="afs" data-bm="${x.k}"><button type="button" class="bmv" data-bmv="${x.k}">${x.h}</button></div>`).join('');
+      if(html){if(first)first.insertAdjacentHTML('afterend',html);else afc.insertAdjacentHTML('afterbegin',html)}
+      afc.dataset.bmsig=sg;const dots=afc.parentNode.querySelector('.afdots');if(dots){const n=afc.children.length;dots.innerHTML=Array.from({length:n},(_,i)=>`<i class="${i===(typeof TOPI==='number'?TOPI:0)?'on':''}"></i>`).join('')}}
+    V.classList.add('bmok')}else V.classList.remove('bmok')}catch(e){console.warn('headArr',e)}}
+document.addEventListener('click',e=>{const t=e.target;const c=t.closest&&t.closest('[data-dn],[data-bmv],[data-tlpil],[data-tlzm],#pilrow .plc');if(!c)return;
+  if(c.dataset.dn!==undefined){e.preventDefault();const o=c.dataset.dn==='-1'?document.getElementById('prev'):c.dataset.dn==='1'?document.getElementById('next'):document.getElementById('dlabel');if(o)o.click();return}
+  if(c.dataset.bmv!==undefined){e.preventDefault();const V=document.getElementById('v-day');const k=c.dataset.bmv;const all=[...V.querySelectorAll('#dash>.banner'),...V.querySelectorAll('#dayBody>.fnbar')];const o=k==='fn'?V.querySelector('#dayBody>.fnbar'):all[+k.slice(1)];if(o)o.click();return}
+  if(c.dataset.tlpil!==undefined){e.preventDefault();document.body.classList.toggle('pilopen');dayHeadArrange();return}
+  if(c.dataset.tlzm!==undefined){e.preventDefault();const o=document.getElementById('simzb');if(o)o.click();return}
+  if(c.matches('#pilrow .plc'))setTimeout(()=>{document.body.classList.remove('pilopen');dayHeadArrange()},0)},true);
+DECO.add('오늘 머리 정리',{root:()=>document.getElementById('v-day')||document.body,deep:true,wait:80,run:dayHeadArrange,now:true});
+(function(){const st=document.createElement('style');st.textContent=`.cvg>.datebar{display:none!important}.cvg.bmok #dash>.banner,.cvg.bmok #dayBody>.fnbar{display:none!important}
+.toolrow{display:flex;align-items:stretch;gap:4px;margin:2px 0 8px;padding:4px;border:1px solid var(--line);border-radius:16px;background:var(--paper)}.toolrow .tlb{flex:1 1 0;min-width:0;border:0;background:none;color:var(--ink);font:inherit;border-radius:12px;padding:5px 0 3px;display:flex;flex-direction:column;align-items:center;gap:1px;cursor:pointer}.toolrow .tlb i{font-style:normal;font-size:1.15rem;line-height:1.2}.toolrow .tlb small{font-size:.54rem;color:var(--muted);white-space:nowrap;letter-spacing:-.04em}.toolrow .tlb.on{background:color-mix(in srgb,var(--acc) 14%,transparent)}.toolrow .tlb.on small{color:var(--acc);font-weight:700}.tlsp{width:1px;margin:6px 1px;background:var(--line)}
+body:not(.pilopen) #dayBody>#pilrow{display:none}
+#v-day.zmon>.toolrow{display:none}
+.stool{flex-wrap:nowrap!important;gap:2px!important}.stool .dleft{font-size:.76rem!important;white-space:nowrap;flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis}.stool .del{padding:3px 5px!important;font-size:.72rem!important}.dnav2 .dnb{width:22px!important}.dnav2{display:inline-flex;align-items:center;gap:0;margin-right:6px}.dnav2 .dnb{border:0;background:none;color:var(--ink);font:inherit;font-size:1.15rem;width:26px;height:28px;cursor:pointer;padding:0}.dnav2 .dnl{border:0;background:none;color:var(--ink);font:inherit;font-family:"Gowun Batang",serif;font-weight:700;font-size:.98rem;padding:0 2px;cursor:pointer;white-space:nowrap}.dnav2 .dnl.td{color:var(--acc)}
+.afs .bmv{display:block;width:100%;text-align:left;border:0;background:none;color:var(--ink);font:inherit;padding:8px 2px;cursor:pointer}.afs .bmv *{pointer-events:none}`;document.head.appendChild(st)})();
 </script>
 <!--BIBLE{--><!--}BIBLE-->
 <div id="miniov" class="miniov" hidden></div>
