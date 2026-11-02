@@ -8183,7 +8183,7 @@ function tipFold(){if(SET.tipFold===false)return;document.querySelectorAll('p.q:
 function tipUnfold(){document.querySelectorAll('.tipb').forEach(b=>b.remove());document.querySelectorAll('.tipf').forEach(p=>p.classList.remove('tipf','tipshow'))}
 /* 가로로 넘치는 탭 줄: 양끝을 흐리게 해서 더 있음을 알립니다 */
 function segFade(el){if(!el||!el.classList)return;const more=el.scrollWidth>el.clientWidth+4;el.classList.toggle('sfr',more&&el.scrollLeft+el.clientWidth<el.scrollWidth-4);el.classList.toggle('sfl',more&&el.scrollLeft>4)}
-function segFadeAll(){const L=[...document.querySelectorAll('.seg,.snp,.snp2')];const M=L.map(el=>el.offsetParent?[el.scrollWidth,el.clientWidth,el.scrollLeft]:null);L.forEach((el,i)=>{const m=M[i];if(!m)return;const more=m[0]>m[1]+4;el.classList.toggle('sfr',more&&m[2]+m[1]<m[0]-4);el.classList.toggle('sfl',more&&m[2]>4)})}
+function segFadeAll(){if(document.hidden)return;const L=[...document.querySelectorAll('.seg,.snp,.snp2')].filter(el=>!el.closest('[hidden]'));const M=L.map(el=>el.offsetParent?[el.scrollWidth,el.clientWidth,el.scrollLeft]:null);L.forEach((el,i)=>{const m=M[i];if(!m)return;const more=m[0]>m[1]+4;el.classList.toggle('sfr',more&&m[2]+m[1]<m[0]-4);el.classList.toggle('sfl',more&&m[2]>4)})}
 /* 오늘 화면: 위쪽 시간 카드가 화면 밖으로 나가면 얇은 바로가기 줄을 띄웁니다 */
 function dmSync(){const M=$('#daymini');if(!M)return;const md0=$('#mode');const on=curSection==='day'&&md0&&md0.offsetParent&&md0.getBoundingClientRect().bottom<0&&$('#focusov').hidden&&$('#taskedit').hidden&&$('#sheet').hidden;
   M.classList.toggle('show',!!on);M.setAttribute('aria-hidden',on?'false':'true');if(on){const dt=parseD(cur);$('#dmd').textContent=`${dt.getMonth()+1}/${dt.getDate()}${cur===today()?'':'⚠️'}`;M.querySelectorAll('[data-dm]').forEach(b=>b.classList.toggle('on',b.dataset.dm===mode))}}
@@ -8241,7 +8241,7 @@ function uiInit(){applyView();setGrid('');
   $('#dmtop').onclick=()=>scrollTo({top:0,behavior:'smooth'});$('#dmd').onclick=()=>scrollTo({top:0,behavior:'smooth'});
   addEventListener('scroll',()=>{if(SET.dayMini!==false)dmSync();else $('#daymini').classList.remove('show')},{passive:true});
   document.addEventListener('scroll',e=>{const t=e.target;if(t&&t.classList&&(t.classList.contains('seg')||t.classList.contains('snp')||t.classList.contains('snp2')))segFade(t)},{capture:true,passive:true});
-  DECO.add('팁 접기·탭 줄',{run:()=>{try{tipFold();segFadeAll();document.querySelectorAll('.seg .on').forEach(b=>{const p=b.parentElement;if(p.scrollWidth>p.clientWidth+4&&!p.dataset.sc){p.dataset.sc='1';p.scrollLeft=Math.max(0,b.offsetLeft-p.clientWidth/2+b.offsetWidth/2)}});if(SET.dayMini!==false)dmSync()}catch(e){}}});
+  DECO.add('팁 접기·탭 줄',{wait:220,run:()=>{try{if(document.hidden)return;tipFold();segFadeAll();[...document.querySelectorAll('.seg .on')].filter(b=>!b.parentElement.dataset.sc&&!b.closest('[hidden]')).forEach(b=>{const p=b.parentElement;if(p.scrollWidth>p.clientWidth+4&&!p.dataset.sc){p.dataset.sc='1';p.scrollLeft=Math.max(0,b.offsetLeft-p.clientWidth/2+b.offsetWidth/2)}});if(SET.dayMini!==false)dmSync()}catch(e){}}});
   addEventListener('resize',segFadeAll);
   const _rbk=renderBkCard;renderBkCard=async function(){const r=await _rbk.apply(this,arguments);try{renderViewCard()}catch(e){}try{if(typeof renderWatchCard==='function')renderWatchCard()}catch(e){}return r};
   tipFold();segFadeAll()}
@@ -16235,7 +16235,7 @@ async function syPutSafe(B,k,v){if(!k.startsWith('day:')||!v||typeof v!=='object
 {const _o=openDay;openDay=async function(d){try{staleGuardInstall()}catch(e){}return _o.apply(this,arguments)}}
 {const _f=flush0;flush0=async function(){try{staleGuardInstall()}catch(e){}return _f.apply(this,arguments)}}
 /* v390 ① 앱 버전 표시 · 새 버전 알림 (GitHub에서 마지막으로 성공한 빌드 번호와 비교) */
-var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/437})();
+var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/438})();
 const VRK='gj-verchk',VRURL='https://github.com/64hwarang-max/c/actions/workflows/build-apk.yml';
 const vrGet=()=>{try{return JSON.parse(localStorage.getItem(VRK)||'{}')}catch(e){return{}}};
 async function vrCheck(force){const c=vrGet();if(!force&&c.t&&Date.now()-c.t<6*36e5)return c;
