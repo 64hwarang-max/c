@@ -16235,7 +16235,7 @@ async function syPutSafe(B,k,v){if(!k.startsWith('day:')||!v||typeof v!=='object
 {const _o=openDay;openDay=async function(d){try{staleGuardInstall()}catch(e){}return _o.apply(this,arguments)}}
 {const _f=flush0;flush0=async function(){try{staleGuardInstall()}catch(e){}return _f.apply(this,arguments)}}
 /* v390 ① 앱 버전 표시 · 새 버전 알림 (GitHub에서 마지막으로 성공한 빌드 번호와 비교) */
-var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/436})();
+var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/437})();
 const VRK='gj-verchk',VRURL='https://github.com/64hwarang-max/c/actions/workflows/build-apk.yml';
 const vrGet=()=>{try{return JSON.parse(localStorage.getItem(VRK)||'{}')}catch(e){return{}}};
 async function vrCheck(force){const c=vrGet();if(!force&&c.t&&Date.now()-c.t<6*36e5)return c;
@@ -17367,6 +17367,32 @@ function bbPickerOpen(){if(document.getElementById('bbpk'))return;let B0=bbB,C0=
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('nav.main [data-g="day"]');if(!b)return;
   try{['#sheet','#blockedit','#focusov','#routineov'].forEach(s=>{const x=document.querySelector(s);if(x&&!x.hidden&&s!=='#focusov'&&s!=='#routineov'){x.hidden=true;if(s==='#sheet')x.innerHTML=''}});const pk=document.getElementById('bbpk');if(pk){pk.remove();document.body.style.overflow=''}document.body.classList.remove('pilopen');document.body.style.overflow='';try{bES=null}catch(x){}try{sMode='plan'}catch(x){}try{DTL=false}catch(x){}try{pReview=false}catch(x){}}catch(x){}
   setTimeout(async()=>{try{if(curSection!=='day')return;if(ZMD>0||cur!==today()){ZMD=0;await openDay(today());try{const v=$('#v-day');v&&v.classList.remove('zmon')}catch(x){}}renderDay();window.scrollTo(0,0);try{zmBarSync()}catch(x){}}catch(x){}},60)},true);
+
+/* ===== v437: 14일까지는 시간표, 그 이상(3주·4주·1달·2달·3달·6달)은 달력 칸에 일정 제목을 적는 월간 보기 ===== */
+const mxSun=(i)=>{const z=ZMS[i];return z&&z[0]==='w'&&z[1]>=3};
+{const _zd=zmDays;zmDays=function(i,a){if(mxSun(i)){const s=addD(mondayOf(a),-1);return[...Array(ZMS[i][1]*7)].map((_,j)=>addD(s,j))}return _zd.apply(this,arguments)}}
+{const _zr=zmRange;zmRange=function(i,a){if(mxSun(i)){const s=addD(mondayOf(a),-1);return`${md(s)} ~ ${md(addD(s,ZMS[i][1]*7-1))}`}return _zr.apply(this,arguments)}}
+function mxCal(i,a){const ds=zmDays(i,a),T=today();const first=ds[0],last=ds[ds.length-1];const gs=addD(first,-parseD(first).getDay()),ge=addD(last,6-parseD(last).getDay());const all=[];for(let d=gs;d<=ge;d=addD(d,1))all.push(d);const rows=all.length/7;
+  const avail=Math.max(300,(window.innerHeight||800)-330);const rh=Math.max(58,Math.min(200,Math.floor(avail/Math.min(rows,6))));const nl=Math.max(2,Math.floor((rh-20)/13));
+  const inR=d=>d>=first&&d<=last;const sh=SET.zmShow||'auto';
+  const cell=d=>{const x=parseD(d),hn=holName(d),I=zmInfo(d);const L=[];if(hn)L.push(`<i class="mxl hol">${esc(hn)}</i>`);
+    (GEV[d]||[]).forEach(e=>L.push(`<i class="mxl ge">${esc(e.title)}</i>`));
+    I.pl.filter(b=>b.s||b.act).slice().sort((p,q)=>(p.s||'99')<(q.s||'99')?-1:1).forEach(b=>L.push(`<i class="mxl" style="--c:${catColor(b.cat)}">${esc(b.act||b.cat||'')}</i>`));
+    I.tk.filter(t=>!t.time).forEach(t=>L.push(`<i class="mxl tk">☐ ${esc(t.title)}</i>`));
+    if(d<=T&&sh!=='plan'&&I.tm.length)L.push(`<i class="mxl ac">✓ 실제 ${I.tm.length}건</i>`);
+    const more=L.length>nl?L.length-(nl-1):0;const vis=more?L.slice(0,nl-1):L;
+    const dn=x.getDate()===1?`${x.getMonth()+1}/1`:x.getDate();
+    return`<button class="mxcell ${d===T?'td':''} ${inR(d)?'':'out'} ${x.getDay()===0?'sun':x.getDay()===6?'sat':''} ${hn?'hol':''}" data-pd="${d}" style="height:${rh}px"><span class="mxn"><b>${dn}</b>${more?`<em>+${more}</em>`:''}</span>${vis.join('')}</button>`};
+  return`<div class="mxw"><div class="mxh">${['일','월','화','수','목','금','토'].map((w,k)=>`<span class="${k===0?'sun':k===6?'sat':''}">${w}</span>`).join('')}</div><div class="mxrid">${all.map(cell).join('')}</div></div>`}
+{const _zb=zmBody;zmBody=function(i,a){const z=ZMS[i];if(z&&((z[0]==='w'&&z[1]>=3)||(z[0]==='m'&&z[1]<=6))&&zmDays(i,a).length>14)return`<div class="zmv">${mxCal(i,a)}</div>`;return _zb.apply(this,arguments)}}
+{const st=document.createElement('style');st.textContent=`.mxw{margin:0 -4px}.mxh{display:grid;grid-template-columns:repeat(7,1fr);font-size:.72rem;color:var(--muted);text-align:center;padding:4px 0}.mxh .sun,.mxcell.sun .mxn b{color:#d9534f}.mxh .sat,.mxcell.sat .mxn b{color:#3a78d8}
+.mxrid{display:grid;grid-template-columns:repeat(7,1fr);gap:0!important;border-top:1px solid var(--line)}
+.mxcell{border-radius:0!important;box-shadow:none!important;margin:0!important;min-height:0!important;width:auto!important;display:block;min-width:0;overflow:hidden;text-align:left;padding:1px 1px 0;border:0;border-right:1px solid var(--line);border-bottom:1px solid var(--line);background:transparent;color:var(--ink);font:inherit;cursor:pointer}.mxcell:nth-child(7n+1){border-left:1px solid var(--line)}
+.mxcell.out{background:color-mix(in srgb,var(--line) 35%,transparent)}.mxcell.out .mxl,.mxcell.out .mxn b{opacity:.55}
+.mxcell.td{background:#fff3b8}.mxcell.td .mxn b{font-weight:900}
+.mxn{display:flex;justify-content:space-between;align-items:baseline;padding:0 2px;line-height:1.1}.mxn b{font-size:.84rem}.mxn em{font-style:normal;font-size:.6rem;color:#7a63c9}
+.mxl{display:block;font-style:normal;font-size:.62rem;line-height:1.3;white-space:nowrap;overflow:hidden;color:var(--c,var(--ink));padding:0 1px}
+.mxl.hol{color:#d9534f}.mxl.ge{background:#aedde3;color:#0d3b44;margin:0 -1px;padding:0 2px}.mxl.tk{color:var(--pen)}.mxl.ac{color:var(--muted)}`;document.head.appendChild(st)}
 </script>
 <!--BIBLE{--><!--}BIBLE-->
 <div id="miniov" class="miniov" hidden></div>
