@@ -14372,7 +14372,7 @@ async function renderLedger(){const F=$('#fbody');if(!F)return;let M;try{M=await
   const R=lgRange();const all=lgData(M,R);const tot=k=>all.filter(x=>x.type===k).reduce((s,x)=>s+x.amt,0);const L=all.filter(x=>LG.kind==='전체'||x.type===LG.kind);const sum=L.reduce((s,x)=>s+x.amt,0);
   const days=Math.max(1,Math.round((parseD(R.b>today()?today():R.b)-parseD(R.a))/864e5)+1);const un=all.filter(x=>x.type==='지출'&&x.cat==='미분류');
   const grp=(keyf)=>{const g={};L.forEach(x=>{const k=keyf(x);(g[k]=g[k]||{k,v:0,n:0,rows:[]});g[k].v+=x.amt;g[k].n++;g[k].rows.push(x)});return Object.values(g).sort((a,b)=>b.v-a.v)};
-  const rowH=x=>`<button class="lgr" data-lgd="${x.d}"><span class="lgd">${md(x.d)}</span><span class="lgi">${esc(x.item)}<small>${esc(x.cat)}${x.rid?' · 반복':''}</small></span><b class="${x.type==='수입'?'dn':''}">${x.type==='수입'?'+':''}${won(x.amt)}</b></button>`;
+  const rowH=x=>`<button class="lgr" data-lgd="${x.d}" data-lgi="${x.i}"><span class="lgd">${md(x.d)}</span><span class="lgi">${esc(x.item)}<small>${esc(x.cat)}${x.rid?' · 반복':''}</small></span><b class="${x.type==='수입'?'dn':''}">${x.type==='수입'?'+':''}${won(x.amt)}</b></button>`;
   let body='';
   if(!L.length)body='<p class="empty">이 기간에 적은 내역이 없습니다.</p>';
   else if(LG.by==='date'){const g={};L.forEach(x=>(g[x.d]=g[x.d]||[]).push(x));body=Object.keys(g).sort().reverse().map(d=>{const t=g[d].reduce((s,x)=>s+x.amt,0);return`<div class="lgg"><div class="lgh"><span>${md(d)} (${WD[parseD(d).getDay()]})</span><b>${won(t)}</b></div>${g[d].map(rowH).join('')}</div>`}).join('')}
@@ -14386,7 +14386,7 @@ async function renderLedger(){const F=$('#fbody');if(!F)return;let M;try{M=await
     ${un.length?`<button class="lgun" data-lgd="${un[0].d}">⚠ 어디에 쓴 돈인지 정하지 않은 내역 ${un.length}건 · ${won(un.reduce((s,x)=>s+x.amt,0))} — 눌러서 분류하기 ›</button>`:''}</div>
    <div class="chips" style="margin:8px 0">${['지출','나눔','수입','전체'].map(k=>`<button class="chip fbtn ${LG.kind===k?'on':''}" data-lgk="${k}">${k}</button>`).join('')}</div>
    <div class="seg lgby" style="--k:var(--c-fin);margin:0 0 8px">${[['date','📅 날짜순'],['cat','🗂 분류별'],['where','📍 쓴 곳별']].map(([k,l])=>`<button data-lgb="${k}" class="${LG.by===k?'on':''}">${l}</button>`).join('')}</div>
-   <div class="lgl">${body}</div><p class="hint" style="margin:10px 0 0">내역을 누르면 그날 재정 기록으로 가서 고칠 수 있습니다. 적는 곳: 📝 오늘 또는 닫는 시간 › 재정.</p></div>`;
+   <div class="lgl">${body}</div><p class="hint" style="margin:10px 0 0">내역을 누르면 바로 고칠 수 있습니다. 적는 곳: 📝 오늘 또는 닫는 시간 › 재정.</p></div>`;
   const shift=k=>{const d=parseD(LG.anc);if(LG.per==='d')d.setDate(d.getDate()+k);else if(LG.per==='w')d.setDate(d.getDate()+7*k);else if(LG.per==='y'){d.setDate(1);d.setFullYear(d.getFullYear()+k)}else{d.setDate(1);d.setMonth(d.getMonth()+k)}LG.anc=ymd(d);LG.open=null;renderLedger()};
   F.querySelector('#lgprev').onclick=()=>shift(-1);F.querySelector('#lgnext').onclick=()=>shift(1);
   F.querySelectorAll('[data-lgp]').forEach(b=>b.onclick=()=>{LG.per=b.dataset.lgp;LG.open=null;renderLedger()});F.querySelectorAll('[data-lgk]').forEach(b=>b.onclick=()=>{LG.kind=b.dataset.lgk;LG.open=null;renderLedger()});
@@ -16235,7 +16235,7 @@ async function syPutSafe(B,k,v){if(!k.startsWith('day:')||!v||typeof v!=='object
 {const _o=openDay;openDay=async function(d){try{staleGuardInstall()}catch(e){}return _o.apply(this,arguments)}}
 {const _f=flush0;flush0=async function(){try{staleGuardInstall()}catch(e){}return _f.apply(this,arguments)}}
 /* v390 ① 앱 버전 표시 · 새 버전 알림 (GitHub에서 마지막으로 성공한 빌드 번호와 비교) */
-var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/432})();
+var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/433})();
 const VRK='gj-verchk',VRURL='https://github.com/64hwarang-max/c/actions/workflows/build-apk.yml';
 const vrGet=()=>{try{return JSON.parse(localStorage.getItem(VRK)||'{}')}catch(e){return{}}};
 async function vrCheck(force){const c=vrGet();if(!force&&c.t&&Date.now()-c.t<6*36e5)return c;
@@ -17288,6 +17288,39 @@ body:not(.pilopen) #dayBody>#pilrow{display:none}
 #v-day.zmon>.toolrow{display:none}
 .stool{flex-wrap:nowrap!important;gap:2px!important}.stool .dleft{font-size:.76rem!important;white-space:nowrap;flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis}.stool .del{padding:3px 5px!important;font-size:.72rem!important}.dnav2 .dnb{width:22px!important}.dnav2{display:inline-flex;align-items:center;gap:0;margin-right:6px}.dnav2 .dnb{border:0;background:none;color:var(--ink);font:inherit;font-size:1.15rem;width:26px;height:28px;cursor:pointer;padding:0}.dnav2 .dnl{border:0;background:none;color:var(--ink);font:inherit;font-family:"Gowun Batang",serif;font-weight:700;font-size:.98rem;padding:0 2px;cursor:pointer;white-space:nowrap}.dnav2 .dnl.td{color:var(--acc)}
 .afs .bmv{display:block;width:100%;text-align:left;border:0;background:none;color:var(--ink);font:inherit;padding:8px 2px;cursor:pointer}.afs .bmv *{pointer-events:none}`;document.head.appendChild(st)})();
+
+/* ===== v433: 계획↔실행 옮기기 · 재정 내역 수정 ===== */
+function blkMoveTo(){try{if(!bES)return;const k=bES.kind;if(bES._read)bES._read();if(!bES.b.s){toast('시작 시간을 먼저 적으십시오.');return}
+  if(bES.i==null){if(!applyBlock())return}else if(!applyBlock())return;
+  const idx=bES.i,src=D[k],old=src[idx];if(!old)return;const to=k==='plan'?'time':'plan';
+  const nb=JSON.parse(JSON.stringify(old));nb.id=uid();['rid','rt','apx','gext','_g','catSet'].forEach(x=>delete nb[x]);
+  delBlock0(k,idx);D[to]=D[to]||[];D[to].push(nb);D[to].sort((a,b)=>(a.s||'99')<(b.s||'99')?-1:1);
+  if(to==='time'){try{syncSpend(nb,'time',nb.act||nb.cat)}catch(e){}}
+  schedule();closeBlockEditor();
+  toast(to==='time'?'➡️ 실행(실제로 한 일)으로 옮겼습니다.':'⬅️ 계획으로 옮겼습니다.')}catch(e){toast('옮기지 못했습니다.')}}
+{const _d=drawBlockEditor;drawBlockEditor=function(){const r=_d.apply(this,arguments);try{if(!bES)return r;const O=$('#blockedit');if(!O||O.querySelector('#bmvx'))return r;
+  const b0=O.querySelector('#bfoc');if(!b0)return r;const k=bES.kind;
+  const btn=document.createElement('button');btn.type='button';btn.id='bmvx';btn.className='btn ghost';btn.style.cssText='width:100%;margin-top:8px';
+  btn.textContent=k==='plan'?'➡️ 실제로 한 일(실행)로 옮기기':'⬅️ 계획으로 옮기기 (잘못 쓴 실행)';btn.onclick=blkMoveTo;b0.after(btn)}catch(e){}return r}}
+function finEditSheet(d,i,after){const o=(D&&D.date===d)?D:[...(cacheAll?cacheAll.values():[])].find(x=>x&&x.date===d);const f0=o&&o.fin&&o.fin[i];if(!f0)return;const st=JSON.parse(JSON.stringify(f0));
+  const S=$('#sheet');const draw=()=>{S.hidden=false;
+    S.innerHTML=`<div class="sheetbox" role="dialog" aria-label="내역 고치기"><div class="shead"><b>✏️ ${md(d)} 내역 고치기</b><button class="del" id="fesx">닫기</button></div><div class="ntsheet" style="display:block">
+    <div class="seg">${['지출','수입','나눔'].map(t=>`<button data-fet="${t}" class="${st.type===t?'on':''}">${t}</button>`).join('')}</div>
+    <div class="g2" style="margin-top:8px"><input type="text" id="fei" value="${esc(st.item||'')}" placeholder="내용 (예: 점심 식사)"><input type="text" id="fea" inputmode="numeric" value="${st.amt||''}" placeholder="금액(원)"></div>
+    <input type="text" id="fem" value="${esc(st.memo||'')}" placeholder="메모 (예: 누가 사줌)" style="margin-top:6px">
+    ${st.type!=='수입'?`<button class="pickbtn ${st.acc?'':'empty'}" id="fep" style="margin-top:6px">${st.acc?esc(accLabel(st)):'예산 항목 고르기'} ▾</button>`:''}
+    ${st.type==='지출'?`<div class="seg" style="margin-top:6px">${[['필요','필요'],['선택','쉬운 선택']].map(([v,l])=>`<button data-fen="${v}" class="${(st.need||'필요')===v?'on':''}">${l}</button>`).join('')}</div>`:''}
+    <div class="row" style="margin-top:10px"><button class="btn small" id="fesv">저장</button><button class="del" id="fedl" style="margin-left:auto">삭제</button></div></div></div>`;
+    const rd=()=>{st.item=$('#fei').value;st.amt=parseAmt($('#fea').value)||+String($('#fea').value).replace(/,/g,'')||0;st.memo=$('#fem').value.trim()};
+    S.querySelector('#fesx').onclick=()=>{S.hidden=true;S.innerHTML=''};
+    S.querySelectorAll('[data-fet]').forEach(b=>b.onclick=()=>{rd();st.type=b.dataset.fet;if(st.type==='수입'){st.acc='';st.bi='';st.cat=''}draw()});
+    S.querySelectorAll('[data-fen]').forEach(b=>b.onclick=()=>{rd();st.need=b.dataset.fen;draw()});
+    const p=S.querySelector('#fep');if(p)p.onclick=()=>{rd();openTree(v=>{const[a,bb]=v.split('|');st.acc=a;st.bi=bb;st.cat=findItem(a,bb).i?.name||'';st.auto=false;try{learn(st.item,v)}catch(e){}draw()},'예산 항목 고르기')};
+    S.querySelector('#fesv').onclick=async()=>{rd();await wcEdit(d,x=>{if(x.fin&&x.fin[i])Object.assign(x.fin[i],st)});S.hidden=true;S.innerHTML='';toast('저장했습니다.');after&&after()};
+    S.querySelector('#fedl').onclick=async()=>{if(!await uiConfirm('이 내역을 지울까요?'))return;await wcEdit(d,x=>{if(x.fin)x.fin.splice(i,1)});S.hidden=true;S.innerHTML='';after&&after()}};
+  draw()}
+{const _fe=finEntry;finEntry=async function(F){const r=await _fe.apply(this,arguments);try{const FD=window.FTD||today();F&&F.querySelectorAll('.finl li').forEach((li,i)=>{li.style.cursor='pointer';const fi=li.querySelector('.fi small');if(fi&&!fi.dataset.ed){fi.dataset.ed=1;fi.insertAdjacentHTML('beforeend',' · ✏️ 눌러서 고치기')}li.onclick=e=>{if(e.target.closest('[data-bfd]'))return;finEditSheet(FD,i,()=>renderBudget())}})}catch(e){}return r}}
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('.lgr[data-lgi]');if(!b)return;e.stopImmediatePropagation();e.preventDefault();finEditSheet(b.dataset.lgd,+b.dataset.lgi,()=>renderLedger())},true);
 </script>
 <!--BIBLE{--><!--}BIBLE-->
 <div id="miniov" class="miniov" hidden></div>
