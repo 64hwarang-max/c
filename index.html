@@ -6993,7 +6993,7 @@ async function mpLoad(){if(MP.loaded)return MP.list;let rows=[];try{rows=await m
 function mpEl(){if(!MP.el){const a=document.createElement('audio');a.preload='metadata';a.id='mpaud';a.style.display='none';document.body.appendChild(a);
     a.addEventListener('ended',mpEnded);a.addEventListener('timeupdate',mpTick);a.addEventListener('play',()=>{MP.started=true;MP.intr=false;mpMS('playing');mpFgs(true);if(MP.ab&&MP.ab.wait){clearTimeout(MP.gapT);MP.ab.wait=false;a.currentTime=MP.ab.a}mpUI()});a.addEventListener('pause',()=>{MP.intr=!a.ended&&!!a.getAttribute('src')&&!(MP.ab&&MP.ab.wait)&&Date.now()-(MP.uP||0)>1500;mpMS('paused');clearTimeout(MP.fgsT);if(!(MP.ab&&MP.ab.wait))MP.fgsT=setTimeout(()=>{if(a.paused)mpFgs(false)},MP.intr?600000:1500);mpPosSave();mpUI()});
     a.addEventListener('loadedmetadata',()=>{a.playbackRate=MP.speed;mpUI()});a.addEventListener('error',()=>{if(a.getAttribute('src'))toast('이 음원을 재생하지 못했습니다.');mpUI()});MP.el=a;setInterval(mpAB,100)}return MP.el}
-function mpPosSave(){const t=MP.list[MP.cur],a=MP.el;if(t&&a&&isFinite(a.currentTime)){MP.pos[t.id]=a.ended?0:a.currentTime;mpSaveSt()}}
+function mpPosSave(){const t=MP.list[MP.cur],a=MP.el;if(t&&a&&a.getAttribute('src')&&isFinite(a.currentTime)){MP.pos[t.id]=a.ended?0:a.currentTime;mpSaveSt()}}
 async function mpPlay(i,at){await mpLoad();if(i<0||i>=MP.list.length)return;const t=MP.list[i],a=mpEl();mpPosSave();clearTimeout(MP.gapT);MP.ab=null;if(MP.url){URL.revokeObjectURL(MP.url);MP.url=''}
   MP.cur=i;MP.curId=t.id;a.src=t.kind==='file'?(MP.url=URL.createObjectURL(t.blob)):t.url;a.defaultPlaybackRate=MP.speed;a.playbackRate=MP.speed;try{a.preservesPitch=true;a.webkitPreservesPitch=true}catch(e){}a.volume=MP.vol;
   const st=at!=null?at:(MP.pos[t.id]||0);a.addEventListener('loadedmetadata',()=>{if(st>0&&st<(a.duration||1e9)-2)a.currentTime=st},{once:true});a.play().catch(()=>{});mpMedia();mpUI();mpSaveSt();if(MP.open)mpDraw()}
@@ -7004,7 +7004,7 @@ function mpEnded(){const t=MP.list[MP.cur];if(t)MP.pos[t.id]=0;if(MP.rep==='one'
 function mpSeek(d){const a=MP.el;if(!a)return;a.currentTime=Math.max(0,Math.min((a.duration||1e9)-0.5,a.currentTime+d))}
 function mpSpeed(v){v=Math.max(.5,Math.min(2,Math.round(v*100)/100));MP.speed=v;if(MP.el){MP.el.defaultPlaybackRate=v;MP.el.playbackRate=v}mpSaveSt();mpUI()}
 function mpVol(v){MP.vol=Math.max(0,Math.min(1,v));if(MP.el&&!(MP.sleepEnd&&MP.sleepEnd-Date.now()<10000))MP.el.volume=MP.vol;mpSaveSt()}
-function mpTick(){const a=MP.el;if(!a)return;if(Date.now()-MP.saveAt>5000){MP.saveAt=Date.now();mpPosSave()}mpUI()}
+function mpTick(){const a=MP.el;if(!a)return;if(Date.now()-MP.saveAt>1500){MP.saveAt=Date.now();mpPosSave()}mpUI()}
 function mpAB(){const a=MP.el,ab=MP.ab;if(!a||!ab||ab.b==null||ab.wait||a.paused)return;if(a.currentTime>=ab.b-0.03){if(ab.left!==Infinity){ab.left--;if(ab.left<=0){MP.ab=null;mpUI();if(MP.open)mpDraw();return}}
     if(ab.gap){a.pause();ab.wait=true;MP.gapT=setTimeout(()=>{if(MP.ab!==ab)return;ab.wait=false;a.currentTime=ab.a;a.play().catch(()=>{})},Math.max(400,(ab.b-ab.a)/MP.speed*1000))}else a.currentTime=ab.a;mpUI()}}
 function mpSleep(min){clearInterval(MP.sleepT);MP.sleepEnd=0;if(MP.el)MP.el.volume=MP.vol;if(!min){mpUI();return}MP.sleepEnd=Date.now()+min*60000;
@@ -16235,7 +16235,7 @@ async function syPutSafe(B,k,v){if(!k.startsWith('day:')||!v||typeof v!=='object
 {const _o=openDay;openDay=async function(d){try{staleGuardInstall()}catch(e){}return _o.apply(this,arguments)}}
 {const _f=flush0;flush0=async function(){try{staleGuardInstall()}catch(e){}return _f.apply(this,arguments)}}
 /* v390 ① 앱 버전 표시 · 새 버전 알림 (GitHub에서 마지막으로 성공한 빌드 번호와 비교) */
-var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/433})();
+var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/434})();
 const VRK='gj-verchk',VRURL='https://github.com/64hwarang-max/c/actions/workflows/build-apk.yml';
 const vrGet=()=>{try{return JSON.parse(localStorage.getItem(VRK)||'{}')}catch(e){return{}}};
 async function vrCheck(force){const c=vrGet();if(!force&&c.t&&Date.now()-c.t<6*36e5)return c;
@@ -17321,6 +17321,46 @@ function finEditSheet(d,i,after){const o=(D&&D.date===d)?D:[...(cacheAll?cacheAl
   draw()}
 {const _fe=finEntry;finEntry=async function(F){const r=await _fe.apply(this,arguments);try{const FD=window.FTD||today();F&&F.querySelectorAll('.finl li').forEach((li,i)=>{li.style.cursor='pointer';const fi=li.querySelector('.fi small');if(fi&&!fi.dataset.ed){fi.dataset.ed=1;fi.insertAdjacentHTML('beforeend',' · ✏️ 눌러서 고치기')}li.onclick=e=>{if(e.target.closest('[data-bfd]'))return;finEditSheet(FD,i,()=>renderBudget())}})}catch(e){}return r}}
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('.lgr[data-lgi]');if(!b)return;e.stopImmediatePropagation();e.preventDefault();finEditSheet(b.dataset.lgd,+b.dataset.lgi,()=>renderLedger())},true);
+
+/* ===== v434: 음악 끊김 방지 · 성경 장 선택창(목차검색) ===== */
+{const _me=mpEl;mpEl=function(){const first=!MP.el;const a=_me.apply(this,arguments);if(first){
+  /* 다른 앱이 소리를 가져가 시스템이 멈춘 경우(내가 멈춘 게 아님) 자동으로 이어서 재생 */
+  a.addEventListener('pause',()=>{try{if(!a.getAttribute('src')||a.ended||(MP.ab&&MP.ab.wait))return;if(Date.now()-(MP.uP||0)<=2500)return;if(MP.sleepEnd&&MP.sleepEnd-Date.now()<10000)return;
+    let n=0;const t=setInterval(()=>{n++;if(!a.paused||n>10||Date.now()-(MP.uP||0)<=2500){clearInterval(t);return}a.play().catch(()=>{})},900)}catch(e){}});
+  setInterval(()=>{try{if(!a.paused&&a.getAttribute('src'))mpPosSave()}catch(e){}},2000)}return a}}
+try{const AP=NP('App');if(AP&&AP.addListener)AP.addListener('resume',()=>{try{const a=MP.el;if(a&&MP.intr&&a.paused&&a.getAttribute('src'))a.play().catch(()=>{})}catch(e){}})}catch(e){}
+const BBG=[['모세오경',0,5],['역사서',5,17],['시가서',17,22],['대선지서',22,27],['소선지서',27,39],['복음서',39,43],['역사',43,44],['바울서신',44,57],['일반서신',57,65],['예언',65,66]];
+const bbU=b=>b===18?'편':'장';
+const BBEN='Genesis Exodus Leviticus Numbers Deuteronomy Joshua Judges Ruth|1 Samuel|2 Samuel|1 Kings|2 Kings|1 Chronicles|2 Chronicles|Ezra Nehemiah Esther Job Psalms Proverbs Ecclesiastes|Song_of_Songs|Isaiah Jeremiah Lamentations Ezekiel Daniel Hosea Joel Amos Obadiah Jonah Micah Nahum Habakkuk Zephaniah Haggai Zechariah Malachi Matthew Mark Luke John Acts Romans|1 Corinthians|2 Corinthians|Galatians Ephesians Philippians Colossians|1 Thessalonians|2 Thessalonians|1 Timothy|2 Timothy|Titus Philemon Hebrews James|1 Peter|2 Peter|1 John|2 John|3 John|Jude Revelation';
+const BBEL=BBEN.split('|').flatMap(s=>/^\d/.test(s)?[s]:s.split(' ')).map(x=>x.replace(/_/g,' '));
+function bbPickerOpen(){if(document.getElementById('bbpk'))return;let B0=bbB,C0=bbC,V0=0;let BK=null;bbLoad().then(x=>{BK=x;dr()}).catch(()=>{});
+  const O=document.createElement('div');O.id='bbpk';document.body.appendChild(O);document.body.style.overflow='hidden';
+  const close=()=>{O.remove();document.body.style.overflow=''};
+  function dr(){const nv=BK&&BK[B0]&&BK[B0][C0-1]?BK[B0][C0-1].length:0;
+    let bl='';BBG.forEach(([g,a,z])=>{bl+=`<div class="pkg">${g}</div>`;for(let i=a;i<z;i++)bl+=`<button data-pb="${i}" class="${i===B0?'on':''}"><b>${BBN[i]}</b><small>${BBEL[i]||''}</small></button>`});
+    const cl=Array.from({length:BBC[B0]},(_,i)=>`<button data-pc="${i+1}" class="${i+1===C0?'on':''}">${i+1} ${bbU(B0)}</button>`).join('');
+    const vl=Array.from({length:nv},(_,i)=>`<button data-pv="${i+1}" class="${i+1===V0?'on':''}">${i+1} 절</button>`).join('');
+    const sc=['pkb','pkc','pkv'].map(k=>{const e=O.querySelector('.'+k);return e?e.scrollTop:0});
+    O.innerHTML=`<div class="pkh"><b>목차검색 :: 성경본문</b><button id="pkx" aria-label="닫기">✕</button></div><div class="pkcols"><div class="pkb">${bl}</div><div class="pkc">${cl}</div><div class="pkv">${vl}</div></div><div class="pkf"><button id="pkgo">${BBN[B0]} ${C0}${bbU(B0)}${V0?' '+V0+'절':''} 열기</button></div>`;
+    ['pkb','pkc','pkv'].forEach((k,i)=>{const e=O.querySelector('.'+k);if(e)e.scrollTop=sc[i]});
+    if(!sc[0]){const on=O.querySelector('.pkb .on');if(on)on.scrollIntoView({block:'center'})}
+    O.querySelector('#pkx').onclick=close;
+    O.querySelectorAll('[data-pb]').forEach(b=>b.onclick=()=>{B0=+b.dataset.pb;C0=1;V0=0;O.querySelector('.pkc')&&(O.querySelector('.pkc').scrollTop=0);dr();O.querySelector('.pkc').scrollTop=0});
+    O.querySelectorAll('[data-pc]').forEach(b=>b.onclick=()=>{C0=+b.dataset.pc;V0=0;dr();O.querySelector('.pkv').scrollTop=0});
+    O.querySelectorAll('[data-pv]').forEach(b=>b.onclick=()=>{V0=+b.dataset.pv;close();bbOpen(B0,C0,V0)});
+    O.querySelector('#pkgo').onclick=()=>{close();bbOpen(B0,C0,V0||0)}}
+  dr()}
+{const _rb=renderBible;renderBible=async function(){const r=await _rb.apply(this,arguments);try{if(bbTab==='read'&&bbView==='read'){const h=document.querySelector('#bbbody .bbhd h3');if(h&&!h.dataset.pk){h.dataset.pk=1;h.classList.add('bbpkh');h.title='눌러서 책·장·절 고르기';h.onclick=bbPickerOpen}}}catch(e){}return r}}
+{const st=document.createElement('style');st.textContent=`.bbpkh{cursor:pointer;text-decoration:underline dotted;text-underline-offset:5px}.bbpkh::after{content:' ▾';font-size:.7em;color:var(--acc)}
+#bbpk{position:fixed;inset:0;z-index:99999;display:flex;flex-direction:column;background:#ccc;color:#222;font-family:inherit}
+#bbpk .pkh{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:#454f66;color:#fff;font-size:1.05rem}#bbpk .pkh button{background:none;border:0;color:#fff;font-size:1.4rem}
+#bbpk .pkcols{flex:1;min-height:0;display:flex}#bbpk .pkb,#bbpk .pkc,#bbpk .pkv{overflow-y:auto;-webkit-overflow-scrolling:touch}
+#bbpk .pkb{flex:0 0 48%;background:#cfcfcf}#bbpk .pkc{flex:0 0 26%;background:#d6d6d6;border-left:1px solid #999}#bbpk .pkv{flex:1;background:#dcdcdc;border-left:1px solid #999}
+#bbpk button[data-pb],#bbpk button[data-pc],#bbpk button[data-pv]{display:block;width:100%;text-align:left;border:0;border-bottom:1px solid #b5b5b5;background:transparent;color:#222;padding:14px 12px;font-size:1.1rem}
+#bbpk button[data-pb] small{display:block;font-size:.72rem;color:#666}#bbpk button[data-pc],#bbpk button[data-pv]{text-align:center}
+#bbpk .on{background:#9a9a88!important;color:#fff!important}#bbpk .on small{color:#eee!important}
+#bbpk .pkg{background:#aeb4bd;color:#444;font-size:.75rem;padding:4px 8px}
+#bbpk .pkf{padding:10px 14px calc(10px + env(safe-area-inset-bottom));background:#e8e8e8;border-top:1px solid #aaa}#bbpk .pkf button{width:100%;padding:13px;border:0;border-radius:10px;background:#2a5db0;color:#fff;font-size:1.05rem}`;document.head.appendChild(st)}
 </script>
 <!--BIBLE{--><!--}BIBLE-->
 <div id="miniov" class="miniov" hidden></div>
