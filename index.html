@@ -16235,7 +16235,7 @@ async function syPutSafe(B,k,v){if(!k.startsWith('day:')||!v||typeof v!=='object
 {const _o=openDay;openDay=async function(d){try{staleGuardInstall()}catch(e){}return _o.apply(this,arguments)}}
 {const _f=flush0;flush0=async function(){try{staleGuardInstall()}catch(e){}return _f.apply(this,arguments)}}
 /* v390 ① 앱 버전 표시 · 새 버전 알림 (GitHub에서 마지막으로 성공한 빌드 번호와 비교) */
-var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/435})();
+var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/436})();
 const VRK='gj-verchk',VRURL='https://github.com/64hwarang-max/c/actions/workflows/build-apk.yml';
 const vrGet=()=>{try{return JSON.parse(localStorage.getItem(VRK)||'{}')}catch(e){return{}}};
 async function vrCheck(force){const c=vrGet();if(!force&&c.t&&Date.now()-c.t<6*36e5)return c;
@@ -17362,6 +17362,11 @@ function bbPickerOpen(){if(document.getElementById('bbpk'))return;let B0=bbB,C0=
 #bbpk .on{background:#9a9a88!important;color:#fff!important}#bbpk .on small{color:#eee!important}
 #bbpk .pkg{background:#aeb4bd;color:#444;font-size:.75rem;padding:4px 8px}
 #bbpk .pkf{padding:10px 14px calc(10px + env(safe-area-inset-bottom));background:#e8e8e8;border-top:1px solid #aaa}#bbpk .pkf button{width:100%;padding:13px;border:0;border-radius:10px;background:#2a5db0;color:#fff;font-size:1.05rem}`;document.head.appendChild(st)}
+
+/* ===== v436: 하단 ☀️오늘을 누르면 언제나 오늘 기본 화면(오늘 날짜·1일 시간표·열린 창 닫기) ===== */
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('nav.main [data-g="day"]');if(!b)return;
+  try{['#sheet','#blockedit','#focusov','#routineov'].forEach(s=>{const x=document.querySelector(s);if(x&&!x.hidden&&s!=='#focusov'&&s!=='#routineov'){x.hidden=true;if(s==='#sheet')x.innerHTML=''}});const pk=document.getElementById('bbpk');if(pk){pk.remove();document.body.style.overflow=''}document.body.classList.remove('pilopen');document.body.style.overflow='';try{bES=null}catch(x){}try{sMode='plan'}catch(x){}try{DTL=false}catch(x){}try{pReview=false}catch(x){}}catch(x){}
+  setTimeout(async()=>{try{if(curSection!=='day')return;if(ZMD>0||cur!==today()){ZMD=0;await openDay(today());try{const v=$('#v-day');v&&v.classList.remove('zmon')}catch(x){}}renderDay();window.scrollTo(0,0);try{zmBarSync()}catch(x){}}catch(x){}},60)},true);
 </script>
 <!--BIBLE{--><!--}BIBLE-->
 <div id="miniov" class="miniov" hidden></div>
