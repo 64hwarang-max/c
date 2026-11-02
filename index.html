@@ -16235,7 +16235,7 @@ async function syPutSafe(B,k,v){if(!k.startsWith('day:')||!v||typeof v!=='object
 {const _o=openDay;openDay=async function(d){try{staleGuardInstall()}catch(e){}return _o.apply(this,arguments)}}
 {const _f=flush0;flush0=async function(){try{staleGuardInstall()}catch(e){}return _f.apply(this,arguments)}}
 /* v390 ① 앱 버전 표시 · 새 버전 알림 (GitHub에서 마지막으로 성공한 빌드 번호와 비교) */
-var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/429})();
+var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/430})();
 const VRK='gj-verchk',VRURL='https://github.com/64hwarang-max/c/actions/workflows/build-apk.yml';
 const vrGet=()=>{try{return JSON.parse(localStorage.getItem(VRK)||'{}')}catch(e){return{}}};
 async function vrCheck(force){const c=vrGet();if(!force&&c.t&&Date.now()-c.t<6*36e5)return c;
@@ -17225,6 +17225,22 @@ document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest
 .mpl{display:flex;gap:6px;align-items:baseline;flex-wrap:wrap;padding:5px 0;border-bottom:1px dashed var(--line);font-size:.88rem}.mpl b{flex:1;min-width:0}
 .mseg button{font-size:.8rem;padding:7px 2px}.mbreath{display:flex;flex-direction:column;align-items:center;padding:18px 0 10px;margin:10px 0;border-radius:14px;background:linear-gradient(180deg,#bfe3ff,#eaf6ff)}.mbreath.river{background:linear-gradient(180deg,#d7f5e3,#bfe8f5)}.mbreath.train{background:linear-gradient(180deg,#f3ead7,#e8eef5)}
 .mcirc{width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,.85);box-shadow:0 0 0 10px rgba(255,255,255,.35);display:flex;flex-direction:column;align-items:center;justify-content:center;transform:scale(.75);transition:transform 4s ease-in-out;color:#2d3436}.mcirc[data-ph=in]{transform:scale(1.15)}.mcirc[data-ph=out]{transform:scale(.7)}.mcirc b{font-size:1rem}.mcirc small{font-size:1.4rem;font-weight:700}`;document.head.appendChild(st)})();
+
+/* ===== v430: 블록 편집 — 시간은 제목 바로 아래, 실행도 동일·반복·이월은 아이콘(📷👤📍💳 줄)으로 ===== */
+{const _d=drawBlockEditor;drawBlockEditor=function(){const r=_d.apply(this,arguments);try{const O=$('#blockedit');if(!O||!bES)return r;
+  const ti=O.querySelector('#bact'),title=ti&&ti.closest('.terow'),tr=O.querySelector('#bs')&&O.querySelector('#bs').closest('.terow'),du=O.querySelector('.durrow');
+  if(title&&tr&&title.nextElementSibling!==tr){title.after(tr);if(du)tr.after(du)}
+  const row=O.querySelector('.beirow');if(!row||row.querySelector('[data-beq]'))return r;
+  const op=bES._pn||'',host=row.closest('.beicons');const mk=(k,e,l,on)=>`<button type="button" class="beico ${on?'on':''} ${op===k?'open':''}" data-beq="${k}" aria-label="${l}" title="${l}">${e}</button>`;
+  let h='';
+  const same=O.querySelector('#bsame');if(same){const done=same.disabled;h+=`<button type="button" class="beico ${done?'on':''}" data-beq="same" aria-label="실행도 동일 · 실제 한 일에 같은 시간으로 넣기" title="실행도 동일 · 실제 한 일에 같은 시간으로 넣기">✅</button>`;same.closest('.terow').style.display='none'}
+  const rep=O.querySelector('#repcard'),cy=O.querySelector('#carrycard');
+  if(rep){const on=!!(bES.b.rid||(bES._rep&&bES._rep.type));h+=mk('rep','🔁','반복',on);const pn=document.createElement('div');pn.className='bepan';pn.dataset.pn='rep';if(op!=='rep')pn.hidden=true;rep.classList.remove('tecard');pn.appendChild(rep);host.appendChild(pn)}
+  if(cy){h+=mk('carry','➡️','이월 · 다른 날로 옮기기',false);const pn=document.createElement('div');pn.className='bepan';pn.dataset.pn='carry';if(op!=='carry')pn.hidden=true;cy.classList.remove('tecard');pn.appendChild(cy);host.appendChild(pn)}
+  row.insertAdjacentHTML('beforeend',h);
+  row.querySelectorAll('[data-beq]').forEach(x=>x.onclick=()=>{const k=x.dataset.beq;if(k==='same'){const b=O.querySelector('#bsame');if(b&&!b.disabled)b.click();else toast('실제에 이미 같은 시간으로 들어 있습니다.');return}
+    bES._pn=bES._pn===k?'':k;O.querySelectorAll('.bepan').forEach(pn=>pn.hidden=pn.dataset.pn!==bES._pn);O.querySelectorAll('[data-beico],[data-beq]').forEach(y=>y.classList.toggle('open',(y.dataset.beico||y.dataset.beq)===bES._pn));const p=O.querySelector('.bepan:not([hidden])');if(p)p.scrollIntoView({block:'nearest',behavior:'smooth'})})
+  }catch(e){console.warn('be430',e)}return r}}
 </script>
 <!--BIBLE{--><!--}BIBLE-->
 <div id="miniov" class="miniov" hidden></div>
