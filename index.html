@@ -16235,7 +16235,7 @@ async function syPutSafe(B,k,v){if(!k.startsWith('day:')||!v||typeof v!=='object
 {const _o=openDay;openDay=async function(d){try{staleGuardInstall()}catch(e){}return _o.apply(this,arguments)}}
 {const _f=flush0;flush0=async function(){try{staleGuardInstall()}catch(e){}return _f.apply(this,arguments)}}
 /* v390 ① 앱 버전 표시 · 새 버전 알림 (GitHub에서 마지막으로 성공한 빌드 번호와 비교) */
-var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/430})();
+var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/431})();
 const VRK='gj-verchk',VRURL='https://github.com/64hwarang-max/c/actions/workflows/build-apk.yml';
 const vrGet=()=>{try{return JSON.parse(localStorage.getItem(VRK)||'{}')}catch(e){return{}}};
 async function vrCheck(force){const c=vrGet();if(!force&&c.t&&Date.now()-c.t<6*36e5)return c;
@@ -17241,6 +17241,16 @@ document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest
   row.querySelectorAll('[data-beq]').forEach(x=>x.onclick=()=>{const k=x.dataset.beq;if(k==='same'){const b=O.querySelector('#bsame');if(b&&!b.disabled)b.click();else toast('실제에 이미 같은 시간으로 들어 있습니다.');return}
     bES._pn=bES._pn===k?'':k;O.querySelectorAll('.bepan').forEach(pn=>pn.hidden=pn.dataset.pn!==bES._pn);O.querySelectorAll('[data-beico],[data-beq]').forEach(y=>y.classList.toggle('open',(y.dataset.beico||y.dataset.beq)===bES._pn));const p=O.querySelector('.bepan:not([hidden])');if(p)p.scrollIntoView({block:'nearest',behavior:'smooth'})})
   }catch(e){console.warn('be430',e)}return r}}
+
+/* ===== v431: 양식·분류규칙 칸은 작게, 메모 칸은 크게 · 빈 메모를 처음 열면 일시를 앞에 넣기 ===== */
+(function(){const st=document.createElement('style');st.textContent=`#blockedit .bcline .bnico{width:36px!important;min-width:36px!important;height:36px!important;padding:0!important;border-radius:10px}#blockedit .bcline .bnico span{font-size:1.1rem!important}#blockedit .bcline .bnico small{display:none!important}
+#blockedit .bnrule{padding:0!important;width:30px;height:30px;font-size:0!important;border-radius:8px}#blockedit .bnrule::before{content:"⚙️";font-size:.9rem}
+#blockedit #bmemo{min-height:11em;font-size:1rem;line-height:1.55;resize:vertical}#blockedit .tecard.tnote{padding-top:10px}`;document.head.appendChild(st)})();
+const MEMO_SKIP=new Set(['smt','uiin','vcpaste','vcq','wquick','wxdin','tpt','stm','rls']);
+function memoStamp(){const n=new Date();return`${md(ymd(n))}(${WD[n.getDay()]}) ${pad(n.getHours())}:${pad(n.getMinutes())} `}
+document.addEventListener('focusin',e=>{const t=e.target;if(!t||t.tagName!=='TEXTAREA'||MEMO_SKIP.has(t.id)||t.readOnly||t.disabled||t.dataset.nostamp)return;if(t.value.trim())return;
+  if(t.closest('#sheet .shead,.bdpop'))return;const s=memoStamp();t.value=s;t.dataset.stamp=s;try{t.setSelectionRange(s.length,s.length)}catch(x){}t.dispatchEvent(new Event('input',{bubbles:true}))},true);
+document.addEventListener('focusout',e=>{const t=e.target;if(!t||t.tagName!=='TEXTAREA'||!t.dataset.stamp)return;if(t.value.trim()===t.dataset.stamp.trim()){t.value='';t.dispatchEvent(new Event('input',{bubbles:true}))}delete t.dataset.stamp},true);
 </script>
 <!--BIBLE{--><!--}BIBLE-->
 <div id="miniov" class="miniov" hidden></div>
