@@ -16236,7 +16236,7 @@ async function syPutSafe(B,k,v){if(!k.startsWith('day:')||!v||typeof v!=='object
 {const _o=openDay;openDay=async function(d){try{staleGuardInstall()}catch(e){}return _o.apply(this,arguments)}}
 {const _f=flush0;flush0=async function(){try{staleGuardInstall()}catch(e){}return _f.apply(this,arguments)}}
 /* v390 ① 앱 버전 표시 · 새 버전 알림 (GitHub에서 마지막으로 성공한 빌드 번호와 비교) */
-var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/438})();
+var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/439})();
 const VRK='gj-verchk',VRURL='https://github.com/64hwarang-max/c/actions/workflows/build-apk.yml';
 const vrGet=()=>{try{return JSON.parse(localStorage.getItem(VRK)||'{}')}catch(e){return{}}};
 async function vrCheck(force){const c=vrGet();if(!force&&c.t&&Date.now()-c.t<6*36e5)return c;
@@ -17438,6 +17438,24 @@ document.addEventListener('click',async e=>{const col=e.target.closest&&e.target
     try{if(!$('#v-plan').hidden)renderPlan();else if(!$('#v-day').hidden)renderDay()}catch(x){}})()}
   return r}}
 
+
+/* ===== v439: 오늘 할 운동 칩을 누르면 그 운동만 바로 입력(부위·종목 선택 줄 숨김) ===== */
+{const _fh=wkFormHTML;wkFormHTML=function(){const F=WKF;
+  if(F.sug&&(F.t==='weight'||F.t==='cardio')){const P=wkPR();
+    if(F.t==='weight'){const nm=(F.name||'').trim();const lb=nm&&P.last[nm],bb=nm&&P.best[nm];
+      return`<div class="wkone"><div class="wkonet"><b>🏋️ ${esc(nm)}</b><button type="button" class="del" id="wkfree">다른 운동 고르기</button></div>
+      ${lb||bb?`<p class="wkhint">${lb?`지난번 ${md(lb.d)}: ${(lb.x.sets||[]).map(s=>`${+s.w||0}kg×${+s.r||0}`).join(', ')}`:''}${bb?` · 최고 ${bb.w}kg×${bb.r}`:''}</p>`:''}
+      <div class="wkset"><span>세트</span><span>무게 kg</span><span>횟수</span><span></span></div>${F.sets.map((s,i)=>`<div class="wkset"><span>${i+1}</span><input type="number" step="0.5" min="0" inputmode="decimal" data-wksw="${i}" value="${esc(s.w)}" placeholder="kg"><input type="number" min="0" inputmode="numeric" data-wksr="${i}" value="${esc(s.r)}" placeholder="회"><button type="button" class="del" data-wksx="${i}" ${F.sets.length<2?'disabled':''}>✕</button></div>`).join('')}
+      <button type="button" class="btn small ghost" id="wkaddset">＋ 세트 추가 (앞 세트 복사)</button><button type="button" class="btn" id="wksave" style="width:100%;margin-top:8px">기록 넣기</button></div>`}
+    return`<div class="wkone"><div class="wkonet"><b>🏃 ${esc(F.cname||'유산소')}</b><button type="button" class="del" id="wkfree">다른 운동 고르기</button></div>
+      <div class="wkg2"><label class="f">거리 (km)<input type="number" step="0.1" min="0" inputmode="decimal" id="wkkm" value="${esc(F.km)}" placeholder="예: 5.2"></label><label class="f">시간 (분)<input type="number" min="0" inputmode="numeric" id="wkmin" value="${esc(F.min)}" placeholder="예: 30"></label></div>
+      <button type="button" class="btn" id="wksave" style="width:100%;margin-top:8px">기록 넣기</button></div>`}
+  return _fh.apply(this,arguments)}}
+{const _b=wkBind;wkBind=function(R,re){const F=WKF;_b.apply(this,arguments);
+  R.querySelectorAll('[data-wksug]').forEach(b=>b.addEventListener('click',()=>{F.sug=1},true));
+  const sv=R.querySelector('#wksave');if(sv)sv.addEventListener('click',()=>{F.sug=0},true);
+  const fr=R.querySelector('#wkfree');if(fr)fr.onclick=()=>{F.sug=0;re()}}}
+(function(){const st=document.createElement('style');st.textContent=`.wkone{border:1px solid var(--line);border-radius:12px;padding:8px 10px;margin-top:6px}.wkonet{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px}.wkonet b{font-size:1rem}`;document.head.appendChild(st)})();
 </script>
 <!--BIBLE{--><!--}BIBLE-->
 <div id="miniov" class="miniov" hidden></div>
