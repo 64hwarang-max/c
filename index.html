@@ -16236,7 +16236,7 @@ async function syPutSafe(B,k,v){if(!k.startsWith('day:')||!v||typeof v!=='object
 {const _o=openDay;openDay=async function(d){try{staleGuardInstall()}catch(e){}return _o.apply(this,arguments)}}
 {const _f=flush0;flush0=async function(){try{staleGuardInstall()}catch(e){}return _f.apply(this,arguments)}}
 /* v390 ① 앱 버전 표시 · 새 버전 알림 (GitHub에서 마지막으로 성공한 빌드 번호와 비교) */
-var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/439})();
+var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/440})();
 const VRK='gj-verchk',VRURL='https://github.com/64hwarang-max/c/actions/workflows/build-apk.yml';
 const vrGet=()=>{try{return JSON.parse(localStorage.getItem(VRK)||'{}')}catch(e){return{}}};
 async function vrCheck(force){const c=vrGet();if(!force&&c.t&&Date.now()-c.t<6*36e5)return c;
@@ -17456,6 +17456,17 @@ document.addEventListener('click',async e=>{const col=e.target.closest&&e.target
   const sv=R.querySelector('#wksave');if(sv)sv.addEventListener('click',()=>{F.sug=0},true);
   const fr=R.querySelector('#wkfree');if(fr)fr.onclick=()=>{F.sug=0;re()}}}
 (function(){const st=document.createElement('style');st.textContent=`.wkone{border:1px solid var(--line);border-radius:12px;padding:8px 10px;margin-top:6px}.wkonet{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px}.wkonet b{font-size:1rem}`;document.head.appendChild(st)})();
+
+/* ===== v440: 노트 왼쪽 목록(대분류·중분류·소분류)을 접어 글 쓰는 칸을 넓게 ===== */
+const ntColGet=()=>{try{return localStorage.getItem('gj-ntcol')==='1'}catch(e){return false}};
+function ntColApply(){const V=$('#v-note');if(!V)return;const on=V.classList.contains('ntwide'),c=on&&ntColGet();V.classList.toggle('ntcol',c);
+  let b=document.getElementById('ntcolb');if(!b){b=document.createElement('button');b.id='ntcolb';b.type='button';document.body.appendChild(b);b.onclick=()=>{try{localStorage.setItem('gj-ntcol',ntColGet()?'0':'1')}catch(e){}ntColApply()}}
+  b.hidden=!on||curSection!=='note';b.textContent=c?'▶ 목록':'◀ 접기';b.setAttribute('aria-label',c?'노트 목록 펼치기':'노트 목록 접기')}
+{const _s=ntSide;ntSide=function(){const r=_s.apply(this,arguments);try{ntColApply()}catch(e){}return r}}
+document.addEventListener('visibilitychange',()=>{try{ntColApply()}catch(e){}});
+setInterval(()=>{try{if(!document.hidden)ntColApply()}catch(e){}},1500);
+{const st=document.createElement('style');st.textContent=`#v-note.ntwide.ntcol{grid-template-columns:minmax(0,1fr)}#v-note.ntwide.ntcol>#ntree{display:none}
+#ntcolb{position:fixed;left:0;top:96px;z-index:60;border:1px solid var(--line);border-left:0;border-radius:0 10px 10px 0;background:var(--card,#fff);color:var(--ink);font-size:.74rem;padding:7px 8px;box-shadow:0 1px 6px rgba(0,0,0,.18);cursor:pointer}#ntcolb[hidden]{display:none}body.nfocus #ntcolb{display:none}`;document.head.appendChild(st)}
 </script>
 <!--BIBLE{--><!--}BIBLE-->
 <div id="miniov" class="miniov" hidden></div>
