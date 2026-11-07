@@ -16236,7 +16236,7 @@ async function syPutSafe(B,k,v){if(!k.startsWith('day:')||!v||typeof v!=='object
 {const _o=openDay;openDay=async function(d){try{staleGuardInstall()}catch(e){}return _o.apply(this,arguments)}}
 {const _f=flush0;flush0=async function(){try{staleGuardInstall()}catch(e){}return _f.apply(this,arguments)}}
 /* v390 ① 앱 버전 표시 · 새 버전 알림 (GitHub에서 마지막으로 성공한 빌드 번호와 비교) */
-var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/440})();
+var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/441})();
 const VRK='gj-verchk',VRURL='https://github.com/64hwarang-max/c/actions/workflows/build-apk.yml';
 const vrGet=()=>{try{return JSON.parse(localStorage.getItem(VRK)||'{}')}catch(e){return{}}};
 async function vrCheck(force){const c=vrGet();if(!force&&c.t&&Date.now()-c.t<6*36e5)return c;
@@ -17467,6 +17467,43 @@ document.addEventListener('visibilitychange',()=>{try{ntColApply()}catch(e){}});
 setInterval(()=>{try{if(!document.hidden)ntColApply()}catch(e){}},1500);
 {const st=document.createElement('style');st.textContent=`#v-note.ntwide.ntcol{grid-template-columns:minmax(0,1fr)}#v-note.ntwide.ntcol>#ntree{display:none}
 #ntcolb{position:fixed;left:0;top:96px;z-index:60;border:1px solid var(--line);border-left:0;border-radius:0 10px 10px 0;background:var(--card,#fff);color:var(--ink);font-size:.74rem;padding:7px 8px;box-shadow:0 1px 6px rgba(0,0,0,.18);cursor:pointer}#ntcolb[hidden]{display:none}body.nfocus #ntcolb{display:none}`;document.head.appendChild(st)}
+
+/* ===== v441: 실제 한 일 물품 여러 개 · 계획→실제는 복사 · 스케줄표에서 바로 복사 ===== */
+linkedFin=function(id){return D.fin.find(f=>f.link&&f.link.id===id&&!f.link.n)};
+function syncBuys(src){try{if(!src||!src.id)return;const ex=D.fin.filter(f=>f.link&&f.link.id===src.id&&f.link.n);const keep=new Set();
+  (src.buys||[]).forEach((x,i)=>{const n=i+1;const amt=parseAmt(String(x.amt||''))||+x.amt||0;if(!amt)return;const text=String(x.m||'').trim()||(src.act||src.cat||'');const c=classify(text);const acc=x.acc||'';let f=ex.find(y=>y.link.n===n);
+    if(!f){const[a,b]=acc?acc.split('|'):(c?c.v.split('|'):['','']);const it=a?findItem(a,b||'').i:null;f={type:'지출',item:text,amt,acc:a||'',bi:b||'',cat:it?it.name:'',need:'필요',auto:!acc&&!!c,link:{kind:'time',id:src.id,n}};D.fin.push(f)}
+    else{f.amt=amt;f.item=text;if(acc){const[a,b]=acc.split('|');f.acc=a;f.bi=b||'';f.cat=(findItem(a,b||'').i||{}).name||'';f.auto=false}else if(f.auto&&c){const[a,b]=c.v.split('|');f.acc=a;f.bi=b;f.cat=(findItem(a,b).i||{}).name||''}}
+    keep.add(f)});
+  ex.forEach(f=>{if(!keep.has(f)){const k=D.fin.indexOf(f);if(k>=0)D.fin.splice(k,1)}});
+  const ids=new Set((D.time||[]).map(b=>b.id));for(let k=D.fin.length-1;k>=0;k--){const f=D.fin[k];if(f.link&&f.link.n&&!ids.has(f.link.id))D.fin.splice(k,1)}}catch(e){console.warn('buys',e)}}
+{const _s=syncSpend;syncSpend=function(src){const r=_s.apply(this,arguments);syncBuys(src);return r}}
+{const _d=delBlock0;delBlock0=function(kind,i){try{const rm=D[kind]&&D[kind][i];if(kind==='time'&&rm&&rm.id)for(let k=D.fin.length-1;k>=0;k--){const f=D.fin[k];if(f.link&&f.link.id===rm.id&&f.link.n)D.fin.splice(k,1)}}catch(e){}return _d.apply(this,arguments)}}
+{const _d=drawBlockEditor;drawBlockEditor=function(){const r=_d.apply(this,arguments);try{if(!bES||bES.kind!=='time')return r;const O=$('#blockedit');const pn=O&&O.querySelector('.bepan[data-pn="amt"]');if(!pn||pn.querySelector('.bbuys'))return r;const b=bES.b;b.buys=Array.isArray(b.buys)?b.buys:[];
+  const tot=()=>{const p=parseAmt(String(b.amt||''))||+b.amt||0;return p+b.buys.reduce((a,x)=>a+(parseAmt(String(x.amt||''))||+x.amt||0),0)};
+  const w=document.createElement('div');w.className='bbuys';
+  w.innerHTML=`${b.buys.map((x,i)=>`<div class="bbuy"><input type="text" data-bbuy="${i}" value="${esc(amtJoin({amt:x.amt,amtm:x.m}))}" placeholder="금액과 물품 (예: 35000 셔츠)"><select data-bbacc="${i}">${accOptions(x.acc||'')}</select><button type="button" class="del" data-bbx="${i}" aria-label="물품 빼기">✕</button></div>`).join('')}<div class="bbadd"><button type="button" class="btn small ghost" id="bbplus">＋ 물품 추가 (2개 이상 샀을 때)</button>${b.buys.length?`<small class="hint">전체 합계 ${won(tot())}</small>`:''}</div>`;
+  pn.appendChild(w);const redraw=()=>{bES._pn='amt';drawBlockEditor()};
+  w.querySelectorAll('[data-bbuy]').forEach(el=>el.oninput=()=>{const[a1,m1]=amtSplit(el.value);const x=b.buys[+el.dataset.bbuy];x.amt=a1;x.m=m1});
+  w.querySelectorAll('[data-bbacc]').forEach(el=>el.onchange=()=>{b.buys[+el.dataset.bbacc].acc=el.value});
+  w.querySelectorAll('[data-bbx]').forEach(el=>el.onclick=()=>{b.buys.splice(+el.dataset.bbx,1);redraw()});
+  w.querySelector('#bbplus').onclick=()=>{if(bES._read)bES._read();b.buys.push({amt:'',m:'',acc:''});redraw();setTimeout(()=>{const L=document.querySelectorAll('#blockedit [data-bbuy]');if(L.length)L[L.length-1].focus()},60)}}catch(e){console.warn('buys ui',e)}return r}}
+/* 계획 → 실제 한 일: 옮기기가 아니라 복사(계획은 그대로) */
+{const _mv=blkMoveTo;blkMoveTo=function(){if(!bES||bES.kind!=='plan')return _mv.apply(this,arguments);
+  try{if(bES._read)bES._read();if(!bES.b.s){toast('시작 시간을 먼저 적으십시오.');return}if(!applyBlock())return;const p=D.plan[bES.i];if(!p)return;
+    const c=planToActual(p);D.time.push(c);D.time.sort((x,y)=>(x.s||'99')<(y.s||'99')?-1:1);try{syncSpend(c,'time',c.act||c.cat)}catch(e){}schedule();toast(`📋 ${p.s}~${p.e||''} ${p.act||p.cat} · 실제 한 일에 복사했습니다 (계획은 그대로).`);closeBlockEditor()}catch(e){toast('복사하지 못했습니다.')}}}
+{const _d=drawBlockEditor;drawBlockEditor=function(){const r=_d.apply(this,arguments);try{const b=document.querySelector('#bmvx');if(b&&bES&&bES.kind==='plan')b.textContent='📋 실제 한 일로 복사 (계획은 그대로)'}catch(e){}return r}}
+/* 스케줄표(오늘 계획 칸)에서도 바로 복사: 계획 블록의 📋 */
+function planCopyIcons(){try{document.querySelectorAll('#dayBody .sblk[data-bk^="plan|"]:not(.ro)').forEach(el=>{if(el.querySelector('.bcp'))return;const i=document.createElement('i');i.className='bcp';i.setAttribute('role','button');i.setAttribute('aria-label','실제 한 일로 복사');i.title='실제 한 일로 복사';i.textContent='📋';i.dataset.bcp=el.dataset.bid||'';el.appendChild(i)})}catch(e){}}
+DECO.add('계획→실제 복사 아이콘',{root:()=>document.getElementById('v-day')||document.body,deep:true,wait:120,run:planCopyIcons,now:true});
+document.addEventListener('click',e=>{const t=e.target.closest&&e.target.closest('.bcp');if(!t)return;e.stopImmediatePropagation();e.preventDefault();
+  const id=t.dataset.bcp;const p=D.plan.find(x=>x.id===id);if(!p)return;if(!p.s){toast('시작 시간이 없는 계획입니다.');return}if(!p.e)p.e=addMin(p.s,60);
+  if(D.time.some(x=>x.from===id)){toast('이미 실제 한 일에 복사한 계획입니다.');return}
+  const c=planToActual(p);D.time.push(c);D.time.sort((x,y)=>(x.s||'99')<(y.s||'99')?-1:1);try{syncSpend(c,'time',c.act||c.cat)}catch(x){}schedule();
+  toastAct(`📋 ${p.s}~${p.e} ${p.act||p.cat} · 실제 한 일에 복사했습니다.`,'되돌리기',()=>{const k=D.time.findIndex(x=>x.id===c.id);if(k>=0){D.time.splice(k,1);delBlockFinClean(c.id);schedule();renderDay()}});renderDay()},true);
+function delBlockFinClean(id){for(let k=D.fin.length-1;k>=0;k--){const f=D.fin[k];if(f.link&&f.link.id===id)D.fin.splice(k,1)}}
+{const st=document.createElement('style');st.textContent=`.sblk .bcp{position:absolute;top:0;right:22px;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-style:normal;font-size:.78rem;opacity:.7;z-index:3}
+.bbuys{margin-top:8px}.bbuy{display:grid;grid-template-columns:1fr auto;gap:6px;margin-top:6px}.bbuy select{grid-column:1/2;min-width:0}.bbuy .del{grid-row:1/3;grid-column:2}.bbadd{margin-top:8px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}`;document.head.appendChild(st)}
 </script>
 <!--BIBLE{--><!--}BIBLE-->
 <div id="miniov" class="miniov" hidden></div>
