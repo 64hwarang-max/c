@@ -16242,7 +16242,7 @@ async function syPutSafe(B,k,v){if(!k.startsWith('day:')||!v||typeof v!=='object
 {const _o=openDay;openDay=async function(d){try{staleGuardInstall()}catch(e){}return _o.apply(this,arguments)}}
 {const _f=flush0;flush0=async function(){try{staleGuardInstall()}catch(e){}return _f.apply(this,arguments)}}
 /* v390 ① 앱 버전 표시 · 새 버전 알림 (GitHub에서 마지막으로 성공한 빌드 번호와 비교) */
-var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/442})();
+var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/443})();
 const VRK='gj-verchk',VRURL='https://github.com/64hwarang-max/c/actions/workflows/build-apk.yml';
 const vrGet=()=>{try{return JSON.parse(localStorage.getItem(VRK)||'{}')}catch(e){return{}}};
 async function vrCheck(force){const c=vrGet();if(!force&&c.t&&Date.now()-c.t<6*36e5)return c;
@@ -17510,6 +17510,33 @@ document.addEventListener('click',e=>{const t=e.target.closest&&e.target.closest
 function delBlockFinClean(id){for(let k=D.fin.length-1;k>=0;k--){const f=D.fin[k];if(f.link&&f.link.id===id)D.fin.splice(k,1)}}
 {const st=document.createElement('style');st.textContent=`.sblk .bcp{position:absolute;top:0;right:22px;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-style:normal;font-size:.78rem;opacity:.7;z-index:3}
 .bbuys{margin-top:8px}.bbuy{display:grid;grid-template-columns:1fr auto;gap:6px;margin-top:6px}.bbuy select{grid-column:1/2;min-width:0}.bbuy .del{grid-row:1/3;grid-column:2}.bbadd{margin-top:8px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}`;document.head.appendChild(st)}
+
+/* ===== v443: 성경 읽기 책갈피 보강 — 절 번호를 눌러 그 절에 꽂기 · 꽂은 절 표시 · 이 장/오늘 분량의 책갈피 목록으로 이동 ===== */
+function bmView(){return bbTab==='eo'&&typeof eoView!=='undefined'&&eoView==='day'?'eo':(bbTab==='read'&&bbView==='read'?'bb':'')}
+function bmList(){const k=bmView(),M=bbMarks();if(k==='eo')return M.filter(x=>x.k==='eo'&&x.day===eoDay);if(k==='bb')return M.filter(x=>x.k==='bb'&&x.b===bbB&&x.c===bbC);return[]}
+function bmSame(m,k,v){return k==='eo'?m.k==='eo'&&m.day===eoDay&&String(m.v)===String(v):m.k==='bb'&&m.b===bbB&&m.c===bbC&&+m.v===+v}
+function bmToggle(v){const k=bmView();if(!k)return;const M=bbMarks();const i=M.findIndex(x=>bmSame(x,k,v));
+  if(i>=0){M.splice(i,1);toast('🔖 책갈피를 뺐습니다.')}
+  else{const m=k==='eo'?{k:'eo',day:eoDay,v:String(v)}:{k:'bb',b:bbB,c:bbC,v:+v};m.id='bm'+uid();m.at=today();M.unshift(m);if(M.length>100)M.length=100;toast(`🔖 ${k==='eo'?String(v).split('-').slice(1).join(':'):bbC+':'+v}절에 책갈피를 꽂았습니다.`)}
+  bbUISave(true);bbMarkBtn()}
+function bmVerseEl(m){return m.k==='eo'?document.querySelector(`#bbbody .eotxt p[data-eov="${m.v}"]`):document.querySelector(`#bbbody .bbtxt p[data-bbv="${m.v}"]`)}
+function bmLabel(m){if(m.k==='eo'){const[b,c,v]=String(m.v).split('-').map(Number);return`${BBA[b]!=null?BBN[b]:''} ${c}:${v}`}return`${BBN[m.b]} ${m.c}:${m.v}`}
+function bmPaint(){try{const k=bmView();document.querySelectorAll('#bbbody p.bmk').forEach(p=>p.classList.remove('bmk'));if(!k)return;bmList().forEach(m=>{const el=bmVerseEl(m);if(el)el.classList.add('bmk')});
+  const hb=document.getElementById('bbmk');if(hb&&!document.getElementById('bbmkl')){const b=document.createElement('button');b.className='iconbtn bbmk';b.id='bbmkl';b.type='button';b.setAttribute('aria-label','이 분량의 책갈피 목록');b.textContent='📑';b.onclick=bmPanel;hb.after(b)}
+  const nb=document.getElementById('bbmkl');if(nb){const n=bmList().length;nb.dataset.n=n||'';nb.classList.toggle('on',n>0)}}catch(e){}}
+{const _m=bbMarkBtn;bbMarkBtn=function(){const r=_m.apply(this,arguments);bmPaint();return r}}
+function bmPanel(){document.getElementById('bmpan')?.remove();const k=bmView();if(!k)return;const L=bmList().slice().sort((a,b)=>{const ka=a.k==='eo'?String(a.v).split('-').map(Number):[0,0,+a.v],kb=b.k==='eo'?String(b.v).split('-').map(Number):[0,0,+b.v];for(let i=0;i<3;i++)if(ka[i]!==kb[i])return ka[i]-kb[i];return 0});
+  const O=document.createElement('div');O.id='bmpan';O.innerHTML=`<div class="bmbox"><div class="bmh"><b>🔖 ${k==='eo'?'오늘 읽기 분량':bbN2()} 책갈피 ${L.length}</b><button type="button" id="bmx" aria-label="닫기">✕</button></div>${L.length?L.map(m=>`<div class="bmr"><button type="button" class="bmgo" data-bg="${esc(m.id)}">📖 ${esc(bmLabel(m))}절</button><button type="button" class="del" data-bd="${esc(m.id)}" aria-label="빼기">✕</button></div>`).join(''):'<p class="hint">아직 없습니다. 읽다가 표시할 곳의 <b>절 번호</b>를 누르면 그 절에 책갈피가 꽂힙니다.</p>'}<button type="button" class="btn" id="bmadd" style="width:100%;margin-top:8px">🔖 지금 화면 위쪽 절에 꽂기</button></div>`;
+  document.body.appendChild(O);const close=()=>O.remove();O.onclick=e=>{if(e.target===O)close()};O.querySelector('#bmx').onclick=close;
+  O.querySelectorAll('[data-bg]').forEach(b=>b.onclick=()=>{const m=bbMarks().find(x=>x.id===b.dataset.bg);close();if(!m)return;const el=bmVerseEl(m);if(el)bbScrollTo(el,true)});
+  O.querySelectorAll('[data-bd]').forEach(b=>b.onclick=()=>{const M=bbMarks(),i=M.findIndex(x=>x.id===b.dataset.bd);if(i>=0)M.splice(i,1);bbUISave(true);bbMarkBtn();bmPanel()});
+  O.querySelector('#bmadd').onclick=()=>{close();bbMarkAdd()}}
+const bbN2=()=>`${BBN[bbB]} ${bbC}${bbB===18?'편':'장'}`;
+document.addEventListener('click',e=>{const s=e.target.closest&&e.target.closest('#bbbody sup');if(!s)return;const p=s.closest('p[data-bbv],p[data-eov]');if(!p)return;if(!bmView())return;e.stopImmediatePropagation();e.preventDefault();bmToggle(p.dataset.eov||p.dataset.bbv)},true);
+DECO.add('책갈피 표시',{root:'#bbbody',deep:true,wait:150,run:bmPaint,now:true});
+{const st=document.createElement('style');st.textContent=`#bbbody p.bmk{border-left:3px solid #e53935;padding-left:6px;background:rgba(229,57,53,.09)}#bbbody p.bmk sup::before{content:'🔖';margin-right:2px}#bbbody sup{cursor:pointer;padding:4px 3px;margin:-4px -3px}
+#bbmkl{position:relative}#bbmkl[data-n]:not([data-n=""])::after{content:attr(data-n);position:absolute;top:-4px;right:-4px;min-width:15px;height:15px;border-radius:8px;background:#e53935;color:#fff;font-size:.62rem;line-height:15px;text-align:center}
+#bmpan{position:fixed;inset:0;z-index:99998;background:rgba(0,0,0,.45);display:flex;align-items:flex-end}.bmbox{width:100%;max-height:70vh;overflow:auto;background:var(--card,#fff);color:var(--ink);border-radius:16px 16px 0 0;padding:14px 14px calc(14px + env(safe-area-inset-bottom))}.bmh{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}.bmh button{background:none;border:0;font-size:1.2rem;color:var(--ink)}.bmr{display:flex;gap:6px;margin-top:6px}.bmgo{flex:1;text-align:left;padding:12px;border:1px solid var(--line);border-radius:10px;background:transparent;color:var(--ink);font-size:1rem}`;document.head.appendChild(st)}
 </script>
 <!--BIBLE{--><!--}BIBLE-->
 <div id="miniov" class="miniov" hidden></div>
