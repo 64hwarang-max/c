@@ -16242,7 +16242,7 @@ async function syPutSafe(B,k,v){if(!k.startsWith('day:')||!v||typeof v!=='object
 {const _o=openDay;openDay=async function(d){try{staleGuardInstall()}catch(e){}return _o.apply(this,arguments)}}
 {const _f=flush0;flush0=async function(){try{staleGuardInstall()}catch(e){}return _f.apply(this,arguments)}}
 /* v390 ① 앱 버전 표시 · 새 버전 알림 (GitHub에서 마지막으로 성공한 빌드 번호와 비교) */
-var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/443})();
+var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/444})();
 const VRK='gj-verchk',VRURL='https://github.com/64hwarang-max/c/actions/workflows/build-apk.yml';
 const vrGet=()=>{try{return JSON.parse(localStorage.getItem(VRK)||'{}')}catch(e){return{}}};
 async function vrCheck(force){const c=vrGet();if(!force&&c.t&&Date.now()-c.t<6*36e5)return c;
@@ -17537,6 +17537,70 @@ DECO.add('책갈피 표시',{root:'#bbbody',deep:true,wait:150,run:bmPaint,now:t
 {const st=document.createElement('style');st.textContent=`#bbbody p.bmk{border-left:3px solid #e53935;padding-left:6px;background:rgba(229,57,53,.09)}#bbbody p.bmk sup::before{content:'🔖';margin-right:2px}#bbbody sup{cursor:pointer;padding:4px 3px;margin:-4px -3px}
 #bbmkl{position:relative}#bbmkl[data-n]:not([data-n=""])::after{content:attr(data-n);position:absolute;top:-4px;right:-4px;min-width:15px;height:15px;border-radius:8px;background:#e53935;color:#fff;font-size:.62rem;line-height:15px;text-align:center}
 #bmpan{position:fixed;inset:0;z-index:99998;background:rgba(0,0,0,.45);display:flex;align-items:flex-end}.bmbox{width:100%;max-height:70vh;overflow:auto;background:var(--card,#fff);color:var(--ink);border-radius:16px 16px 0 0;padding:14px 14px calc(14px + env(safe-area-inset-bottom))}.bmh{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}.bmh button{background:none;border:0;font-size:1.2rem;color:var(--ink)}.bmr{display:flex;gap:6px;margin-top:6px}.bmgo{flex:1;text-align:left;padding:12px;border:1px solid var(--line);border-radius:10px;background:transparent;color:var(--ink);font-size:1rem}`;document.head.appendChild(st)}
+
+/* ===== v444: Supabase 암호화 클라우드 백업 — 기기에서 암호화(AES-256-GCM)한 뒤 올림. 서버에는 암호문만 저장 ===== */
+const SBK='gj-sb';let SBP='';
+const SBSQL=`-- Supabase › SQL Editor 에 붙여 넣고 Run (한 번만)
+insert into storage.buckets (id,name,public) values ('backups','backups',false) on conflict (id) do nothing;
+create policy "gj_bk_sel" on storage.objects for select to authenticated using (bucket_id='backups' and (storage.foldername(name))[1]=auth.uid()::text);
+create policy "gj_bk_ins" on storage.objects for insert to authenticated with check (bucket_id='backups' and (storage.foldername(name))[1]=auth.uid()::text);
+create policy "gj_bk_upd" on storage.objects for update to authenticated using (bucket_id='backups' and (storage.foldername(name))[1]=auth.uid()::text) with check (bucket_id='backups' and (storage.foldername(name))[1]=auth.uid()::text);
+create policy "gj_bk_del" on storage.objects for delete to authenticated using (bucket_id='backups' and (storage.foldername(name))[1]=auth.uid()::text);`;
+function sbC(){try{return JSON.parse(localStorage.getItem(SBK)||'{}')}catch(e){return{}}}
+function sbW(o){try{localStorage.setItem(SBK,JSON.stringify(o))}catch(e){}}
+const sbBase=()=>String(sbC().url||'').trim().replace(/\/+$/,'');
+async function sbF(path,opt,tok){const c=sbC();const h=Object.assign({apikey:c.key},opt&&opt.headers||{});if(tok!==false&&c.ses&&c.ses.at)h.Authorization='Bearer '+c.ses.at;const r=await fetch(sbBase()+path,Object.assign({},opt,{headers:h}));return r}
+async function sbErr(r){let t='';try{const j=await r.json();t=j.msg||j.message||j.error_description||j.error||''}catch(e){}return`${r.status} ${t}`.trim()}
+async function sbAuth(mode){const c=sbC();if(!c.url||!c.key||!c.email||!c.pw)throw new Error('주소·키·이메일·계정 비밀번호를 모두 입력하십시오.');
+  const body=JSON.stringify({email:c.email,password:c.pw});const H={'Content-Type':'application/json'};
+  if(mode==='up'){const r=await sbF('/auth/v1/signup',{method:'POST',headers:H,body},false);if(!r.ok)throw new Error('가입 실패: '+await sbErr(r));const j=await r.json();if(!j.access_token)return'confirm'}
+  const r=await sbF('/auth/v1/token?grant_type=password',{method:'POST',headers:H,body},false);if(!r.ok)throw new Error('로그인 실패: '+await sbErr(r));const j=await r.json();
+  c.ses={at:j.access_token,rt:j.refresh_token,exp:Date.now()+(j.expires_in||3600)*1000-60000,uid:j.user.id};sbW(c);return'ok'}
+async function sbEnsure(){const c=sbC();if(c.ses&&c.ses.at&&Date.now()<c.ses.exp)return c;
+  if(c.ses&&c.ses.rt){try{const r=await sbF('/auth/v1/token?grant_type=refresh_token',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({refresh_token:c.ses.rt})},false);if(r.ok){const j=await r.json();c.ses={at:j.access_token,rt:j.refresh_token,exp:Date.now()+(j.expires_in||3600)*1000-60000,uid:j.user.id};sbW(c);return c}}catch(e){}}
+  await sbAuth('in');return sbC()}
+const sbB64=u=>{let s='';for(let i=0;i<u.length;i+=8192)s+=String.fromCharCode.apply(null,u.subarray(i,i+8192));return btoa(s)};
+async function sbKey(pass,salt){const k=await crypto.subtle.importKey('raw',new TextEncoder().encode(pass),'PBKDF2',false,['deriveKey']);return crypto.subtle.deriveKey({name:'PBKDF2',salt,iterations:250000,hash:'SHA-256'},k,{name:'AES-GCM',length:256},false,['encrypt','decrypt'])}
+async function sbPipe(bytes,kind){const S=new Blob([bytes]).stream().pipeThrough(new (kind==='gz'?CompressionStream:DecompressionStream)('gzip'));return new Uint8Array(await new Response(S).arrayBuffer())}
+async function sbEnc(text,pass){let raw=new TextEncoder().encode(text),gz=0;if(typeof CompressionStream!=='undefined'){raw=await sbPipe(raw,'gz');gz=1}
+  const salt=crypto.getRandomValues(new Uint8Array(16)),iv=crypto.getRandomValues(new Uint8Array(12));const ct=new Uint8Array(await crypto.subtle.encrypt({name:'AES-GCM',iv},await sbKey(pass,salt),raw));
+  const out=new Uint8Array(4+1+16+12+ct.length);out.set(new TextEncoder().encode('GJE1'),0);out[4]=gz;out.set(salt,5);out.set(iv,21);out.set(ct,33);return out}
+async function sbDec(buf,pass){const u=new Uint8Array(buf);if(new TextDecoder().decode(u.subarray(0,4))!=='GJE1')throw new Error('백업 파일 형식이 아닙니다.');
+  let raw;try{raw=new Uint8Array(await crypto.subtle.decrypt({name:'AES-GCM',iv:u.subarray(21,33)},await sbKey(pass,u.subarray(5,21)),u.subarray(33)))}catch(e){throw new Error('암호가 맞지 않습니다.')}
+  if(u[4]===1)raw=await sbPipe(raw,'gun');return new TextDecoder().decode(raw)}
+async function sbList(){const c=await sbEnsure();const r=await sbF('/storage/v1/object/list/backups',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prefix:c.ses.uid+'/',limit:100,sortBy:{column:'name',order:'desc'}})});if(!r.ok)throw new Error('목록 실패: '+await sbErr(r));return(await r.json()).filter(x=>/\.enc$/.test(x.name))}
+async function sbBackup(auto){const c=await sbEnsure();const pass=SBP||c.pass;if(!pass)throw new Error('백업 암호를 입력하십시오.');
+  const b=await collectBackup(SET.bkPhotos!==false);if(b.empty){if(!auto)throw new Error('저장된 기록이 아직 없어 올리지 않았습니다.');return'empty'}
+  const bin=await sbEnc(b.txt,pass);const name=today()+'.enc';
+  const r=await sbF(`/storage/v1/object/backups/${c.ses.uid}/${name}`,{method:'POST',headers:{'Content-Type':'application/octet-stream','x-upsert':'true'},body:bin});if(!r.ok)throw new Error('올리기 실패: '+await sbErr(r));
+  try{const L=await sbList();const old=L.slice(30).map(x=>`${c.ses.uid}/${x.name}`);if(old.length)await sbF('/storage/v1/object/backups',{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({prefixes:old})})}catch(e){}
+  SET.sbLast={date:today(),kb:Math.round(bin.length/1024),days:b.days,notes:b.notes};await saveSet().catch(()=>{});return`${b.days}일 · 노트 ${b.notes}편 · ${(bin.length/1048576).toFixed(1)}MB`}
+async function sbRestore(name){const c=await sbEnsure();const pass=SBP||c.pass;if(!pass)throw new Error('백업 암호를 입력하십시오.');
+  const r=await sbF(`/storage/v1/object/authenticated/backups/${c.ses.uid}/${name}`);if(!r.ok)throw new Error('내려받기 실패: '+await sbErr(r));const txt=await sbDec(await r.arrayBuffer(),pass);await importText(txt)}
+function sbCard(){const C=$('#bkcloud');if(!C||$('#sbcard'))return;const c=sbC(),L=SET.sbLast;
+  const d=document.createElement('div');d.className='lkcard';d.id='sbcard';d.style.margin='10px 0';
+  d.innerHTML=`<h4>🔐 암호화 클라우드 백업 (Supabase) ${c.ses?'<span class="cytag">로그인됨</span>':''}</h4>
+  <p class="hint" style="margin:0 0 6px">기기에서 <b>AES-256으로 암호화한 뒤</b> 올립니다. 서버에는 암호문만 있어 운영자도 읽을 수 없습니다. <b>백업 암호를 잊으면 복원할 수 없습니다.</b> ${L?`마지막: ${md(L.date)} · ${L.days}일 · 노트 ${L.notes}편`:'아직 올린 적 없음'}</p>
+  <details style="margin:0 0 8px"><summary>① Supabase 준비 (한 번만)</summary><p class="hint">Supabase 프로젝트의 SQL Editor에 아래 문장을 붙여 넣고 Run 하십시오. Project Settings › API 의 Project URL과 anon public 키를 아래에 입력합니다. (service_role 키는 넣지 마십시오.)</p><button class="btn small ghost" type="button" id="sbsql">SQL 복사</button></details>
+  <label class="f">Project URL<input id="sburl" type="url" autocomplete="off" placeholder="https://xxxx.supabase.co" value="${esc(c.url||'')}"></label>
+  <label class="f">anon public 키<input id="sbkey" type="text" autocomplete="off" value="${esc(c.key||'')}"></label>
+  <label class="f">이메일<input id="sbem" type="email" autocomplete="off" value="${esc(c.email||'')}"></label>
+  <label class="f">계정 비밀번호 (로그인용, 6자 이상)<input id="sbpw" type="password" autocomplete="off" value="${esc(c.pw||'')}"></label>
+  <label class="f">백업 암호 (암호화용 · 계정 비밀번호와 다르게)<input id="sbpp" type="password" autocomplete="off" value="${esc(c.pass||'')}"></label>
+  <label class="chk" style="color:var(--ink)"><input type="checkbox" id="sbsv" ${c.pass?'checked':''}>이 기기에 백업 암호 저장 (자동 백업에 필요)</label>
+  <label class="chk" style="color:var(--ink)"><input type="checkbox" id="sbau" ${c.auto?'checked':''}>하루 한 번 앱을 열 때 자동 백업</label>
+  <div class="row" style="flex-wrap:wrap;margin-top:6px"><button class="btn small" type="button" id="sbup">☁️ 지금 백업</button><button class="btn small ghost" type="button" id="sblist">♻️ 복원 목록</button><button class="btn small ghost" type="button" id="sbin">가입/로그인</button></div>
+  <p class="hint" id="sbmsg" style="margin:6px 0 0"></p><div id="sbls"></div>`;
+  C.appendChild(d);const say=t=>{$('#sbmsg').textContent=t};
+  const grab=()=>{const o=sbC();o.url=$('#sburl').value.trim();o.key=$('#sbkey').value.trim();o.email=$('#sbem').value.trim();o.pw=$('#sbpw').value;SBP=$('#sbpp').value;o.pass=$('#sbsv').checked?SBP:'';o.auto=$('#sbau').checked;if(o.url!==sbC().url||o.email!==sbC().email)delete o.ses;sbW(o);return o};
+  $('#sbsql').onclick=async()=>{try{await navigator.clipboard.writeText(SBSQL);say('SQL을 복사했습니다. Supabase SQL Editor에 붙여 넣으십시오.')}catch(e){const t=document.createElement('textarea');t.value=SBSQL;t.style.cssText='width:100%;height:140px';$('#sbmsg').after(t);t.select()}};
+  $('#sbin').onclick=async()=>{grab();say('연결 중…');try{let r;try{r=await sbAuth('in')}catch(e){if(!/Invalid login|400/.test(e.message))throw e;r=await sbAuth('up')}say(r==='confirm'?'📧 확인 메일이 갔습니다. 메일의 링크를 누른 뒤 다시 ‘가입/로그인’을 누르십시오.':'✅ 로그인했습니다.')}catch(e){say('❌ '+(e.message||e))}};
+  $('#sbup').onclick=async()=>{grab();if(!SBP){say('백업 암호를 입력하십시오.');return}const b=$('#sbup');b.disabled=true;say('암호화해서 올리는 중…');try{say('✅ 올렸습니다 · '+await sbBackup())}catch(e){say('❌ '+(e.message||e))}b.disabled=false};
+  $('#sblist').onclick=async()=>{grab();say('목록을 불러오는 중…');try{const A=await sbList();say(A.length?`백업 ${A.length}개 — 누르면 복원합니다 (지금 기록은 지우지 않고 빠진 것만 채움)`:'올라간 백업이 없습니다.');$('#sbls').innerHTML=A.map(x=>`<button class="btn small ghost" type="button" data-sbn="${esc(x.name)}" style="margin:3px 3px 0 0">${esc(x.name.replace('.enc',''))} · ${Math.round((x.metadata&&x.metadata.size||0)/1024)}KB</button>`).join('');
+    $('#sbls').querySelectorAll('[data-sbn]').forEach(b=>b.onclick=async()=>{if(!SBP){say('백업 암호를 입력하십시오.');return}say('내려받아 복호화하는 중…');try{await sbRestore(b.dataset.sbn);say('✅ 복원했습니다.')}catch(e){say('❌ '+(e.message||e))}})}catch(e){say('❌ '+(e.message||e))}};
+  ['sbau','sbsv'].forEach(i=>$('#'+i).onchange=grab)}
+{const _r=renderCloudCard;renderCloudCard=function(){const r=_r.apply(this,arguments);try{sbCard()}catch(e){}return r}}
+setTimeout(()=>{try{const c=sbC();if(!c.auto||!c.pass||!c.ses||(SET.sbLast||{}).date===today())return;SBP=c.pass;sbBackup(true).then(r=>{if(r&&r!=='empty')toast('🔐 클라우드 백업 완료 · '+r)}).catch(()=>{})}catch(e){}},12000);
 </script>
 <!--BIBLE{--><!--}BIBLE-->
 <div id="miniov" class="miniov" hidden></div>
