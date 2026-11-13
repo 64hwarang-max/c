@@ -1808,7 +1808,7 @@ function startHTML(){
   if(prevDay&&tx(prevDay.sleepq))h+=`<div class="prevq">어젯밤 질문 · ${esc(prevDay.sleepq)}</div>`;
   h+=`<div class="blk lx-e"><label>☀️ 아침의 한 문장</label><p class="hint">${WORD_HINT}</p>${ta('word','',2)}</div>`;
   h+=`<div class="blk"><label>⭐ 오늘의 우선순위</label><p class="hint">목표의 할 일과 연결하면 완료 체크가 목표 진행률에 반영됩니다.</p>`;
-  {const pc=priCarry();if(pc.length)h+=`<button class="cyban" data-pricarry="1">↪️ ${yname()}(${md(prevDay.date)}) 못 끝낸 우선순위 ${pc.length} · ${pc.slice(0,3).map(p=>esc(p.text)).join(' · ')} — 눌러서 가져오기</button>`}
+  {const pc=priCarry();if(pc.length)h+=`<button class="cyban" data-nk="carry" data-pricarry="1">↪️ ${yname()}(${md(prevDay.date)}) 못 끝낸 우선순위 ${pc.length} · ${pc.slice(0,3).map(p=>esc(p.text)).join(' · ')} — 눌러서 가져오기</button>`}
   D.pri.slice(0,priN()).forEach((p,i)=>{h+=`<div class="pri" data-sk="${i}"><div class="gl">${HDR('pdrg')}<span class="num" style="color:var(--pen)">${i+1}</span><input type="checkbox" data-pdone="${i}" ${p.done?'checked':''} aria-label="완료" style="width:20px;height:20px;accent-color:var(--pen);flex:none">${inp(`pri.${i}.text`,i===0?'가장 중요한 일':'')}<button class="prib" data-tosch="${i}" title="스케줄에 넣기">🗓️</button>${priN()>1?`<button class="prib" data-pridel="${i}" title="이 항목 지우기" aria-label="이 항목 지우기">✕</button>`:''}</div><select data-plink="${i}" class="plink">${taskOptions(D.date,p.link)}</select></div>`});
   h+=`<button class="add" data-priadd="1">우선순위 하나 더</button></div>`;
   h+=(()=>{try{return gxPlanBlk()}catch(e){return''}})();
@@ -1827,7 +1827,7 @@ function reflHTML(){const R=D.refl=D.refl||[];const bl=reflBlks();
 function reflDue(date){const m=cacheAll||new Map();const all=[...m.values()];if(!all.includes(D))all.push(D);const tg=m.get(date)||(D.date===date?D:null);const done=(tg&&tg.reflApplied)||[];const out=[];
   all.forEach(o=>(o.refl||[]).forEach(r=>{if(r&&r.id&&r.d===date&&r.act&&r.ns&&o.date<date&&!done.includes(r.id))out.push({r,src:o.date})}));return out}
 function reflBanHTML(){const L=reflDue(cur);if(!L.length)return'';
-  return`<div class="rflban"><b>🔧 지난 반성 ${L.length}건 · 이 날 계획에 반영</b>${L.map(x=>`<div class="rflrow"><span>${esc(x.r.act)} <b>${esc(x.r.oldS||'?')} → ${esc(x.r.ns)}</b><small>${esc(x.r.fix||x.r.what||'')}</small></span><button class="btn small" data-rapply="${x.r.id}">계획에 반영</button><button class="del" data-rskip="${x.r.id}">건너뛰기</button></div>`).join('')}</div>`}
+  return`<div class="rflban" data-nk="refl"><b>🔧 지난 반성 ${L.length}건 · 이 날 계획에 반영</b>${L.map(x=>`<div class="rflrow"><span>${esc(x.r.act)} <b>${esc(x.r.oldS||'?')} → ${esc(x.r.ns)}</b><small>${esc(x.r.fix||x.r.what||'')}</small></span><button class="btn small" data-rapply="${x.r.id}">계획에 반영</button><button class="del" data-rskip="${x.r.id}">건너뛰기</button></div>`).join('')}</div>`}
 document.addEventListener('click',e=>{const t=e.target.closest&&e.target.closest('[data-radd],[data-rdel],[data-rapply],[data-rskip],[data-mvnote],[data-newnote],[data-opennote]');if(!t)return;const d=t.dataset;
   if(d.radd!=null){(D.refl=D.refl||[]).push({id:uid(),what:'',fix:'',act:'',cat:'',oldS:'',dur:60,ns:'',d:addD(cur,7)});schedule();renderDay();return}
   if(d.rdel!=null){D.refl.splice(+d.rdel,1);schedule();renderDay();return}
@@ -5724,14 +5724,14 @@ function dashHTML(){const T=cur===today();const pr=D.pri.filter(p=>tx(p.text));c
   const hb=SET.habits.filter(h=>D.habits[h.id]).length;const sc=scoreOf(D);
   let bud='—';try{const mo=cur.slice(0,7);const P=plan();const b=P.accounts.reduce((s,a)=>s+accMon(a),0);if(b&&cacheAll){const sp=spendList(cacheAll,d=>d.startsWith(mo)).filter(x=>{const f=findItem(x.acc,x.bi);return x.acc!=='unexp'&&!(f.i&&isAnnual(f.i))}).reduce((s,x)=>s+x.amt,0);bud=(b-sp>=0?'':'−')+Math.round(Math.abs(b-sp)/10000)+'만'}}catch(e){}
   const tile=(emo,lab,val,go,col)=>`<button class="dtile" data-dgo="${go}" style="--tc:${col}"><span class="de">${emo}</span><b>${val}</b><small>${lab}</small></button>`;
-  const T0=today();let ban='';if([0,1].includes(parseD(T0).getDay())&&[...goalsAt('w',perKey('w',T0)),...goalsAt('m',perKey('m',T0))].some(g=>(g.tasks||[]).some(t=>!t.done&&!t.due)))ban+='<button class="banner" data-wkplace="1">🗓️ 이번 주 목표 할 일을 요일에 배치하기</button>';if(daysSince(SET.lastBackup)>=(IS_NATIVE?((SET.autoBk||'week')==='off'?3:10):7)&&cacheAll&&[...cacheAll.values()].filter(hasAny).length>=3)ban+=`<button class="banner bk" data-dgo="export">💾 ${SET.lastBackup?`마지막 백업 ${daysSince(SET.lastBackup)}일 전`:'아직 백업 파일이 없습니다'} · 지금 백업하기 ›</button>`;
-  {const e=eveItems().length+priCarry().length,n=carryNotes().length;if(T&&e+n)ban+=`<button class="banner" data-dgo="carry">📌 이어 받을 것${e?` · 어제에서 ${e}`:''}${n?` · 참고 노트 ${n}`:''} ›</button>`}
-  {const F=weekFocus();const f=F[0];if(f&&!f.low)ban+=`<button class="banner" data-dgo="report">🎯 이번 주 한 걸음: ${f.area?(AREA_E[f.area]||'')+' ':''}${esc(f.g.title)} · 진척 ${Math.round(f.p*100)}% ›</button>`}
-  {const L=typeof ddList==='function'?ddList().filter(x=>{const n=ddN(x.d);return n>=0&&n<=30}):[];if(L.length)ban+=`<button class="banner" data-dgo="goal">📅 ${L.slice(0,3).map(x=>`${esc(x.t)} <b>${ddTxt(x.d)}</b>`).join(' · ')} ›</button>`}
-  ban+=onThisDay();{const due=cycDue().filter(x=>x.left<=x.c.remind);if(due.length)ban+=`<button class="banner cy" data-dgo="cycle">✂️ ${due.map(x=>`${x.c.emo||''}${esc(cyName(x.c))} ${x.left<0?`${-x.left}일 지남`:x.left===0?'오늘':`${x.left}일 뒤`}`).join(' · ')} · 주기 할 일 ›</button>`}
+  const T0=today();let ban='';if([0,1].includes(parseD(T0).getDay())&&[...goalsAt('w',perKey('w',T0)),...goalsAt('m',perKey('m',T0))].some(g=>(g.tasks||[]).some(t=>!t.done&&!t.due)))ban+='<button class="banner" data-nk="wk" data-wkplace="1">🗓️ 이번 주 목표 할 일을 요일에 배치하기</button>';if(daysSince(SET.lastBackup)>=(IS_NATIVE?((SET.autoBk||'week')==='off'?3:10):7)&&cacheAll&&[...cacheAll.values()].filter(hasAny).length>=3)ban+=`<button class="banner bk" data-dgo="export">💾 ${SET.lastBackup?`마지막 백업 ${daysSince(SET.lastBackup)}일 전`:'아직 백업 파일이 없습니다'} · 지금 백업하기 ›</button>`;
+  {const e=eveItems().length+priCarry().length,n=carryNotes().length;if(T&&e+n)ban+=`<button class="banner" data-nk="carry" data-dgo="carry">📌 이어 받을 것${e?` · 어제에서 ${e}`:''}${n?` · 참고 노트 ${n}`:''} ›</button>`}
+  {const F=weekFocus();const f=F[0];if(f&&!f.low)ban+=`<button class="banner" data-nk="focus" data-dgo="report">🎯 이번 주 한 걸음: ${f.area?(AREA_E[f.area]||'')+' ':''}${esc(f.g.title)} · 진척 ${Math.round(f.p*100)}% ›</button>`}
+  {const L=typeof ddList==='function'?ddList().filter(x=>{const n=ddN(x.d);return n>=0&&n<=30}):[];if(L.length)ban+=`<button class="banner" data-nk="dday" data-dgo="goal">📅 ${L.slice(0,3).map(x=>`${esc(x.t)} <b>${ddTxt(x.d)}</b>`).join(' · ')} ›</button>`}
+  ban+=onThisDay();{const due=cycDue().filter(x=>x.left<=x.c.remind);if(due.length)ban+=`<button class="banner cy" data-nk="cycle" data-dgo="cycle">✂️ ${due.map(x=>`${x.c.emo||''}${esc(cyName(x.c))} ${x.left<0?`${-x.left}일 지남`:x.left===0?'오늘':`${x.left}일 뒤`}`).join(' · ')} · 주기 할 일 ›</button>`}
   const NN=nowNext();const bt=b=>`<b>${esc(b.s)}</b> ${esc((b.act||b.cat||'').slice(0,18))}`;
   const hero=`<div class="hero"><button class="hring" data-dgo="pm:growth" aria-label="${FRUIT} ${sc??'없음'}">${scoreRing(sc)}<span><b>${sc??'—'}</b><small>${FRUIT}</small></span></button><div class="hnow"><button class="hl" data-dgo="sched">${NN.n?`<span class="tag tnow">지금</span>${bt(NN.n)}<small>~${esc(NN.n.e)}</small>`:T?`<span class="tag">지금</span><i>비어 있는 시간</i>`:`<span class="tag">이날</span>블록 ${NN.all.length}개`}</button>${NN.x?`<button class="hl" data-dgo="sched"><span class="tag">다음</span>${bt(NN.x)}</button>`:''}<div class="hstat"><button data-dgo="start">⭐ ${pr.length?`${prd}/${pr.length}`:'우선순위'}</button><button data-dgo="sched">📋 ${tk}</button><button data-dgo="pm:hab">✅ ${hb}/${SET.habits.length}</button></div></div></div>`;
-  {const nR=reflDue(cur).length;if(nR)ban=`<button class="banner" data-dgo="start">🔧 지난 반성 ${nR}건 · 이 날 계획에 반영하기 ›</button>`+ban}
+  {const nR=reflDue(cur).length;if(nR)ban=`<button class="banner" data-nk="refl" data-dgo="start">🔧 지난 반성 ${nR}건 · 이 날 계획에 반영하기 ›</button>`+ban}
   return `<div class="bans">${ban}</div>`+topCardHTML(hero)}
 function bindDash(root){{const bs=root.querySelector('.bans');if(bs&&bs.children.length>1){bs.classList.toggle('open',BANOPEN);const mb=document.createElement('button');mb.className='del bmore';mb.textContent=BANOPEN?'알림 접기 ▴':`알림 ${bs.children.length-1}개 더 ▾`;mb.onclick=()=>{BANOPEN=!BANOPEN;renderDay()};bs.after(mb)}}bindAff(root);root.querySelectorAll('img[data-dpz]').forEach(im=>im.onclick=()=>zoomImg(im.src));hydrate(root);root.querySelectorAll('[data-otd]').forEach(b=>b.onclick=async()=>{mode='pm';sec='growth';go('day');await openDay(b.dataset.otd)});root.querySelectorAll('[data-dgo]').forEach(b=>b.onclick=()=>{const g=b.dataset.dgo;if(g==='carry'){openCarrySheet();return}if(['budget','export','routine','care','cycle','goal'].includes(g)){go(g);return}if(g==='report'){rpWk=parseD(today()).getDay()===1?addD(mondayOf(today()),-7):null;go('report');return}const[m,s2]=g.split(':');mode=m;if(s2)sec=s2;renderDay();$('#mode')?.scrollIntoView({behavior:'smooth',block:'start'})})}
 /* ---------- 빠른 입력: 한 칸에 적으면 알아서 분류 ---------- */
@@ -6946,7 +6946,7 @@ const cyItem=(n,full)=>`<div class="cyit"><b>${esc(n.title||noteCat(n)||'노트'
 const eveItem=(x,full)=>`<div class="cyit"><b>${x.area?(AREA_E[x.area]||'')+' ':''}${esc(x.label)}</b> <small class="hint">${md(x.date)} 저녁 기록</small><pre>${esc(x.text.slice(0,600))}</pre><div class="row" style="gap:6px;flex-wrap:wrap">${full?`<button class="del" data-cyplan="e:${esc(x.key)}">🗓️ 계획에 넣기</button>`:''}<button class="del" data-cytask="e:${esc(x.key)}">📋 할 일로</button><button class="del" data-evedone="${esc(x.key)}">✓ 반영함</button></div></div>`;
 function carryBoxHTML(cat,skip,sub){const{exact,same,area}=carryFor(cat,skip,sub);const a=catArea(cat);const ev=a?eveItems().filter(x=>x.area===a):[];if(!exact.length&&!same.length&&!area.length&&!ev.length)return'';
   return`<div class="cybox"><h4>📌 이어 받을 것 · ${esc(cat)}${sub?' › '+esc(sub):''} ${ev.length+exact.length+same.length}</h4>${ev.length?`<p class="fl" style="margin:0">🌙 ${yname()} 저녁에 적은 이어 할 일</p>${ev.map(x=>eveItem(x)).join('')}`:''}${exact.length?`<p class="fl" style="margin:${ev.length?'6px 0 0':'0'}">같은 세부 노트 · ${esc(sub)}</p>${exact.map(n=>cyItem(n)).join('')}`:''}${same.length?`<p class="fl" style="margin:${ev.length||exact.length?'6px 0 0':'0'}">${exact.length?'같은 소분류의 다른 세부':'같은 소분류 노트'}</p>${same.map(n=>cyItem(n)).join('')}`:''}${area.length?`<details ${ev.length||exact.length||same.length?'':'open'}><summary class="hint">${AREA_E[a]||''} ${esc(areaName(a))} 기둥의 다른 참고 노트 ${area.length}</summary>${area.map(n=>cyItem(n)).join('')}</details>`:''}</div>`}
-function carryBanHTML(){const e=eveItems().length+priCarry().length,n=carryNotes().length;return e+n?`<button class="cyban" id="cyban">📌 이어 받을 것${e?` · ${yname()}에서 <b>${e}</b>`:''}${n?` · 참고 노트 <b>${n}</b>`:''} · 눌러서 보기</button>`:''}
+function carryBanHTML(){const e=eveItems().length+priCarry().length,n=carryNotes().length;return e+n?`<button class="cyban" data-nk="carry" id="cyban">📌 이어 받을 것${e?` · ${yname()}에서 <b>${e}</b>`:''}${n?` · 참고 노트 <b>${n}</b>`:''} · 눌러서 보기</button>`:''}
 function openCarrySheet(){const S=$('#sheet');S.hidden=false;const draw=()=>{const L=carryNotes(),EV=eveItems(),PC=priCarry();const G={};L.forEach(n=>{const a=noteArea(n)||'';const c=noteCat(n)||'(분류 없음)';((G[a]=G[a]||{})[c]=G[a][c]||[]).push(n)});const bySub=ns=>{const g={};ns.forEach(n=>{(g[noteSub(n)]=g[noteSub(n)]||[]).push(n)});return Object.entries(g).sort((x,y)=>(x[0]===''?1:0)-(y[0]===''?1:0)).map(([k,v])=>`${k?`<p class="fl" style="margin:6px 0 0">› ${esc(k)}</p>`:Object.keys(g).length>1?'<p class="fl" style="margin:6px 0 0">› 세부 없음</p>':''}${v.map(n=>cyItem(n,1)).join('')}`).join('')};
   S.innerHTML=`<div class="sheetbox" role="dialog" aria-label="이어 받을 것"><div class="shead"><b>📌 이어 받을 것 · ${md(D.date)}</b><button class="del" id="cyx">닫기</button></div>
     <p class="hint" style="margin:0 0 8px">${yname()} 기록과 ‘↪️ 다음 계획 때 참고’를 체크한 노트를 모았습니다. 🗓️ 계획에 넣기·📋 할 일로 바로 옮기고, 다 이어 받았으면 ‘✓ 반영함’을 누르십시오.</p>
@@ -6973,7 +6973,7 @@ function apRun(rows){let n=0;rows.forEach(r=>{const min=Math.max(5,+r.min||30);l
     if(r.kind==='task'){const t=TASKS.items.find(x=>x.id===r.id);if(t){if(+t.dur!==min){t.dur=min;saveTasks()}}}
     else{const a=habAt()[r.id]=habAt()[r.id]||{};if(r.s)a.s=r.s;a.min=min;a.cat=r.cat}
     D.plan.push(b);n++});if(n){D.plan.sort((a,b)=>(a.s||'99')<(b.s||'99')?-1:1);schedule();saveSet().catch(()=>{})}return n}
-const apBanHTML=()=>{const n=apCands().length;return n?`<button class="cyban" id="apban">🗓️ 오늘 할 일·습관 ${n}개를 시간표에 배치하기</button>`:''};
+const apBanHTML=()=>{const n=apCands().length;return n?`<button class="cyban" data-nk="place" id="apban">🗓️ 오늘 할 일·습관 ${n}개를 시간표에 배치하기</button>`:''};
 function openApSheet(rer){const S=$('#sheet');S.hidden=false;const rows=apCands();
   const draw=()=>{S.innerHTML=`<div class="sheetbox" role="dialog" aria-label="시간표 자동 배치"><div class="shead"><b>🗓️ 시간표에 배치 · ${md(D.date)}</b><button class="del" id="apx">닫기</button></div>
     <p class="hint" style="margin:0 0 6px">체크한 항목이 계획 블록으로 들어갑니다. 시간을 비워 두면 빈 시간을 찾아 놓습니다. 습관의 시각은 ‘대략’입니다. 그 시각에 다른 일정이 있으면 가장 가까운 빈 시간에 넣습니다. 적어 둔 시각은 기억했다가 다음부터 그 근처에 놓습니다(요일·시각은 습관 › 습관루틴에서 한꺼번에 고칩니다).</p>
@@ -7512,7 +7512,7 @@ document.addEventListener('pointerdown',()=>{if(sndWant()&&!SND.on)setTimeout(sn
 function onThisDay(){if(!cacheAll||cur!==today())return'';const T=today();const ago=(y,m)=>{const d=parseD(T);d.setFullYear(d.getFullYear()-y);d.setMonth(d.getMonth()-m);return ymd(d)};
   const hit=[[addD(T,-7),'1주 전'],[ago(0,1),'1달 전'],[ago(1,0),'1년 전'],[ago(2,0),'2년 전'],[ago(3,0),'3년 전']].map(([d,l])=>({d,l,o:cacheAll.get(d)})).filter(x=>x.o&&(tx(x.o.verdict)||tx((x.o.best||{}).joy)||tx(x.o.thought)));
   if(!hit.length)return'';const x=hit[hit.length-1];const t=tx(x.o.verdict)?x.o.verdict:tx((x.o.best||{}).joy)?x.o.best.joy:x.o.thought;
-  return`<button class="banner otd" data-otd="${x.d}">📅 ${x.l} 오늘 · ${esc(t.slice(0,60))}${t.length>60?'…':''} ›</button>`}
+  return`<button class="banner otd" data-nk="otd" data-otd="${x.d}">📅 ${x.l} 오늘 · ${esc(t.slice(0,60))}${t.length>60?'…':''} ›</button>`}
 
 /* ---------- mood pixels & insight ---------- */
 function moodInsight(m){const T=today(),Y=+T.slice(0,4);const all=[...m.values()];const lvOf=d=>{const o=m.get(d);return o?+(o.emo||{}).lv||0:0};
@@ -9102,7 +9102,7 @@ function gxRunCard(B){
 
 /* 오늘 첫 화면에 한 줄 알림 (큐티) */
 function gxBanner(){if(cur!==today())return'';try{if(isHid('gap'))return''}catch(e){}let qb='';
-  try{if(GX_QT()){const q=gxQtDone();if(!q)qb=`<button class="gapb" data-gapgo="1">🙏 오늘 큐티 제안 · ${esc(gxQtSug().qt.ref)} · 성경 ${esc(gxQtSug().rd.ref)} › 본문 정하기</button>`;else if(!gxLog().shared)qb=`<button class="gapb" data-gapgo="1">📤 오늘 큐티 한 줄을 나눠 보십시오 ›</button>`}}catch(e){}
+  try{if(GX_QT()){const q=gxQtDone();if(!q)qb=`<button class="gapb" data-nk="qt" data-gapgo="1">🙏 오늘 큐티 제안 · ${esc(gxQtSug().qt.ref)} · 성경 ${esc(gxQtSug().rd.ref)} › 본문 정하기</button>`;else if(!gxLog().shared)qb=`<button class="gapb" data-nk="qt" data-gapgo="1">📤 오늘 큐티 한 줄을 나눠 보십시오 ›</button>`}}catch(e){}
   return qb}
 (function(){const dh=dashHTML,bd=bindDash;
   dashHTML=function(){let r=dh.apply(this,arguments);try{const b=gxBanner();if(b)r=b+r}catch(e){}return r};
@@ -10663,7 +10663,7 @@ function pcJoin(){try{const R=$('#pbody');if(!R||curSection!=='plan')return;cons
 .cpyrow button small{font-weight:500;color:var(--muted);margin-left:4px}`;document.head.appendChild(st)})();
 function cpLeft(){return(D.plan||[]).filter(b=>b.s&&b.e&&!(typeof planDone==='function'&&planDone(b)))}
 function cpPaint(){try{if(curSection!=='day'||mode!=='run'||ZMD>0||!D)return;const B=$('#dayBody');if(!B)return;document.querySelectorAll('.cpyrow').forEach(e=>e.remove());const L=cpLeft();if(!L.length)return;
-  const sv=B.querySelector('.svseg');const h=`<div class="cpyrow"><button type="button" data-cpplan="1">📋 오늘 계획 그대로 실제로 복사<small>${L.length}개</small></button></div>`;
+  const sv=B.querySelector('.svseg');const h=`<div class="cpyrow" data-nk="copy"><button type="button" data-cpplan="1">📋 오늘 계획 그대로 실제로 복사<small>${L.length}개</small></button></div>`;
   if(sv)sv.insertAdjacentHTML('afterend',h);else B.insertAdjacentHTML('afterbegin',h)}catch(e){console.warn('cp',e)}}
 {renderDay=HK.w('renderDay','9:계획→실행복사바',renderDay,_rd=>async function(){const r=await _rd.apply(this,arguments);cpPaint();return r});}
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-cpplan]');if(!b)return;e.preventDefault();const L=cpLeft();if(!L.length)return;
@@ -13386,7 +13386,7 @@ async function qrOpen(date){if(date&&date!==cur){await openDay(date)}const S=$('
   const save=()=>{Object.entries(ch).forEach(([k,v])=>{D.score[k]=v;D.scUser=D.scUser||{};D.scUser[k]=1;if(D.scAuto)delete D.scAuto[k]});D.grat=Array.isArray(D.grat)?D.grat:[];S.querySelectorAll('[data-qrg]').forEach(i=>{D.grat[+i.dataset.qrg]=i.value.trim()});D.step=$('#qrs').value.trim();schedule()};
   $('#qrok').onclick=()=>{save();close();toast('⚡ 오늘 돌아보기를 저장했습니다');try{renderDay()}catch(e){}};
   $('#qrmore').onclick=()=>{save();close();mode='pm';go('day');renderDay()}}
-{dashHTML=HK.w('dashHTML','2:today',dashHTML,dh=>function(){let r=dh.apply(this,arguments);try{if(cur===today()&&new Date().getHours()>=19){const n=qrNeed();if(n.length)r=`<button class="banner qrban" data-qropen="1">⚡ 3분 돌아보기 · 아직 ${n.join('·')} ›</button>`+r}}catch(e){}return r});}
+{dashHTML=HK.w('dashHTML','2:today',dashHTML,dh=>function(){let r=dh.apply(this,arguments);try{if(cur===today()&&new Date().getHours()>=19){const n=qrNeed();if(n.length)r=`<button class="banner qrban" data-nk="qr" data-qropen="1">⚡ 3분 돌아보기 · 아직 ${n.join('·')} ›</button>`+r}}catch(e){}return r});}
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-qropen]');if(!b)return;e.preventDefault();e.stopPropagation();qrOpen()},true);
 {renderDay=HK.w('renderDay','22:3분돌아보기배너',renderDay,rd=>function(){const r=rd.apply(this,arguments);try{if(mode==='pm'&&curSection==='day'&&!(ZMD>0)){const B=$('#dayBody');if(B&&!B.querySelector('.qrtop')){const b=document.createElement('button');b.className='banner qrtop';b.dataset.qropen='1';const n=qrNeed();b.textContent=n.length?`⚡ 3분 돌아보기 — ${n.join('·')}만 먼저 쓰기 ›`:'⚡ 3분 돌아보기로 고치기 ›';B.prepend(b)}}}catch(e){}return r});}
 
@@ -13433,7 +13433,7 @@ async function wkOpen(){const S=$('#sheet');S.hidden=false;S.innerHTML='<div cla
    ${wkNotesHTML(W.days)}${W.gr.length?`<p class="fl">🙏 이번 주 감사 ${W.gr.length}</p><ul class="list">${W.gr.slice(-6).reverse().map(([d,g])=>`<li><small>${md(d)}</small> ${esc(g)}</li>`).join('')}</ul>`:''}
    <button class="del" id="wkrep" style="width:100%;margin-top:10px">한 주 돌아봄 전체 보기 ›</button></div>`;
   const close=()=>{S.hidden=true;S.innerHTML=''};$('#wkx').onclick=close;S.onclick=e=>{if(e.target===S)close()};$('#wkrep').onclick=()=>{close();go('report')}}
-{dashHTML=HK.w('dashHTML','3:today',dashHTML,dh=>function(){let r=dh.apply(this,arguments);try{const wd=parseD(today()).getDay();if(cur===today()&&(wd===0||wd===1)&&SET.wkSeen!==mondayOf(today())+wd)r=`<button class="banner" data-wkopen="1">📊 지난 7일 요약 · 나에게 맞는 패턴 보기 ›</button>`+r}catch(e){}return r});}
+{dashHTML=HK.w('dashHTML','3:today',dashHTML,dh=>function(){let r=dh.apply(this,arguments);try{const wd=parseD(today()).getDay();if(cur===today()&&(wd===0||wd===1)&&SET.wkSeen!==mondayOf(today())+wd)r=`<button class="banner" data-nk="week" data-wkopen="1">📊 지난 7일 요약 · 나에게 맞는 패턴 보기 ›</button>`+r}catch(e){}return r});}
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-wkopen]');if(!b)return;e.preventDefault();e.stopPropagation();SET.wkSeen=mondayOf(today())+parseD(today()).getDay();saveSet().catch(()=>{});wkOpen()},true);
 (()=>{const c=document.createElement('style');c.textContent=`.qrbox .qrr{display:grid;grid-template-columns:7.5em 1fr 2em;align-items:center;gap:8px;margin:4px 0}.qrbox .qrr b{text-align:right}.qrbox .qri{width:100%;box-sizing:border-box;margin:3px 0}
 .wkbars{display:flex;gap:6px;align-items:flex-end;height:110px;margin:6px 0 10px}.wkb{flex:1;display:flex;flex-direction:column;align-items:center;height:100%;justify-content:flex-end}.wkb i{display:block;width:70%;border-radius:6px 6px 2px 2px}.wkb small{font-size:11px;color:var(--mute,#888)}.wkb b{font-size:11px;min-height:14px}
@@ -13637,6 +13637,7 @@ function ntfSlides(){try{if(ZMD>0||curSection!=='day')return;
   const card=document.querySelector('#dash .topcard .afc');
   let L=[...document.querySelectorAll(NTF_SEL)].filter(e=>!e.closest('.afs'));
   L=L.filter(e=>!L.some(o=>o!==e&&o.contains(e)));
+  L=L.filter(e=>{const k=e.dataset.nk||(e.closest('[data-nk]')||{dataset:{}}).dataset.nk;if(k&&(SET.ntfOff||[]).includes(k)){e.dataset.ntfh='1';return false}return true});
   const hasTop=L.some(e=>e.classList.contains('qrtop'));const seen=new Set();
   L=L.filter(e=>{const t=e.textContent.trim().replace(/\s+/g,' ');if(!t||seen.has(t)||(hasTop&&e.classList.contains('qrban')))return false;seen.add(t);return true});
   document.querySelectorAll('.bmore').forEach(e=>e.remove());
@@ -16258,7 +16259,7 @@ async function syPutSafe(B,k,v){if(!k.startsWith('day:')||!v||typeof v!=='object
 {const _o=openDay;openDay=async function(d){try{staleGuardInstall()}catch(e){}return _o.apply(this,arguments)}}
 {const _f=flush0;flush0=async function(){try{staleGuardInstall()}catch(e){}return _f.apply(this,arguments)}}
 /* v390 ① 앱 버전 표시 · 새 버전 알림 (GitHub에서 마지막으로 성공한 빌드 번호와 비교) */
-var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/448})();
+var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/449})();
 const VRK='gj-verchk',VRURL='https://github.com/64hwarang-max/c/actions/workflows/build-apk.yml';
 const vrGet=()=>{try{return JSON.parse(localStorage.getItem(VRK)||'{}')}catch(e){return{}}};
 async function vrCheck(force){const c=vrGet();if(!force&&c.t&&Date.now()-c.t<6*36e5)return c;
@@ -17645,6 +17646,17 @@ featListHTML=function(H){const u=useGet(),since=u.s?daysSince(u.s):0;
   return FEAT.map(([k,l,d])=>{const x=(u.k||{})[k];const st=useStale(k)?`<b style="color:var(--c-mis)">${x?daysSince(x.l)+'일째 메뉴로 안 엶':'30일 넘게 메뉴로 안 엶'}</b>`:x?(daysSince(x.l)===0?'오늘 씀':daysSince(x.l)+'일 전 씀')+` · ${x.n}회`:`아직 안 씀 · 집계 ${since+1}일째`;
     return`<label class="chk featrow"><input type="checkbox" data-fk="${k}" ${useStale(k)?'data-stale="1"':''} ${H.includes(k)?'':'checked'}><span><b>${l}</b> <small class="hint">${d}</small><br><small class="hint">${st}</small></span></label>`}).join('')};
 {const _r=renderFeatCard;renderFeatCard=function(){const r=_r.apply(this,arguments);try{const C=$('#featcard');if(!C||C.querySelector('#featstale'))return r;const n=C.querySelectorAll('[data-stale]:checked').length;const row=C.querySelector('.row');if(row&&n){const b=document.createElement('button');b.className='btn ghost small';b.id='featstale';b.type='button';b.textContent=`메뉴로 안 연 ${n}개 끄기`;b.onclick=async()=>{const nm=[...C.querySelectorAll('[data-stale]:checked')].map(c=>c.closest('label').querySelector('b').textContent).join(', ');if(!await uiConfirm(`메뉴로 연 적이 30일 넘게 없는 기능 ${n}개를 감춥니다.\n(${nm})\n오늘 화면 안에서 쓰는 기능은 메뉴로 열지 않아도 쓰는 것일 수 있으니 확인하십시오. 기록은 그대로이고 다시 켤 수 있습니다.`))return;C.querySelectorAll('[data-stale]').forEach(c=>c.checked=false);featSave(featRead(C),`🧩 안 쓰던 기능 ${n}개를 감췄습니다. 기록은 그대로이고 여기서 다시 켤 수 있습니다.`)};row.appendChild(b)}}catch(e){}return r}}
+
+/* ===== v449: 알림 종류별 켜기·끄기 (SET.ntfOff = 끈 종류 키 목록) ===== */
+const NTK=[['wk','🗓️ 이번 주 목표 날짜 배치'],['carry','📌 이어 받을 것'],['focus','🎯 이번 주 한 걸음'],['dday','📅 D-day'],['otd','📅 N년 전 오늘'],['cycle','✂️ 주기 할 일'],['refl','🔧 지난 반성'],['qr','⚡ 3분 돌아보기'],['week','📊 지난 7일 요약'],['place','🗓️ 할 일·습관 시간표 배치'],['qt','🙏 큐티 제안'],['copy','📋 계획 그대로 실제로 복사'],['sys','💾 저장·완료 안내']];
+function ntkCss(){let st=document.getElementById('ntfoffcss');if(!st){st=document.createElement('style');st.id='ntfoffcss';document.head.appendChild(st)}
+  st.textContent=(SET.ntfOff||[]).filter(k=>k!=='sys').map(k=>`[data-nk="${k}"]{display:none!important}`).join('')}
+{const _a=NTT.add;NTT.add=function(m,lb,fn){if((SET.ntfOff||[]).includes('sys')&&!(lb&&typeof fn==='function'))return;return _a.apply(this,arguments)}}
+{const _r=renderFeatCard;renderFeatCard=function(){const r=_r.apply(this,arguments);try{const C=$('#featcard');if(!C||C.querySelector('#ntkbox'))return r;const off=SET.ntfOff||[];
+  const d=document.createElement('div');d.id='ntkbox';d.style.marginTop='14px';
+  d.innerHTML=`<h3 style="margin:0 0 6px">🔔 알림 고르기</h3><p class="hint" style="margin:0 0 8px">끈 알림은 오늘 화면의 🔔 알림 칸과 배너에 나오지 않습니다. 기록은 그대로입니다.</p>${NTK.map(([k,l])=>`<label class="chk featrow"><input type="checkbox" data-ntk="${k}" ${off.includes(k)?'':'checked'}><span><b>${l}</b></span></label>`).join('')}`;
+  C.appendChild(d);d.querySelectorAll('[data-ntk]').forEach(c=>c.onchange=()=>{SET.ntfOff=[...d.querySelectorAll('[data-ntk]')].filter(x=>!x.checked).map(x=>x.dataset.ntk);saveSet().catch(()=>{});ntkCss();try{ntfKick()}catch(e){}try{refreshAny()}catch(e){}})}catch(e){console.warn('ntk',e)}return r}}
+try{ntkCss()}catch(e){}
 </script>
 <!--BIBLE{--><!--}BIBLE-->
 <div id="miniov" class="miniov" hidden></div>
