@@ -4864,16 +4864,19 @@ function idbStore(){let dbp=null;const idbLog=(ev,e)=>{try{svLog({t:new Date().t
     t.oncomplete=()=>fin(res)(out&&typeof out==='object'&&'readyState' in out?out.result:out);t.onerror=()=>fin(rej)(t.error||new Error('idb-error'));t.onabort=()=>fin(rej)(t.error||new Error('idb-abort'))})};
   const tx=async(mode,fn)=>{try{return await tx1(mode,fn)}catch(e){if(e&&e.name==='QuotaExceededError')throw e;idbLog('idb-retry',e);dbp=null;await new Promise(r=>setTimeout(r,150));return tx1(mode,fn)}};
   const getAll1=async()=>{const db=await open();return new Promise((res,rej)=>{const out=[];let t;try{t=db.transaction('docs')}catch(e){dbp=null;rej(e);return}const c=t.objectStore('docs').openCursor();c.onsuccess=()=>{const cur=c.result;if(cur){out.push([cur.key,cur.value]);cur.continue()}else res(out)};c.onerror=()=>rej(c.error);t.onabort=()=>rej(t.error||new Error('idb-abort'))})};
+  /* 사진·녹음·날짜 문서처럼 덩치 큰 묶음은 건너뛰며 읽는다(노트만 필요할 때 사진 수십 MB를 메모리에 올리지 않게) */
+  const getSkip=async skips=>{const db=await open();const SK=skips.slice().sort();return new Promise((res,rej)=>{const out=[];let t;try{t=db.transaction('docs')}catch(e){dbp=null;rej(e);return}const os=t.objectStore('docs');
+    const kc=os.openKeyCursor();const want=[];kc.onsuccess=()=>{const cur=kc.result;if(cur){const k=cur.key;const p=typeof k==='string'?SK.find(x=>k.startsWith(x)):null;if(p){cur.continue(p+'\uffff');return}want.push(k);cur.continue()}else{let n=want.length;if(!n){res(out);return}want.forEach((k,i)=>{const g=os.get(k);g.onsuccess=()=>{out[i]=[k,g.result];if(!--n)res(out)};g.onerror=()=>rej(g.error)})}};kc.onerror=()=>rej(kc.error);t.onabort=()=>rej(t.error||new Error('idb-abort'))})};
   const getAll=async()=>{try{return await getAll1()}catch(e){idbLog('idb-retry-all',e);dbp=null;await new Promise(r=>setTimeout(r,150));return getAll1()}};
   return{mode:'device',
     async load(d){return(await tx('readonly',st=>st.get('day:'+d)))||null},
     async save(d,o){await tx('readwrite',st=>st.put(JSON.parse(JSON.stringify(o)),'day:'+d))},
-    async all(){return(await getAll()).filter(([k,v])=>k.startsWith('day:')&&v&&/^\d{4}-\d{2}-\d{2}$/.test(v.date)).map(([,v])=>v)},
-    async notes(){return(await getAll()).filter(([,v])=>v&&v.kind==='note').map(([,v])=>v)},
+    async all(){let L;try{L=await tx('readonly',st=>st.getAll(IDBKeyRange.bound('day:','day:\uffff')))}catch(e){L=null}if(!Array.isArray(L))L=(await getAll()).filter(([k])=>typeof k==='string'&&k.startsWith('day:')).map(([,v])=>v);return L.filter(v=>v&&/^\d{4}-\d{2}-\d{2}$/.test(v.date))},
+    async notes(){let L;try{L=await getSkip(['day:','ops:','photo-','rec-','snap:'])}catch(e){L=await getAll()}return L.filter(([,v])=>v&&v.kind==='note').map(([,v])=>v)},
     async getDoc(id){return(await tx('readonly',st=>st.get(id)))||null},
     async putDoc(id,o){await tx('readwrite',st=>st.put(JSON.parse(JSON.stringify(o)),id))},
     async delDoc(id){await tx('readwrite',st=>st.delete(id))},
-    async keys(){return(await getAll()).map(([k])=>k)},
+    async keys(){try{const K=await tx('readonly',st=>st.getAllKeys());if(Array.isArray(K))return K}catch(e){}return(await getAll()).map(([k])=>k)},
     async range(pre){return(await tx('readonly',st=>st.getAll(IDBKeyRange.bound(pre,pre+'\uffff'))))||[]},
     async rangeKeys(pre){return(await tx('readonly',st=>st.getAllKeys(IDBKeyRange.bound(pre,pre+'\uffff'))))||[]},
     async swap(put,dels){await tx('readwrite',st=>{if(put)st.put(JSON.parse(JSON.stringify(put[1])),put[0]);(dels||[]).forEach(k=>st.delete(k))})}}}
@@ -6896,7 +6899,7 @@ function bindAff(R){
   R.querySelectorAll('[data-afuse]').forEach(b=>b.onclick=()=>{const o=(cacheAll||new Map()).get(b.dataset.afuse);if(o){D.affirm=o.affirm;schedule();renderDay();toast('💪 오늘도 이 다짐으로')}});
   R.querySelectorAll('[data-afgo]').forEach(b=>b.onclick=()=>{nView='aff';nEdit=null;go('note')});
   const c=R.querySelector('.afc');if(c){const ds=R.querySelectorAll('.afdots i');const fit=k=>{if(c.closest('.topcard')&&c.children[k])c.style.height=c.children[k].offsetHeight+'px'};setTimeout(()=>{if(TOPI)c.scrollLeft=TOPI*c.clientWidth;fit(TOPI)},0);let lk=-1,rq=0;c.addEventListener('scroll',()=>{if(rq)return;rq=requestAnimationFrame(()=>{rq=0;const k=Math.round(c.scrollLeft/(c.clientWidth||1));if(k===lk)return;lk=k;TOPI=k;fit(k);ds.forEach((d,j)=>d.classList.toggle('on',j===k))})},{passive:true})}
-  if(!cacheAll)allMap().then(()=>{if(curSection==='day')renderDay()})}
+  if(!cacheAll)allMap().then(()=>{if(curSection==='day'&&document.documentElement.classList.contains('gjready'))renderDay()})}
 function affBoxHTML(){const Q=GOALS.quotes||[];const st=GOALS.affStar||{};const A=affPast();
   return`<div class="card" style="--k:#ff7043"><h3>💬 명언 보관함</h3><p class="hint" style="margin:0 0 6px">붙잡고 싶은 문장을 모아 두면 채우는 시간 맨 위 카드에서 날마다 돌아가며 보입니다.</p>
     <div style="display:grid;gap:6px"><textarea id="afqt" rows="2" placeholder="문장"></textarea><div class="gl"><input type="text" id="afqw" placeholder="누가 (선택)"><button class="btn small" data-afqadd="1">보관</button></div></div>
@@ -16255,7 +16258,7 @@ async function syPutSafe(B,k,v){if(!k.startsWith('day:')||!v||typeof v!=='object
 {const _o=openDay;openDay=async function(d){try{staleGuardInstall()}catch(e){}return _o.apply(this,arguments)}}
 {const _f=flush0;flush0=async function(){try{staleGuardInstall()}catch(e){}return _f.apply(this,arguments)}}
 /* v390 ① 앱 버전 표시 · 새 버전 알림 (GitHub에서 마지막으로 성공한 빌드 번호와 비교) */
-var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/445})();
+var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/446})();
 const VRK='gj-verchk',VRURL='https://github.com/64hwarang-max/c/actions/workflows/build-apk.yml';
 const vrGet=()=>{try{return JSON.parse(localStorage.getItem(VRK)||'{}')}catch(e){return{}}};
 async function vrCheck(force){const c=vrGet();if(!force&&c.t&&Date.now()-c.t<6*36e5)return c;
