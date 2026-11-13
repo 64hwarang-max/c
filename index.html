@@ -16258,7 +16258,7 @@ async function syPutSafe(B,k,v){if(!k.startsWith('day:')||!v||typeof v!=='object
 {const _o=openDay;openDay=async function(d){try{staleGuardInstall()}catch(e){}return _o.apply(this,arguments)}}
 {const _f=flush0;flush0=async function(){try{staleGuardInstall()}catch(e){}return _f.apply(this,arguments)}}
 /* v390 ① 앱 버전 표시 · 새 버전 알림 (GitHub에서 마지막으로 성공한 빌드 번호와 비교) */
-var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/446})();
+var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/447})();
 const VRK='gj-verchk',VRURL='https://github.com/64hwarang-max/c/actions/workflows/build-apk.yml';
 const vrGet=()=>{try{return JSON.parse(localStorage.getItem(VRK)||'{}')}catch(e){return{}}};
 async function vrCheck(force){const c=vrGet();if(!force&&c.t&&Date.now()-c.t<6*36e5)return c;
@@ -17617,6 +17617,23 @@ function sbCard(){const C=$('#bkcloud');if(!C||$('#sbcard'))return;const c=sbC()
   ['sbau','sbsv'].forEach(i=>$('#'+i).onchange=grab)}
 {const _r=renderCloudCard;renderCloudCard=function(){const r=_r.apply(this,arguments);try{sbCard()}catch(e){}return r}}
 setTimeout(()=>{try{const c=sbC();if(!c.auto||!c.pass||!c.ses||(SET.sbLast||{}).date===today())return;SBP=c.pass;sbBackup(true).then(r=>{if(r&&r!=='empty')toast('🔐 클라우드 백업 완료 · '+r)}).catch(()=>{})}catch(e){}},12000);
+
+/* ===== v447: 백업 한눈에 — 방법별 카드(파일·폰 폴더·드라이브·원드라이브·Supabase)를 한 곳에 모아 상태를 보여 주고 ‘지금 모두 백업’ 하나로 ===== */
+function bkOneRows(){const R=[];const ago=d=>{if(!d)return'한 적 없음';const n=daysSince(d);return`${md(d)} (${n===0?'오늘':n+'일 전'})`};
+  if(IS_NATIVE)R.push({k:'folder',n:'📱 폰 폴더',on:(SET.autoBk||'week')!=='off',last:ago((SET.lastAuto||{}).date),run:async()=>{const r=await autoBackup(true);return r?'저장':'저장 안 됨'}});
+  const g=gdS();R.push({k:'gd',n:'☁️ 구글 드라이브',on:!!(g&&g.url),last:g&&g.url?(esc(g.msg||'')||'올린 적 없음'):'설정 안 함',run:async()=>await gdUpload()});
+  R.push({k:'od',n:'☁️ 원드라이브',on:!!(OD&&OD.rt),last:OD&&OD.rt?(esc(OD.msg||'')||'올린 적 없음'):'설정 안 함',run:async()=>await odUpload()});
+  const c=sbC();R.push({k:'sb',n:'🔐 Supabase(암호화)',on:!!(c.ses&&(SBP||c.pass)&&c.url),last:c.url?ago((SET.sbLast||{}).date):'설정 안 함',run:async()=>{SBP=SBP||c.pass;return await sbBackup()}});
+  return R}
+function bkOne(){const host=$('#bksync');if(!host||$('#bkone'))return;const D0=document.createElement('div');D0.className='card nocol';D0.id='bkone';D0.dataset.sg='backup cloud';D0.style.setProperty('--k','#13b5b1');host.before(D0);
+  const det=document.createElement('details');det.id='bkdet';det.dataset.sg='backup cloud';det.style.margin='0 0 12px';det.innerHTML='<summary style="cursor:pointer;font-weight:700;padding:10px 4px">⚙️ 방법별 설정 · 복원 (파일·폰 폴더·드라이브·원드라이브·Supabase)</summary>';
+  D0.after(det);[...document.querySelectorAll('[data-sg="backup"],[data-sg="cloud"]')].filter(e=>e!==D0&&e!==det&&!det.contains(e)&&e.closest('#sec-settings,section,.wrap')).forEach(e=>{if(e.tagName==='TEXTAREA'||e.closest('details#bkdet'))return;if(e.classList.contains('card')){e.dataset.sg='backup cloud';det.appendChild(e)}});
+  const draw=()=>{const R=bkOneRows();const on=R.filter(x=>x.on);D0.innerHTML=`<h3>💾 백업 한눈에</h3><p class="hint" style="margin:0 0 8px">켜 둔 방법에 한꺼번에 백업합니다. 휴대폰을 잃어버려도 되살리려면 <b>폰 밖</b>(드라이브·원드라이브·Supabase)에 하나는 두십시오.</p>
+    ${R.map(x=>`<div class="row" style="justify-content:space-between;align-items:center;margin:4px 0"><span>${x.on?'✅':'⬜'} ${x.n}</span><small class="hint" style="margin:0;text-align:right">${x.last}</small></div>`).join('')}
+    <button class="btn" id="bkall" type="button" style="width:100%;margin-top:8px" ${on.length?'':'disabled'}>☁️ 지금 모두 백업 (${on.length}곳)</button><p class="hint" id="bkallmsg" style="margin:6px 0 0">${on.length?'':'아래 ‘방법별 설정’에서 한 곳 이상 켜십시오.'}</p>`;
+    const b=$('#bkall');if(b)b.onclick=async()=>{b.disabled=true;const out=[];for(const x of on){$('#bkallmsg').textContent=`${x.n} 올리는 중…`;try{const r=await x.run();out.push(`✅ ${x.n}`)}catch(e){out.push(`❌ ${x.n}: ${(e&&e.message||e)}`)}}$('#bkallmsg').innerHTML=out.join('<br>');b.disabled=false;try{renderCloudCard()}catch(e){}}};
+  draw();D0._draw=draw}
+{const _r=renderCloudCard;renderCloudCard=function(){const r=_r.apply(this,arguments);try{bkOne();const d=$('#bkone');if(d&&d._draw)d._draw()}catch(e){console.warn('bkOne',e)}return r}}
 </script>
 <!--BIBLE{--><!--}BIBLE-->
 <div id="miniov" class="miniov" hidden></div>
