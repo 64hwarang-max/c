@@ -13,7 +13,7 @@ if(seed){await p.evaluate(async()=>{const T=today();const C=SET.cats.map(c=>c.na
  for(let i=0;i<30;i++){const id='note-'+uid();const n={kind:'note',id,date:addD(T,-i),topic:'',dk:['work','grow','spirit','body'][i%4],title:'노트 '+i,body:'<p>본문 내용입니다.</p>',photos:[],tags:[],created:Date.now(),updated:Date.now()};NOTES.set(id,n);await store.putDoc(id,n)}
  for(let i=0;i<8;i++)TASKS.items.push({id:uid(),title:'할 일 '+i,due:addD(T,i%3-1),done:false,list:TASKS.lists[0].id});try{await saveTasks()}catch(e){}});await p.waitForTimeout(800);await load()}
 const want=process.argv.slice(2);const S={
- day:async()=>{await p.evaluate(()=>go('day'))},
+ day:async()=>{await p.evaluate(async()=>{await openDay(today());window.scrollTo(0,0)});await p.waitForTimeout(1500)},
  alarm:async()=>{await p.evaluate(()=>{go('day');toast('예시 안내 1');toast('예시 안내 2')});await p.waitForTimeout(400)},
  editor:async()=>{await p.evaluate(()=>{go('day');openBlockEditor('plan',1)})},
  quick:async()=>{await p.evaluate(()=>{try{closeBlockEditor()}catch(e){}go('day');openQuick()})},

@@ -5349,7 +5349,7 @@ function tlHTML(kind,editable){HPX=Math.max(16,Math.min(110,+SET.hpx||31));const
   const LM=Object.fromEntries(LN.map(x=>[x.i,x]));
   arr.forEach((b,i)=>{if(!b.s)return;const s0=mins('00:00',b.s),e0=b.e?mins('00:00',b.e):s0+60;const e1=e0<=s0?1440:e0;const cs=Math.max(s0,st*60),ce=Math.min(e1,en*60);if(ce<=cs)return;const top=(cs-st*60)*HPX/60,hh=Math.max(22,(ce-cs)*HPX/60-2);const n=b.noteId&&NOTES.get(b.noteId);
     const ln=LM[i]||{lane:0,n:1};const lp=ln.n>1?`left:calc(18px + (100% - 20px) * ${ln.lane} / ${ln.n});right:auto;width:calc((100% - 20px) / ${ln.n} - 2px);`:'';
-    g+=`<button class="sblk ${editable?'':'ro'}${ln.n>1?' lane':''}" data-bk="${kind}|${i}" data-bid="${esc(b.id||'')}" style="top:${top}px;height:${hh}px;${lp}--c:${catColor(b.cat)}"><b>${b.apx?'≈':''}${b.s}${b.e?'~'+b.e:''}</b> ${b.rid?'🔁':''}${AREA_E[b.area||catArea(b.cat)]||''}${esc(b.act||b.cat)}${n?' '+(n.jt?JT[n.jt].e:'📝'):''}${b.who?` 👤${esc(b.who)}`:''}${kind==='time'&&+b.focus?` · ${b.focus}%`:''}${+b.rt?` ⭐${b.rt}`:''}${b.memo?` 💬${esc(b.memo)}`:''}${(b.ph||[]).length?` 📷${b.ph.length}`:''}${editable?`<i class="rsz" aria-hidden="true"></i><i class="bx" data-bdel="${kind}|${i}" role="button" aria-label="블록 삭제">✕</i>`:''}</button>`});
+    g+=`<button class="sblk ${editable?'':'ro'}${ln.n>1?' lane':''}" data-bk="${kind}|${i}" data-bid="${esc(b.id||'')}" style="top:${top}px;height:${hh}px;${lp}--c:${catColor(b.cat)}"><b>${b.apx?'≈':''}${b.s}${b.e?'~'+b.e:''}</b> ${b.rid?'🔁':''}${AREA_E[b.area||catArea(b.cat)]||''}${esc(b.act||b.cat)}${n?' '+(n.jt?JT[n.jt].e:'📝'):''}${b.who?` 👤${esc(b.who)}`:''}${kind==='time'&&+b.focus?` · ${b.focus}%`:''}${+b.rt?` ⭐${b.rt}`:''}${b.memo?` 💬${esc(b.memo)}`:''}${(b.ph||[]).length?` 📷${b.ph.length}`:''}${editable?`<i class="rsz" aria-hidden="true"></i>`:''}</button>`});
   {const pd=prevDay&&D&&prevDay.date===addD(D.date,-1)?prevDay:null;if(pd)(pd[kind]||[]).forEach(b=>{if(!b.s||!b.e)return;const s0=mins('00:00',b.s),e0=mins('00:00',b.e);if(e0>=s0||e0<=st*60)return;g+=`<div class="sblk ro gho" style="top:0;height:${Math.max(22,(e0-st*60)*HPX/60-2)}px;--c:${catColor(b.cat)}"><b>↪ 전날 ${b.s}~${b.e}</b> ${esc(b.act||b.cat)}</div>`})}
   if(cur===today()){const nm=new Date().getHours()*60+new Date().getMinutes();if(nm>=st*60&&nm<en*60)g+=`<div class="now" style="top:${(nm-st*60)*HPX/60}px"></div>`}
   return g+'</div>'}
@@ -5634,7 +5634,7 @@ function syncDkColors(){try{SET.dkColor=SET.dkColor&&typeof SET.dkColor==='objec
 const catColor=n=>{const c=SET.cats.find(x=>x.name===n);return c?(c.own?c.own:dkOf(c)?dkColor(dkOf(c)):'#9aa0a6'):(n==='수면'?'#455a64':'#3949ab')};
 {const _ls=loadSet;loadSet=async function(){const r=await _ls.apply(this,arguments);syncDkColors();return r}}
 const isFold=(k,d)=>{const v=(SET.fold||{})[k];return v==null?d:!!v};
-document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-fold]');if(!b)return;const k=b.dataset.fold;SET.fold=SET.fold||{};SET.fold[k]=!isFold(k,k==='leg'||k==='top0');saveSet().catch(()=>{});if(curSection==='plan')renderPlan();else renderDay()});
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-fold]');if(!b)return;const k=b.dataset.fold;SET.fold=SET.fold||{};SET.fold[k]=!isFold(k,k==='leg'||k==='top0'||k==='top');saveSet().catch(()=>{});if(curSection==='plan')renderPlan();else renderDay()});
 function foldBeg(key,title,def){const f=isFold(key,!!def);return`<div class="fwrap" data-fk="${key}"><div class="fwh"><b>${title}</b><button type="button" class="del" data-fold="${key}">${f?'펼치기 ▾':'접기 ▴'}</button></div><div class="fbody"${f?' hidden':''}>`}
 const foldEnd=()=>'</div></div>';
 const foldWrap=(key,title,inner,def)=>foldBeg(key,title,def)+inner+foldEnd();
@@ -6890,7 +6890,7 @@ function affSlides(){const fold=false;const st=GOALS.affStar||{};const past=affP
   pv.forEach(o=>S.push(`<small>${st[o.date]?'⭐ ':''}${md(o.date)}${o.date===y?' (어제)':''}의 다짐</small><p class="afp">${esc(o.affirm)}</p>`));
   return S}
 let TOPI=0,BANOPEN=false;
-function topCardHTML(hero){if(isFold('top',false)){const sc=scoreOf(D);return`<div class="card topbar nocol" style="--k:#ff7043"><div class="fwh"><b>🍎 ${FRUIT} ${sc??'—'} · 다짐·명언·사진</b><button type="button" class="del" data-fold="top">펼치기 ▾</button></div></div>`}const S=[hero];const L=D.photos||[];
+function topCardHTML(hero){if(isFold('top',true)){const sc=scoreOf(D);return`<div class="card topbar nocol" style="--k:#ff7043"><div class="fwh"><b>🍎 ${FRUIT} ${sc??'—'} · 다짐·명언·사진</b><button type="button" class="del" data-fold="top">펼치기 ▾</button></div></div>`}const S=[hero];const L=D.photos||[];
   if(L.length)S.push(`<small>📷 오늘의 사진 ${L.length}장</small><div class="gph">${L.slice(0,6).map(x=>`<figure>${imgTag(x.ph,'alt="" data-dpz="1"')}</figure>`).join('')}</div><button class="del" data-dgo="pm">🌙 닫는 시간에서 사진 더하기·보기 ›</button>`);
   affSlides().forEach(x=>S.push(x));if(TOPI>=S.length)TOPI=0;
   return `<div class="card afcard topcard nocol" style="--k:#ff7043"><button type="button" class="del topfold" data-fold="top">접기 ▴</button><div class="afc">${S.map(x=>`<div class="afs">${x}</div>`).join('')}</div><div class="afdots">${S.map((_,i)=>`<i class="${i===TOPI?'on':''}"></i>`).join('')}</div></div>`}
@@ -16259,7 +16259,7 @@ async function syPutSafe(B,k,v){if(!k.startsWith('day:')||!v||typeof v!=='object
 {const _o=openDay;openDay=async function(d){try{staleGuardInstall()}catch(e){}return _o.apply(this,arguments)}}
 {const _f=flush0;flush0=async function(){try{staleGuardInstall()}catch(e){}return _f.apply(this,arguments)}}
 /* v390 ① 앱 버전 표시 · 새 버전 알림 (GitHub에서 마지막으로 성공한 빌드 번호와 비교) */
-var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/454})();
+var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/455})();
 const VRK='gj-verchk',VRURL='https://github.com/64hwarang-max/c/actions/workflows/build-apk.yml';
 const vrGet=()=>{try{return JSON.parse(localStorage.getItem(VRK)||'{}')}catch(e){return{}}};
 async function vrCheck(force){const c=vrGet();if(!force&&c.t&&Date.now()-c.t<6*36e5)return c;
@@ -17693,6 +17693,12 @@ function xpCssApply(){let st=document.getElementById('xpoffcss');if(!st){st=docu
 
 /* ===== v454: 중점 기둥 줄을 기둥별 목표 목록의 ⭐로 합침 ===== */
 {const st=document.createElement('style');st.textContent=`#wkcard .wbtg{position:relative}#wkcard .pdstar{position:absolute;top:7px;right:36px;padding:2px 10px;font-size:1rem;line-height:1.3;z-index:1;filter:grayscale(1);opacity:.45}#wkcard .pdstar.on{filter:none;opacity:1}`;document.head.appendChild(st)}
+
+/* ===== v455: 오늘 탭을 열면 지금 시각이 화면 위쪽 1/3쯤 오도록 시간표를 내려 줌 · 위쪽 카드 기본 접힘 ===== */
+let NS=1,NSD=0,NST=0;setTimeout(()=>{if(!NST)NS=0},6000);
+{const _o=openSection;openSection=function(v){const r=_o.apply(this,arguments);if(v==='day'){NS=1;NSD=0;const tk=++NST;setTimeout(()=>{if(tk===NST)NS=0},4000);[300,900,1800].forEach(t=>setTimeout(nowScroll,t))}return r}}
+function nowScroll(){try{if(!NS||NSD||curSection!=='day'||(typeof ZMD!=='undefined'&&ZMD>0)||!D||D.date!==today())return;const n=document.querySelector('#v-day .now');if(!n||!n.offsetWidth)return;if(Math.abs(scrollY)>80){NSD=1;return}const r=n.getBoundingClientRect();if(r.top>innerHeight*.5){NSD=1;window.scrollTo({top:scrollY+r.top-innerHeight*.33,behavior:'auto'})}}catch(e){}}
+DECO.add('지금 시각으로 내리기',{root:'#v-day',deep:true,wait:350,run:nowScroll,now:true});
 </script>
 <!--BIBLE{--><!--}BIBLE-->
 <div id="miniov" class="miniov" hidden></div>
