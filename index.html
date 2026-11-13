@@ -922,6 +922,7 @@ body{font-size:.9375rem}
 #v-export[data-cur="cloud"] [data-sg~="cloud"]{display:block}
 #v-export[data-cur="feat"] [data-sg~="feat"]{display:block}
 #v-export[data-cur="view"] [data-sg~="view"]{display:block}
+#v-export[data-cur="show"] [data-sg~="show"]{display:block}
 #v-export[data-cur="watch"] [data-sg~="watch"]{display:block}
 #v-export[data-cur="float"] [data-sg~="float"]{display:block}
 #v-export[data-cur="lock"] [data-sg~="lock"]{display:block}
@@ -8248,7 +8249,7 @@ function renderViewCard(){const C=$('#viewcard');if(!C)return;const f=+SET.fsz||
   C.querySelectorAll('[data-vlk]').forEach(b=>b.onclick=()=>{SET.look=b.dataset.vlk==='rich'?'rich':b.dataset.vlk==='cute'?'cute':b.dataset.vlk==='taste'?'taste':'';SET.cuteOn=1;sv();try{lvApply()}catch(e){}renderViewCard()});
   $('#vtip').onchange=e=>{SET.tipFold=e.target.checked;sv();if(SET.tipFold){document.querySelectorAll('[data-tf]').forEach(x=>delete x.dataset.tf);tipFold()}};
   $('#vfab').onchange=e=>{SET.fab=e.target.checked;sv()};$('#vdm').onchange=e=>{SET.dayMini=e.target.checked;sv();dmSync()}}
-const SGR=[['backup','💾','백업·복원'],['cloud','☁️','드라이브·기기 연동'],['view','🎨','화면·기능 고르기'],['map','🗺️','메뉴 옮기기'],['watch','⌚','워치·건강'],['float','🍎','떠 있는 버튼'],['lock','🔒','앱 잠금'],['trash','🗑️','휴지통']];
+const SGR=[['backup','💾','백업·복원'],['cloud','☁️','드라이브·기기 연동'],['view','🎨','화면·기능 고르기'],['show','👁️','화면에 보일 것'],['map','🗺️','메뉴 옮기기'],['watch','⌚','워치·건강'],['float','🍎','떠 있는 버튼'],['lock','🔒','앱 잠금'],['trash','🗑️','휴지통']];
 let sgCur='';
 /* 설정 칸 아래에 붙는 관리 단추(예전에는 감시 코드가 따로 붙였음) */
 const SGX=[['qlinks','🚀','앱 바로가기','data-qlmgr'],['areas','🏛️','삶의 기둥','data-armgr'],['alinks','🔗','연결 앱','data-almgr'],['xprules','⭐','경험치 기준','data-xropen']];
@@ -16259,7 +16260,7 @@ async function syPutSafe(B,k,v){if(!k.startsWith('day:')||!v||typeof v!=='object
 {const _o=openDay;openDay=async function(d){try{staleGuardInstall()}catch(e){}return _o.apply(this,arguments)}}
 {const _f=flush0;flush0=async function(){try{staleGuardInstall()}catch(e){}return _f.apply(this,arguments)}}
 /* v390 ① 앱 버전 표시 · 새 버전 알림 (GitHub에서 마지막으로 성공한 빌드 번호와 비교) */
-var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/455})();
+var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/456})();
 const VRK='gj-verchk',VRURL='https://github.com/64hwarang-max/c/actions/workflows/build-apk.yml';
 const vrGet=()=>{try{return JSON.parse(localStorage.getItem(VRK)||'{}')}catch(e){return{}}};
 async function vrCheck(force){const c=vrGet();if(!force&&c.t&&Date.now()-c.t<6*36e5)return c;
@@ -16856,7 +16857,7 @@ try{navV420()}catch(e){}
 function navV421(){try{if(!SET.navMap||SET.navV421)return;const M=SET.navMap;Object.keys(M).forEach(g=>{if(Array.isArray(M[g]))M[g]=M[g].filter(k=>k!=='pmd')});if(SET.subOrd&&Array.isArray(SET.subOrd.goal))SET.subOrd.goal=SET.subOrd.goal.filter(k=>k!=='pmd');SET.navV421=1;saveSet().catch(()=>{})}catch(e){}}
 {const _a=applyNavMap;applyNavMap=function(){const r=_a.apply(this,arguments);navV421();return r}}
 try{navV421()}catch(e){}
-let sgCat='';const SGU_K=['view','map','watch','float'],SGS_K=['backup','cloud','lock','trash'];
+let sgCat='';const SGU_K=['view','show','map','watch','float'],SGS_K=['backup','cloud','lock','trash'];
 setGrid=function(k,scroll){if(k==='map'){openSiteMap(true);return}if(k==='pmd'){openSection('pmd');return}
   if(k==='user'||k==='sys'){sgCat=k;sgCur=''}else if(k==='home'){sgCat='';sgCur=''}else{if(k){sgCat=SGS_K.includes(k)?'sys':'user'}sgCur=k===sgCur?'':k}
   const V=$('#v-export');if(!V)return;V.dataset.cur=sgCur;const G=$('#sgrid');if(!G)return;G.classList.toggle('sgtop2',!sgCat);
@@ -17699,6 +17700,11 @@ let NS=1,NSD=0,NST=0;setTimeout(()=>{if(!NST)NS=0},6000);
 {const _o=openSection;openSection=function(v){const r=_o.apply(this,arguments);if(v==='day'){NS=1;NSD=0;const tk=++NST;setTimeout(()=>{if(tk===NST)NS=0},4000);[300,900,1800].forEach(t=>setTimeout(nowScroll,t))}return r}}
 function nowScroll(){try{if(!NS||NSD||curSection!=='day'||(typeof ZMD!=='undefined'&&ZMD>0)||!D||D.date!==today())return;const n=document.querySelector('#v-day .now');if(!n||!n.offsetWidth)return;if(Math.abs(scrollY)>80){NSD=1;return}const r=n.getBoundingClientRect();if(r.top>innerHeight*.5){NSD=1;window.scrollTo({top:scrollY+r.top-innerHeight*.33,behavior:'auto'})}}catch(e){}}
 DECO.add('지금 시각으로 내리기',{root:'#v-day',deep:true,wait:350,run:nowScroll,now:true});
+
+/* ===== v456: 설정 타일을 누르면 접힌 카드를 바로 펼침 · 알림/위쪽 카드/도구 줄/레벨 고르기를 '화면에 보일 것' 타일로 분리 ===== */
+{const _r=renderFeatCard;renderFeatCard=function(){const S=document.getElementById('showcard');if(S)S.querySelectorAll('#ntkbox,#tpkbox,#tlkbox,#xpkbox').forEach(e=>e.remove());const r=_r.apply(this,arguments);try{const C=$('#featcard');if(!C)return r;let S2=document.getElementById('showcard');if(!S2){S2=document.createElement('div');S2.className='card nocol';S2.id='showcard';S2.dataset.sg='show';S2.style.setProperty('--k','#2fbf71');S2.innerHTML='<h3>👁️ 화면에 보일 것</h3><p class="hint" style="margin:0">쓰지 않는 알림·카드·단추를 꺼서 오늘 화면을 단순하게 만듭니다. 기록은 그대로 남습니다.</p>';C.after(S2)}
+  ['ntkbox','tpkbox','tlkbox','xpkbox'].forEach(id=>{const b=C.querySelector('#'+id);if(b)S2.appendChild(b)})}catch(e){console.warn('showcard',e)}return r}}
+{const _g=setGrid;setGrid=function(k,scroll){const r=_g.apply(this,arguments);try{if(sgCur){const open=()=>document.querySelectorAll(`#v-export [data-sg~="${sgCur}"].pclosed`).forEach(c=>{c.classList.remove('pclosed');if(c.dataset.pkey)PCOL[c.dataset.pkey]=false});[60,400,1000].forEach(t=>setTimeout(open,t))}}catch(e){}return r}}
 </script>
 <!--BIBLE{--><!--}BIBLE-->
 <div id="miniov" class="miniov" hidden></div>
