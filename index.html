@@ -16259,7 +16259,7 @@ async function syPutSafe(B,k,v){if(!k.startsWith('day:')||!v||typeof v!=='object
 {const _o=openDay;openDay=async function(d){try{staleGuardInstall()}catch(e){}return _o.apply(this,arguments)}}
 {const _f=flush0;flush0=async function(){try{staleGuardInstall()}catch(e){}return _f.apply(this,arguments)}}
 /* v390 ① 앱 버전 표시 · 새 버전 알림 (GitHub에서 마지막으로 성공한 빌드 번호와 비교) */
-var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/451})();
+var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/452})();
 const VRK='gj-verchk',VRURL='https://github.com/64hwarang-max/c/actions/workflows/build-apk.yml';
 const vrGet=()=>{try{return JSON.parse(localStorage.getItem(VRK)||'{}')}catch(e){return{}}};
 async function vrCheck(force){const c=vrGet();if(!force&&c.t&&Date.now()-c.t<6*36e5)return c;
@@ -17279,7 +17279,7 @@ document.addEventListener('focusout',e=>{const t=e.target;if(!t||t.tagName!=='TE
 
 /* ===== v432: 오늘 머리 정리 — 알림(요약·쓴 돈 포함) · 도구줄+기둥 · 스케줄창(날짜 이동 포함) 순서 ===== */
 const TLB=[['dbt','gmap','🗺️','지도'],['dbt','glink','⭐','즐겨찾기'],['dbt','gsearch','🔍','검색'],['sp'],['cvi','start','🚀','시작'],['cvi','fr','🎯','몰입·루틴'],['cvi','gap','⏱️','짜투리'],['cvi','pm','📊','평가'],['pil','x','🏛️','기둥']];
-function tlbHTML(){return TLB.map(([t,k,e,l])=>t==='sp'?'<span class="tlsp"></span>':t==='pil'?`<button type="button" class="tlb ${document.body.classList.contains('pilopen')?'on':''}" data-tlpil="1" aria-label="기둥" title="삶의 기둥"><i>${e}</i><small>${l}</small></button>`:`<button type="button" class="tlb" data-${t}="${k}" aria-label="${l}" title="${l}"><i>${e}</i><small>${l}</small></button>`).join('')+(typeof simOn==='function'&&simOn()?'<button type="button" class="tlb" data-tlzm="1" aria-label="여러 날 보기" title="여러 날 보기"><i>📆</i><small>여러 날</small></button>':'')}
+function tlbHTML(){return TLB.filter(x=>x[0]==='sp'||!(SET.tlbOff||[]).includes(x[1])).map(([t,k,e,l])=>t==='sp'?'<span class="tlsp"></span>':t==='pil'?`<button type="button" class="tlb ${document.body.classList.contains('pilopen')?'on':''}" data-tlpil="1" aria-label="기둥" title="삶의 기둥"><i>${e}</i><small>${l}</small></button>`:`<button type="button" class="tlb" data-${t}="${k}" aria-label="${l}" title="${l}"><i>${e}</i><small>${l}</small></button>`).join('')+(typeof simOn==='function'&&simOn()?'<button type="button" class="tlb" data-tlzm="1" aria-label="여러 날 보기" title="여러 날 보기"><i>📆</i><small>여러 날</small></button>':'')}
 function dayHeadArrange(){try{const V=document.getElementById('v-day');if(!V||!V.classList.contains('cvg'))return;
   /* ① 도구줄 */
   let tr=V.querySelector(':scope>#toolrow');const dayB=V.querySelector(':scope>#dayBody');
@@ -17673,6 +17673,13 @@ DECO.add('위쪽 카드 고르기',{root:'#dash',deep:true,wait:100,run:tpApply,
   const d=document.createElement('div');d.id='tpkbox';d.style.marginTop='14px';
   d.innerHTML=`<h3 style="margin:0 0 6px">🃏 위쪽 카드에 보일 것</h3><p class="hint" style="margin:0 0 8px">오늘 화면 맨 위 카드는 좌우로 넘겨 봅니다. 끈 장은 나오지 않습니다. (경험치와 🔔 알림 장은 항상 보입니다.)</p>${TPK.map(([k,l])=>`<label class="chk featrow"><input type="checkbox" data-tpk="${k}" ${off.includes(k)?'':'checked'}><span><b>${l}</b></span></label>`).join('')}`;
   C.appendChild(d);d.querySelectorAll('[data-tpk]').forEach(c=>c.onchange=()=>{SET.topOff=[...d.querySelectorAll('[data-tpk]')].filter(x=>!x.checked).map(x=>x.dataset.tpk);saveSet().catch(()=>{});try{refreshAny()}catch(e){}})}catch(e){console.warn('tpk',e)}return r}}
+
+/* ===== v452: 오늘 화면 도구 줄(지도·즐겨찾기·…) 고르기 (SET.tlbOff = 끈 단추 키) ===== */
+const TLK=[['gmap','🗺️ 지도'],['glink','⭐ 즐겨찾기'],['gsearch','🔍 검색'],['start','🚀 시작'],['fr','🎯 몰입·루틴'],['gap','⏱️ 짜투리'],['pm','📊 평가'],['x','🏛️ 기둥']];
+{const _r=renderFeatCard;renderFeatCard=function(){const r=_r.apply(this,arguments);try{const C=$('#featcard');if(!C||C.querySelector('#tlkbox'))return r;const off=SET.tlbOff||[];
+  const d=document.createElement('div');d.id='tlkbox';d.style.marginTop='14px';
+  d.innerHTML=`<h3 style="margin:0 0 6px">🧰 오늘 화면 도구 줄</h3><p class="hint" style="margin:0 0 8px">오늘 화면 위쪽의 아이콘 줄에서 쓰지 않는 단추를 감춥니다. 감춰도 메뉴에서 그 기능은 그대로 열 수 있습니다.</p>${TLK.map(([k,l])=>`<label class="chk featrow"><input type="checkbox" data-tlk="${k}" ${off.includes(k)?'':'checked'}><span><b>${l}</b></span></label>`).join('')}`;
+  C.appendChild(d);d.querySelectorAll('[data-tlk]').forEach(c=>c.onchange=()=>{SET.tlbOff=[...d.querySelectorAll('[data-tlk]')].filter(x=>!x.checked).map(x=>x.dataset.tlk);saveSet().catch(()=>{});try{refreshAny()}catch(e){}})}catch(e){console.warn('tlk',e)}return r}}
 </script>
 <!--BIBLE{--><!--}BIBLE-->
 <div id="miniov" class="miniov" hidden></div>
