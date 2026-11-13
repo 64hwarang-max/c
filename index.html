@@ -16259,7 +16259,7 @@ async function syPutSafe(B,k,v){if(!k.startsWith('day:')||!v||typeof v!=='object
 {const _o=openDay;openDay=async function(d){try{staleGuardInstall()}catch(e){}return _o.apply(this,arguments)}}
 {const _f=flush0;flush0=async function(){try{staleGuardInstall()}catch(e){}return _f.apply(this,arguments)}}
 /* v390 ① 앱 버전 표시 · 새 버전 알림 (GitHub에서 마지막으로 성공한 빌드 번호와 비교) */
-var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/452})();
+var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/453})();
 const VRK='gj-verchk',VRURL='https://github.com/64hwarang-max/c/actions/workflows/build-apk.yml';
 const vrGet=()=>{try{return JSON.parse(localStorage.getItem(VRK)||'{}')}catch(e){return{}}};
 async function vrCheck(force){const c=vrGet();if(!force&&c.t&&Date.now()-c.t<6*36e5)return c;
@@ -17680,6 +17680,16 @@ const TLK=[['gmap','🗺️ 지도'],['glink','⭐ 즐겨찾기'],['gsearch','�
   const d=document.createElement('div');d.id='tlkbox';d.style.marginTop='14px';
   d.innerHTML=`<h3 style="margin:0 0 6px">🧰 오늘 화면 도구 줄</h3><p class="hint" style="margin:0 0 8px">오늘 화면 위쪽의 아이콘 줄에서 쓰지 않는 단추를 감춥니다. 감춰도 메뉴에서 그 기능은 그대로 열 수 있습니다.</p>${TLK.map(([k,l])=>`<label class="chk featrow"><input type="checkbox" data-tlk="${k}" ${off.includes(k)?'':'checked'}><span><b>${l}</b></span></label>`).join('')}`;
   C.appendChild(d);d.querySelectorAll('[data-tlk]').forEach(c=>c.onchange=()=>{SET.tlbOff=[...d.querySelectorAll('[data-tlk]')].filter(x=>!x.checked).map(x=>x.dataset.tlk);saveSet().catch(()=>{});try{refreshAny()}catch(e){}})}catch(e){console.warn('tlk',e)}return r}}
+
+/* ===== v453: 레벨·경험치 표시 기본 끔 (기록·점수는 그대로, 설정에서 다시 켤 수 있음) ===== */
+function xpCssApply(){let st=document.getElementById('xpoffcss');if(!st){st=document.createElement('style');st.id='xpoffcss';document.head.appendChild(st)}
+  st.textContent=SET.xpOff?'#xpbar,.pillv,.pilb,.mnlv,.xppr{display:none!important}':''}
+{const _l=loadSet;loadSet=async function(){const r=await _l.apply(this,arguments);try{if(SET&&SET.xpOffV!==1){SET.xpOffV=1;SET.xpOff=true;saveSet().catch(()=>{})}xpCssApply()}catch(e){}return r}}
+{const _x=xpCheck;xpCheck=function(){if(SET.xpOff)return;return _x.apply(this,arguments)}}
+{const _r=renderFeatCard;renderFeatCard=function(){const r=_r.apply(this,arguments);try{const C=$('#featcard');if(!C||C.querySelector('#xpkbox'))return r;
+  const d=document.createElement('div');d.id='xpkbox';d.style.marginTop='14px';
+  d.innerHTML=`<h3 style="margin:0 0 6px">🌳 레벨·경험치</h3><label class="chk featrow"><input type="checkbox" id="xpkc" ${SET.xpOff?'':'checked'}><span><b>레벨·경험치 보이기</b> <small class="hint">위쪽 카드의 🔥 Lv·XP, 레벨 달성·기둥 레벨업 알림. 꺼도 점수와 기록은 그대로입니다.</small></span></label>`;
+  C.appendChild(d);d.querySelector('#xpkc').onchange=e=>{SET.xpOff=!e.target.checked;saveSet().catch(()=>{});xpCssApply();try{refreshAny()}catch(x){}}}catch(e){console.warn('xpk',e)}return r}}
 </script>
 <!--BIBLE{--><!--}BIBLE-->
 <div id="miniov" class="miniov" hidden></div>
