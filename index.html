@@ -16259,7 +16259,7 @@ async function syPutSafe(B,k,v){if(!k.startsWith('day:')||!v||typeof v!=='object
 {const _o=openDay;openDay=async function(d){try{staleGuardInstall()}catch(e){}return _o.apply(this,arguments)}}
 {const _f=flush0;flush0=async function(){try{staleGuardInstall()}catch(e){}return _f.apply(this,arguments)}}
 /* v390 ① 앱 버전 표시 · 새 버전 알림 (GitHub에서 마지막으로 성공한 빌드 번호와 비교) */
-var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/449})();
+var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/450})();
 const VRK='gj-verchk',VRURL='https://github.com/64hwarang-max/c/actions/workflows/build-apk.yml';
 const vrGet=()=>{try{return JSON.parse(localStorage.getItem(VRK)||'{}')}catch(e){return{}}};
 async function vrCheck(force){const c=vrGet();if(!force&&c.t&&Date.now()-c.t<6*36e5)return c;
@@ -17657,6 +17657,10 @@ function ntkCss(){let st=document.getElementById('ntfoffcss');if(!st){st=documen
   d.innerHTML=`<h3 style="margin:0 0 6px">🔔 알림 고르기</h3><p class="hint" style="margin:0 0 8px">끈 알림은 오늘 화면의 🔔 알림 칸과 배너에 나오지 않습니다. 기록은 그대로입니다.</p>${NTK.map(([k,l])=>`<label class="chk featrow"><input type="checkbox" data-ntk="${k}" ${off.includes(k)?'':'checked'}><span><b>${l}</b></span></label>`).join('')}`;
   C.appendChild(d);d.querySelectorAll('[data-ntk]').forEach(c=>c.onchange=()=>{SET.ntfOff=[...d.querySelectorAll('[data-ntk]')].filter(x=>!x.checked).map(x=>x.dataset.ntk);saveSet().catch(()=>{});ntkCss();try{ntfKick()}catch(e){}try{refreshAny()}catch(e){}})}catch(e){console.warn('ntk',e)}return r}}
 try{ntkCss()}catch(e){}
+
+/* ===== v450: 일정 편집창 동그란 아이콘 아래에 글자 ===== */
+{const st=document.createElement('style');st.textContent=`.beirow{padding-bottom:16px}.beico::after{position:absolute;top:100%;left:50%;transform:translateX(-50%);margin-top:2px;font-size:.62rem;line-height:1.1;color:var(--muted);white-space:nowrap;font-weight:400}
+.beico[data-bpha]::after{content:'사진'}.beico[data-beico="who"]::after{content:'사람'}.beico[data-beico="loc"]::after{content:'장소'}.beico[data-beico="amt"]::after{content:'예산'}.beico[data-beico="goal"]::after{content:'목표'}.beico[data-beq="same"]::after{content:'실행도'}.beico[data-beq="rep"]::after{content:'반복'}.beico[data-beq="carry"]::after{content:'이월'}`;document.head.appendChild(st)}
 </script>
 <!--BIBLE{--><!--}BIBLE-->
 <div id="miniov" class="miniov" hidden></div>
