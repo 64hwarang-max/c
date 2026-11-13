@@ -16259,7 +16259,7 @@ async function syPutSafe(B,k,v){if(!k.startsWith('day:')||!v||typeof v!=='object
 {const _o=openDay;openDay=async function(d){try{staleGuardInstall()}catch(e){}return _o.apply(this,arguments)}}
 {const _f=flush0;flush0=async function(){try{staleGuardInstall()}catch(e){}return _f.apply(this,arguments)}}
 /* v390 ① 앱 버전 표시 · 새 버전 알림 (GitHub에서 마지막으로 성공한 빌드 번호와 비교) */
-var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/450})();
+var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/451})();
 const VRK='gj-verchk',VRURL='https://github.com/64hwarang-max/c/actions/workflows/build-apk.yml';
 const vrGet=()=>{try{return JSON.parse(localStorage.getItem(VRK)||'{}')}catch(e){return{}}};
 async function vrCheck(force){const c=vrGet();if(!force&&c.t&&Date.now()-c.t<6*36e5)return c;
@@ -17661,6 +17661,18 @@ try{ntkCss()}catch(e){}
 /* ===== v450: 일정 편집창 동그란 아이콘 아래에 글자 ===== */
 {const st=document.createElement('style');st.textContent=`.beirow{padding-bottom:16px}.beico::after{position:absolute;top:100%;left:50%;transform:translateX(-50%);margin-top:2px;font-size:.62rem;line-height:1.1;color:var(--muted);white-space:nowrap;font-weight:400}
 .beico[data-bpha]::after{content:'사진'}.beico[data-beico="who"]::after{content:'사람'}.beico[data-beico="loc"]::after{content:'장소'}.beico[data-beico="amt"]::after{content:'예산'}.beico[data-beico="goal"]::after{content:'목표'}.beico[data-beq="same"]::after{content:'실행도'}.beico[data-beq="rep"]::after{content:'반복'}.beico[data-beq="carry"]::after{content:'이월'}`;document.head.appendChild(st)}
+
+/* ===== v451: 오늘 화면 위쪽 카드에 보일 것 고르기 (SET.topOff = 끈 장 키) ===== */
+const TPK=[['hero','🍎 하루 열매(점수)'],['aff','💪 오늘의 다짐'],['affp','⭐ 지난 다짐'],['quote','💬 명언'],['step','🎯 이번 주 한 걸음'],['vision','🧭 나의 비전'],['photo','📷 오늘의 사진'],['mem','📖 오늘의 암송'],['sg-qt','🙏 큐티 제안'],['sg-rd','📖 성경 읽기 제안'],['sg-gr','🙏 감사 제안']];
+function tpApply(){try{const c=document.querySelector('#dash .topcard .afc');if(!c)return;const off=SET.topOff||[];
+  [...c.children].forEach(e=>{if(!e.dataset.hs){const t=e.textContent;const k=/하루 열매/.test(t)?'hero':/오늘의 사진/.test(t)?'photo':/오늘의 다짐/.test(t)?'aff':/의 다짐/.test(t)?'affp':/명언/.test(t)?'quote':/이번 주 한 걸음/.test(t)?'step':/나의 비전/.test(t)?'vision':'';if(k)e.dataset.hs=k}});
+  let n=0;if(off.length)[...c.children].forEach(e=>{if(off.includes(e.dataset.hs)&&c.children.length>1){e.remove();n++}});
+  if(n){const dots=document.querySelector('#dash .afdots');if(dots){const m=c.children.length;if(typeof TOPI!=='undefined'&&TOPI>=m)TOPI=0;dots.innerHTML=Array.from({length:m},(_,i)=>`<i class="${i===(typeof TOPI!=='undefined'?TOPI:0)?'on':''}"></i>`).join('')}}}catch(e){console.warn('tpApply',e)}}
+DECO.add('위쪽 카드 고르기',{root:'#dash',deep:true,wait:100,run:tpApply,now:true});
+{const _r=renderFeatCard;renderFeatCard=function(){const r=_r.apply(this,arguments);try{const C=$('#featcard');if(!C||C.querySelector('#tpkbox'))return r;const off=SET.topOff||[];
+  const d=document.createElement('div');d.id='tpkbox';d.style.marginTop='14px';
+  d.innerHTML=`<h3 style="margin:0 0 6px">🃏 위쪽 카드에 보일 것</h3><p class="hint" style="margin:0 0 8px">오늘 화면 맨 위 카드는 좌우로 넘겨 봅니다. 끈 장은 나오지 않습니다. (경험치와 🔔 알림 장은 항상 보입니다.)</p>${TPK.map(([k,l])=>`<label class="chk featrow"><input type="checkbox" data-tpk="${k}" ${off.includes(k)?'':'checked'}><span><b>${l}</b></span></label>`).join('')}`;
+  C.appendChild(d);d.querySelectorAll('[data-tpk]').forEach(c=>c.onchange=()=>{SET.topOff=[...d.querySelectorAll('[data-tpk]')].filter(x=>!x.checked).map(x=>x.dataset.tpk);saveSet().catch(()=>{});try{refreshAny()}catch(e){}})}catch(e){console.warn('tpk',e)}return r}}
 </script>
 <!--BIBLE{--><!--}BIBLE-->
 <div id="miniov" class="miniov" hidden></div>
