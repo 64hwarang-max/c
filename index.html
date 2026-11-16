@@ -22,7 +22,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&display=swap">
 <style>
 :root{
-  --bg:#eef0f2;--paper:#ffffff;--ink:#1d2430;--muted:#646c78;--line:#d5d9df;--pen:#23397a;--pen-soft:#e3e8f5;
+  --bg:#eef0f2;--paper:#ffffff;--ink:#1d2430;--muted:#4d5561;--line:#d5d9df;--pen:#23397a;--pen-soft:#e3e8f5;
   --c-grat:#b07d12;--c-time:#23397a;--c-mis:#a33a2a;--c-meet:#1f6e6a;--c-fin:#566b2c;
   box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
 }
@@ -2834,7 +2834,7 @@ function bypilHTML(){const T=today();
   const rows=[...SCORE.map(([k,l])=>[k,l,AREA_E[k]||'']),['','기타','🗂']];
   let h=`<p class="hint" style="margin:0 0 8px">⠿를 끌면 기둥 순서가 바뀝니다. 기둥(삶의 영역)마다 시기별 목표를 한 칸씩 봅니다. 칸을 누르면 그 시기의 목표를 열고, 빈 칸은 바로 적습니다.</p>`;
   rows.forEach(([k,l,e])=>{const cells=cols.map(([cn,lvs])=>[cn,lvs,gOf(lvs,k)]);const tot=cells.reduce((a,c)=>a+c[2].length,0);if(!k&&!tot)return;
-    const pw=k&&((GOALS.vis||{}).pboard||{})[k];h+=`<div class="bpil" ${k?`data-sk="${k}"`:''}><div class="bph">${k?HDR('gdrag'):''}<b>${e} ${esc(l)}</b><small>${tot?`목표 ${tot}`:'아직 없음'}</small></div>${k?`<button class="bpwant ${tx(pw)?'on':''}" data-bpw="1">🖼️ ${tx(pw)?esc(pw):'＋ 원하는 모습'}</button>`:''}<div class="bpg">${cells.map(([cn,lvs,gs])=>{const lv=(gs[0]&&gs[0].lv)||lvs[0];const g0=gs[0];return`<button class="bpc ${g0?'on':''}" data-bp="${k}|${lv}|${g0?1:0}"><small>${cn}</small>${g0?`<span>${esc(g0.title)}</span>${gs.length>1?`<em>외 ${gs.length-1}</em>`:`<em>${Math.round(prog(g0)*100)}%</em>`}${gSubLine(g0)}`:'<span class="bpe">＋</span>'}</button>`}).join('')}</div></div>`});
+    const pw=k&&((GOALS.vis||{}).pboard||{})[k];h+=`<div class="bpil${tot?'':' bpem'}" ${k?`data-sk="${k}"`:''}><div class="bph">${k?HDR('gdrag'):''}<b>${e} ${esc(l)}</b><small>${tot?`목표 ${tot}`:'아직 없음 · 눌러서 ＋ ▾'}</small></div>${k?`<button class="bpwant ${tx(pw)?'on':''}" data-bpw="1">🖼️ ${tx(pw)?esc(pw):'＋ 원하는 모습'}</button>`:''}<div class="bpg">${cells.map(([cn,lvs,gs])=>{const lv=(gs[0]&&gs[0].lv)||lvs[0];const g0=gs[0];return`<button class="bpc ${g0?'on':''}" data-bp="${k}|${lv}|${g0?1:0}"><small>${cn}</small>${g0?`<span>${esc(g0.title)}</span>${gs.length>1?`<em>외 ${gs.length-1}</em>`:`<em>${Math.round(prog(g0)*100)}%</em>`}${gSubLine(g0)}`:'<span class="bpe">＋</span>'}</button>`}).join('')}</div></div>`});
   return h}
 function bindLadder(R){
   R.querySelectorAll('[data-goshort]').forEach(b=>b.onclick=()=>go('short'));
@@ -6893,7 +6893,7 @@ function affSlides(){const fold=false;const st=GOALS.affStar||{};const past=affP
   pv.forEach(o=>S.push(`<small>${st[o.date]?'⭐ ':''}${md(o.date)}${o.date===y?' (어제)':''}의 다짐</small><p class="afp">${esc(o.affirm)}</p>`));
   return S}
 let TOPI=0,BANOPEN=false;
-function topCardHTML(hero){if(isFold('top',true)){const sc=scoreOf(D);return`<div class="card topbar nocol" style="--k:#ff7043"><div class="fwh"><b>🍎 ${FRUIT} ${sc??'—'} · 다짐·명언·사진</b><button type="button" class="del" data-fold="top">펼치기 ▾</button></div></div>`}const S=[hero];const L=D.photos||[];
+function topCardHTML(hero){if(isFold('top',true)){const sc=scoreOf(D);return`<div class="card topbar nocol" style="--k:#ff7043"><div class="fwh"><b>🍎 ${sc??'—'}점 <small class="hint">다짐·명언</small></b><button type="button" class="del" data-fold="top" aria-label="위쪽 카드 펼치기">▾</button></div></div>`}const S=[hero];const L=D.photos||[];
   if(L.length)S.push(`<small>📷 오늘의 사진 ${L.length}장</small><div class="gph">${L.slice(0,6).map(x=>`<figure>${imgTag(x.ph,'alt="" data-dpz="1"')}</figure>`).join('')}</div><button class="del" data-dgo="pm">🌙 닫는 시간에서 사진 더하기·보기 ›</button>`);
   affSlides().forEach(x=>S.push(x));if(TOPI>=S.length)TOPI=0;
   return `<div class="card afcard topcard nocol" style="--k:#ff7043"><button type="button" class="del topfold" data-fold="top">접기 ▴</button><div class="afc">${S.map(x=>`<div class="afs">${x}</div>`).join('')}</div><div class="afdots">${S.map((_,i)=>`<i class="${i===TOPI?'on':''}"></i>`).join('')}</div></div>`}
@@ -15865,7 +15865,7 @@ setInterval(()=>{if(document.visibilityState==='visible')scrKeep()},4000);
 
 /* v375 정돈 스타일 (taste-skill 앱 화면 규칙: 3/2/8 — 얌전한 배치·거의 없는 움직임·촘촘한 정보) */
 (function(){const st=document.createElement('style');st.id='tastecss';st.textContent=`
-html.taste{--bg:#f9fafb;--paper:#fff;--ink:#111;--muted:#5f6368;--line:#e8e8e8;--pen:#111;--pen-soft:#f1f2f4}
+html.taste{--bg:#f9fafb;--paper:#fff;--ink:#111;--muted:#4a4f55;--line:#e8e8e8;--pen:#111;--pen-soft:#f1f2f4}
 @media (prefers-color-scheme:dark){html.taste:not([data-theme="light"]){--bg:#101214;--paper:#181b1f;--ink:#ececec;--muted:#a0a6ae;--line:#2b3037;--pen:#ececec;--pen-soft:#22262b}}
 html.taste[data-theme="dark"]{--bg:#101214;--paper:#181b1f;--ink:#ececec;--muted:#a0a6ae;--line:#2b3037;--pen:#ececec;--pen-soft:#22262b}
 html.taste body{font-size:14px;line-height:1.5;font-variant-numeric:tabular-nums}
@@ -17879,6 +17879,29 @@ DECO.add('열 넓히기',{root:'#v-day',deep:true,wait:100,run:wideApply,now:tru
 /* ===== v468: 달 보기 — 반복 일정은 기본으로 개수(🔁 n)만, 버튼으로 펼침 ===== */
 {const st=document.createElement('style');st.textContent=`.mxrb{display:flex;justify-content:flex-end;margin:0 0 6px}.mxrb .chip{font-size:.78rem}`;document.head.appendChild(st)}
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-mxrep]');if(!b)return;e.preventDefault();e.stopPropagation();SET.mxRep=!SET.mxRep;saveSet().catch(()=>{});try{renderDay()}catch(x){}try{if(curSection==='plan')renderPlan()}catch(x){}},true);
+
+/* ===== v469: 흐린 글씨 진하게(--muted) · 가장 작은 글자 한 단계 키움 ===== */
+{const st=document.createElement('style');st.textContent=`.mxl{font-size:.68rem!important}.sblk>b{font-size:.66rem!important;opacity:.82!important}.wmt small{font-size:.74rem!important}.axgl{font-size:.76rem!important}.bpc .bpsub{font-size:.72rem!important}.bpc small,.pilrow small{font-size:.74rem}.hint{font-size:.86rem}small.hint,.hint small{font-size:.8rem}`;document.head.appendChild(st)}
+
+/* ===== v469: 평가 점수 — 숫자를 누르면 0~10 단추가 한 줄로 펼쳐져 한 번에 고름 (슬라이더도 그대로) ===== */
+{const st=document.createElement('style');st.textContent=`.scsl>b{cursor:pointer;min-width:2.2em;text-align:center;padding:4px 6px;border-radius:8px;border:1px dashed var(--line)}.scch{display:flex;gap:4px;margin:2px 0 8px}.scch button{flex:1;min-width:0;height:38px;border:1px solid var(--line);border-radius:9px;background:var(--paper);color:var(--ink);font:inherit;font-weight:700;padding:0}.scch button.on{background:var(--pen);color:#fff;border-color:var(--pen)}`;document.head.appendChild(st)}
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('.scsl>b');if(!b)return;const w=b.parentNode,r=w.querySelector('input[data-scr]');if(!r)return;e.preventDefault();e.stopPropagation();const row=w.closest('.rate');const old=row.nextElementSibling;if(old&&old.classList.contains('scch')){old.remove();return}
+  document.querySelectorAll('.scch').forEach(x=>x.remove());const d=document.createElement('div');d.className='scch';const v=+r.value;d.innerHTML=Array.from({length:11},(_,i)=>`<button type="button" data-scn="${i}" class="${i===v?'on':''}">${i}</button>`).join('');row.after(d);
+  d.querySelectorAll('[data-scn]').forEach(x=>x.onclick=()=>{r.value=x.dataset.scn;r.dispatchEvent(new Event('input',{bubbles:true}));r.dispatchEvent(new Event('change',{bubbles:true}))})},true);
+
+/* ===== v470: 성경 하단 음악바 — 음악을 한 번도 넣지 않았으면 숨김(🎧로 열기) / 상단 탭줄 잘림 표시 ===== */
+{const _s=mpBarSync;mpBarSync=function(){let inB=false;try{inB=curSection==='bible'}catch(e){}
+  if(inB&&!MP.started&&!MP.loaded){mpLoad().then(()=>{try{mpBarSync()}catch(e){}});const B=mpBar();B.hidden=true;document.body.classList.remove('mpon');return}
+  if(inB&&!MP.started&&!MP.list.length){const B=mpBar();B.hidden=true;document.body.classList.remove('mpon');return}
+  return _s.apply(this,arguments)}}
+DECO.add('성경 🎧',{root:'#v-bible, #bbsb, body',deep:true,wait:200,now:true,run:()=>{const g=document.querySelector('#bbgo');if(!g||document.querySelector('#bbmu'))return;const b=document.createElement('button');b.id='bbmu';b.className='btn small';b.textContent='🎧';b.setAttribute('aria-label','음악 열기');b.onclick=()=>mpOpen();g.after(b)}});
+{const st=document.createElement('style');st.textContent=`.subnav .snp.mre{-webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 28px),transparent);mask-image:linear-gradient(90deg,#000 calc(100% - 28px),transparent)}`;document.head.appendChild(st);
+ const upd=()=>{document.querySelectorAll('.subnav .snp').forEach(n=>{const more=n.scrollWidth>n.clientWidth+4&&n.scrollLeft+n.clientWidth<n.scrollWidth-4;n.classList.toggle('mre',more)})};
+ document.addEventListener('scroll',upd,true);window.addEventListener('resize',upd);setInterval(upd,700)}
+
+/* ===== v471: 목표(기둥별) — 목표 없는 기둥은 접어 한 줄로, 헤더를 누르면 ＋칸 펼침 ===== */
+{const st=document.createElement('style');st.textContent=`.bpem:not(.open) .bpg,.bpem:not(.open) .bpwant{display:none}.bpem:not(.open){padding-bottom:8px}.bpem .bph{cursor:pointer}`;document.head.appendChild(st);
+document.addEventListener('click',e=>{const h=e.target.closest&&e.target.closest('.bpem .bph');if(!h||e.target.closest('.hdrag'))return;h.parentNode.classList.toggle('open')})}
 </script>
 <!--BIBLE{--><!--}BIBLE-->
 <div id="miniov" class="miniov" hidden></div>
