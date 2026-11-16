@@ -17920,7 +17920,7 @@ function crqChip(k,r){const c=r.v>=1?'ok':r.v>0?'part':r.pb?'pl':'';const sym=r.
 function crqHTML(todo){const X=crqData();if(!X.n&&todo)return'';const open=(()=>{try{return localStorage.getItem(todo?'gj-crqt':'gj-crqa')!=='0'}catch(e){return true}})();
   const body=X.G.map(([k,R])=>{const L=todo?R.filter(r=>{if(r.v>=1)return false;if(r.it.ap&&r.it.ap.m==='wk'){const W=crWkInfo(r.it,D);return W.cnt<W.n}return true}):R;if(!L.length&&todo)return'';return`<div class="crqg"><i>${AREA_E[k]||''} ${esc(areaName(k))}</i>${L.map(r=>crqChip(k,r)).join('')}${todo?'':crqEdit(k)}</div>`}).join('');
   const left=X.n-X.d;
-  return`<details class="crq ${todo?'crqt':'crqa'}"${open?' open':''} data-crqk="${todo?'t':'a'}"><summary>${todo?`✅ 오늘 챙길 것`:`📋 전체 항목 한 번에`}${(()=>{try{if(SET.xpOff)return'';const v=xpAll();return v?` <em class="crxp">⚡${v.today.xp}/${xpGoal()}</em>`:''}catch(e){return''}})()}<small>${todo?(left?`남은 ${left}개`:`모두 했음 🎉`):''} ${X.d}/${X.n} ▾</small></summary><button type="button" class="crqc" data-evw="1" style="margin-top:8px">🌙 한 장씩 평가하기</button>${body||'<p class="hint">오늘 항목을 모두 했습니다.</p>'}<p class="hint">누르면 ✓ (다시 누르면 취소) · 📅는 오늘 계획에 있는 것 · 실제 일정에 적으면 자동 ✓${todo?' · 평가 점수에 바로 반영':''}</p></details>`}
+  return`<details class="crq ${todo?'crqt':'crqa'}"${open?' open':''} data-crqk="${todo?'t':'a'}"><summary>${todo?`✅ 오늘 챙길 것`:`📋 전체 항목 한 번에`}${(()=>{try{if(SET.xpOff)return'';const v=xpAll();return v?` <em class="crxp">⚡${v.today.xp}/${xpGoal()}</em>`:''}catch(e){return''}})()}<small>${todo?(left?`남은 ${left}개`:`모두 했음 🎉`):''} ${X.d}/${X.n} ▾</small></summary><button type="button" class="crqc" data-evw="1" style="margin-top:8px">🌙 한 장씩 평가하기</button>${body||'<p class="hint">오늘 항목을 모두 했습니다.</p>'}<p class="hint">누를 때마다 ½ → ✓ → ○ · 📅는 오늘 계획에 있는 것 · 실제 일정에 적으면 자동 ✓${todo?' · 평가 점수에 바로 반영':''}</p></details>`}
 function crqPaint(){try{if(curSection!=='day'||!D)return;const B=document.getElementById('dayBody');if(!B)return;
   const put=(anchor,where,todo)=>{const h=crqHTML(todo);const cls=todo?'crqt':'crqa';const old=B.querySelector('.'+cls);if(!anchor||!h){if(old)old.remove();return}if(old&&old._h===h)return;const T=document.createElement('template');T.innerHTML=h;const el=T.content.firstElementChild;el._h=h;if(old)old.replaceWith(el);else anchor.insertAdjacentElement(where,el)};
   const rd=B.querySelector('#rdrag');put(rd,'afterend',false);if(!rd){const o=B.querySelector('.crqa');if(o)o.remove()}
@@ -17928,7 +17928,7 @@ function crqPaint(){try{if(curSection!=='day'||!D)return;const B=document.getEle
 DECO.add('세부 항목 한 번에',{root:'#dayBody',deep:true,wait:200,run:crqPaint,now:true});
 document.addEventListener('toggle',e=>{const d=e.target;if(d&&d.dataset&&d.dataset.crqk)try{localStorage.setItem(d.dataset.crqk==='t'?'gj-crqt':'gj-crqa',d.open?'1':'0')}catch(_){}},true);
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-crq]');if(!b)return;e.preventDefault();e.stopPropagation();const[k,id]=b.dataset.crq.split('|');D.crit=D.crit||{};const M=D.crit[k]=D.crit[k]||{};const E=crEval(D,k),row=E&&E.rows.find(x=>x.it.id===id);
-  if(row&&row.v>=1){if(M[id]===1)delete M[id];else M[id]=0}else M[id]=1;
+  if(row&&row.v>=1){if(M[id]===1)delete M[id];else M[id]=0}else if(row&&row.v>0)M[id]=1;else M[id]=.5;
   if(!Object.keys(M).length)delete D.crit[k];if(D.scUser)delete D.scUser[k];try{applyDraft(D)}catch(_){}schedule();if(mode==='run')crqPaint();else renderDay()},true);
 
 /* ===== v473: 뒤로가기 동그랗게·＋ 작게 · 하단 바 내릴 때 숨김 · 연속 🔥 · 연간 잔디 · 기둥 추세 ===== */
