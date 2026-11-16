@@ -18156,15 +18156,15 @@ const FAV_PRE=[['밀리의서재','📚','https://www.millie.co.kr','grow','독�
 let FAVRUN=null;
 function crSetToday(k,id,v){const T=today();const put=o=>{o.crit=o.crit||{};const M=o.crit[k]=o.crit[k]||{};if(v)M[id]=1;else delete M[id];if(!Object.keys(M).length)delete o.crit[k];if(o.scUser)delete o.scUser[k]};
   if(D&&D.date===T){put(D);try{applyDraft(D)}catch(e){}schedule();return Promise.resolve()}
-  return store.load(T).then(o=>{o=norm(o||{date:T});put(o);return store.save(T,o)}).then(()=>{try{if(cacheAll)cacheAll.delete(T)}catch(e){}})}
+  return store.load(T).then(o=>{o=norm(o||{date:T});put(o);return store.save(T,o).then(()=>{try{if(cacheAll)cacheAll.set(T,o)}catch(e){}})})}
 function favLinkOpen(id){const f=(SET.favLinks||[]).find(x=>x.id===id);if(!f)return;
   if(f.k&&f.item){try{crSetToday(f.k,f.item,1);toast(`${f.em||'🔗'} ${f.name} · ${areaName(f.k)} ‘${((crList(f.k).find(x=>x.id===f.item))||{}).n||'항목'}’ ✓`)}catch(e){}}
   if(f.log)FAVRUN={t:Date.now(),id};
-  if(f.url){try{window.open(f.url,'_blank')}catch(e){location.href=f.url}}}
+  if(f.url&&!/^\s*(javascript|data|vbscript|file):/i.test(f.url)){try{window.open(f.url,'_blank')}catch(e){location.href=f.url}}}
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState!=='visible'||!FAVRUN)return;const R=FAVRUN;FAVRUN=null;const mins=Math.round((Date.now()-R.t)/60000);if(mins<3||mins>360)return;const f=(SET.favLinks||[]).find(x=>x.id===R.id);if(!f)return;
   const a=new Date(R.t),b=new Date();const hm=d=>`${pad(d.getHours())}:${pad(d.getMinutes())}`;if(a.getDate()!==b.getDate())return;const blk={id:uid(),s:hm(a),e:hm(b),act:f.name,cat:'',area:f.k||''};
   const T=today();const done=()=>toastAct(`${f.em||'🔗'} ${f.name} ${mins}분을 실제 한 일에 기록했습니다`,'취소',async()=>{try{if(D&&D.date===T){D.time=D.time.filter(x=>x.id!==blk.id);schedule();renderDay()}else{const o=await store.load(T);o.time=(o.time||[]).filter(x=>x.id!==blk.id);await store.save(T,o)}}catch(e){}});
-  try{if(D&&D.date===T){D.time=D.time||[];D.time.push(blk);schedule();try{if(curSection==='day')renderDay()}catch(e){}done()}else store.load(T).then(o=>{o=norm(o||{date:T});o.time=o.time||[];o.time.push(blk);return store.save(T,o)}).then(done)}catch(e){}});
+  try{if(D&&D.date===T){D.time=D.time||[];D.time.push(blk);schedule();try{if(curSection==='day')renderDay()}catch(e){}done()}else store.load(T).then(o=>{o=norm(o||{date:T});o.time=o.time||[];o.time.push(blk);return store.save(T,o).then(()=>{try{if(cacheAll)cacheAll.set(T,o)}catch(e){}})}).then(done)}catch(e){}});
 function favLinkEdit(id){const S=$('#sheet');S.hidden=false;const L=()=>{SET.favLinks=Array.isArray(SET.favLinks)?SET.favLinks:[];return SET.favLinks};const f0=L().find(x=>x.id===id);
   const f=Object.assign({id:'fl'+uid(),name:'',em:'🔗',url:'',k:'',item:'',log:true,_new:true},f0||{});if(f0)delete f._new;let newName='';
   const items=k=>k?crList(k):[];
@@ -18186,7 +18186,7 @@ function favLinkEdit(id){const S=$('#sheet');S.hidden=false;const L=()=>{SET.fav
     g('flk').onchange=()=>{sync();f.k=g('flk').value;f.item=f.k&&crList(f.k)[0]?crList(f.k)[0].id:'__new';draw()};
     if(g('fli'))g('fli').onchange=()=>{sync();f.item=g('fli').value;draw()};
     const del=g('fld');if(del)del.onclick=async()=>{if(!await uiConfirm(`‘${f.name}’ 링크를 지울까요?`))return;SET.favLinks=L().filter(x=>x.id!==id);SET.favs=favList().filter(x=>x!=='lnk:'+id);await saveSet().catch(()=>{});S.hidden=true;S.innerHTML='';openFav()};
-    g('flok').onclick=async()=>{sync();if(!f.name){toast('이름을 적어 주십시오.');return}if(f.url&&!/^[a-z][a-z0-9+.-]*:\/\//i.test(f.url))f.url='https://'+f.url;
+    g('flok').onclick=async()=>{sync();if(!f.name){toast('이름을 적어 주십시오.');return}if(/^\s*(javascript|data|vbscript|file):/i.test(f.url)){toast('이 주소 형식은 쓸 수 없습니다.');return}if(f.url&&!/^[a-z][a-z0-9+.-]*:\/\//i.test(f.url))f.url='https://'+f.url;
       if(f.k&&(f.item==='__new'||!f.item)){const n=newName||'독서';if(!crList(f.k).some(x=>x.n===n))crAddItem(f.k,n);const it=crList(f.k).find(x=>x.n===n);f.item=it?it.id:''}
       const o={id:f.id,name:f.name,em:f.em,url:f.url,k:f.k,item:f.item,log:!!f.log};const A=L();const ix=A.findIndex(x=>x.id===f.id);if(ix>=0)A[ix]=o;else A.push(o);
       if(!favList().includes('lnk:'+f.id))SET.favs=[...favList(),'lnk:'+f.id];await saveSet().catch(()=>{});toast(`${o.em} ${o.name} 저장`);S.hidden=true;S.innerHTML='';openFav()}};
@@ -18195,17 +18195,20 @@ function favLinkEdit(id){const S=$('#sheet');S.hidden=false;const L=()=>{SET.fav
 /* ===== v483: 연동 — 목표→오늘/이번 주 계획 · 항목 길게 눌러 계획 · 성경→평가 · 노트→주간 · 다음 주 한 가지 · 목표 완료 XP ===== */
 function gAddBlock(g,dur,tomorrow){const cat=(guessBlock(g.title)||{}).cat||SET.cats[0].name;const T=today();const mk=(s)=>({id:uid(),s,e:addMin(s,dur),act:g.title,cat,who:'',goal:g.id});
   if(!tomorrow&&D&&D.date===T){const fr=plFree(dur);if(fr){const f=m=>`${pad(Math.floor(m/60)%24)}:${pad(m%60)}`;const b=mk(f(fr.s));b.e=f(fr.s+Math.min(dur,fr.d));D.plan.push(b);D.plan.sort((a,z)=>(a.s||'99')<(z.s||'99')?-1:1);schedule();try{if(curSection==='day')renderDay()}catch(e){}toast(`🎯 오늘 ${b.s}~${b.e}에 ‘${g.title}’ 블록을 넣었습니다.`);return Promise.resolve(true)}}
-  const d=addD(T,1);return store.load(d).then(o=>{o=norm(o||{date:d});o.plan=o.plan||[];o.plan.push(mk('19:00'));return store.save(d,o)}).then(()=>{try{if(cacheAll)cacheAll.delete(d)}catch(e){}toast(`🎯 ${md(d)} 19:00에 ‘${g.title}’ 블록을 넣었습니다.`);return true})}
+  const d=addD(T,1);return dayPush(d,mk('19:00')).then(()=>{toast(`🎯 ${md(d)} 19:00에 ‘${g.title}’ 블록을 넣었습니다.`);return true})}
+async function dayPush(d,blk){if(D&&D.date===d){D.plan=D.plan||[];D.plan.push(blk);D.plan.sort((a,z)=>(a.s||'99')<(z.s||'99')?-1:1);schedule();try{if(curSection==='day')renderDay()}catch(e){}return}const o=norm((await store.load(d))||{date:d});o.plan=o.plan||[];o.plan.push(blk);o.plan.sort((a,z)=>(a.s||'99')<(z.s||'99')?-1:1);await store.save(d,o);try{if(cacheAll)cacheAll.set(d,o)}catch(e){}}
 function goalWeekPaint(){try{const R=document.getElementById('minebody');if(!R||R.querySelector('.mgw'))return;const T=today();const L=GOALS.list.filter(g=>g.title&&!g.done&&['w','m'].includes(g.lv)&&g.per===perKey(g.lv,T)).slice(0,5);if(!L.length)return;
   R.insertAdjacentHTML('afterbegin',`<div class="mcrd mgw"><h3>🎯 이번 주·달 목표 → 일정에 넣기</h3>${L.map(g=>`<p>${esc(g.title)} <button type="button" class="crqc" data-gab="${g.id}|30|0">오늘 30분</button><button type="button" class="crqc" data-gab="${g.id}|60|1">내일 1시간</button></p>`).join('')}</div>`)}catch(e){}}
 DECO.add('나 목표 일정',{root:'#minebody',deep:false,wait:300,run:goalWeekPaint,now:true});
 document.addEventListener('click',async e=>{let b=e.target.closest&&e.target.closest('[data-gab]');if(b){e.preventDefault();e.stopImmediatePropagation();const[id,d,t]=b.dataset.gab.split('|');const g=GOALS.list.find(x=>x.id===id);if(g)await gAddBlock(g,+d,t==='1');return}
   b=e.target.closest&&e.target.closest('[data-wk1]');if(b){e.preventDefault();e.stopImmediatePropagation();const k=b.dataset.wk1;const mon=addD(mondayOf(today()),7);const it=(crList(k)[0]||{}).n||areaName(k);const cat=(guessBlock(it)||{}).cat||SET.cats[0].name;
-    const o=norm((await store.load(mon))||{date:mon});o.plan=o.plan||[];o.plan.push({id:uid(),s:'19:00',e:'19:30',act:it,cat,who:'',area:k});await store.save(mon,o);try{if(cacheAll)cacheAll.delete(mon)}catch(er){}b.textContent='✓ 넣었음';b.disabled=true;toast(`📅 다음 주 월요일(${md(mon)}) 19:00에 ‘${it}’ 계획을 넣었습니다.`)}},true);
+    await dayPush(mon,{id:uid(),s:'19:00',e:'19:30',act:it,cat,who:'',area:k});b.textContent='✓ 넣었음';b.disabled=true;toast(`📅 다음 주 월요일(${md(mon)}) 19:00에 ‘${it}’ 계획을 넣었습니다.`)}},true);
 /* 세부 항목 길게 눌러 → 오늘 계획 */
-{let t=null,hit=null;document.addEventListener('pointerdown',e=>{const c=e.target.closest&&e.target.closest('[data-crq]');if(!c)return;clearTimeout(t);t=setTimeout(()=>{t=null;hit=c;const[k,id]=c.dataset.crq.split('|');const it=crList(k).find(x=>x.id===id);if(!it)return;try{navigator.vibrate&&navigator.vibrate(20)}catch(_){}plAddBlock((guessBlock(it.n)||{}).cat||SET.cats[0].name,30,it.n)},600)},{passive:true});
-  ['pointerup','pointercancel','pointermove','scroll'].forEach(n=>document.addEventListener(n,()=>{clearTimeout(t);t=null},{passive:true}));
-  document.addEventListener('click',e=>{if(hit&&e.target.closest&&e.target.closest('[data-crq]')){e.preventDefault();e.stopImmediatePropagation();hit=null}},true)}
+{let t=null,hit=null,lx=0,ly=0;document.addEventListener('pointerdown',e=>{const c=e.target.closest&&e.target.closest('[data-crq]');if(!c)return;lx=e.clientX;ly=e.clientY;clearTimeout(t);t=setTimeout(()=>{t=null;hit=c;setTimeout(()=>{hit=null},1500);const[k,id]=c.dataset.crq.split('|');const it=crList(k).find(x=>x.id===id);if(!it)return;try{navigator.vibrate&&navigator.vibrate(20)}catch(_){}plAddBlock((guessBlock(it.n)||{}).cat||SET.cats[0].name,30,it.n)},600)},{passive:true});
+  ['pointerup','pointercancel','scroll'].forEach(n=>document.addEventListener(n,()=>{clearTimeout(t);t=null},{passive:true}));
+  document.addEventListener('pointermove',e=>{if(t&&(Math.abs(e.clientX-lx)>8||Math.abs(e.clientY-ly)>8)){clearTimeout(t);t=null}},{passive:true});
+  document.addEventListener('contextmenu',e=>{if(e.target.closest&&e.target.closest('[data-crq]'))e.preventDefault()});
+  window.addEventListener('click',e=>{if(hit&&e.target.closest&&e.target.closest('[data-crq]')){e.preventDefault();e.stopImmediatePropagation()}hit=null},true)}
 /* 성경 → 영성 평가 ‘성경’ 항목 자동 ✓ + 오늘 읽은 곳 */
 function bbTodayRead(){try{const S=bbS(),T=today();const L=Object.entries(S.read||{}).filter(([,d])=>d===T).map(([k])=>k.split('-').map(Number));if(!L.length)return'';const by={};L.forEach(([b,c])=>{(by[b]=by[b]||[]).push(c)});return Object.keys(by).map(b=>{const c=by[b].sort((x,y)=>x-y);return`${BBN[b]} ${c.length>1?c[0]+'–'+c[c.length-1]:c[0]}장`}).join(', ')}catch(e){return''}}
 let BBSY='';function bbCritSync(){try{const r=bbTodayRead();if(!r||r===BBSY||!D||D.date!==today())return;BBSY=r;const it=crList('spirit').find(x=>/성경|말씀/.test(x.n));if(!it)return;const M=(D.crit&&D.crit.spirit)||{};if(M[it.id]!==undefined)return;crSetToday('spirit',it.id,1);toast(`📖 ${r} 읽음 → 영성 ‘${it.n}’ ✓`)}catch(e){}}
