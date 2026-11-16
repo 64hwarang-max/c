@@ -18002,6 +18002,51 @@ document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest
 /* 목표 보기 6종 → 기본 2개 */
 function gvMorePaint(){try{document.querySelectorAll('.gvbar').forEach(b=>{if(b.querySelector('.gvmore'))return;let all=false;try{all=localStorage.getItem('gj-gvall')==='1'}catch(e){}b.classList.toggle('gvall',all);const m=document.createElement('button');m.type='button';m.className='gvmore';m.textContent=all?'접기 ‹':'⋯ 더보기';m.onclick=()=>{const on=!b.classList.contains('gvall');b.classList.toggle('gvall',on);m.textContent=on?'접기 ‹':'⋯ 더보기';try{localStorage.setItem('gj-gvall',on?'1':'0')}catch(e){}};b.appendChild(m)})}catch(e){}}
 DECO.add('목표 보기 더보기',{root:'body',deep:true,wait:200,run:gvMorePaint,now:true});
+
+/* ===== v476: 늘리기 손잡이 크게 · 계획 블록 ‘했음’ 원 · 하루 틀 ===== */
+{const st=document.createElement('style');st.textContent=`.sblk .rsz{height:22px}.sblk .rsz::after{width:38px;height:5px;opacity:.85}.sblk .bok{position:absolute;left:2px;top:2px;width:26px;height:26px;border-radius:50%;border:2px solid var(--c);background:var(--paper);color:var(--c);display:flex;align-items:center;justify-content:center;font-style:normal;font-size:.95rem;font-weight:700;z-index:2;box-sizing:border-box}.sblk .bok.dn{background:#2e9e6b;border-color:#2e9e6b;color:#fff}.sblk:has(.bok) .bcp{display:none!important}.dtp{display:flex;align-items:center;gap:6px;padding:9px 0;border-bottom:1px solid var(--line)}.dtp>span{flex:1;min-width:0;font-weight:700}.dtp small{font-weight:400;color:var(--muted);margin-left:4px}.dtp button{border:1px solid var(--line);background:var(--paper);color:var(--ink);border-radius:9px;padding:7px 10px;font:inherit;font-size:.85rem}.dtb{border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:999px;padding:4px 10px;font:inherit;font-size:.82rem;min-height:30px}.mvb{display:flex;gap:8px;margin:10px 0}.mvb button{flex:1;border:1px solid var(--line);background:var(--paper);color:var(--ink);border-radius:10px;padding:10px;font:inherit;font-weight:700}`;document.head.appendChild(st)}
+function bokPaint(){try{if(curSection!=='day'||!D)return;document.querySelectorAll('#dayBody .sblk[data-bk^="plan|"]').forEach(b=>{const i=+b.dataset.bk.split('|')[1];const pb=(D.plan||[])[i];const h=b.offsetHeight;if(!pb||!pb.s||!pb.e||h<28){const o=b.querySelector('.bok');if(o)o.remove();b.classList.remove('hasok');return}
+    let dn=false;try{dn=planDone(pb)}catch(e){}let o=b.querySelector('.bok');if(!o){o=document.createElement('i');o.className='bok';o.setAttribute('role','button');o.setAttribute('data-bok','1');b.appendChild(o)}
+    o.classList.toggle('dn',dn);o.textContent=dn?'✓':'';o.setAttribute('aria-label',dn?'실제에 기록됨':'계획대로 했다고 기록');b.classList.add('hasok')})}catch(e){}}
+DECO.add('계획 했음 원',{root:'#dayBody',deep:true,wait:150,run:bokPaint,now:true});
+document.addEventListener('click',e=>{const o=e.target.closest&&e.target.closest('[data-bok]');if(!o)return;e.preventDefault();e.stopImmediatePropagation();
+  if(o.classList.contains('dn')){toast('이미 실제 한 일에 있습니다.');return}const c=o.parentNode.querySelector('[data-bcp]');if(c)c.click()},true);
+/* 하루 틀 */
+const dtpList=()=>{SET.dayTpl=Array.isArray(SET.dayTpl)?SET.dayTpl:[];return SET.dayTpl};
+function dtpOpen(){const S=$('#sheet');S.hidden=false;const close=()=>{S.hidden=true;S.innerHTML=''};
+  const draw=()=>{const L=dtpList();const has=(D.plan||[]).length>0;
+    S.innerHTML=`<div class="sheetbox" role="dialog" aria-label="하루 틀"><div class="shead"><b>🗂 하루 틀</b><button class="del" id="dtx">닫기</button></div>
+    <p class="hint" style="margin:0 0 6px">자주 쓰는 하루 계획(평일·주말·당직 등)을 저장해 두고 한 번에 가져옵니다.</p>
+    ${L.map((t,i)=>`<div class="dtp"><span>${esc(t.name)}<small>${t.blocks.length}개</small></span>${has?`<button data-dta="${i}|add">＋ 덧붙이기</button><button data-dta="${i}|rep">바꾸기</button>`:`<button data-dta="${i}|rep">적용</button>`}<button data-dtd="${i}" aria-label="틀 지우기">✕</button></div>`).join('')||'<p class="hint">아직 저장한 틀이 없습니다.</p>'}
+    <div class="row" style="margin-top:12px"><button class="btn" id="dts" ${has?'':'disabled'}>＋ 오늘 계획을 틀로 저장</button></div>${has?'':'<p class="hint">오늘 계획이 있어야 틀로 저장할 수 있습니다.</p>'}</div>`;
+    $('#dtx').onclick=close;S.onclick=e=>{if(e.target===S)close()};
+    S.querySelectorAll('[data-dta]').forEach(b=>b.onclick=()=>{const[i,m]=b.dataset.dta.split('|');const t=dtpList()[+i];if(!t)return;const nb=t.blocks.map(x=>Object.assign({},x,{id:uid()}));D.plan=m==='add'?[...(D.plan||[]),...nb]:nb;schedule();close();renderDay();toast(`🗂 ‘${t.name}’ 틀을 ${m==='add'?'덧붙였습니다':'적용했습니다'}.`)});
+    S.querySelectorAll('[data-dtd]').forEach(b=>b.onclick=async()=>{const t=dtpList()[+b.dataset.dtd];if(!t||!await uiConfirm(`‘${t.name}’ 틀을 지울까요?`))return;dtpList().splice(+b.dataset.dtd,1);saveSet().catch(()=>{});draw()});
+    const sv=$('#dts');if(sv)sv.onclick=async()=>{const n=await uiPrompt('틀 이름 (예: 평일, 주말, 당직)','');if(!n||!n.trim())return;const bl=(D.plan||[]).filter(x=>x.s&&x.e).map(x=>({s:x.s,e:x.e,act:x.act,cat:x.cat,who:x.who||'',area:x.area,goal:x.goal}));if(!bl.length){toast('시간이 정해진 계획 블록이 없습니다.');return}dtpList().push({id:uid(),name:n.trim().slice(0,12),blocks:bl});saveSet().catch(()=>{});draw();toast('🗂 틀로 저장했습니다.')}};
+  draw()}
+function dtbPaint(){try{if(curSection!=='day'||!D)return;const B=document.getElementById('dayBody');if(!B||B.querySelector('.dtb'))return;const bar=B.querySelector('.cpbar');if(!bar)return;const b=document.createElement('button');b.type='button';b.className='dtb';b.dataset.dtpl='1';b.textContent='🗂 하루 틀';bar.appendChild(b)}catch(e){}}
+DECO.add('하루 틀 단추',{root:'#dayBody',deep:true,wait:250,run:dtbPaint,now:true});
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-dtpl]');if(!b)return;e.preventDefault();e.stopPropagation();dtpOpen()},true);
+function edTplPaint(){try{const c=document.querySelector('#dayBody .emptyd');if(c&&!c.querySelector('[data-dtpl]')&&dtpList().length)c.insertAdjacentHTML('beforeend','<button type="button" class="crqc" data-dtpl="1">🗂 하루 틀 적용</button>')}catch(e){}}
+DECO.add('빈 날 틀 단추',{root:'#dayBody',deep:true,wait:300,run:edTplPaint,now:true});
+
+/* ===== v477: 빈 시간 길게 눌러 새 블록 · 블록 다른 날로 옮기기·복사 ===== */
+function lpBind(tl,kind,st){if(!tl||tl._lp)return;tl._lp=1;let t=null,x0=0,y0=0,id=0;const clr=()=>{clearTimeout(t);t=null};
+  tl.addEventListener('pointerdown',e=>{if(e.pointerType==='mouse'&&e.button!==0)return;if(e.target.closest('.sblk,button,a,input,select,textarea'))return;clr();x0=e.clientX;y0=e.clientY;id=e.pointerId;
+    t=setTimeout(()=>{t=null;const r=tl.getBoundingClientRect();let m=Math.floor(((y0-r.top)/HPX*60+st*60)/30)*30;m=Math.max(st*60,Math.min(1440-30,m));const f=v=>`${pad(Math.floor(v/60)%24)}:${pad(v%60)}`;try{navigator.vibrate&&navigator.vibrate(20)}catch(_){}
+      openBlockEditor(kind,null,{s:f(m),e:f(Math.min(1440,m+60))})},550)},{passive:true});
+  tl.addEventListener('pointermove',e=>{if(t&&(Math.abs(e.clientX-x0)>8||Math.abs(e.clientY-y0)>8))clr()},{passive:true});
+  ['pointerup','pointercancel','pointerleave','scroll'].forEach(n=>tl.addEventListener(n,clr,{passive:true}));
+  tl.addEventListener('contextmenu',e=>{if(!e.target.closest('.sblk'))e.preventDefault()})}
+{const _b=bindBlockDrag;bindBlockDrag=function(tl,kind,st){const r=_b.apply(this,arguments);try{lpBind(tl,kind,st)}catch(e){console.warn('lp',e)}return r}}
+function mvParse(v,base){v=String(v||'').trim();if(!v)return'';let m;if((m=v.match(/^([+-]\d+)$/)))return addD(base,+m[1]);if((m=v.match(/^(\d{4})[-\/.](\d{1,2})[-\/.](\d{1,2})$/)))return`${m[1]}-${pad(+m[2])}-${pad(+m[3])}`;if((m=v.match(/^(\d{1,2})[-\/.](\d{1,2})$/)))return`${base.slice(0,4)}-${pad(+m[1])}-${pad(+m[2])}`;return''}
+async function mvBlock(copy){try{if(!bES||bES.i==null)return;if(bES._read)bES._read();const kind=bES.kind,i=bES.i,b=JSON.parse(JSON.stringify(bES.b));
+  const v=await uiPrompt(`${copy?'복사':'옮길'} 날짜 (예: 11/20 · +1 은 내일 · -1 은 어제)`,'+1');const to=mvParse(v,D.date);if(!to||isNaN(parseD(to))||ymd(parseD(to))!==to){if(v)toast('날짜를 읽지 못했습니다. 예: 11/20 또는 +1');return}if(to===D.date){toast('같은 날입니다.');return}
+  const o=norm((await store.load(to))||{date:to});const nb=Object.assign({},b,{id:uid()});delete nb.noteId;o[kind]=o[kind]||[];o[kind].push(nb);await store.save(to,o);try{if(cacheAll)cacheAll.set(to,o)}catch(e){}
+  if(!copy){D[kind].splice(i,1);schedule()}closeBlockEditor();toast(`📅 ${md(to)}로 ${copy?'복사':'옮겼'}${copy?'했':'습니'}다.`)}catch(e){console.warn('mv',e)}}
+function mvBtnPaint(){try{const O=document.getElementById('blockedit');if(!O||O.hidden||O.querySelector('.mvb'))return;const d=O.querySelector('#bdel');if(!d)return;d.insertAdjacentHTML('beforebegin','<div class="mvb"><button type="button" data-mvb="mv">📅 다른 날로 옮기기</button><button type="button" data-mvb="cp">📅 다른 날로 복사</button></div>')}catch(e){}}
+DECO.add('블록 다른 날',{root:'#blockedit',deep:true,wait:120,run:mvBtnPaint,now:true});
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-mvb]');if(!b)return;e.preventDefault();e.stopPropagation();mvBlock(b.dataset.mvb==='cp')},true);
 </script>
 <!--BIBLE{--><!--}BIBLE-->
 <div id="miniov" class="miniov" hidden></div>
