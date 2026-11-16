@@ -16262,7 +16262,7 @@ async function syPutSafe(B,k,v){if(!k.startsWith('day:')||!v||typeof v!=='object
 {const _o=openDay;openDay=async function(d){try{staleGuardInstall()}catch(e){}return _o.apply(this,arguments)}}
 {const _f=flush0;flush0=async function(){try{staleGuardInstall()}catch(e){}return _f.apply(this,arguments)}}
 /* v390 ① 앱 버전 표시 · 새 버전 알림 (GitHub에서 마지막으로 성공한 빌드 번호와 비교) */
-var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/462})();
+var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/463})();
 const VRK='gj-verchk',VRURL='https://github.com/64hwarang-max/c/actions/workflows/build-apk.yml';
 const vrGet=()=>{try{return JSON.parse(localStorage.getItem(VRK)||'{}')}catch(e){return{}}};
 async function vrCheck(force){const c=vrGet();if(!force&&c.t&&Date.now()-c.t<6*36e5)return c;
@@ -17775,6 +17775,22 @@ function gSubLine(g){try{if(!g||!['y','h','q'].includes(g.lv))return'';const T=t
   const a=mondayOf(T);const m=goalMins(g,a,addD(a,6));const mm=m&&m.act?` · 이번 주 실행 ${hm(m.act)}`:'';if(!nm&&!nw&&!mm)return'';
   return`<i class="bpsub">${nm?'이번 달 '+nm:''}${nm&&nw?' · ':''}${nw?'이번 주 '+nw:''}${mm}</i>`}catch(e){return''}}
 {const st=document.createElement('style');st.textContent=`.bpc .bpsub{display:block;font-style:normal;font-size:.66rem;color:var(--muted);line-height:1.25;margin-top:2px;white-space:normal}`;document.head.appendChild(st)}
+
+/* ===== v463: '나' 맨 위에 "지금의 나" 한 장 (비전 · 이번 주 방향 · 역할별 시간 · 지난 7일 하루 열매) — 읽기 전용 ===== */
+{const st=document.createElement('style');st.textContent=`#mnow{border:1px solid var(--line);border-radius:16px;padding:12px 14px;margin:0 0 12px;background:var(--paper)}#mnow h3{margin:0 0 6px;font-size:1rem}#mnow .mr{display:flex;gap:8px;align-items:baseline;padding:6px 0;border-top:1px dashed var(--line);font-size:.86rem;cursor:pointer}#mnow .mr:first-of-type{border-top:0}#mnow .mr>b{flex:0 0 4.2em;color:var(--muted);font-weight:600;font-size:.76rem}#mnow .mr>span{flex:1;min-width:0}#mnow .mv{font-size:.95rem;font-weight:700;color:var(--ink)}`;document.head.appendChild(st)}
+async function mnowPaint(){try{const R=document.getElementById('minebody');if(!R)return;let old=R.querySelector('#mnow');const T=today();
+  let M=null;try{M=await allMap()}catch(e){}const vis=(GOALS.vision||'').trim();
+  const fo=(()=>{try{return pdFocusGet('w',T)}catch(e){return[]}})();const gs=[...goalsAt('w',perKey('w',T)),...goalsAt('m',perKey('m',T))].filter(g=>g.title);
+  let rl='';try{const o=await rlWeekMin();const L=rlList();rl=L.filter(r=>o[r.id]).map(r=>`${esc(r.e||'')} ${esc(r.name||r.n||'')} ${hm(o[r.id])}`).join(' · ')}catch(e){}
+  const sc=[];for(let i=0;i<7;i++){const d=addD(T,-i);const o=d===(D&&D.date)?D:(M&&M.get(d));if(o){const v=scoreOf(o);if(v!=null)sc.push(v)}}
+  const avg=sc.length?Math.round(sc.reduce((a,b)=>a+b,0)/sc.length):null;
+  const rows=[`<div class="mr" data-mngo="vision"><b>비전</b><span class="mv">${vis?esc(vis):'＋ 비전 적기'}</span></div>`,
+   `<div class="mr" data-mngo="plan"><b>이번 주</b><span>${fo.length?'⭐ '+fo.map(k=>(AREA_E[k]||'')+esc(areaName(k))).join(' · ')+' — ':''}${gs.length?gs.map(g=>(g.done?'✓ ':'🎯 ')+esc(g.title)).join(' · '):'<small class="hint">세운 목표가 없습니다</small>'}</span></div>`];
+  if(rl)rows.push(`<div class="mr" data-mngo="vision"><b>역할</b><span>${rl}</span></div>`);
+  if(avg!=null)rows.push(`<div class="mr" data-mngo="rv2"><b>지난 7일</b><span>하루 열매 평균 <b style="color:var(--ink)">${avg}</b>점 · 기록한 날 ${sc.length}일</span></div>`);
+  const h=`<h3>🧭 지금의 나</h3>${rows.join('')}`;if(!old){old=document.createElement('div');old.id='mnow';R.prepend(old)}old.innerHTML=h;
+  old.querySelectorAll('[data-mngo]').forEach(b=>b.onclick=()=>{const k=b.dataset.mngo;if(k==='plan'){PLM='plan';go('plan')}else go(k)})}catch(e){console.warn('mnow',e)}}
+{const _m=renderMine;renderMine=async function(){const r=await _m.apply(this,arguments);try{await mnowPaint()}catch(e){}return r}}
 </script>
 <!--BIBLE{--><!--}BIBLE-->
 <div id="miniov" class="miniov" hidden></div>
