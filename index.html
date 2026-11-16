@@ -3504,7 +3504,7 @@ function ntSubOf(ek){if(!ek)return null;if(ek.startsWith('t:')){const t=SET.topi
 const ntEk=e=>e.cat||('t:'+e.t.id);
 function ntPage(n,lv){return`<button class="ntpg${n.id===nEdit?' on':''}" data-no="${n.id}" draggable="${NDND()?'true':'false'}" style="--lv:${lv}"><span class="ntic">${n.person?'👤':n.map?'🧠':n.bref?'📖':(Array.isArray(n.recs)&&n.recs.length)?'🎙':'📄'}</span><span class="ntx">${esc(nTitle(n))}</span><small>${md(n.date)}</small></button>`}
 const ntEmpty=lv=>`<p class="ntemp" style="--lv:${lv}">비어 있음 · ＋로 추가</p>`;
-function ntRow(key,lv,label,cnt,attrs,act,col){const op=ntIs(key);return`<div class="ntr" style="--lv:${lv}${col?';--c:'+col:''}" ${attrs}><button class="ntt" data-ntog="${esc(key)}" aria-expanded="${op}" aria-label="${op?'접기':'펼치기'}">${op?'▾':'▸'}</button><button class="ntn" data-ntog="${esc(key)}">${label}</button><small>${cnt}</small><button class="ntb" data-ntfeed="${esc(act)}" aria-label="날짜별로 이어 보기" title="날짜별로 이어 보기">📅</button><button class="ntb" data-ntadd="${esc(act)}" aria-label="여기에 추가">＋</button><button class="ntb" data-ntmenu="${esc(act)}" aria-label="더보기">⋯</button></div>`}
+function ntRow(key,lv,label,cnt,attrs,act,col){const op=ntIs(key);return`<div class="ntr" style="--lv:${lv}${col?';--c:'+col:''}" ${attrs}><button class="ntt" data-ntog="${esc(key)}" aria-expanded="${op}" aria-label="${op?'접기':'펼치기'}">${op?'▾':'▸'}</button><button class="ntn" data-ntog="${esc(key)}">${label}</button><small>${cnt}</small><button class="ntb" data-ntadd="${esc(act)}" aria-label="여기에 추가">＋</button><button class="ntb" data-ntmenu="${esc(act)}" aria-label="더보기">⋯</button></div>`}
 function ntTreeHTML(all){let h='';ntKeys().forEach((k,i)=>{const subs=pilSubs(k);const inK=all.filter(n=>noteDk(n)===k);if(k===''&&!subs.length&&!inK.length)return;const kk='k:'+k;
     h+=ntRow(kk,0,`${dkEmo(k)} ${esc(dkName(k))}`,inK.length,`data-dropdk="${esc(k)}"`,'k|'+k,k===''?'#9aa3b2':TPAL[i%TPAL.length]);if(!ntIs(kk))return;
     subs.forEach(e=>{const ek=ntEk(e);const ns=all.filter(n=>subHas(e,n));const ck='c:'+ek;
@@ -16262,7 +16262,7 @@ async function syPutSafe(B,k,v){if(!k.startsWith('day:')||!v||typeof v!=='object
 {const _o=openDay;openDay=async function(d){try{staleGuardInstall()}catch(e){}return _o.apply(this,arguments)}}
 {const _f=flush0;flush0=async function(){try{staleGuardInstall()}catch(e){}return _f.apply(this,arguments)}}
 /* v390 ① 앱 버전 표시 · 새 버전 알림 (GitHub에서 마지막으로 성공한 빌드 번호와 비교) */
-var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/464})();
+var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/465})();
 const VRK='gj-verchk',VRURL='https://github.com/64hwarang-max/c/actions/workflows/build-apk.yml';
 const vrGet=()=>{try{return JSON.parse(localStorage.getItem(VRK)||'{}')}catch(e){return{}}};
 async function vrCheck(force){const c=vrGet();if(!force&&c.t&&Date.now()-c.t<6*36e5)return c;
@@ -17808,6 +17808,19 @@ async function bbSearchOpen(q){q=String(q||'').trim();if(q.length<2){toast('두 
     S.querySelectorAll('[data-bsg]').forEach(b=>b.onclick=()=>{const[x,y,z]=b.dataset.bsg.split(',').map(Number);S.hidden=true;S.innerHTML='';bbOpen(x,y,z)})};draw()}
 
 function bbIsRef(q){q=(q||'').replace(/\s+/g,'').replace(/[장절]/g,m=>m==='장'?':':'');if(!q)return false;const names=[...BBN,...BBA].sort((a,b)=>b.length-a.length);const h=names.find(n=>q.startsWith(n));return !!h&&/^(\d+)?(:\d+)?([-~]\d+)?:?$/.test(q.slice(h.length))}
+
+/* ===== v465: 노트 편집창 — 태그·도구 줄을 접어서 본문이 제목 바로 아래에서 시작 ===== */
+{const st=document.createElement('style');st.textContent=`details.nxtra{margin:4px 0 8px;border-bottom:1px solid var(--line)}details.nxtra>summary{cursor:pointer;list-style:none;font-size:.82rem;color:var(--muted);padding:6px 2px;display:flex;align-items:center;gap:6px}details.nxtra>summary::-webkit-details-marker{display:none}details.nxtra>summary::after{content:"▾";margin-left:auto}details.nxtra[open]>summary::after{content:"▴"}`;document.head.appendChild(st)}
+function nxFold(){try{const t=document.getElementById('ntitle');if(!t||document.getElementById('nxtra'))return;const P=t.parentElement;const o=P.querySelector(':scope>#nopts'),e=P.querySelector(':scope>.edtools');if(!o&&!e)return;
+  const d=document.createElement('details');d.className='nxtra';d.id='nxtra';let op=false;try{op=localStorage.getItem('gj-nxtra')==='1'}catch(x){}d.open=op;d.innerHTML='<summary>⚙️ 태그 · 도구 (녹음·사진·계획 참고)</summary>';
+  t.after(d);if(o)d.appendChild(o);if(e)d.appendChild(e);d.addEventListener('toggle',()=>{try{localStorage.setItem('gj-nxtra',d.open?'1':'0')}catch(x){}})}catch(x){console.warn('nxFold',x)}}
+DECO.add('노트 위쪽 접기',{root:'#v-note',deep:true,wait:150,run:nxFold,now:true});
+
+/* ===== v466: 노트 목록 줄의 📅 단추를 ⋯ 메뉴 안으로 · 남은 단추는 크게 ===== */
+{const st=document.createElement('style');st.textContent=`.ntr .ntb{min-width:38px;min-height:38px;font-size:1.1rem}`;document.head.appendChild(st)}
+let NTMP='';
+{const _m=ntMenu;ntMenu=function(p){NTMP=p;try{return _m.apply(this,arguments)}finally{setTimeout(()=>{NTMP=''},0)}}}
+{const _s=ntSheet;ntSheet=function(title,items){try{if(NTMP&&/^[kc]\|/.test(NTMP)){const p=NTMP;items=[['📅 날짜별로 이어 보기',()=>{const b=document.createElement('button');b.dataset.ntfeed=p;b.style.display='none';document.body.appendChild(b);b.click();b.remove()}],...items]}}catch(e){}return _s.call(this,title,items)}}
 </script>
 <!--BIBLE{--><!--}BIBLE-->
 <div id="miniov" class="miniov" hidden></div>
