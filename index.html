@@ -17928,6 +17928,28 @@ document.addEventListener('toggle',e=>{const d=e.target;if(d&&d.dataset&&d.datas
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-crq]');if(!b)return;e.preventDefault();e.stopPropagation();const[k,id]=b.dataset.crq.split('|');D.crit=D.crit||{};const M=D.crit[k]=D.crit[k]||{};const E=crEval(D,k),row=E&&E.rows.find(x=>x.it.id===id);
   if(row&&row.v>=1){if(M[id]===1)delete M[id];else M[id]=0}else M[id]=1;
   if(!Object.keys(M).length)delete D.crit[k];if(D.scUser)delete D.scUser[k];try{applyDraft(D)}catch(_){}schedule();if(mode==='run')crqPaint();else renderDay()},true);
+
+/* ===== v473: 뒤로가기 동그랗게·＋ 작게 · 하단 바 내릴 때 숨김 · 연속 🔥 · 연간 잔디 · 기둥 추세 ===== */
+{const st=document.createElement('style');st.textContent=`.navbk{width:38px;height:38px;padding:0!important;display:flex;align-items:center;justify-content:center;opacity:.8}.navbk #navbkl{display:none}.fab{width:52px!important;height:52px!important}.zmbar{transition:transform .2s}.zmbar.zmhide{transform:translateY(140%)}
+.hmc{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:10px 12px;margin:10px 0}.hmc h3{margin:0 0 6px;font-size:1rem}.hmg{display:grid;grid-auto-flow:column;grid-template-rows:repeat(7,1fr);gap:2px}.hmg i{display:block;aspect-ratio:1;border-radius:2px;background:color-mix(in srgb,var(--line) 70%,transparent)}.hmg i[data-l="1"]{background:#c8e6d4}.hmg i[data-l="2"]{background:#8fd0aa}.hmg i[data-l="3"]{background:#4fb77e}.hmg i[data-l="4"]{background:#1f8f5a}.hmf{display:flex;gap:5px;flex-wrap:wrap;margin:6px 0}.hmf button{border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:999px;padding:5px 10px;font:inherit;font-size:.85rem}.hmf button.on{background:var(--pen);color:#fff;border-color:var(--pen)}.hmt{display:flex;align-items:center;gap:8px;margin:4px 0;font-size:.85rem}.hmt b{min-width:4.6em}.hmt svg{flex:1;height:26px}.hmt em{font-style:normal;min-width:2.4em;text-align:right;color:var(--muted)}.crqc .stk{font-size:.74rem;opacity:.9}`;document.head.appendChild(st);
+ let y0=scrollY;addEventListener('scroll',()=>{const b=document.getElementById('zmbar');if(!b)return;const y=scrollY;if(y>y0+10)b.classList.add('zmhide');else if(y<y0-10||y<40)b.classList.remove('zmhide');y0=y},{passive:true})}
+/* 연속 기록 🔥 (세부 항목 칩) */
+let CRSK={d:'',m:{}};
+async function crStreak(){try{if(!D)return;const T=D.date;if(CRSK.d===T&&CRSK.run)return;CRSK.d=T;CRSK.run=1;const AM=await allMap();const M={};
+  SCORE.forEach(([k])=>{let L=[];try{L=crList(k).filter(it=>+it.w>0)}catch(e){}L.forEach(it=>{let n=0;for(let i=0;i<120;i++){const dt=addD(T,-i);const o=dt===T?D:AM.get(dt);if(!o){if(i===0)continue;break}let E;try{E=crEval(o,k)}catch(e){break}const r=E&&E.rows.find(x=>x.it.id===it.id);if(r&&r.v>=1)n++;else if(i===0)continue;else break}M[k+'|'+it.id]=n})});
+  CRSK.m=M;CRSK.run=0;crStkPaint()}catch(e){CRSK.run=0}}
+function crStkPaint(){document.querySelectorAll('.crqc[data-crq]').forEach(b=>{const n=CRSK.m[b.dataset.crq];let e=b.querySelector('.stk');if(n>=2){if(!e){e=document.createElement('small');e.className='stk';b.appendChild(e)}e.textContent='🔥'+n}else if(e)e.remove()})}
+{const _p=crqPaint;crqPaint=function(){_p.apply(this,arguments);try{if(CRSK.d!==(D&&D.date))CRSK.run=0,crStreak();else crStkPaint()}catch(e){}}}
+/* 연간 잔디 + 기둥 추세 (평가 화면 · 나 화면 아래) */
+let HMK='';
+async function hmPaint(){try{const R=document.getElementById('scoreBody');if(!R||R.querySelector('.hmc'))return;const AM=await allMap();const T=today();const K=HMK;
+  const val=o=>{if(!o)return 0;if(!K){const v=scoreOf(o);return v==null?0:v/10}return +(o.score||{})[K]||0};
+  const W=26,cells=[];const d0=addD(T,-(W*7-1)-parseD(T).getDay()+6);for(let i=0;i<W*7;i++){const dt=addD(d0,i);if(dt>T){cells.push('<i></i>');continue}const v=val(AM.get(dt));const l=!v?0:v<4?1:v<6.5?2:v<8.5?3:4;cells.push(`<i data-l="${l}" title="${dt} ${v?Math.round(v*10)/10:'기록 없음'}"></i>`)}
+  const trend=SCORE.map(([k,l])=>{const pts=[];for(let w=11;w>=0;w--){let a=0,c=0;for(let i=0;i<7;i++){const o=AM.get(addD(T,-(w*7+i)));const v=o?+(o.score||{})[k]||0:0;if(v){a+=v;c++}}pts.push(c?a/c:null)}const ok=pts.filter(x=>x!=null);if(!ok.length)return'';const xs=pts.map((v,i)=>v==null?null:[i*(100/11),24-v*2.2]).filter(Boolean);const last=ok[ok.length-1],prv=ok.length>1?ok[ok.length-2]:last;const dl=last-prv;
+    return`<div class="hmt"><b>${AREA_E[k]||''} ${esc(l)}</b><svg viewBox="0 0 100 26" preserveAspectRatio="none"><polyline fill="none" stroke="var(--pen)" stroke-width="1.6" vector-effect="non-scaling-stroke" points="${xs.map(p=>p.join(',')).join(' ')}"/></svg><em>${Math.round(last*10)/10}${dl>.4?' ↑':dl<-.4?' ↓':''}</em></div>`}).join('');
+  const h=document.createElement('div');h.className='hmc';h.innerHTML=`<h3>🟩 최근 26주 잔디</h3><div class="hmf"><button data-hmk="" class="${K?'':'on'}">전체</button>${SCORE.map(([k,l])=>`<button data-hmk="${k}" class="${K===k?'on':''}">${AREA_E[k]||''}${esc(l)}</button>`).join('')}</div><div class="hmg">${cells.join('')}</div><p class="hint" style="margin:6px 0 8px">진할수록 점수가 높은 날 · 칸을 길게 누르면 날짜와 점수</p><h3 style="margin-top:8px">📈 기둥별 주간 평균 (12주)</h3>${trend||'<p class="hint">기록이 쌓이면 나옵니다.</p>'}`;R.appendChild(h)}catch(e){console.warn('hm',e)}}
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-hmk]');if(!b)return;e.preventDefault();HMK=b.dataset.hmk;const c=b.closest('.hmc');if(c)c.remove();hmPaint()},true);
+DECO.add('연간 잔디',{root:'#scoreBody',deep:true,wait:300,run:hmPaint,now:true});
 </script>
 <!--BIBLE{--><!--}BIBLE-->
 <div id="miniov" class="miniov" hidden></div>
