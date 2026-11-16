@@ -16262,7 +16262,7 @@ async function syPutSafe(B,k,v){if(!k.startsWith('day:')||!v||typeof v!=='object
 {const _o=openDay;openDay=async function(d){try{staleGuardInstall()}catch(e){}return _o.apply(this,arguments)}}
 {const _f=flush0;flush0=async function(){try{staleGuardInstall()}catch(e){}return _f.apply(this,arguments)}}
 /* v390 ① 앱 버전 표시 · 새 버전 알림 (GitHub에서 마지막으로 성공한 빌드 번호와 비교) */
-var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/467})();
+var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/468})();
 const VRK='gj-verchk',VRURL='https://github.com/64hwarang-max/c/actions/workflows/build-apk.yml';
 const vrGet=()=>{try{return JSON.parse(localStorage.getItem(VRK)||'{}')}catch(e){return{}}};
 async function vrCheck(force){const c=vrGet();if(!force&&c.t&&Date.now()-c.t<6*36e5)return c;
@@ -17404,13 +17404,13 @@ function mxCal(i,a){const ds=zmDays(i,a),T=today();const first=ds[0],last=ds[ds.
   const inR=d=>d>=first&&d<=last;const sh=SET.zmShow||'auto';
   const cell=d=>{const x=parseD(d),hn=holName(d),I=zmInfo(d);const L=[];if(hn)L.push(`<i class="mxl hol">${esc(hn)}</i>`);
     (GEV[d]||[]).forEach(e=>L.push(`<i class="mxl ge">${esc(e.title)}</i>`));
-    I.pl.filter(b=>b.s||b.act).slice().sort((p,q)=>(p.s||'99')<(q.s||'99')?-1:1).forEach(b=>L.push(`<i class="mxl" style="--c:${catColor(b.cat)}">${esc(b.act||b.cat||'')}</i>`));
+    {const rp=I.pl.filter(b=>b.rid||b.rt);const pl=SET.mxRep?I.pl:I.pl.filter(b=>!(b.rid||b.rt));pl.filter(b=>b.s||b.act).slice().sort((p,q)=>(p.s||'99')<(q.s||'99')?-1:1).forEach(b=>L.push(`<i class="mxl" style="--c:${catColor(b.cat)}">${esc(b.act||b.cat||'')}</i>`));if(!SET.mxRep&&rp.length)L.push(`<i class="mxl ac">🔁 ${rp.length}</i>`)}
     I.tk.filter(t=>!t.time).forEach(t=>L.push(`<i class="mxl tk">☐ ${esc(t.title)}</i>`));
     if(d<=T&&sh!=='plan'&&I.tm.length)L.push(`<i class="mxl ac">✓ 실제 ${I.tm.length}건</i>`);
     const more=L.length>nl?L.length-(nl-1):0;const vis=more?L.slice(0,nl-1):L;
     const dn=x.getDate()===1?`${x.getMonth()+1}/1`:x.getDate();
     return`<button class="mxcell ${d===T?'td':''} ${inR(d)?'':'out'} ${x.getDay()===0?'sun':x.getDay()===6?'sat':''} ${hn?'hol':''}" data-pd="${d}" style="height:${rh}px"><span class="mxn"><b>${dn}</b>${more?`<em>+${more}</em>`:''}</span>${vis.join('')}</button>`};
-  return`<div class="mxw"><div class="mxh">${['일','월','화','수','목','금','토'].map((w,k)=>`<span class="${k===0?'sun':k===6?'sat':''}">${w}</span>`).join('')}</div><div class="mxrid">${all.map(cell).join('')}</div></div>`}
+  return`<div class="mxrb"><button type="button" class="chip" data-mxrep="1">🔁 반복 일정 ${SET.mxRep?'숨기기':'보이기'}</button></div><div class="mxw"><div class="mxh">${['일','월','화','수','목','금','토'].map((w,k)=>`<span class="${k===0?'sun':k===6?'sat':''}">${w}</span>`).join('')}</div><div class="mxrid">${all.map(cell).join('')}</div></div>`}
 {const _zb=zmBody;zmBody=function(i,a){const z=ZMS[i];if(z&&((z[0]==='w'&&z[1]>=3)||(z[0]==='m'&&z[1]<=6))&&zmDays(i,a).length>14)return`<div class="zmv">${mxCal(i,a)}</div>`;return _zb.apply(this,arguments)}}
 {const st=document.createElement('style');st.textContent=`.mxw{margin:0 -4px}.mxh{display:grid;grid-template-columns:repeat(7,1fr);font-size:.72rem;color:var(--muted);text-align:center;padding:4px 0}.mxh .sun,.mxcell.sun .mxn b{color:#d9534f}.mxh .sat,.mxcell.sat .mxn b{color:#3a78d8}
 .mxrid{display:grid;grid-template-columns:repeat(7,1fr);gap:0!important;border-top:1px solid var(--line)}
@@ -17866,6 +17866,19 @@ document.addEventListener('click',e=>{const t=e.target.closest&&e.target.closest
   setTimeout(()=>{try{if(!(bbS().read||{})[b0+'-'+c0])return;const T=today();if(!D||D.date!==T)return;const now=hhmm(new Date());const st=addMin(now,-15);
     if((D.time||[]).some(x=>x.s&&x.e&&x.s<now&&x.e>st))return;
     toastAct(`📖 ${BBN[b0]} ${c0}장 읽음`,'실제 한 일에 넣기',()=>{const sc=(SET.cats||[]).find(c=>catArea(c.name)==='spirit');const rec={id:uid(),s:st,e:now,act:`${BBN[b0]} ${c0}장 읽기`,cat:sc?sc.name:'기도',area:'spirit'};D.time=D.time||[];D.time.push(rec);D.time.sort((x,y)=>(x.s||'99')<(y.s||'99')?-1:1);schedule();try{renderDay()}catch(x){}toast('🗓️ 실제 한 일에 넣었습니다.')})}catch(x){console.warn('bbdone-act',x)}},700)},true);
+
+/* ===== v468: 시간표 블록 — 제목을 앞에, 시간은 작게 뒤로 (짧은 블록도 제목이 읽힘) ===== */
+{const st=document.createElement('style');st.textContent=`.sblk{display:flex!important;flex-wrap:wrap;align-content:flex-start;align-items:baseline;gap:0 5px;font-size:.76rem;line-height:1.25}.sblk>b{order:2;font-size:.62rem;font-weight:500;opacity:.72;white-space:nowrap}`;document.head.appendChild(st)}
+
+/* ===== v468: 계획/실제 열 제목을 누르면 그 열이 넓어짐 (다시 누르면 원래대로) ===== */
+{const st=document.createElement('style');st.textContent=`.scols.rv[data-wide="0"]{grid-template-columns:2.4fr 1fr}.scols.rv[data-wide="1"]{grid-template-columns:1fr 2.4fr}.scols.rv[data-wide="1"]>.scl:first-child .sblk,.scols.rv[data-wide="0"]>.scl:last-child .sblk{padding:2px 3px!important}.scols.rv[data-wide="1"]>.scl:first-child .sblk .bx,.scols.rv[data-wide="1"]>.scl:first-child .sblk .bcp,.scols.rv[data-wide="0"]>.scl:last-child .sblk .bx{display:none}.scols.rv .sch{cursor:pointer}.scols.rv .sch:not(:has(button))::after{content:"↔";font-size:.7rem;color:var(--muted);margin-left:6px}`;document.head.appendChild(st)}
+function wideApply(){try{let w='';try{w=localStorage.getItem('gj-wide')||''}catch(e){}document.querySelectorAll('.scols.rv').forEach(c=>{if(w==='0'||w==='1')c.dataset.wide=w;else delete c.dataset.wide})}catch(e){}}
+document.addEventListener('click',e=>{const h=e.target.closest&&e.target.closest('.scols.rv .sch');if(!h||e.target.closest('button,input,select,a'))return;const c=h.closest('.scols.rv');const i=[...c.children].indexOf(h.closest('.scl'));if(i<0)return;let w='';try{w=localStorage.getItem('gj-wide')||''}catch(x){}const nw=w===String(i)?'':String(i);try{localStorage.setItem('gj-wide',nw)}catch(x){}wideApply()});
+DECO.add('열 넓히기',{root:'#v-day',deep:true,wait:100,run:wideApply,now:true});
+
+/* ===== v468: 달 보기 — 반복 일정은 기본으로 개수(🔁 n)만, 버튼으로 펼침 ===== */
+{const st=document.createElement('style');st.textContent=`.mxrb{display:flex;justify-content:flex-end;margin:0 0 6px}.mxrb .chip{font-size:.78rem}`;document.head.appendChild(st)}
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-mxrep]');if(!b)return;e.preventDefault();e.stopPropagation();SET.mxRep=!SET.mxRep;saveSet().catch(()=>{});try{renderDay()}catch(x){}try{if(curSection==='plan')renderPlan()}catch(x){}},true);
 </script>
 <!--BIBLE{--><!--}BIBLE-->
 <div id="miniov" class="miniov" hidden></div>
