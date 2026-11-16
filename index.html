@@ -16262,7 +16262,7 @@ async function syPutSafe(B,k,v){if(!k.startsWith('day:')||!v||typeof v!=='object
 {const _o=openDay;openDay=async function(d){try{staleGuardInstall()}catch(e){}return _o.apply(this,arguments)}}
 {const _f=flush0;flush0=async function(){try{staleGuardInstall()}catch(e){}return _f.apply(this,arguments)}}
 /* v390 ① 앱 버전 표시 · 새 버전 알림 (GitHub에서 마지막으로 성공한 빌드 번호와 비교) */
-var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/459})();
+var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/460})();
 const VRK='gj-verchk',VRURL='https://github.com/64hwarang-max/c/actions/workflows/build-apk.yml';
 const vrGet=()=>{try{return JSON.parse(localStorage.getItem(VRK)||'{}')}catch(e){return{}}};
 async function vrCheck(force){const c=vrGet();if(!force&&c.t&&Date.now()-c.t<6*36e5)return c;
@@ -17739,6 +17739,17 @@ function gbDayHTML(){try{if(SET.gbandDay===false||D.date!==today())return'';cons
   return foldWrap('gbday',`🎯 이번 주 목표 ${all.length}개 <small class="hint">이룸 ${dn}</small>`,body,false)}catch(e){return''}}
 {const _r=renderFeatCard;renderFeatCard=function(){const r=_r.apply(this,arguments);try{const S=document.getElementById('showcard');if(!S||S.querySelector('#gbdkbox'))return r;const d=document.createElement('div');d.id='gbdkbox';d.style.marginTop='14px';
   d.innerHTML=`<h3 style="margin:0 0 6px">🎯 오늘 화면 목표 띠</h3><label class="chk featrow"><input type="checkbox" id="gbdk" ${SET.gbandDay===false?'':'checked'}><span><b>이번 주 목표 보이기</b> <small class="hint">시간표 위에 접힌 한 줄로 나옵니다.</small></span></label>`;S.appendChild(d);d.querySelector('#gbdk').onchange=e=>{SET.gbandDay=e.target.checked;saveSet().catch(()=>{});try{refreshAny()}catch(x){}}}catch(e){}return r}}
+
+/* ===== v460: 평가의 기둥 줄에 그 기둥의 이번 주 목표와 오늘 시간 (보여 주기만, 점수 계산은 그대로) ===== */
+{const st=document.createElement('style');st.textContent=`.axgl{display:block;font-size:.72rem;font-weight:500;color:var(--muted);line-height:1.35;margin-top:2px;white-space:normal}.axgl b{color:var(--acc);font-weight:600}`;document.head.appendChild(st)}
+function axGoalLine(){try{const B=document.getElementById('dayBody');if(!B||!D)return;const rows=B.querySelectorAll('.rate[id^="ax-"]');if(!rows.length)return;
+  const per=perKey('w',D.date),pm=perKey('m',D.date);const GL=[...goalsAt('w',per),...goalsAt('m',pm)].filter(g=>g.title&&!g.done);const T=wkTarget();
+  rows.forEach(r=>{const k=r.id.slice(3);const lab=r.querySelector(':scope>span');if(!lab)return;const old=lab.querySelector('.axgl');if(old)old.remove();
+    const gs=GL.filter(g=>g.area===k).slice(0,2);let m=0;(D.time||[]).forEach(b=>{if((b.area||catArea(b.cat))===k)m+=mins(b.s,b.e)});const tg=T[k]?T[k]/7*60:0;
+    if(!gs.length&&!(tg&&m))return;
+    const parts=[];if(gs.length)parts.push('🎯 <b>'+gs.map(g=>esc(g.title)).join(' · ')+'</b>');if(m||tg)parts.push('오늘 '+(m?hm(m):'0분')+(tg?' / 하루 몫 '+hm(Math.round(tg)):''));
+    const e=document.createElement('small');e.className='axgl';e.innerHTML=parts.join(' · ');lab.appendChild(e)})}catch(e){console.warn('axGoal',e)}}
+DECO.add('평가 기둥 목표 줄',{root:'#dayBody',deep:true,wait:200,run:axGoalLine,now:true});
 </script>
 <!--BIBLE{--><!--}BIBLE-->
 <div id="miniov" class="miniov" hidden></div>
