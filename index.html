@@ -2834,7 +2834,7 @@ function bypilHTML(){const T=today();
   const rows=[...SCORE.map(([k,l])=>[k,l,AREA_E[k]||'']),['','기타','🗂']];
   let h=`<p class="hint" style="margin:0 0 8px">⠿를 끌면 기둥 순서가 바뀝니다. 기둥(삶의 영역)마다 시기별 목표를 한 칸씩 봅니다. 칸을 누르면 그 시기의 목표를 열고, 빈 칸은 바로 적습니다.</p>`;
   rows.forEach(([k,l,e])=>{const cells=cols.map(([cn,lvs])=>[cn,lvs,gOf(lvs,k)]);const tot=cells.reduce((a,c)=>a+c[2].length,0);if(!k&&!tot)return;
-    const pw=k&&((GOALS.vis||{}).pboard||{})[k];h+=`<div class="bpil" ${k?`data-sk="${k}"`:''}><div class="bph">${k?HDR('gdrag'):''}<b>${e} ${esc(l)}</b><small>${tot?`목표 ${tot}`:'아직 없음'}</small></div>${k?`<button class="bpwant ${tx(pw)?'on':''}" data-bpw="1">🖼️ ${tx(pw)?esc(pw):'＋ 원하는 모습'}</button>`:''}<div class="bpg">${cells.map(([cn,lvs,gs])=>{const lv=(gs[0]&&gs[0].lv)||lvs[0];const g0=gs[0];return`<button class="bpc ${g0?'on':''}" data-bp="${k}|${lv}|${g0?1:0}"><small>${cn}</small>${g0?`<span>${esc(g0.title)}</span>${gs.length>1?`<em>외 ${gs.length-1}</em>`:`<em>${Math.round(prog(g0)*100)}%</em>`}`:'<span class="bpe">＋</span>'}</button>`}).join('')}</div></div>`});
+    const pw=k&&((GOALS.vis||{}).pboard||{})[k];h+=`<div class="bpil" ${k?`data-sk="${k}"`:''}><div class="bph">${k?HDR('gdrag'):''}<b>${e} ${esc(l)}</b><small>${tot?`목표 ${tot}`:'아직 없음'}</small></div>${k?`<button class="bpwant ${tx(pw)?'on':''}" data-bpw="1">🖼️ ${tx(pw)?esc(pw):'＋ 원하는 모습'}</button>`:''}<div class="bpg">${cells.map(([cn,lvs,gs])=>{const lv=(gs[0]&&gs[0].lv)||lvs[0];const g0=gs[0];return`<button class="bpc ${g0?'on':''}" data-bp="${k}|${lv}|${g0?1:0}"><small>${cn}</small>${g0?`<span>${esc(g0.title)}</span>${gs.length>1?`<em>외 ${gs.length-1}</em>`:`<em>${Math.round(prog(g0)*100)}%</em>`}${gSubLine(g0)}`:'<span class="bpe">＋</span>'}</button>`}).join('')}</div></div>`});
   return h}
 function bindLadder(R){
   R.querySelectorAll('[data-goshort]').forEach(b=>b.onclick=()=>go('short'));
@@ -16262,7 +16262,7 @@ async function syPutSafe(B,k,v){if(!k.startsWith('day:')||!v||typeof v!=='object
 {const _o=openDay;openDay=async function(d){try{staleGuardInstall()}catch(e){}return _o.apply(this,arguments)}}
 {const _f=flush0;flush0=async function(){try{staleGuardInstall()}catch(e){}return _f.apply(this,arguments)}}
 /* v390 ① 앱 버전 표시 · 새 버전 알림 (GitHub에서 마지막으로 성공한 빌드 번호와 비교) */
-var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/461})();
+var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/462})();
 const VRK='gj-verchk',VRURL='https://github.com/64hwarang-max/c/actions/workflows/build-apk.yml';
 const vrGet=()=>{try{return JSON.parse(localStorage.getItem(VRK)||'{}')}catch(e){return{}}};
 async function vrCheck(force){const c=vrGet();if(!force&&c.t&&Date.now()-c.t<6*36e5)return c;
@@ -17768,6 +17768,13 @@ document.addEventListener('click',async e=>{const b=e.target.closest&&e.target.c
   const gs=goalsAt(lv,perOf(lv,a)).filter(g=>g.title&&!g.done&&!g.carried&&!GOALS.list.some(x=>x.lv===lv&&x.per===perOf(lv,plpShift(lv,a,1))&&x.title===g.title));if(!gs.length)return;
   e.preventDefault();e.stopImmediatePropagation();let ok=false;try{ok=await uiConfirm(`아직 못 이룬 목표 ${gs.length}개를 다음 기간으로 넘길까요? (원래 목표는 그대로 남습니다)`)}catch(x){}
   if(ok){gs.forEach(g=>grCarry(g,lv,a));saveGoalsSoon()}b.dataset.grq='1';b.click()},true);
+
+/* ===== v462: 목표 화면(기둥별) 칸에 이번 달·이번 주 단계와 이번 주 실행 시간 ===== */
+function gSubLine(g){try{if(!g||!['y','h','q'].includes(g.lv))return'';const T=today(),pm=perKey('m',T),pw=perKey('w',T);const ids=new Set([g.id]);let ch=true;while(ch){ch=false;GOALS.list.forEach(x=>{if(x.parent&&ids.has(x.parent)&&!ids.has(x.id)){ids.add(x.id);ch=true}})}
+  const D2=GOALS.list.filter(x=>ids.has(x.id)&&x.id!==g.id);const nm=D2.filter(x=>x.lv==='m'&&x.per===pm&&!x.done).length,nw=D2.filter(x=>x.lv==='w'&&x.per===pw&&!x.done).length;
+  const a=mondayOf(T);const m=goalMins(g,a,addD(a,6));const mm=m&&m.act?` · 이번 주 실행 ${hm(m.act)}`:'';if(!nm&&!nw&&!mm)return'';
+  return`<i class="bpsub">${nm?'이번 달 '+nm:''}${nm&&nw?' · ':''}${nw?'이번 주 '+nw:''}${mm}</i>`}catch(e){return''}}
+{const st=document.createElement('style');st.textContent=`.bpc .bpsub{display:block;font-style:normal;font-size:.66rem;color:var(--muted);line-height:1.25;margin-top:2px;white-space:normal}`;document.head.appendChild(st)}
 </script>
 <!--BIBLE{--><!--}BIBLE-->
 <div id="miniov" class="miniov" hidden></div>
