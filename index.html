@@ -1787,7 +1787,7 @@ function renderDay(){if(ZMD>0&&curSection==='day'){zmDay().catch(e=>{console.war
   if(!['start','sched','run','pm'].includes(mode))mode=mode==='plan'?'start':'pm';if(lvNow()==='easy'&&mode==='pm'&&!simOn())mode='start';document.querySelectorAll('#mode button').forEach(b=>b.classList.toggle('on',b.dataset.m===mode));
   if(applyDraft(D))schedule();{const qb=$('#qbox');if(qb)qb.hidden=true}qInit();modeSubs();navScore();{const Dh=$('#dash');if(Dh){Dh.innerHTML=dashHTML();bindDash(Dh)}}
   if(mode==='run'){const B=$('#dayBody');B.innerHTML=schedHTML('run');bindSched(B,renderDay);bindRun(B);try{gxRunCard(B)}catch(e){}try{rcBarSync()}catch(e){}return}
-  $('#dayBody').innerHTML=mode==='start'?startHTML()+foldWrap('schday','🗓️ 시간표 · 할 일',schedHTML('day'),false):mode==='plan'||mode==='am'?planHTML():mode==='life'?lifeHTML():mode==='pm'?pmHTML():scoreHTML();bindAll($('#dayBody'));bindRadarDrag($('#dayBody'));if(mode==='start')bindSched($('#dayBody'),renderDay);if(mode==='pm')bindDayPhotos($('#dayBody'));{const B=$('#dayBody');B.querySelectorAll('[data-ax]').forEach(el=>el.addEventListener('click',e=>{if(e.target.closest('button'))return;const k=el.dataset.ax;if(AXO.has(k))AXO.delete(k);else AXO.add(k);renderDay();setTimeout(()=>document.getElementById('ax-'+k)?.scrollIntoView({block:'start',behavior:'smooth'}),40)}));collapsify(B);if(AXGO){const k=AXGO;AXGO=null;setTimeout(()=>document.getElementById('ax-'+k)?.scrollIntoView({block:'start'}),60)}}buildJump();try{rcBarSync()}catch(e){}if(mode==='pm')markFive();if(mode==='pm'||mode==='score')fillLists()}
+  $('#dayBody').innerHTML=mode==='start'?startHTML()+gbDayHTML()+foldWrap('schday','🗓️ 시간표 · 할 일',schedHTML('day'),false):mode==='plan'||mode==='am'?planHTML():mode==='life'?lifeHTML():mode==='pm'?pmHTML():scoreHTML();bindAll($('#dayBody'));bindRadarDrag($('#dayBody'));if(mode==='start'){bindSched($('#dayBody'),renderDay);try{bindGoalBand($('#dayBody'),renderDay)}catch(e){}}if(mode==='pm')bindDayPhotos($('#dayBody'));{const B=$('#dayBody');B.querySelectorAll('[data-ax]').forEach(el=>el.addEventListener('click',e=>{if(e.target.closest('button'))return;const k=el.dataset.ax;if(AXO.has(k))AXO.delete(k);else AXO.add(k);renderDay();setTimeout(()=>document.getElementById('ax-'+k)?.scrollIntoView({block:'start',behavior:'smooth'}),40)}));collapsify(B);if(AXGO){const k=AXGO;AXGO=null;setTimeout(()=>document.getElementById('ax-'+k)?.scrollIntoView({block:'start'}),60)}}buildJump();try{rcBarSync()}catch(e){}if(mode==='pm')markFive();if(mode==='pm'||mode==='score')fillLists()}
 const inp=(p,ph='',type='text')=>`<input type="${type}" data-p="${p}" value="${esc(getP(p))}" placeholder="${esc(ph)}">`;
 const ta=(p,ph='',rows=2,cls='')=>`<textarea rows="${rows}" class="${cls}" data-p="${p}" placeholder="${esc(ph)}">${esc(getP(p))}</textarea>`;
 let LR={};
@@ -5307,10 +5307,12 @@ function goalBandHTML(){const T=today();const L=[...goalsAt('w',perKey('w',T)),.
   if(!L.length)return`<div class="gband"><div class="gbh"><b>🎯 이번 주 · 이번 달 목표</b></div><p class="hint" style="margin:4px 0 0">아직 이번 주·이번 달 목표가 없습니다. 아래 사다리의 1달·1주 칸에서 ＋로 세우십시오.</p></div>`;
   const dl=D.date===T?'오늘':md(D.date);
   return`<div class="gband"><div class="gbh"><b>🎯 이번 주 · 이번 달 목표</b><span><button class="del" data-wkplace="1">🗓️ 주간 배치</button></span></div>${L.map(g=>{const p=Math.round(prog(g)*100);const o=GBOPEN===g.id;const wk=goalMinsHTML(g);const left=g.tasks.filter(t=>!t.done).length;
-    return`<div class="gbr ${o?'open':''}" style="--k:var(${ladCol(g.lv)})"><button class="gbt" data-gbo="${g.id}"><small>${LVEMO[g.lv]} ${ladLab(g.lv)}</small><span>${esc(g.title)}</span><b>${p}%</b><em>${o?'▴':'▾'}</em><i style="width:${p}%"></i></button><p class="gbm">${left?`남은 할 일 ${left}`:'할 일 없음'}${wk?' · '+wk:''}</p>
+    return`<div class="gbr ${o?'open':''}" style="--k:var(${ladCol(g.lv)})"><button class="gbt" data-gbo="${g.id}"><small>${LVEMO[g.lv]} ${ladLab(g.lv)}</small><span>${esc(g.title)}</span><b>${p}%</b><em>${o?'▴':'▾'}</em><i style="width:${p}%"></i></button><p class="gbm">${left?`남은 할 일 ${left}`:'할 일 없음'}${wk?' · '+wk:''} <button type="button" class="del" data-gbdn="${g.id}">✓ 이룸</button> <button type="button" class="del" data-gbpg="${g.id}">＋ 오늘 계획에 넣기</button></p>
     ${o?`<ul class="gbl">${g.tasks.map(t=>`<li><label class="chk"><input type="checkbox" data-gbt="${g.id}|${t.id}" ${t.done?'checked':''}><span class="${t.done?'done':''}">${esc(t.text)}</span></label>${t.due?`<small class="hint">📅 ${md(t.due)}</small>`:''}${t.done?'':`<span class="gbb"><button class="del ${t.due===D.date?'on':''}" data-gbday="${g.id}|${t.id}">${t.due===D.date?'✓ ':'📋 '}${dl}</button><button class="del" data-gbpl="${g.id}|${t.id}">🗓️ 시간표</button></span>`}</li>`).join('')}</ul><div class="gl"><input type="text" data-gbnew="${g.id}" placeholder="이 목표의 할 일 추가"><button class="btn small" data-gbadd="${g.id}">추가</button></div>`:''}</div>`}).join('')}</div>`}
 function bindGoalBand(R,rer){
   R.querySelectorAll('[data-wbt]').forEach(b=>b.onclick=()=>{WBOPEN=!WBOPEN;rer()});
+  R.querySelectorAll('[data-gbdn]').forEach(b=>b.onclick=()=>{const g=GOALS.list.find(x=>x.id===b.dataset.gbdn);if(!g)return;g.done=true;g.doneAt=today();saveGoals();toast('🎯 목표를 이뤘습니다.');rer()});
+  R.querySelectorAll('[data-gbpg]').forEach(b=>b.onclick=()=>{const g=GOALS.list.find(x=>x.id===b.dataset.gbpg);if(!g)return;const g0=guessBlock(g.title)||{};openBlockEditor('plan',null,{act:g.title,goal:g.id,cat:g0.cat||'업무',area:g.area||''})});
   R.querySelectorAll('[data-gbo]').forEach(b=>b.onclick=()=>{GBOPEN=GBOPEN===b.dataset.gbo?'':b.dataset.gbo;rer()});
   R.querySelectorAll('[data-gbgo]').forEach(b=>b.onclick=()=>{gSub='ladder';gEdit=null;go('goal')});
   R.querySelectorAll('[data-gbt]').forEach(c=>c.onchange=()=>{const t=taskBy(c.dataset.gbt);if(t){t.done=c.checked;gtPush(c.dataset.gbt);saveGoals()}rer()});
@@ -16260,7 +16262,7 @@ async function syPutSafe(B,k,v){if(!k.startsWith('day:')||!v||typeof v!=='object
 {const _o=openDay;openDay=async function(d){try{staleGuardInstall()}catch(e){}return _o.apply(this,arguments)}}
 {const _f=flush0;flush0=async function(){try{staleGuardInstall()}catch(e){}return _f.apply(this,arguments)}}
 /* v390 ① 앱 버전 표시 · 새 버전 알림 (GitHub에서 마지막으로 성공한 빌드 번호와 비교) */
-var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/457})();
+var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/458})();
 const VRK='gj-verchk',VRURL='https://github.com/64hwarang-max/c/actions/workflows/build-apk.yml';
 const vrGet=()=>{try{return JSON.parse(localStorage.getItem(VRK)||'{}')}catch(e){return{}}};
 async function vrCheck(force){const c=vrGet();if(!force&&c.t&&Date.now()-c.t<6*36e5)return c;
@@ -17730,6 +17732,13 @@ document.addEventListener('click',e=>{const t=e.target.closest&&e.target.closest
   if(!was)setTimeout(()=>{const g=document.querySelector(`.wbtg.wbf[data-wbk="${k}"]`);if(g)g.scrollIntoView({block:'center',behavior:'smooth'})},60)},true);
 document.addEventListener('click',e=>{if(e.target.closest&&e.target.closest('[data-wbtf]'))setTimeout(wmSync,0)});
 try{if(localStorage.getItem('gj-wbtov')!=='1'){localStorage.setItem('gj-wbtov','1');if(WBTO.size>1){WBTO.clear();localStorage.setItem('gj-wbto','[]')}}}catch(e){}
+
+/* ===== v458: 오늘 화면에 이번 주 목표 띠 (세우기 → 오늘) ===== */
+function gbDayHTML(){try{if(SET.gbandDay===false||D.date!==today())return'';const T=today();const all=[...goalsAt('w',perKey('w',T)),...goalsAt('m',perKey('m',T))].filter(g=>g.title);if(!all.length)return'';const dn=all.filter(g=>g.done).length;
+  const body=all.some(g=>!g.done)?goalBandHTML():'<p class="hint" style="margin:4px 0">이번 주·이번 달 목표를 모두 이뤘습니다. 🎉</p>';
+  return foldWrap('gbday',`🎯 이번 주 목표 ${all.length}개 <small class="hint">이룸 ${dn}</small>`,body,false)}catch(e){return''}}
+{const _r=renderFeatCard;renderFeatCard=function(){const r=_r.apply(this,arguments);try{const S=document.getElementById('showcard');if(!S||S.querySelector('#gbdkbox'))return r;const d=document.createElement('div');d.id='gbdkbox';d.style.marginTop='14px';
+  d.innerHTML=`<h3 style="margin:0 0 6px">🎯 오늘 화면 목표 띠</h3><label class="chk featrow"><input type="checkbox" id="gbdk" ${SET.gbandDay===false?'':'checked'}><span><b>이번 주 목표 보이기</b> <small class="hint">시간표 위에 접힌 한 줄로 나옵니다.</small></span></label>`;S.appendChild(d);d.querySelector('#gbdk').onchange=e=>{SET.gbandDay=e.target.checked;saveSet().catch(()=>{});try{refreshAny()}catch(x){}}}catch(e){}return r}}
 </script>
 <!--BIBLE{--><!--}BIBLE-->
 <div id="miniov" class="miniov" hidden></div>
