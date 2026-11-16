@@ -16262,7 +16262,7 @@ async function syPutSafe(B,k,v){if(!k.startsWith('day:')||!v||typeof v!=='object
 {const _o=openDay;openDay=async function(d){try{staleGuardInstall()}catch(e){}return _o.apply(this,arguments)}}
 {const _f=flush0;flush0=async function(){try{staleGuardInstall()}catch(e){}return _f.apply(this,arguments)}}
 /* v390 ① 앱 버전 표시 · 새 버전 알림 (GitHub에서 마지막으로 성공한 빌드 번호와 비교) */
-var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/460})();
+var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/461})();
 const VRK='gj-verchk',VRURL='https://github.com/64hwarang-max/c/actions/workflows/build-apk.yml';
 const vrGet=()=>{try{return JSON.parse(localStorage.getItem(VRK)||'{}')}catch(e){return{}}};
 async function vrCheck(force){const c=vrGet();if(!force&&c.t&&Date.now()-c.t<6*36e5)return c;
@@ -17750,6 +17750,24 @@ function axGoalLine(){try{const B=document.getElementById('dayBody');if(!B||!D)r
     const parts=[];if(gs.length)parts.push('🎯 <b>'+gs.map(g=>esc(g.title)).join(' · ')+'</b>');if(m||tg)parts.push('오늘 '+(m?hm(m):'0분')+(tg?' / 하루 몫 '+hm(Math.round(tg)):''));
     const e=document.createElement('small');e.className='axgl';e.innerHTML=parts.join(' · ');lab.appendChild(e)})}catch(e){console.warn('axGoal',e)}}
 DECO.add('평가 기둥 목표 줄',{root:'#dayBody',deep:true,wait:200,run:axGoalLine,now:true});
+
+/* ===== v461: 돌아보기에서 이 기간 목표 결과 묻기 · 못 이룬 목표는 다음 기간으로 복사 (원래 목표는 남김) ===== */
+{const st=document.createElement('style');st.textContent=`.wkgr{border:1px solid var(--line);border-radius:12px;padding:8px 10px;margin:10px 0}.wkgr>b{display:block;font-size:.9rem;margin-bottom:4px}.wkgr .gr{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:6px 0;border-top:1px dashed var(--line)}.wkgr .gr span{flex:1 1 100%;font-size:.88rem}.wkgr .gr small{color:var(--muted)}.wkgr .gr.dn span{text-decoration:line-through;opacity:.6}.wkgr .gr .del{padding:4px 10px}`;document.head.appendChild(st)}
+function wkGrHTML(lv,a){try{if(!LV.some(x=>x[0]===lv))return'';const per=perOf(lv,a);const gs=goalsAt(lv,per).filter(g=>g.title);if(!gs.length)return'';const R=plpRange(lv,a);
+  const nx=perOf(lv,plpShift(lv,a,1));
+  return`<div class="wkgr" data-lv="${lv}" data-a="${a}"><b>🎯 이 기간 목표 ${gs.length}개 <small class="hint">${gs.filter(g=>g.done).length}개 이룸</small></b>${gs.map(g=>{const m=goalMins(g,R.a,R.b);const mt=(m&&(m.act||m.pl))?` · 실행 ${hm(m.act)||'0분'}`:'';const car=g.carried||GOALS.list.some(x=>x.lv===lv&&x.per===nx&&x.title===g.title);
+    return`<div class="gr ${g.done?'dn':''}"><span>${esc(g.title)} <small>${g.done?'이룸 '+md(g.doneAt||today()):''}${mt}${car&&!g.done?' · 다음으로 넘김':''}</small></span>${g.done?'':`<button type="button" class="del" data-grok="${g.id}">✓ 이룸</button>${car?'':`<button type="button" class="del" data-grnx="${g.id}">→ 다음으로</button>`}`}</div>`}).join('')}</div>`}catch(e){return''}}
+{const _w=wkcHTML;wkcHTML=function(lv,a){const h=_w.apply(this,arguments);try{if(!/class="on" data-wkcs="1"/.test(h))return h;const g=wkGrHTML(lv,a);if(!g)return h;const k='② 돌아보기</button></div>';const i=h.indexOf(k);return i<0?h:h.slice(0,i+k.length)+g+h.slice(i+k.length)}catch(e){return h}}}
+function grCarry(g,lv,a){const nx=perOf(lv,plpShift(lv,a,1));if(GOALS.list.some(x=>x.lv===lv&&x.per===nx&&x.title===g.title))return false;
+  GOALS.list.push({id:uid(),lv:g.lv,per:nx,title:g.title,done:false,doneAt:'',parent:g.parent||null,tasks:(g.tasks||[]).filter(t=>!t.done).map(t=>({...t,id:uid(),subs:[],due:''})),area:g.area||'',rank:g.rank||0,kind:g.kind||'once'});g.carried=true;return true}
+document.addEventListener('click',e=>{const t=e.target.closest&&e.target.closest('[data-grok],[data-grnx]');if(!t)return;const C=t.closest('.wkgr');if(!C)return;e.preventDefault();e.stopPropagation();const lv=C.dataset.lv,a=C.dataset.a;
+  const id=t.dataset.grok||t.dataset.grnx;const g=GOALS.list.find(x=>x.id===id);if(!g)return;
+  if(t.dataset.grok){g.done=true;g.doneAt=today();toast('🎯 목표를 이뤘습니다.')}else{toast(grCarry(g,lv,a)?'→ 다음 기간 목표로 넘겼습니다. 원래 목표는 그대로 남습니다.':'이미 다음 기간에 있습니다.')}
+  saveGoalsSoon();try{wkcPaint(true)}catch(x){}},true);
+document.addEventListener('click',async e=>{const b=e.target.closest&&e.target.closest('[data-wkcdone]');if(!b||b.dataset.grq)return;const C=b.closest('#wkcard');const W=C&&C.querySelector('.wkgr');if(!W)return;const lv=W.dataset.lv,a=W.dataset.a;
+  const gs=goalsAt(lv,perOf(lv,a)).filter(g=>g.title&&!g.done&&!g.carried&&!GOALS.list.some(x=>x.lv===lv&&x.per===perOf(lv,plpShift(lv,a,1))&&x.title===g.title));if(!gs.length)return;
+  e.preventDefault();e.stopImmediatePropagation();let ok=false;try{ok=await uiConfirm(`아직 못 이룬 목표 ${gs.length}개를 다음 기간으로 넘길까요? (원래 목표는 그대로 남습니다)`)}catch(x){}
+  if(ok){gs.forEach(g=>grCarry(g,lv,a));saveGoalsSoon()}b.dataset.grq='1';b.click()},true);
 </script>
 <!--BIBLE{--><!--}BIBLE-->
 <div id="miniov" class="miniov" hidden></div>
