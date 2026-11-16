@@ -16262,7 +16262,7 @@ async function syPutSafe(B,k,v){if(!k.startsWith('day:')||!v||typeof v!=='object
 {const _o=openDay;openDay=async function(d){try{staleGuardInstall()}catch(e){}return _o.apply(this,arguments)}}
 {const _f=flush0;flush0=async function(){try{staleGuardInstall()}catch(e){}return _f.apply(this,arguments)}}
 /* v390 ① 앱 버전 표시 · 새 버전 알림 (GitHub에서 마지막으로 성공한 빌드 번호와 비교) */
-var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/466})();
+var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/467})();
 const VRK='gj-verchk',VRURL='https://github.com/64hwarang-max/c/actions/workflows/build-apk.yml';
 const vrGet=()=>{try{return JSON.parse(localStorage.getItem(VRK)||'{}')}catch(e){return{}}};
 async function vrCheck(force){const c=vrGet();if(!force&&c.t&&Date.now()-c.t<6*36e5)return c;
@@ -17834,6 +17834,38 @@ function bbNextBtn(){try{const d=document.getElementById('bbdone');if(!d||docume
   const b=document.createElement('button');b.type='button';b.className='btn';b.id='bbdn2';b.textContent='✓ 읽고 다음 장 ›';d.after(b);
   b.onclick=()=>{const k=bbB+'-'+bbC;const rd=!!(bbS().read||{})[k];if(!rd)d.click();setTimeout(()=>bbOpen(nx[0],nx[1]),rd?0:500)}}catch(e){console.warn('bbdn2',e)}}
 DECO.add('읽고 다음 장',{root:'#bbbody',deep:true,wait:150,run:bbNextBtn,now:true});
+
+/* ===== v467: 노트·일지 글 속의 성경 구절(요 3:16)을 누르면 그 말씀이 작은 창으로 (화면에서만 감쌈, 저장된 글은 그대로) ===== */
+{const st=document.createElement('style');st.textContent=`.brf{color:var(--acc);text-decoration:underline;text-decoration-style:dotted;cursor:pointer}#brfsh .bv{margin:6px 0;line-height:1.6;font-size:.95rem}#brfsh .bv sup{color:var(--acc);margin-right:3px}`;document.head.appendChild(st)}
+let BRF_RE=null;function brfRe(){if(BRF_RE)return BRF_RE;const names=[...new Set([...BBN,...BBA])].sort((a,b)=>b.length-a.length).map(n=>n.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'));BRF_RE=new RegExp('(?<![가-힣])('+names.join('|')+')\\s?(\\d{1,3})\\s?[:장]\\s?(\\d{1,3})(?:\\s?[-~]\\s?(\\d{1,3}))?(?:\\s?절)?','g');return BRF_RE}
+function brfBook(nm){let i=BBN.indexOf(nm);if(i<0)i=BBA.indexOf(nm);return i}
+function brfScan(root){try{if(!root)return;const re=brfRe();const W=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode(n){const p=n.parentElement;if(!p||p.closest('[contenteditable],textarea,input,select,script,style,.brf,.shead,#brfsh'))return NodeFilter.FILTER_REJECT;return /\d/.test(n.nodeValue)&&n.nodeValue.length>5?NodeFilter.FILTER_ACCEPT:NodeFilter.FILTER_REJECT}});const L=[];let n;while((n=W.nextNode())&&L.length<400)L.push(n);
+  L.forEach(t=>{const v=t.nodeValue;re.lastIndex=0;if(!re.test(v))return;re.lastIndex=0;const f=document.createDocumentFragment();let last=0,m;while((m=re.exec(v))){const b=brfBook(m[1]);if(b<0)continue;if(m.index>last)f.appendChild(document.createTextNode(v.slice(last,m.index)));const sp=document.createElement('span');sp.className='brf';sp.setAttribute('role','link');sp.dataset.brf=[b,m[2],m[3],m[4]||''].join(',');sp.textContent=m[0];f.appendChild(sp);last=m.index+m[0].length}
+    if(last===0)return;if(last<v.length)f.appendChild(document.createTextNode(v.slice(last)));t.replaceWith(f)})}catch(e){console.warn('brf',e)}}
+DECO.add('성경 구절 링크',{root:'#v-note',deep:true,wait:250,run:()=>brfScan(document.getElementById('v-note')),now:true});
+DECO.add('성경 구절 링크(일지)',{root:'#v-day',deep:true,wait:400,run:()=>{const m=document.querySelector('#dayBody .prevq,#dayBody .rfblank');brfScan(document.querySelector('#v-day .tgrid')||m)}});
+document.addEventListener('click',async e=>{const t=e.target.closest&&e.target.closest('.brf');if(!t)return;e.preventDefault();e.stopImmediatePropagation();const[b,c,v1,v2]=t.dataset.brf.split(',').map(x=>+x||0);
+  const r={b,c,v1:v1||0,v2:v2||0};const res=await brefVerses(r);const S=$('#sheet');S.hidden=false;
+  S.innerHTML=`<div class="sheetbox" id="brfsh" role="dialog" aria-label="성경 구절"><div class="shead"><b>📖 ${res?esc(brefLabel(r,res.a,res.z)):esc(BBN[b]+' '+c)}</b><button class="del" id="brfx">닫기</button></div>${res?res.L.map(([n,x])=>`<p class="bv"><sup>${n}</sup>${esc(x)}</p>`).join(''):'<p class="hint">이 구절을 찾지 못했습니다.</p>'}<button class="btn" id="brfo" style="width:100%;margin-top:8px">📖 이 장 열기</button></div>`;
+  $('#brfx').onclick=()=>{S.hidden=true;S.innerHTML=''};$('#brfo').onclick=()=>{S.hidden=true;S.innerHTML='';bbOpen(b,c,v1||0)}},true);
+
+/* ===== v467: 성경 읽기 화면 장 끝에 "이 장을 적은 노트" 목록 ===== */
+function bbChNotes(){try{if(bbView!=='read')return;const d=document.getElementById('bbdone');if(!d||document.querySelector('#bbnl'))return;const row=d.parentElement;const re=brfRe();const L=[];
+  for(const n of NOTES.values()){if(n.person)continue;const tx=(n.title||'')+' '+String(n.body||'').replace(/<[^>]+>/g,' ')+' '+String(n.bdoc||'').replace(/<[^>]+>/g,' ');if(!/\d/.test(tx))continue;re.lastIndex=0;let m,hit=false;while((m=re.exec(tx))){if(brfBook(m[1])===bbB&&+m[2]===bbC){hit=true;break}}if(hit)L.push(n)}
+  if(!L.length)return;L.sort((a,b)=>(b.updated||0)-(a.updated||0));const el=document.createElement('details');el.id='bbnl';el.className='card nocol';el.style.margin='0 0 10px';
+  el.innerHTML=`<summary style="cursor:pointer;font-weight:700">📒 이 장을 적은 노트 ${L.length}개</summary>${L.slice(0,20).map(n=>`<button type="button" class="btn ghost small" data-bbno="${n.id}" style="display:block;width:100%;text-align:left;margin:6px 0">${esc(nTitle(n))} <small class="hint">${md(n.date)}</small></button>`).join('')}`;
+  row.before(el);el.querySelectorAll('[data-bbno]').forEach(b=>b.onclick=()=>{nReturn='bible';nView='topic';go('note');ntOpenPage(b.dataset.bbno)})}catch(e){console.warn('bbnl',e)}}
+DECO.add('이 장을 적은 노트',{root:'#bbbody',deep:true,wait:300,run:bbChNotes,now:true});
+
+/* ===== v467: 일정 블록 ↔ 노트 ↔ 성경 잇기 ===== */
+function nBlkChip(){try{const t=document.getElementById('ntitle');if(!t||document.getElementById('nblkchip')||!nEdit)return;const n=NOTES.get(nEdit);if(!n||!n.block||!n.block.date)return;const b=n.block;
+  const c=document.createElement('button');c.type='button';c.id='nblkchip';c.className='btn ghost small';c.style.cssText='margin:4px 0;text-align:left';c.textContent=`🗓️ ${md(b.date)} ${b.s||''}${b.e?'~'+b.e:''} ${b.act||b.cat||''} 일정 보기`;t.before(c);
+  c.onclick=async()=>{try{nEdit=null;mode='start';go('day');await openDay(b.date)}catch(e){}}}catch(e){console.warn('nblk',e)}}
+DECO.add('노트 일정 칩',{root:'#v-note',deep:true,wait:200,run:nBlkChip,now:true});
+document.addEventListener('click',e=>{const t=e.target.closest&&e.target.closest('#bbdone');if(!t)return;const k=bbB+'-'+bbC;if((bbS().read||{})[k])return;const b0=bbB,c0=bbC;
+  setTimeout(()=>{try{if(!(bbS().read||{})[b0+'-'+c0])return;const T=today();if(!D||D.date!==T)return;const now=hhmm(new Date());const st=addMin(now,-15);
+    if((D.time||[]).some(x=>x.s&&x.e&&x.s<now&&x.e>st))return;
+    toastAct(`📖 ${BBN[b0]} ${c0}장 읽음`,'실제 한 일에 넣기',()=>{const sc=(SET.cats||[]).find(c=>catArea(c.name)==='spirit');const rec={id:uid(),s:st,e:now,act:`${BBN[b0]} ${c0}장 읽기`,cat:sc?sc.name:'기도',area:'spirit'};D.time=D.time||[];D.time.push(rec);D.time.sort((x,y)=>(x.s||'99')<(y.s||'99')?-1:1);schedule();try{renderDay()}catch(x){}toast('🗓️ 실제 한 일에 넣었습니다.')})}catch(x){console.warn('bbdone-act',x)}},700)},true);
 </script>
 <!--BIBLE{--><!--}BIBLE-->
 <div id="miniov" class="miniov" hidden></div>
