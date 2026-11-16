@@ -6348,7 +6348,7 @@ const SYNCX=k=>/^(secret-|snap:|ops:|_sync$|fcsound$)/.test(k);
 let SY={mt:{},dirty:{}},syBusy=false,syTimer=null,syMsg='';
 const syCfg=()=>{try{return JSON.parse(localStorage.getItem('gj-sync')||'{}')}catch(e){return{}}};
 const syCfgSet=c=>{try{localStorage.setItem('gj-sync',JSON.stringify(c))}catch(e){}};
-const syOn=()=>!!(syCfg().on&&store&&store.base&&gdS().url);
+const syOn=()=>!!(syCfg().on&&store&&store.base&&(syCfg().tx==='sb'?sbC().url:gdS().url));
 async function syLoad(){try{const o=await store.base.getDoc('_sync');if(o&&o.mt)SY={mt:o.mt,dirty:o.dirty||{}}}catch(e){}}
 let sySaveT=null;function sySave(){clearTimeout(sySaveT);sySaveT=setTimeout(()=>{store.base&&store.base.putDoc('_sync',SY).catch(()=>{})},400)}
 function sySoon(ms){if(!syOn())return;clearTimeout(syTimer);syTimer=setTimeout(()=>syncNow(false),ms||15000)}
@@ -6361,14 +6361,14 @@ const syGet=(B,k)=>k.startsWith('day:')?B.load(k.slice(4)):B.getDoc(k);
 const syPut=(B,k,v)=>k.startsWith('day:')?B.save(k.slice(4),v):B.putDoc(k,v);
 async function syMarkAll(){const ks=store.base.keys?await store.base.keys():[];ks.forEach(k=>{if(SYNCX(k))return;if(SY.mt[k]===undefined){SY.mt[k]=0;SY.dirty[k]={t:0,del:0}}});await store.base.putDoc('_sync',SY).catch(()=>{})}
 async function syReload(){await Promise.all([loadSet(),loadGoals(),loadPeople(),loadNotes(),loadBudget(),loadAssets(),loadTasks(),loadProj(),loadStuff(),loadBooks()]);await loadTrash().catch(()=>{});syncAreas();syncJT();syncCats();cacheAll=null;await openDay(cur);if(curSection&&curSection!=='day')go(curSection);widgetSoon();try{repFill()}catch(e){}}
-async function syncNow(manual){const c=syCfg();if(!c.on||!store.base)return manual?'연동이 꺼져 있습니다.':'';if(!gdS().url)return'구글 드라이브 웹 앱 주소가 없습니다.';if(syBusy)return'이미 연동하는 중입니다.';
+async function syncNow(manual){const c=syCfg();if(!c.on||!store.base)return manual?'연동이 꺼져 있습니다.':'';if(c.tx!=='sb'&&!gdS().url)return'구글 드라이브 웹 앱 주소가 없습니다.';if(syBusy)return'이미 연동하는 중입니다.';
   if(!navigator.onLine){syMsg='오프라인 · 인터넷이 되면 다시 맞춥니다';return syMsg}
   syBusy=true;let pushed=0,applied=0;try{await flush();
-    if(!c.v2){const r=await gdSend({ping:1});if(!(r&&r.v>=2))throw new Error('구글 Apps Script 코드가 예전 것입니다. 연동 설정의 안내대로 새 코드로 바꿔 ‘새 버전’으로 배포하십시오.');c.v2=1;syCfgSet(c)}
+    if(!c.v2){const r=await syTx({ping:1});if(!(r&&r.v>=2))throw new Error('구글 Apps Script 코드가 예전 것입니다. 연동 설정의 안내대로 새 코드로 바꿔 ‘새 버전’으로 배포하십시오.');c.v2=1;syCfgSet(c)}
     const keys=Object.keys(SY.dirty);let rounds=0;
     while(rounds++<60){const batch=[];let size=0;
       while(keys.length&&size<2500000&&batch.length<80){const k=keys.shift();const d=SY.dirty[k];if(!d)continue;const it={k,t:d.t};if(d.del)it.del=1;else{const v=await syGet(store.base,k).catch(()=>null);if(v==null){delete SY.dirty[k];continue}it.v=v;size+=JSON.stringify(v).length}batch.push(it)}
-      const cc=syCfg();const r=await gdSend({sync:1,push:batch,since:cc.since||0});
+      const cc=syCfg();const r=await syTx({sync:1,push:batch,since:cc.since||0});
       batch.forEach(it=>{const d=SY.dirty[it.k];if(d&&d.t===it.t)delete SY.dirty[it.k]});pushed+=batch.length;
       for(const it of r.items||[]){const d=SY.dirty[it.k];if(d&&d.t>it.t)continue;const lt=SY.mt[it.k];
         if(lt===undefined||it.t>lt||(it.t===0&&lt===0&&!(it.k in SY.dirty))){try{if(it.del)await store.base.delDoc(it.k.startsWith('day:')?'day:'+it.k.slice(4):it.k);else await syPutSafe(store.base,it.k,it.v);SY.mt[it.k]=it.t;if(it.t>0||lt===undefined)applied++}catch(e){}}}
@@ -18101,6 +18101,61 @@ let XPLAST={d:'',xp:null};
 function xpFloat(){try{if(SET.xpOff||!cacheAll)return;const v=xpAll();if(!v)return;const T=today(),x=v.today.xp;if(XPLAST.d===T&&XPLAST.xp!=null&&x>XPLAST.xp){const g=xpGoal();document.querySelectorAll('.xpfl').forEach(e=>e.remove());const e=document.createElement('div');e.className='xpfl';e.textContent=`+${x-XPLAST.xp} XP · 오늘 ${x}/${g}`;document.body.appendChild(e);setTimeout(()=>e.remove(),1700)}XPLAST={d:T,xp:x}}catch(e){}}
 {const _p=xpPaint;xpPaint=function(){const r=_p.apply(this,arguments);try{xpFloat()}catch(e){}return r}}
 {const _f=flush;flush=async function(){const r=await _f.apply(this,arguments);try{XPC.k='';setTimeout(()=>{xpFloat();try{crqPaint()}catch(e){}},80)}catch(e){}return r}}
+
+/* ===== v480: ☁️ 로그인 자동 동기화 (Supabase 표 gj_sync) — 기존 ‘폰·태블릿 연동’ 엔진을 Supabase로도 쓰게 함 ===== */
+const SBSQL2=`-- 자동 동기화용: Supabase › SQL Editor 에 붙여 넣고 Run (한 번만)
+create sequence if not exists public.gj_sync_seq;
+create table if not exists public.gj_sync(
+  user_id uuid not null default auth.uid() references auth.users(id) on delete cascade,
+  k text not null, t bigint not null default 0, del boolean not null default false, v text,
+  srv bigint not null default 0, primary key(user_id,k));
+create index if not exists gj_sync_srv on public.gj_sync(user_id,srv);
+alter table public.gj_sync enable row level security;
+drop policy if exists gj_sync_own on public.gj_sync;
+create policy gj_sync_own on public.gj_sync for all to authenticated using (user_id=auth.uid()) with check (user_id=auth.uid());
+create or replace function public.gj_sync_touch() returns trigger language plpgsql security definer set search_path=public as $$begin new.srv:=nextval('public.gj_sync_seq'); return new; end$$;
+drop trigger if exists gj_sync_touch on public.gj_sync;
+create trigger gj_sync_touch before insert or update on public.gj_sync for each row execute function public.gj_sync_touch();
+create or replace function public.gj_sync_push(items jsonb) returns void language plpgsql security invoker set search_path=public as $$
+begin
+  insert into public.gj_sync(user_id,k,t,del,v)
+  select auth.uid(), x->>'k', (x->>'t')::bigint, coalesce((x->>'del')::boolean,false), x->>'v' from jsonb_array_elements(items) x
+  on conflict (user_id,k) do update set t=excluded.t, del=excluded.del, v=excluded.v where public.gj_sync.t<=excluded.t;
+end$$;
+grant select,insert,update,delete on public.gj_sync to authenticated;
+grant execute on function public.gj_sync_push(jsonb) to authenticated;`;
+async function sbSyncSend(p){await sbEnsure();const J={'Content-Type':'application/json'};
+  if(p.ping){const r=await sbF('/rest/v1/gj_sync?select=k&limit=1');if(!r.ok)throw new Error('동기화 표(gj_sync)를 찾지 못했습니다. ‘동기화용 SQL 복사’를 눌러 Supabase SQL Editor에서 실행하십시오. ('+await sbErr(r)+')');return{v:2,rows:(await r.json()).length}}
+  if(p.push&&p.push.length){const items=p.push.map(it=>({k:it.k,t:it.t,del:!!it.del,v:it.del?null:JSON.stringify(it.v)}));const r=await sbF('/rest/v1/rpc/gj_sync_push',{method:'POST',headers:J,body:JSON.stringify({items})});if(!r.ok)throw new Error('올리기 실패: '+await sbErr(r))}
+  const since=+p.since||0,lim=60;const r=await sbF(`/rest/v1/gj_sync?select=k,t,del,v,srv&srv=gt.${since}&order=srv.asc&limit=${lim}`);if(!r.ok)throw new Error('받기 실패: '+await sbErr(r));const rows=await r.json();
+  const items=[];rows.forEach(x=>{try{items.push({k:x.k,t:+x.t,del:x.del?1:0,v:x.v?JSON.parse(x.v):null})}catch(e){}});
+  return{items:items.filter(it=>it.del||it.v!=null),since:rows.length?+rows[rows.length-1].srv:since,more:rows.length===lim}}
+function syTx(p){return syCfg().tx==='sb'?sbSyncSend(p):gdSend(p)}
+/* 켜기: up = 이 기기 기록을 기준으로 올림 · down = 서버 기록을 받아 이 기기를 맞춤 */
+async function sbSyncStart(mode){if(!store||!store.base)throw new Error('이 화면은 Claude 계정에 저장되어 이미 기기끼리 맞춰집니다. 앱(APK)이나 웹 주소에서 켜십시오.');
+  await sbEnsure();const pg=await sbSyncSend({ping:1});if(!mode)mode=pg.rows?'down':'up';
+  await flush();const ks=store.base.keys?await store.base.keys():[];const now=Date.now();SY={mt:SY.mt||{},dirty:{}};
+  if(mode==='up')ks.forEach(k=>{if(SYNCX(k))return;SY.mt[k]=now;SY.dirty[k]={t:now,del:0}});
+  else ks.forEach(k=>{if(SYNCX(k))return;SY.mt[k]=0});
+  await store.base.putDoc('_sync',SY).catch(()=>{});const c=syCfg();c.on=1;c.tx='sb';c.v2=1;c.since=0;syCfgSet(c);
+  let r=await syncNow(true);if(/^❌/.test(r))throw new Error(r.replace(/^❌\s*/,''));
+  if(mode==='down'){const t2=Date.now();let n=0;Object.keys(SY.mt).forEach(k=>{if(SY.mt[k]===0&&!SYNCX(k)){SY.mt[k]=t2;SY.dirty[k]={t:t2,del:0};n++}});if(n){await store.base.putDoc('_sync',SY).catch(()=>{});r=await syncNow(false)||r}}
+  return r}
+function sbSyncCard(){try{const C=document.getElementById('sbcard');if(!C||C.querySelector('#sbsyn'))return;const c=syCfg(),on=c.on&&c.tx==='sb';const pend=Object.keys(SY.dirty||{}).length;
+  const d=document.createElement('div');d.id='sbsyn';d.style.cssText='margin:10px 0;padding:10px;border:1px solid var(--pen);border-radius:12px';
+  d.innerHTML=`<b>☁️ 로그인 자동 동기화 ${on?'<span class="cytag">켜짐</span>':''}</b><p class="hint" style="margin:4px 0 6px">위의 주소·키·이메일·비밀번호로 로그인해 두면 폰·태블릿·웹(Vercel)이 기록·노트·목표·설정을 알아서 맞춥니다. 앱을 열 때, 돌아올 때, 고친 뒤 15초 뒤에 맞추고, 같은 기록을 두 곳에서 고치면 나중에 고친 쪽이 남습니다. 이 동기화는 내 Supabase 프로젝트에 <b>암호화하지 않고</b> 저장합니다(나만 읽도록 접근 규칙 적용).</p>
+   ${on?`<p style="margin:0 0 6px">마지막: <b>${esc(syMsg||(c.last?new Date(c.last).toLocaleString('ko-KR'):'아직 없음'))}</b>${pend?` · 보낼 것 ${pend}`:''}</p>`:''}
+   <div class="row" style="flex-wrap:wrap">${on?`<button class="btn small" type="button" id="sbsnow">🔄 지금 맞추기</button><button class="btn small ghost" type="button" id="sbsoff">동기화 끄기</button>`:`<button class="btn small" type="button" id="sbson">☁️ 로그인하고 동기화 켜기</button>`}<button class="btn small ghost" type="button" id="sbssql">동기화용 SQL 복사</button>${on?'':`<button class="btn small ghost" type="button" id="sbsup">이 기기 기록으로 서버 덮어쓰기</button>`}</div><p class="hint" id="sbsmsg" style="margin:6px 0 0"></p>`;
+  const anchor=C.querySelector('details');C.insertBefore(d,anchor||C.firstChild.nextSibling);
+  const say=t=>{const m=document.getElementById('sbsmsg');if(m)m.textContent=t};const redraw=()=>{const o=document.getElementById('sbsyn');if(o)o.remove();sbSyncCard()};
+  const grab=()=>{const o=sbC();const g=i=>{const e=document.getElementById(i);return e?e.value:''};const u=g('sburl').trim(),em=g('sbem').trim();if(u!==o.url||em!==o.email)delete o.ses;o.url=u;o.key=g('sbkey').trim();o.email=em;o.pw=g('sbpw');sbW(o);return o};
+  const login=async()=>{grab();try{await sbAuth('in')}catch(e){if(!/Invalid login|400/.test(e.message))throw e;const r=await sbAuth('up');if(r==='confirm')throw new Error('📧 확인 메일이 갔습니다. 메일의 링크를 누른 뒤 다시 눌러 주십시오.')}};
+  const q=document.getElementById('sbssql');q.onclick=async()=>{try{await navigator.clipboard.writeText(SBSQL2);say('동기화용 SQL을 복사했습니다. Supabase SQL Editor에 붙여 넣고 Run 하십시오.')}catch(e){const t=document.createElement('textarea');t.value=SBSQL2;t.style.cssText='width:100%;height:140px';d.appendChild(t);t.select()}};
+  const b1=document.getElementById('sbson');if(b1)b1.onclick=async()=>{b1.disabled=true;say('로그인 중…');try{await login();const pg=await sbSyncSend({ping:1});let mode='up';if(pg.rows){if(!await uiConfirm('서버에 이미 기록이 있습니다. 서버 기록을 받아 이 기기를 맞출까요?\n(같은 날짜·같은 항목은 서버 것으로 바뀌고, 이 기기에만 있는 것은 서버로 올라갑니다.)')){say('켜지 않았습니다. 이 기기를 기준으로 하려면 ‘이 기기 기록으로 서버 덮어쓰기’를 누르십시오.');b1.disabled=false;return}mode='down'}say(mode==='up'?'이 기기 기록을 올리는 중… (처음엔 몇 분 걸릴 수 있습니다)':'서버 기록을 받는 중…');const r=await sbSyncStart(mode);redraw();say('✅ '+r)}catch(e){say('❌ '+(e.message||e));b1.disabled=false}};
+  const b2=document.getElementById('sbsup');if(b2)b2.onclick=async()=>{if(!await uiConfirm('이 기기의 기록을 기준으로 서버를 덮어쓸까요? 다른 기기는 다음에 맞출 때 이 기기 기록으로 바뀝니다.'))return;say('로그인하고 올리는 중…');try{await login();const r=await sbSyncStart('up');redraw();say('✅ '+r)}catch(e){say('❌ '+(e.message||e))}};
+  const b3=document.getElementById('sbsnow');if(b3)b3.onclick=async()=>{b3.disabled=true;say('맞추는 중…');const r=await syncNow(true);redraw();say(r)};
+  const b4=document.getElementById('sbsoff');if(b4)b4.onclick=async()=>{if(!await uiConfirm('이 기기의 자동 동기화를 끌까요? 기록은 이 기기와 서버에 그대로 남습니다.'))return;const x=syCfg();x.on=0;syCfgSet(x);redraw()}}catch(e){console.warn('sbsync',e)}}
+{const _s=sbCard;sbCard=function(){const r=_s.apply(this,arguments);try{sbSyncCard()}catch(e){}return r}}
 </script>
 <!--BIBLE{--><!--}BIBLE-->
 <div id="miniov" class="miniov" hidden></div>
