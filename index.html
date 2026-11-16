@@ -7976,11 +7976,11 @@ function subOrdSave(k,ks){SET.subOrd=SET.subOrd||{};SET.subOrd[k]=ks;saveSet().c
 const FAV_ACT={'act:ai':['🤖 AI 비서',()=>openAI()],'act:search':['🔍 전체 검색',()=>openSearch()],
   'act:note':['✏️ 새 노트',()=>{go('note');setTimeout(()=>{let tp='';try{tp=localStorage.getItem('gj-lasttopic')||''}catch(e){}if(!SET.topics.some(t=>t.id===tp))tp=(SET.topics[0]||{}).id||'';newNote(tp,today())},60)}],
   'act:map':['🗺️ 메뉴 지도',()=>openSiteMap()],'act:task':['➕ 할 일 추가',()=>{go('task');setTimeout(()=>{const i=$('#tnew');if(i){i.scrollIntoView({block:'center'});i.focus()}},150)}]};
-const favLabel=k=>FAV_ACT[k]?FAV_ACT[k][0]:(SUBL[k]||({day:'☀️ 오늘'})[k]||k);
-const favOK=k=>!!(FAV_ACT[k]||k==='day'||(SUBL[k]&&!isHid(k)&&SEC_ORDER.includes(k)));
+const favLabel=k=>String(k).startsWith('lnk:')?(()=>{const f=(SET.favLinks||[]).find(x=>'lnk:'+x.id===k);return f?`${f.em||'🔗'} ${f.name}`:'🔗 링크'})():FAV_ACT[k]?FAV_ACT[k][0]:(SUBL[k]||({day:'☀️ 오늘'})[k]||k);
+const favOK=k=>!!(String(k).startsWith('lnk:')?(SET.favLinks||[]).some(x=>'lnk:'+x.id===k):FAV_ACT[k]||k==='day'||(SUBL[k]&&!isHid(k)&&SEC_ORDER.includes(k)));
 const favList=()=>(Array.isArray(SET.favs)?SET.favs:['task','note','act:note','budget','act:ai','act:search']).filter(favOK);
-const FAV_ALL=()=>[...Object.keys(FAV_ACT),...SEC_ORDER.filter(favOK)];
-function favRun(k){const S=$('#sheet');S.hidden=true;S.innerHTML='';if(FAV_ACT[k])FAV_ACT[k][1]();else openSection(k)}
+const FAV_ALL=()=>[...Object.keys(FAV_ACT),...SEC_ORDER.filter(favOK),...(SET.favLinks||[]).map(x=>'lnk:'+x.id)];
+function favRun(k){const S=$('#sheet');S.hidden=true;S.innerHTML='';if(String(k).startsWith('lnk:'))favLinkOpen(k.slice(4));else if(FAV_ACT[k])FAV_ACT[k][1]();else openSection(k)}
 
 /* ❓ 사용법 */
 const HELP=[
@@ -8008,11 +8008,12 @@ function openFav(){const S=$('#sheet');S.hidden=false;let edit=false;
     const tile=k=>{const l=favLabel(k);const i=l.indexOf(' ');return`<button class="favtile" data-sk="${esc(k)}" data-fv="${esc(k)}"><b>${l.slice(0,i)}</b>${esc(l.slice(i+1))}${edit?`<span class="favx" data-fvx="${esc(k)}" aria-label="빼기">✕</span>`:''}</button>`};
     S.innerHTML=`<div class="sheetbox" role="dialog" aria-label="즐겨찾기"><div class="shead"><b>⭐ 즐겨찾기</b><span><button class="del" id="fvedit">${edit?'✔ 완료':'✏️ 편집'}</button> <button class="del" id="fvx">닫기</button></span></div>
       ${F.length?`<div class="favgrid" id="fvgrid">${F.map(tile).join('')}</div><p class="hint" style="margin:8px 0 0">누르면 바로 열립니다. 길게 눌러 끌면 순서가 바뀝니다.${edit?' ✕를 누르면 뺍니다.':''}</p>`:'<p class="empty">아직 즐겨찾기가 없습니다. 아래에서 자주 쓰는 메뉴를 눌러 추가하십시오.</p>'}
-      ${edit||!F.length?`<p class="mhead" style="margin-top:14px">눌러서 추가</p><div class="chips">${rest.map(k=>`<button class="chip" data-fva="${esc(k)}">${k===curSection?'📍 ':''}${esc(favLabel(k))}</button>`).join('')||'<span class="hint">모두 추가했습니다.</span>'}</div>`:''}
+      ${edit||!F.length?`<p class="mhead" style="margin-top:14px">앱·링크 <small class="hint">(밀리의서재 → 독서 처럼 세부 항목에 연결)</small></p><div class="chips"><button class="chip" data-fvnew="1">＋ 앱·링크 등록</button></div><p class="mhead" style="margin-top:14px">눌러서 추가</p><div class="chips">${rest.map(k=>`<button class="chip" data-fva="${esc(k)}">${k===curSection?'📍 ':''}${esc(favLabel(k))}</button>`).join('')||'<span class="hint">모두 추가했습니다.</span>'}</div>`:''}
       <p class="hint" style="margin:12px 0 0">💡 아래 큰 메뉴(오늘·시간·기둥…)와 위의 작은 메뉴(계획·할 일·반복…), 화면 안의 탭(사다리·기둥별·비전…)도 <b>길게 눌러 끌면</b> 순서를 바꿀 수 있습니다.</p><p class="hint" style="margin:6px 0 0">🗺️ 메뉴를 묶음 사이로 옮기는 메뉴 지도는 ⚙️ 설정에 있습니다.</p></div>`;
     $('#fvx').onclick=()=>{S.hidden=true;S.innerHTML=''};S.onclick=e=>{if(e.target===S){S.hidden=true;S.innerHTML=''}};
     $('#fvedit').onclick=()=>{edit=!edit;draw()};
-    S.querySelectorAll('[data-fv]').forEach(b=>b.onclick=e=>{const k=b.dataset.fv;if(e.target.closest('[data-fvx]')){save(favList().filter(x=>x!==k));draw();return}if(!edit)favRun(k)});
+    S.querySelectorAll('[data-fv]').forEach(b=>b.onclick=e=>{const k=b.dataset.fv;if(e.target.closest('[data-fvx]')){save(favList().filter(x=>x!==k));draw();return}if(!edit)favRun(k);else if(String(k).startsWith('lnk:'))favLinkEdit(k.slice(4))});
+    S.querySelectorAll('[data-fvnew]').forEach(b=>b.onclick=()=>favLinkEdit(''));
     S.querySelectorAll('[data-fva]').forEach(b=>b.onclick=()=>{save([...favList(),b.dataset.fva]);toast(`⭐ ${favLabel(b.dataset.fva)} 추가`);draw()});
     sortable($('#fvgrid'),'.favtile',ks=>{save(ks);draw()},'g')};
   draw()}
@@ -17913,10 +17914,10 @@ crEval=function(o,k){const L=crList(k).filter(it=>+it.w>0);if(!L.length)return n
     const man=M[it.id];const na=man===-1||(man==null&&!pb&&!crApp(it,o,r));const v=man===1?1:man===.5?.5:man===0?0:r.v;if(!na){sw+=+it.w;sv+=+it.w*v}return{it,auto:r,man,v,na,pb}});
   return{rows,ratio:sw?sv/sw:0,sw,na:sw===0,earned:Math.round(sv*10)/10}};
 {const st=document.createElement('style');st.textContent=`.crq{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:10px 12px;margin:10px 0}.crq>summary,.crqh{display:flex;align-items:center;gap:8px;font-weight:700;cursor:pointer;list-style:none}.crq>summary::-webkit-details-marker{display:none}.crq>summary small,.crqh small{font-weight:500;color:var(--muted);margin-left:auto}.crqg{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:8px}.crqg>i{font-style:normal;font-size:.85rem;color:var(--muted);min-width:4.2em}.crqc{border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:999px;padding:7px 11px;font:inherit;font-size:.9rem;min-height:38px;display:inline-flex;gap:5px;align-items:center}.crqc.ok{background:#2e9e6b;border-color:#2e9e6b;color:#fff}.crqc.part{border-color:#2e9e6b;color:#1d7a50}.crqc.pl{border-style:dashed;border-color:var(--pen)}.crqc small{opacity:.8;font-size:.78rem}.crq .hint{margin:8px 0 0}`;document.head.appendChild(st)}
-function crqData(){const G=[];let n=0,d=0;SCORE.forEach(([k])=>{let E=null;try{E=crEval(D,k)}catch(e){}if(!E)return;const R=E.rows.filter(r=>!r.na||(r.it.ap&&r.it.ap.m==='wk'));if(!R.length)return;n+=R.length;d+=R.filter(r=>r.v>=1).length;G.push([k,R])});return{G,n,d}}
+function crqData(){const G=[];let n=0,d=0;SCORE.forEach(([k])=>{let E=null;try{E=crEval(D,k)}catch(e){}if(!E){G.push([k,[]]);return}const R=E.rows.filter(r=>!r.na||(r.it.ap&&r.it.ap.m==='wk'));if(!R.length){G.push([k,[]]);return}n+=R.length;d+=R.filter(r=>r.v>=1).length;G.push([k,R])});return{G,n,d}}
 function crqChip(k,r){const c=r.v>=1?'ok':r.v>0?'part':r.pb?'pl':'';const sym=r.v>=1?'✓':r.v>0?'½':'○';const wkI=r.it.ap&&r.it.ap.m==='wk'?crWkInfo(r.it,D):null;const tm=(wkI?`<small>주 ${wkI.cnt}/${wkI.n}</small>`:'')+(r.v<1&&r.pb&&r.pb.s?`<small>📅${r.pb.s}</small>`:'');return`<button type="button" class="crqc ${c}" data-crq="${k}|${r.it.id}">${sym} ${esc(r.it.n)}${tm}</button>`}
-function crqHTML(todo){const X=crqData();if(!X.n)return'';const open=(()=>{try{return localStorage.getItem(todo?'gj-crqt':'gj-crqa')!=='0'}catch(e){return true}})();
-  const body=X.G.map(([k,R])=>{const L=todo?R.filter(r=>{if(r.v>=1)return false;if(r.it.ap&&r.it.ap.m==='wk'){const W=crWkInfo(r.it,D);return W.cnt<W.n}return true}):R;if(!L.length)return'';return`<div class="crqg"><i>${AREA_E[k]||''} ${esc(areaName(k))}</i>${L.map(r=>crqChip(k,r)).join('')}</div>`}).join('');
+function crqHTML(todo){const X=crqData();if(!X.n&&todo)return'';const open=(()=>{try{return localStorage.getItem(todo?'gj-crqt':'gj-crqa')!=='0'}catch(e){return true}})();
+  const body=X.G.map(([k,R])=>{const L=todo?R.filter(r=>{if(r.v>=1)return false;if(r.it.ap&&r.it.ap.m==='wk'){const W=crWkInfo(r.it,D);return W.cnt<W.n}return true}):R;if(!L.length&&todo)return'';return`<div class="crqg"><i>${AREA_E[k]||''} ${esc(areaName(k))}</i>${L.map(r=>crqChip(k,r)).join('')}${todo?'':crqEdit(k)}</div>`}).join('');
   const left=X.n-X.d;
   return`<details class="crq ${todo?'crqt':'crqa'}"${open?' open':''} data-crqk="${todo?'t':'a'}"><summary>${todo?`✅ 오늘 챙길 것`:`📋 전체 항목 한 번에`}${(()=>{try{if(SET.xpOff)return'';const v=xpAll();return v?` <em class="crxp">⚡${v.today.xp}/${xpGoal()}</em>`:''}catch(e){return''}})()}<small>${todo?(left?`남은 ${left}개`:`모두 했음 🎉`):''} ${X.d}/${X.n} ▾</small></summary><button type="button" class="crqc" data-evw="1" style="margin-top:8px">🌙 한 장씩 평가하기</button>${body||'<p class="hint">오늘 항목을 모두 했습니다.</p>'}<p class="hint">누르면 ✓ (다시 누르면 취소) · 📅는 오늘 계획에 있는 것 · 실제 일정에 적으면 자동 ✓${todo?' · 평가 점수에 바로 반영':''}</p></details>`}
 function crqPaint(){try{if(curSection!=='day'||!D)return;const B=document.getElementById('dayBody');if(!B)return;
@@ -17957,13 +17958,13 @@ function crRawDone(it,o,k){if(!o)return false;try{const M=((o.crit||{})[k])||{};
 function crWkInfo(it,o){const n=Math.max(1,+((it.ap||{}).n)||3);const d=parseD(o.date);const dow=(d.getDay()+6)%7;const mon=addD(o.date,-dow);let cnt=0;let k='';SCORE.forEach(([a])=>{if(!k&&(crAll()[a]||[]).some(x=>x.id===it.id))k=a});
   for(let i=0;i<=dow;i++){const dt=addD(mon,i);const x=dt===o.date?o:(typeof cacheAll!=='undefined'&&cacheAll?cacheAll.get(dt):null);if(crRawDone(it,x,k))cnt++}return{cnt,n}}
 /* ① 한 장씩 평가 */
-{const st=document.createElement('style');st.textContent=`.evw{position:fixed;inset:0;z-index:300;background:var(--bg);overflow-y:auto;padding:calc(env(safe-area-inset-top,0px) + 12px) 16px 24px}.evwh{display:flex;align-items:center;gap:10px;font-size:1.25rem}.evwh b{flex:1}.evwh small{color:var(--muted);font-size:.9rem}.evwh button{border:0;background:none;color:var(--ink);font-size:1.3rem;padding:6px}.evwp{height:5px;border-radius:3px;background:var(--line);margin:10px 0 14px;overflow:hidden}.evwp i{display:block;height:100%;background:var(--pen)}.evwsc{flex-wrap:wrap}.evwsc button{min-width:calc(16% - 4px)}.evwn{display:flex;gap:10px;margin-top:22px}.evwn button{flex:1;height:50px;border-radius:12px;border:1px solid var(--line);background:var(--paper);color:var(--ink);font:inherit;font-weight:700}.evwn .pri{background:var(--pen);color:#fff;border-color:var(--pen);flex:2}.evw .fl{font-weight:700;margin:16px 0 6px}`;document.head.appendChild(st)}
+{const st=document.createElement('style');st.textContent=`.evw{position:fixed;inset:0;z-index:57;background:var(--bg);overflow-y:auto;padding:calc(env(safe-area-inset-top,0px) + 12px) 16px 24px}.evwh{display:flex;align-items:center;gap:10px;font-size:1.25rem}.evwh b{flex:1}.evwh small{color:var(--muted);font-size:.9rem}.evwh button{border:0;background:none;color:var(--ink);font-size:1.3rem;padding:6px}.evwp{height:5px;border-radius:3px;background:var(--line);margin:10px 0 14px;overflow:hidden}.evwp i{display:block;height:100%;background:var(--pen)}.evwsc{flex-wrap:wrap}.evwsc button{min-width:calc(16% - 4px)}.evwn{display:flex;gap:10px;margin-top:22px}.evwn button{flex:1;height:50px;border-radius:12px;border:1px solid var(--line);background:var(--paper);color:var(--ink);font:inherit;font-weight:700}.evwn .pri{background:var(--pen);color:#fff;border-color:var(--pen);flex:2}.evw .fl{font-weight:700;margin:16px 0 6px}`;document.head.appendChild(st)}
 let EVW=0;
 function evwDraw(){let S=document.getElementById('evw');if(!S){S=document.createElement('div');S.id='evw';S.className='evw';document.body.appendChild(S)}
   const n=SCORE.length,i=EVW,[k,l]=SCORE[i];let E=null;try{E=crEval(D,k)}catch(e){}
   const rows=E?E.rows.filter(r=>!r.na||(r.it.ap&&r.it.ap.m==='wk')):[];const sc=+D.score[k]||0;const auto=!!(D.scAuto&&D.scAuto[k]);
   S.innerHTML=`<div class="evwh"><button type="button" data-evx="1" aria-label="닫기">✕</button><b>${AREA_E[k]||''} ${esc(l)}</b><small>${i+1} / ${n}</small></div><div class="evwp"><i style="width:${(i+1)/n*100}%"></i></div>
-   ${rows.length?`<p class="fl" style="margin-top:0">오늘 한 것 <small style="font-weight:400;color:var(--muted)">눌러서 ✓</small></p><div class="crqg">${rows.map(r=>crqChip(k,r)).join('')}</div>`:'<p class="hint">세부 항목이 없는 기둥입니다. 점수만 골라 주세요.</p>'}
+   ${rows.length?`<p class="fl" style="margin-top:0">오늘 한 것 <small style="font-weight:400;color:var(--muted)">눌러서 ✓</small></p><div class="crqg">${rows.map(r=>crqChip(k,r)).join('')}${crqEdit(k)}</div>`:`<p class="hint">세부 항목이 없는 기둥입니다. 점수만 골라도 되고, 항목을 만들어 둘 수도 있습니다.</p><div class="crqg">${crqEdit(k)}</div>`}
    <p class="fl">오늘 점수 ${auto?'<small style="font-weight:400;color:var(--muted)">🤖 기록으로 매긴 초안 — 고치려면 누르세요</small>':''}</p><div class="scch evwsc">${Array.from({length:11},(_,j)=>`<button type="button" data-evs="${j}" class="${j===sc?'on':''}">${j}</button>`).join('')}</div>
    <div class="evwn">${i?'<button type="button" data-evp="1">‹ 이전</button>':''}<button type="button" class="pri" data-evn="1">${i===n-1?'✔ 끝내기':'다음 ›'}</button></div>`;S.scrollTop=0}
 function evwClose(){const S=document.getElementById('evw');if(S)S.remove();EVW=0;try{renderDay()}catch(e){}}
@@ -17991,14 +17992,6 @@ function setqPaint(){try{const V=document.getElementById('v-export');if(!V||V.hi
 document.addEventListener('input',e=>{if(!e.target||e.target.id!=='setq')return;const q=e.target.value.trim().toLowerCase();const V=document.getElementById('v-export');if(!V)return;
   V.querySelectorAll(':scope>.card,:scope>details').forEach(c=>{const hit=!q||c.textContent.toLowerCase().includes(q);c.style.display=hit?'':'none';if(q&&hit&&c.classList.contains('pclosed'))c.classList.remove('pclosed');if(q&&hit&&c.tagName==='DETAILS')c.open=true})},true);
 DECO.add('설정 찾기',{root:'#v-export',deep:false,wait:200,run:setqPaint,now:true});
-/* 빈 날 안내 */
-function emptyDayPaint(){try{if(curSection!=='day'||!D||typeof mode==='undefined'||mode!=='run')return;const B=document.getElementById('dayBody');if(!B)return;const old=B.querySelector('.emptyd');const empty=!(D.plan||[]).length&&!(D.time||[]).length;const sc=B.querySelector(':scope>.sched');
-  if(!empty||!sc){if(old)old.remove();return}if(old)return;let pv=0;try{const o=cacheAll&&cacheAll.get(addD(D.date,-1));pv=o?(o.plan||[]).filter(b=>b.s&&b.e).length:0}catch(e){}
-  (B.querySelector(':scope>.crqt')||sc).insertAdjacentHTML('beforebegin',`<div class="emptyd"><p>아직 오늘 일정이 없습니다</p><button type="button" class="crqc" data-ed="add">＋ 첫 계획 블록 추가</button>${pv?`<button type="button" class="crqc" data-ed="copy">📋 어제 계획 ${pv}개 가져오기</button>`:''}</div>`)}catch(e){console.warn('emptyd',e)}}
-DECO.add('빈 날 안내',{root:'#dayBody',deep:true,wait:250,run:emptyDayPaint,now:true});
-document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-ed]');if(!b)return;e.preventDefault();e.stopPropagation();
-  if(b.dataset.ed==='add'){openBlockEditor('plan',null,{});return}
-  try{const o=cacheAll.get(addD(D.date,-1));D.plan=(o.plan||[]).filter(x=>x.s&&x.e).map(x=>({id:uid(),s:x.s,e:x.e,act:x.act,cat:x.cat,who:x.who||'',area:x.area,goal:x.goal}));schedule();renderDay();toast('📋 어제 계획을 가져왔습니다.')}catch(er){console.warn(er)}},true);
 /* 목표 보기 6종 → 기본 2개 */
 function gvMorePaint(){try{document.querySelectorAll('.gvbar').forEach(b=>{if(b.querySelector('.gvmore'))return;let all=false;try{all=localStorage.getItem('gj-gvall')==='1'}catch(e){}b.classList.toggle('gvall',all);const m=document.createElement('button');m.type='button';m.className='gvmore';m.textContent=all?'접기 ‹':'⋯ 더보기';m.onclick=()=>{const on=!b.classList.contains('gvall');b.classList.toggle('gvall',on);m.textContent=on?'접기 ‹':'⋯ 더보기';try{localStorage.setItem('gj-gvall',on?'1':'0')}catch(e){}};b.appendChild(m)})}catch(e){}}
 DECO.add('목표 보기 더보기',{root:'body',deep:true,wait:200,run:gvMorePaint,now:true});
@@ -18027,8 +18020,6 @@ function dtpOpen(){const S=$('#sheet');S.hidden=false;const close=()=>{S.hidden=
 function dtbPaint(){try{if(curSection!=='day'||!D)return;const B=document.getElementById('dayBody');if(!B||B.querySelector('.dtb'))return;const bar=B.querySelector('.cpbar');if(!bar)return;const b=document.createElement('button');b.type='button';b.className='dtb';b.dataset.dtpl='1';b.textContent='🗂 하루 틀';bar.appendChild(b)}catch(e){}}
 DECO.add('하루 틀 단추',{root:'#dayBody',deep:true,wait:250,run:dtbPaint,now:true});
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-dtpl]');if(!b)return;e.preventDefault();e.stopPropagation();dtpOpen()},true);
-function edTplPaint(){try{const c=document.querySelector('#dayBody .emptyd');if(c&&!c.querySelector('[data-dtpl]')&&dtpList().length)c.insertAdjacentHTML('beforeend','<button type="button" class="crqc" data-dtpl="1">🗂 하루 틀 적용</button>')}catch(e){}}
-DECO.add('빈 날 틀 단추',{root:'#dayBody',deep:true,wait:300,run:edTplPaint,now:true});
 
 /* ===== v477: 빈 시간 길게 눌러 새 블록 · 블록 다른 날로 옮기기·복사 ===== */
 function lpBind(tl,kind,st){if(!tl||tl._lp)return;tl._lp=1;let t=null,x0=0,y0=0,id=0;const clr=()=>{clearTimeout(t);t=null};
@@ -18054,12 +18045,6 @@ document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest
 .bbtxt p[data-hl="0"]{background:rgba(255,214,0,.32)}.bbtxt p[data-hl="1"]{background:rgba(60,190,110,.28)}.bbtxt p[data-hl="2"]{background:rgba(60,140,240,.25)}.bbtxt p[data-hl="3"]{background:rgba(240,90,140,.25)}
 .phg{display:grid;grid-template-columns:repeat(3,1fr);gap:4px}.phg button{padding:0;border:0;background:none;aspect-ratio:1;overflow:hidden;border-radius:8px}.phg img{width:100%;height:100%;object-fit:cover;display:block}
 .mcrd{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:10px 12px;margin:10px 0}.mcrd h3{margin:0 0 6px;font-size:1rem}.mcrd p{margin:4px 0;font-size:.88rem}.mcrd small{color:var(--muted)}.gpn{margin:6px 0;font-size:.82rem;color:var(--muted)}.gpn summary{cursor:pointer}`;document.head.appendChild(st)}
-/* 25) 빠른 메모 */
-function qmemoPaint(){try{if(curSection!=='day')return;const B=document.getElementById('dayBody');if(!B||B.querySelector('.qmemo'))return;const h=document.createElement('div');h.className='qmemo';h.innerHTML='<input type="text" id="qmi" placeholder="⚡ 빠른 메모 — 한 줄 적고 나중에 분류" enterkeyhint="done"><button type="button" id="qmb">저장</button>';B.insertBefore(h,B.firstChild)}catch(e){}}
-function qmemoSave(){const i=document.getElementById('qmi');const v=(i&&i.value||'').trim();if(!v)return;const id='note-'+uid();const n={kind:'note',id,date:today(),topic:'',title:v.slice(0,24),body:v,photos:[],tags:['분류전'],created:Date.now(),updated:Date.now()};NOTES.set(id,n);saveNote(n,true);i.value='';toastAct('⚡ 노트에 담았습니다 (분류전)','열기',()=>{nEdit=id;go('note')})}
-document.addEventListener('click',e=>{if(e.target.closest&&e.target.closest('#qmb')){e.preventDefault();qmemoSave()}},true);
-document.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target&&e.target.id==='qmi'){e.preventDefault();qmemoSave()}},true);
-DECO.add('빠른 메모',{root:'#dayBody',deep:false,wait:200,run:qmemoPaint,now:true});
 /* 29) 형광펜 */
 const hlMap=()=>{const S=bbS();if(!S.hl||typeof S.hl!=='object')S.hl={};return S.hl};
 function hlPaint(){try{const R=document.getElementById('bbbody');if(!R)return;const H=hlMap();R.querySelectorAll('.bbtxt p[data-bbv]').forEach(p=>{const c=H[`${bbB}-${bbC}-${p.dataset.bbv}`];if(c==null){if(p.hasAttribute('data-hl'))p.removeAttribute('data-hl')}else if(p.dataset.hl!==String(c))p.dataset.hl=c});
@@ -18156,6 +18141,55 @@ function sbSyncCard(){try{const C=document.getElementById('sbcard');if(!C||C.que
   const b3=document.getElementById('sbsnow');if(b3)b3.onclick=async()=>{b3.disabled=true;say('맞추는 중…');const r=await syncNow(true);redraw();say(r)};
   const b4=document.getElementById('sbsoff');if(b4)b4.onclick=async()=>{if(!await uiConfirm('이 기기의 자동 동기화를 끌까요? 기록은 이 기기와 서버에 그대로 남습니다.'))return;const x=syCfg();x.on=0;syCfgSet(x);redraw()}}catch(e){console.warn('sbsync',e)}}
 {const _s=sbCard;sbCard=function(){const r=_s.apply(this,arguments);try{sbSyncCard()}catch(e){}return r}}
+
+/* ===== v481: 평가 — 기둥마다 항목 ✎편집 · ＋추가 (한꺼번에 카드·한 장씩 모두) ===== */
+function crqEdit(k){return`<button type="button" class="crqc ed" data-cra="${k}" aria-label="${esc(areaName(k))} 항목 추가">＋</button><button type="button" class="crqc ed" data-cre="${k}" aria-label="${esc(areaName(k))} 항목 편집">✎</button>`}
+function crAddItem(k,name){name=String(name||'').trim().slice(0,30);if(!name)return false;const C=crAll();C[k]=C[k]||[];if(C[k].some(x=>x.n===name)){toast('이미 있는 항목입니다.');return false}const g=crGuess(name);C[k].push({id:'cr'+uid(),n:name,w:20,src:g,g:crSrc(g)[3]||0});SET.crit=C;SET.critT=SET.critT||{};SET.critT[k]=1;saveSet().catch(()=>{});let ok=true;try{ok=crToMand(k,C[k])}catch(e){}try{saveGoals()}catch(e){}try{CR_MS=''}catch(e){}try{if(D){applyDraft(D);schedule()}}catch(e){}toast(`＋ ${areaName(k)} · ${name}`+(ok===false?' (만다라트 8칸이 차서 그쪽에는 못 넣었습니다)':''));return true}
+{const st=document.createElement('style');st.textContent=`.crqc.ed{min-width:38px;justify-content:center;border-style:dashed;color:var(--muted)}`;document.head.appendChild(st)}
+document.addEventListener('click',async e=>{let b;if((b=e.target.closest&&e.target.closest('[data-cra]'))){e.preventDefault();e.stopImmediatePropagation();const k=b.dataset.cra;const n=await uiPrompt(`${areaName(k)} 기둥에 추가할 항목 이름 (예: 독서 30분, 산책, 영어 단어)`,'');if(n&&crAddItem(k,n)){if(document.getElementById('evw'))evwDraw();else if(curSection==='day')renderDay()}return}
+  if((b=e.target.closest&&e.target.closest('[data-cre]'))){e.preventDefault();e.stopImmediatePropagation();openCrMgr(b.dataset.cre)}},true);
+{const _c=openCrMgr;openCrMgr=function(){const S=document.getElementById('sheet');const r=_c.apply(this,arguments);try{const obs=new MutationObserver(()=>{if(S.hidden||!S.innerHTML){obs.disconnect();if(document.getElementById('evw'))evwDraw();else if(curSection==='day')setTimeout(()=>{try{renderDay()}catch(e){}},50)}});obs.observe(S,{attributes:true,childList:true})}catch(e){}return r}}
+
+/* ===== v482: 즐겨찾기 앱·링크 ↔ 세부 항목 연동 (밀리의서재 → 독서) ===== */
+const FAV_PRE=[['밀리의서재','📚','https://www.millie.co.kr','grow','독서'],['교보문고','📖','https://www.kyobobook.co.kr','grow','독서'],['리디','📕','https://ridibooks.com','grow','독서'],['예스24','📗','https://www.yes24.com','grow','독서'],['윌라 오디오북','🎧','https://www.welaaa.com','grow','독서']];
+let FAVRUN=null;
+function crSetToday(k,id,v){const T=today();const put=o=>{o.crit=o.crit||{};const M=o.crit[k]=o.crit[k]||{};if(v)M[id]=1;else delete M[id];if(!Object.keys(M).length)delete o.crit[k];if(o.scUser)delete o.scUser[k]};
+  if(D&&D.date===T){put(D);try{applyDraft(D)}catch(e){}schedule();return Promise.resolve()}
+  return store.load(T).then(o=>{o=norm(o||{date:T});put(o);return store.save(T,o)}).then(()=>{try{if(cacheAll)cacheAll.delete(T)}catch(e){}})}
+function favLinkOpen(id){const f=(SET.favLinks||[]).find(x=>x.id===id);if(!f)return;
+  if(f.k&&f.item){try{crSetToday(f.k,f.item,1);toast(`${f.em||'🔗'} ${f.name} · ${areaName(f.k)} ‘${((crList(f.k).find(x=>x.id===f.item))||{}).n||'항목'}’ ✓`)}catch(e){}}
+  if(f.log)FAVRUN={t:Date.now(),id};
+  if(f.url){try{window.open(f.url,'_blank')}catch(e){location.href=f.url}}}
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState!=='visible'||!FAVRUN)return;const R=FAVRUN;FAVRUN=null;const mins=Math.round((Date.now()-R.t)/60000);if(mins<3||mins>360)return;const f=(SET.favLinks||[]).find(x=>x.id===R.id);if(!f)return;
+  const a=new Date(R.t),b=new Date();const hm=d=>`${pad(d.getHours())}:${pad(d.getMinutes())}`;if(a.getDate()!==b.getDate())return;const blk={id:uid(),s:hm(a),e:hm(b),act:f.name,cat:'',area:f.k||''};
+  const T=today();const done=()=>toastAct(`${f.em||'🔗'} ${f.name} ${mins}분을 실제 한 일에 기록했습니다`,'취소',async()=>{try{if(D&&D.date===T){D.time=D.time.filter(x=>x.id!==blk.id);schedule();renderDay()}else{const o=await store.load(T);o.time=(o.time||[]).filter(x=>x.id!==blk.id);await store.save(T,o)}}catch(e){}});
+  try{if(D&&D.date===T){D.time=D.time||[];D.time.push(blk);schedule();try{if(curSection==='day')renderDay()}catch(e){}done()}else store.load(T).then(o=>{o=norm(o||{date:T});o.time=o.time||[];o.time.push(blk);return store.save(T,o)}).then(done)}catch(e){}});
+function favLinkEdit(id){const S=$('#sheet');S.hidden=false;const L=()=>{SET.favLinks=Array.isArray(SET.favLinks)?SET.favLinks:[];return SET.favLinks};const f0=L().find(x=>x.id===id);
+  const f=Object.assign({id:'fl'+uid(),name:'',em:'🔗',url:'',k:'',item:'',log:true,_new:true},f0||{});if(f0)delete f._new;let newName='';
+  const items=k=>k?crList(k):[];
+  const draw=()=>{const IT=items(f.k);S.innerHTML=`<div class="sheetbox" role="dialog" aria-label="앱·링크"><div class="shead"><b>${f0?'✏️ 앱·링크 고치기':'＋ 앱·링크 등록'}</b><button class="del" id="flx">닫기</button></div>
+    ${f0?'':`<p class="mhead" style="margin:0 0 4px">자주 쓰는 앱</p><div class="chips">${FAV_PRE.map((p,i)=>`<button class="chip" data-flp="${i}">${p[1]} ${esc(p[0])}</button>`).join('')}</div>`}
+    <label class="f">이름<input id="fln" type="text" value="${esc(f.name)}" placeholder="예: 밀리의서재"></label>
+    <label class="f">이모지<input id="fle" type="text" maxlength="4" value="${esc(f.em)}" style="width:5em"></label>
+    <label class="f">주소 (https://… 또는 앱 링크)<input id="flu" type="url" autocomplete="off" value="${esc(f.url)}" placeholder="https://www.millie.co.kr"></label>
+    <p class="mhead" style="margin:10px 0 4px">연결할 평가 항목</p>
+    <div class="row" style="gap:6px;flex-wrap:wrap"><select id="flk"><option value="">연결 안 함</option>${SCORE.map(([k,l])=>`<option value="${k}" ${f.k===k?'selected':''}>${AREA_E[k]||''} ${esc(l)}</option>`).join('')}</select>
+    ${f.k?`<select id="fli">${IT.map(i=>`<option value="${esc(i.id)}" ${f.item===i.id?'selected':''}>${esc(i.n)}</option>`).join('')}<option value="__new" ${f.item==='__new'||!IT.length?'selected':''}>＋ 새 항목 만들기</option></select>`:''}</div>
+    ${f.k&&(f.item==='__new'||!IT.length)?`<label class="f">새 항목 이름<input id="fln2" type="text" value="${esc(newName||'독서')}"></label>`:''}
+    <label class="chk" style="margin-top:8px;color:var(--ink)"><input type="checkbox" id="fll" ${f.log?'checked':''}>다녀오면 머문 시간을 ‘실제 한 일’에 기록 (3분 이상)</label>
+    <p class="hint" style="margin:6px 0 0">열면 연결한 평가 항목이 오늘 ✓로 표시됩니다. https 주소는 앱이 깔려 있으면 그 앱으로 열리는 경우가 많습니다(기기·앱에 따라 다름).</p>
+    <div class="row" style="margin-top:12px;justify-content:space-between">${f0?'<button class="del" id="fld">이 링크 지우기</button>':'<span></span>'}<button class="btn" id="flok">저장</button></div></div>`;
+    const g=i=>document.getElementById(i);const sync=()=>{if(g('fln'))f.name=g('fln').value.trim();if(g('fle'))f.em=g('fle').value.trim()||'🔗';if(g('flu'))f.url=g('flu').value.trim();if(g('fll'))f.log=g('fll').checked;if(g('fln2'))newName=g('fln2').value.trim()};
+    g('flx').onclick=()=>{S.hidden=true;S.innerHTML='';try{openFav()}catch(e){}};
+    S.querySelectorAll('[data-flp]').forEach(b=>b.onclick=()=>{const p=FAV_PRE[+b.dataset.flp];f.name=p[0];f.em=p[1];f.url=p[2];f.k=p[3];const ex=crList(p[3]).find(x=>x.n.includes(p[4]));f.item=ex?ex.id:'__new';newName=p[4];draw()});
+    g('flk').onchange=()=>{sync();f.k=g('flk').value;f.item=f.k&&crList(f.k)[0]?crList(f.k)[0].id:'__new';draw()};
+    if(g('fli'))g('fli').onchange=()=>{sync();f.item=g('fli').value;draw()};
+    const del=g('fld');if(del)del.onclick=async()=>{if(!await uiConfirm(`‘${f.name}’ 링크를 지울까요?`))return;SET.favLinks=L().filter(x=>x.id!==id);SET.favs=favList().filter(x=>x!=='lnk:'+id);await saveSet().catch(()=>{});S.hidden=true;S.innerHTML='';openFav()};
+    g('flok').onclick=async()=>{sync();if(!f.name){toast('이름을 적어 주십시오.');return}if(f.url&&!/^[a-z][a-z0-9+.-]*:\/\//i.test(f.url))f.url='https://'+f.url;
+      if(f.k&&(f.item==='__new'||!f.item)){const n=newName||'독서';if(!crList(f.k).some(x=>x.n===n))crAddItem(f.k,n);const it=crList(f.k).find(x=>x.n===n);f.item=it?it.id:''}
+      const o={id:f.id,name:f.name,em:f.em,url:f.url,k:f.k,item:f.item,log:!!f.log};const A=L();const ix=A.findIndex(x=>x.id===f.id);if(ix>=0)A[ix]=o;else A.push(o);
+      if(!favList().includes('lnk:'+f.id))SET.favs=[...favList(),'lnk:'+f.id];await saveSet().catch(()=>{});toast(`${o.em} ${o.name} 저장`);S.hidden=true;S.innerHTML='';openFav()}};
+  draw()}
 </script>
 <!--BIBLE{--><!--}BIBLE-->
 <div id="miniov" class="miniov" hidden></div>
