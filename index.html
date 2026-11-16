@@ -9662,12 +9662,13 @@ function xpDay(o,d){const P=[];const add=(k,v,n)=>{v=Math.round(v);if(v>0)P.push
     const wr=['word','thought','hard','better','step','affirm'].filter(k=>xs(o[k])).length+[...(o.grat||[]),...(o.mgrat||[]),...(o.great||[])].filter(xs).length;add('✍️ 하루 기록 쓰기',Math.min(30,wr*3),wr+'칸');
     const lg=(o.meet||[]).length+(o.mis||[]).length+(o.fin||[]).length+(o.meals||[]).filter(m=>xs(m.what)).length;add('📒 만남·실수·지출·식사',Math.min(20,lg*2),lg+'건');
     if(o.sleep&&(o.sleep.bed||o.sleep.hours))add('😴 잠 기록',3)}
+  try{const gd=GOALS.list.filter(g=>g.done&&g.doneAt===d);add('🏁 목표 완료',Math.min(60,gd.length*15+gd.filter(g=>g.reflect).length*5),gd.length+'개')}catch(e){}
   try{const tk=xpIdx().tk[d]||0;add('☑️ 할 일 끝내기',tk*5,tk+'개')}catch(e){}
   try{const nt=xpIdx().nt[d]||0;add('📝 노트',Math.min(20,nt*5),nt+'편')}catch(e){}
   try{const B=SET.bible||{};const ch=xpIdx().bc[d]||0;add('📖 성경 읽기',ch*5,ch+'장');const eo=xpIdx().eo[d]||0;add('📚 어성경',eo*10,eo+'일치')}catch(e){}
   return{xp:P.reduce((a,x)=>a+x[1],0),parts:P}}
 let XPC={k:'',v:null};
-function xpAll(){if(!cacheAll)return null;const key=[cacheAll.size,D&&D._sv,D&&xpDsig(),TASKS.items.length,(TASKS.items.filter(t=>t.done).length),NOTES.size,Object.keys((SET.bible||{}).read||{}).length,today()].join('|');
+function xpAll(){if(!cacheAll)return null;const key=[cacheAll.size,D&&D._sv,D&&xpDsig(),TASKS.items.length,(TASKS.items.filter(t=>t.done).length),GOALS.list.filter(g=>g.done).length+'/'+GOALS.list.filter(g=>g.reflect).length,NOTES.size,Object.keys((SET.bible||{}).read||{}).length,today()].join('|');
   if(XPC.k===key&&XPC.v)return XPC.v;
   const days=new Set([...cacheAll.keys()]);if(D&&D.date)days.add(D.date);try{TASKS.items.forEach(t=>{if(t.doneAt)days.add(t.doneAt);(t.log||[]).forEach(x=>days.add(x))})}catch(e){}
   try{NOTES.forEach(n=>{if(n.date)days.add(n.date)})}catch(e){}try{Object.values((SET.bible||{}).read||{}).forEach(x=>days.add(x))}catch(e){}
@@ -17982,7 +17983,7 @@ function wkSumPaint(){try{const R=document.getElementById('rpbody');if(!R||R.que
   const rows=SCORE.filter(([x])=>A[x]).map(([x,l])=>({x,l,v:A[x],d:P[x]?A[x]-P[x]:null}));if(!rows.length)return;
   const up=rows.filter(r=>r.d!=null).sort((a,b)=>b.d-a.d)[0],dn=rows.filter(r=>r.d!=null).sort((a,b)=>a.d-b.d)[0],low=rows.slice().sort((a,b)=>a.v-b.v)[0];
   const f=r=>`${AREA_E[r.x]||''} ${esc(r.l)} ${r.d>0?'+':''}${r.d.toFixed(1)}`;
-  const h=`<div class="card wksum" style="--k:var(--pen)"><h3>📌 이번 주 한눈에</h3><ul class="list">${up&&up.d>0.05?`<li><small>가장 오른 기둥</small>${f(up)}</li>`:''}${dn&&dn.d<-0.05?`<li><small>가장 내려간 기둥</small>${f(dn)}</li>`:''}${(()=>{try{const v=xpAll();if(!v)return'';const x=weekDays(mon).reduce((a,d)=>a+(v.per[d]||0),0),y=weekDays(prv).reduce((a,d)=>a+(v.per[d]||0),0);return`<li><small>이번 주 XP</small>⚡ ${x}${y?` (지난주 ${y})`:''} · Lv.${xpLevel(v.tot)}</li>`}catch(e){return''}})()}<li><small>다음 주 한 가지</small>${AREA_E[low.x]||''} ${esc(low.l)}(${low.v.toFixed(1)})에 시간을 먼저 배정해 보십시오</li></ul></div>`;k.insertAdjacentHTML('beforebegin',h)}catch(e){console.warn('wksum',e)}}
+  const h=`<div class="card wksum" style="--k:var(--pen)"><h3>📌 이번 주 한눈에</h3><ul class="list">${up&&up.d>0.05?`<li><small>가장 오른 기둥</small>${f(up)}</li>`:''}${dn&&dn.d<-0.05?`<li><small>가장 내려간 기둥</small>${f(dn)}</li>`:''}${(()=>{try{const v=xpAll();if(!v)return'';const x=weekDays(mon).reduce((a,d)=>a+(v.per[d]||0),0),y=weekDays(prv).reduce((a,d)=>a+(v.per[d]||0),0);return`<li><small>이번 주 XP</small>⚡ ${x}${y?` (지난주 ${y})`:''} · Lv.${xpLevel(v.tot)}</li>`}catch(e){return''}})()}<li><small>다음 주 한 가지</small>${AREA_E[low.x]||''} ${esc(low.l)}(${low.v.toFixed(1)})에 시간을 먼저 배정해 보십시오 <button type="button" class="crqc" data-wk1="${low.x}">＋ 다음 주 계획에 넣기</button></li></ul></div>`;k.insertAdjacentHTML('beforebegin',h)}catch(e){console.warn('wksum',e)}}
 DECO.add('주간 한눈에',{root:'#rpbody',deep:true,wait:300,run:wkSumPaint,now:true});
 
 /* ===== v475: 설정 검색 · 빈 날 안내 · 목표 보기 기본 2개 ===== */
@@ -18068,7 +18069,7 @@ function gCreated(g){const t=parseInt(String(g.id||'').slice(0,8),36);return t>1
 function mineGoalsPaint(){try{const R=document.getElementById('minebody');if(!R||R.querySelector('.mcrd'))return;const T=today(),a=addD(T,-13);const stalled=[];
   GOALS.list.filter(g=>g.title&&!g.done&&['w','m','y'].includes(g.lv)&&g.per===perKey(g.lv,T)).forEach(g=>{const c=gCreated(g);if(!c||Date.now()-c<14*864e5)return;let m={act:0,pl:0};try{m=goalMins(g,a,T)}catch(e){}if(!(m.act||m.pl))stalled.push(g)});
   const done=GOALS.list.filter(g=>g.done&&g.title).sort((x,z)=>String(z.doneAt||'').localeCompare(String(x.doneAt||''))).slice(0,15);
-  let h='';if(stalled.length)h+=`<div class="mcrd"><h3>⏸ 멈춘 목표 ${stalled.length}</h3>${stalled.slice(0,4).map(g=>`<p>${esc(g.title)} <small>${{w:'1주',m:'1달',y:'올해'}[g.lv]} · 최근 2주 이 목표에 계획·실제 시간이 없습니다</small></p>`).join('')}<small>이번 주 계획에 시간 블록을 하나 넣어 다시 움직여 보십시오.</small></div>`;
+  let h='';if(stalled.length)h+=`<div class="mcrd"><h3>⏸ 멈춘 목표 ${stalled.length}</h3>${stalled.slice(0,4).map(g=>`<p>${esc(g.title)} <small>${{w:'1주',m:'1달',y:'올해'}[g.lv]} · 최근 2주 이 목표에 계획·실제 시간이 없습니다</small> <button type="button" class="crqc" data-gab="${g.id}|30|1">이번 주 계획에 넣기</button></p>`).join('')}<small>이번 주 계획에 시간 블록을 하나 넣어 다시 움직여 보십시오.</small></div>`;
   if(done.length)h+=`<details class="mcrd"><summary><b>🏁 완료한 목표 ${GOALS.list.filter(g=>g.done&&g.title).length}</b></summary>${done.map(g=>`<p>✓ ${esc(g.title)} <small>${g.doneAt?md(g.doneAt):''}</small>${g.reflect?`<br><small>“${esc(g.reflect)}”</small>`:''}</p>`).join('')}</details>`;
   if(h)R.insertAdjacentHTML('afterbegin',h)}catch(e){console.warn('mineg',e)}}
 DECO.add('나 목표 카드',{root:'#minebody',deep:false,wait:300,run:mineGoalsPaint,now:true});
@@ -18190,6 +18191,32 @@ function favLinkEdit(id){const S=$('#sheet');S.hidden=false;const L=()=>{SET.fav
       const o={id:f.id,name:f.name,em:f.em,url:f.url,k:f.k,item:f.item,log:!!f.log};const A=L();const ix=A.findIndex(x=>x.id===f.id);if(ix>=0)A[ix]=o;else A.push(o);
       if(!favList().includes('lnk:'+f.id))SET.favs=[...favList(),'lnk:'+f.id];await saveSet().catch(()=>{});toast(`${o.em} ${o.name} 저장`);S.hidden=true;S.innerHTML='';openFav()}};
   draw()}
+
+/* ===== v483: 연동 — 목표→오늘/이번 주 계획 · 항목 길게 눌러 계획 · 성경→평가 · 노트→주간 · 다음 주 한 가지 · 목표 완료 XP ===== */
+function gAddBlock(g,dur,tomorrow){const cat=(guessBlock(g.title)||{}).cat||SET.cats[0].name;const T=today();const mk=(s)=>({id:uid(),s,e:addMin(s,dur),act:g.title,cat,who:'',goal:g.id});
+  if(!tomorrow&&D&&D.date===T){const fr=plFree(dur);if(fr){const f=m=>`${pad(Math.floor(m/60)%24)}:${pad(m%60)}`;const b=mk(f(fr.s));b.e=f(fr.s+Math.min(dur,fr.d));D.plan.push(b);D.plan.sort((a,z)=>(a.s||'99')<(z.s||'99')?-1:1);schedule();try{if(curSection==='day')renderDay()}catch(e){}toast(`🎯 오늘 ${b.s}~${b.e}에 ‘${g.title}’ 블록을 넣었습니다.`);return Promise.resolve(true)}}
+  const d=addD(T,1);return store.load(d).then(o=>{o=norm(o||{date:d});o.plan=o.plan||[];o.plan.push(mk('19:00'));return store.save(d,o)}).then(()=>{try{if(cacheAll)cacheAll.delete(d)}catch(e){}toast(`🎯 ${md(d)} 19:00에 ‘${g.title}’ 블록을 넣었습니다.`);return true})}
+function goalWeekPaint(){try{const R=document.getElementById('minebody');if(!R||R.querySelector('.mgw'))return;const T=today();const L=GOALS.list.filter(g=>g.title&&!g.done&&['w','m'].includes(g.lv)&&g.per===perKey(g.lv,T)).slice(0,5);if(!L.length)return;
+  R.insertAdjacentHTML('afterbegin',`<div class="mcrd mgw"><h3>🎯 이번 주·달 목표 → 일정에 넣기</h3>${L.map(g=>`<p>${esc(g.title)} <button type="button" class="crqc" data-gab="${g.id}|30|0">오늘 30분</button><button type="button" class="crqc" data-gab="${g.id}|60|1">내일 1시간</button></p>`).join('')}</div>`)}catch(e){}}
+DECO.add('나 목표 일정',{root:'#minebody',deep:false,wait:300,run:goalWeekPaint,now:true});
+document.addEventListener('click',async e=>{let b=e.target.closest&&e.target.closest('[data-gab]');if(b){e.preventDefault();e.stopImmediatePropagation();const[id,d,t]=b.dataset.gab.split('|');const g=GOALS.list.find(x=>x.id===id);if(g)await gAddBlock(g,+d,t==='1');return}
+  b=e.target.closest&&e.target.closest('[data-wk1]');if(b){e.preventDefault();e.stopImmediatePropagation();const k=b.dataset.wk1;const mon=addD(mondayOf(today()),7);const it=(crList(k)[0]||{}).n||areaName(k);const cat=(guessBlock(it)||{}).cat||SET.cats[0].name;
+    const o=norm((await store.load(mon))||{date:mon});o.plan=o.plan||[];o.plan.push({id:uid(),s:'19:00',e:'19:30',act:it,cat,who:'',area:k});await store.save(mon,o);try{if(cacheAll)cacheAll.delete(mon)}catch(er){}b.textContent='✓ 넣었음';b.disabled=true;toast(`📅 다음 주 월요일(${md(mon)}) 19:00에 ‘${it}’ 계획을 넣었습니다.`)}},true);
+/* 세부 항목 길게 눌러 → 오늘 계획 */
+{let t=null,hit=null;document.addEventListener('pointerdown',e=>{const c=e.target.closest&&e.target.closest('[data-crq]');if(!c)return;clearTimeout(t);t=setTimeout(()=>{t=null;hit=c;const[k,id]=c.dataset.crq.split('|');const it=crList(k).find(x=>x.id===id);if(!it)return;try{navigator.vibrate&&navigator.vibrate(20)}catch(_){}plAddBlock((guessBlock(it.n)||{}).cat||SET.cats[0].name,30,it.n)},600)},{passive:true});
+  ['pointerup','pointercancel','pointermove','scroll'].forEach(n=>document.addEventListener(n,()=>{clearTimeout(t);t=null},{passive:true}));
+  document.addEventListener('click',e=>{if(hit&&e.target.closest&&e.target.closest('[data-crq]')){e.preventDefault();e.stopImmediatePropagation();hit=null}},true)}
+/* 성경 → 영성 평가 ‘성경’ 항목 자동 ✓ + 오늘 읽은 곳 */
+function bbTodayRead(){try{const S=bbS(),T=today();const L=Object.entries(S.read||{}).filter(([,d])=>d===T).map(([k])=>k.split('-').map(Number));if(!L.length)return'';const by={};L.forEach(([b,c])=>{(by[b]=by[b]||[]).push(c)});return Object.keys(by).map(b=>{const c=by[b].sort((x,y)=>x-y);return`${BBN[b]} ${c.length>1?c[0]+'–'+c[c.length-1]:c[0]}장`}).join(', ')}catch(e){return''}}
+let BBSY='';function bbCritSync(){try{const r=bbTodayRead();if(!r||r===BBSY||!D||D.date!==today())return;BBSY=r;const it=crList('spirit').find(x=>/성경|말씀/.test(x.n));if(!it)return;const M=(D.crit&&D.crit.spirit)||{};if(M[it.id]!==undefined)return;crSetToday('spirit',it.id,1);toast(`📖 ${r} 읽음 → 영성 ‘${it.n}’ ✓`)}catch(e){}}
+{const _s=saveSet;saveSet=async function(){const r=await _s.apply(this,arguments);setTimeout(bbCritSync,50);return r}}
+{const _q=crqHTML;crqHTML=function(todo){let h=_q.apply(this,arguments);try{const r=bbTodayRead();if(r&&h&&!todo)h=h.replace('<p class="hint">누르면','<p class="hint">📖 오늘 읽은 곳: '+esc(r)+'</p><p class="hint">누르면')}catch(e){}return h}}
+/* 노트 → 주간 리포트 */
+function wkNotePaint(){try{const R=document.getElementById('rpbody');if(!R||R.querySelector('.wknote')||typeof rpWk==='undefined'||!rpWk)return;const a=rpWk,z=addD(a,6);const L=[...NOTES.values()].filter(n=>n&&n.kind==='note'&&n.date>=a&&n.date<=z&&(n.title||n.body)).sort((x,y)=>String(y.date).localeCompare(String(x.date)));if(!L.length)return;const k=R.querySelector('.wksum')||R.querySelector('.kpis');if(!k)return;
+  const fb=k.classList.contains('wksum')?'afterend':'beforebegin';k.insertAdjacentHTML(fb,`<div class="card wknote" style="--k:var(--pen)"><h3>📝 이번 주 쓴 노트 ${L.length}</h3><ul class="list">${L.slice(0,6).map(n=>`<li><small>${md(n.date)}${n.memoSync?' · 일정 메모':''}</small>${esc(n.title||String(n.body).replace(/\s+/g,' ').slice(0,30))}</li>`).join('')}</ul></div>`)}catch(e){}}
+DECO.add('주간 노트',{root:'#rpbody',deep:true,wait:400,run:wkNotePaint,now:true});
+/* 레벨업 → 다음 목표 제안 */
+{const _c=xpCelebrate;xpCelebrate=function(big,title,sub){const r=_c.apply(this,arguments);try{if(/레벨/.test(String(title)+String(sub)))setTimeout(()=>toastAct('🌱 레벨이 올랐습니다. 다음 목표를 세워 볼까요?','목표 열기',()=>go('goal')),6000)}catch(e){}return r}}
 </script>
 <!--BIBLE{--><!--}BIBLE-->
 <div id="miniov" class="miniov" hidden></div>
