@@ -14,8 +14,10 @@ jobs:
           node-version: 20
       - name: 자동 점검 (하나라도 실패하면 APK를 만들지 않음)
         run: |
-          mkdir -p /tmp/pw && (cd /tmp/pw && npm init -y >/dev/null 2>&1 && npm i playwright@1.56.0 >/dev/null 2>&1)
-          (cd /tmp/pw && npx playwright install --with-deps chromium >/dev/null 2>&1)
+          mkdir -p /tmp/pw && cd /tmp/pw && npm init -y >/dev/null 2>&1
+          for i in 1 2 3; do npm i playwright@1.56.0 && break; echo "npm 재시도 $i"; sleep 5; done
+          for i in 1 2 3; do npx playwright install --with-deps chromium && break; echo "브라우저 설치 재시도 $i"; sleep 5; done
+          cd "$GITHUB_WORKSPACE"
           python3 -m http.server 8765 >/dev/null 2>&1 &
           sleep 2
           NODE_PATH=/tmp/pw/node_modules node tests/check.js
