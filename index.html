@@ -17918,7 +17918,7 @@ function crqChip(k,r){const c=r.v>=1?'ok':r.v>0?'part':r.pb?'pl':'';const sym=r.
 function crqHTML(todo){const X=crqData();if(!X.n)return'';const open=(()=>{try{return localStorage.getItem(todo?'gj-crqt':'gj-crqa')!=='0'}catch(e){return true}})();
   const body=X.G.map(([k,R])=>{const L=todo?R.filter(r=>{if(r.v>=1)return false;if(r.it.ap&&r.it.ap.m==='wk'){const W=crWkInfo(r.it,D);return W.cnt<W.n}return true}):R;if(!L.length)return'';return`<div class="crqg"><i>${AREA_E[k]||''} ${esc(areaName(k))}</i>${L.map(r=>crqChip(k,r)).join('')}</div>`}).join('');
   const left=X.n-X.d;
-  return`<details class="crq ${todo?'crqt':'crqa'}"${open?' open':''} data-crqk="${todo?'t':'a'}"><summary>${todo?`✅ 오늘 챙길 것`:`📋 전체 항목 한 번에`}<small>${todo?(left?`남은 ${left}개`:`모두 했음 🎉`):''} ${X.d}/${X.n} ▾</small></summary><button type="button" class="crqc" data-evw="1" style="margin-top:8px">🌙 한 장씩 평가하기</button>${body||'<p class="hint">오늘 항목을 모두 했습니다.</p>'}<p class="hint">누르면 ✓ (다시 누르면 취소) · 📅는 오늘 계획에 있는 것 · 실제 일정에 적으면 자동 ✓${todo?' · 평가 점수에 바로 반영':''}</p></details>`}
+  return`<details class="crq ${todo?'crqt':'crqa'}"${open?' open':''} data-crqk="${todo?'t':'a'}"><summary>${todo?`✅ 오늘 챙길 것`:`📋 전체 항목 한 번에`}${(()=>{try{if(SET.xpOff)return'';const v=xpAll();return v?` <em class="crxp">⚡${v.today.xp}/${xpGoal()}</em>`:''}catch(e){return''}})()}<small>${todo?(left?`남은 ${left}개`:`모두 했음 🎉`):''} ${X.d}/${X.n} ▾</small></summary><button type="button" class="crqc" data-evw="1" style="margin-top:8px">🌙 한 장씩 평가하기</button>${body||'<p class="hint">오늘 항목을 모두 했습니다.</p>'}<p class="hint">누르면 ✓ (다시 누르면 취소) · 📅는 오늘 계획에 있는 것 · 실제 일정에 적으면 자동 ✓${todo?' · 평가 점수에 바로 반영':''}</p></details>`}
 function crqPaint(){try{if(curSection!=='day'||!D)return;const B=document.getElementById('dayBody');if(!B)return;
   const put=(anchor,where,todo)=>{const h=crqHTML(todo);const cls=todo?'crqt':'crqa';const old=B.querySelector('.'+cls);if(!anchor||!h){if(old)old.remove();return}if(old&&old._h===h)return;const T=document.createElement('template');T.innerHTML=h;const el=T.content.firstElementChild;el._h=h;if(old)old.replaceWith(el);else anchor.insertAdjacentElement(where,el)};
   const rd=B.querySelector('#rdrag');put(rd,'afterend',false);if(!rd){const o=B.querySelector('.crqa');if(o)o.remove()}
@@ -17981,7 +17981,7 @@ function wkSumPaint(){try{const R=document.getElementById('rpbody');if(!R||R.que
   const rows=SCORE.filter(([x])=>A[x]).map(([x,l])=>({x,l,v:A[x],d:P[x]?A[x]-P[x]:null}));if(!rows.length)return;
   const up=rows.filter(r=>r.d!=null).sort((a,b)=>b.d-a.d)[0],dn=rows.filter(r=>r.d!=null).sort((a,b)=>a.d-b.d)[0],low=rows.slice().sort((a,b)=>a.v-b.v)[0];
   const f=r=>`${AREA_E[r.x]||''} ${esc(r.l)} ${r.d>0?'+':''}${r.d.toFixed(1)}`;
-  const h=`<div class="card wksum" style="--k:var(--pen)"><h3>📌 이번 주 한눈에</h3><ul class="list">${up&&up.d>0.05?`<li><small>가장 오른 기둥</small>${f(up)}</li>`:''}${dn&&dn.d<-0.05?`<li><small>가장 내려간 기둥</small>${f(dn)}</li>`:''}<li><small>다음 주 한 가지</small>${AREA_E[low.x]||''} ${esc(low.l)}(${low.v.toFixed(1)})에 시간을 먼저 배정해 보십시오</li></ul></div>`;k.insertAdjacentHTML('beforebegin',h)}catch(e){console.warn('wksum',e)}}
+  const h=`<div class="card wksum" style="--k:var(--pen)"><h3>📌 이번 주 한눈에</h3><ul class="list">${up&&up.d>0.05?`<li><small>가장 오른 기둥</small>${f(up)}</li>`:''}${dn&&dn.d<-0.05?`<li><small>가장 내려간 기둥</small>${f(dn)}</li>`:''}${(()=>{try{const v=xpAll();if(!v)return'';const x=weekDays(mon).reduce((a,d)=>a+(v.per[d]||0),0),y=weekDays(prv).reduce((a,d)=>a+(v.per[d]||0),0);return`<li><small>이번 주 XP</small>⚡ ${x}${y?` (지난주 ${y})`:''} · Lv.${xpLevel(v.tot)}</li>`}catch(e){return''}})()}<li><small>다음 주 한 가지</small>${AREA_E[low.x]||''} ${esc(low.l)}(${low.v.toFixed(1)})에 시간을 먼저 배정해 보십시오</li></ul></div>`;k.insertAdjacentHTML('beforebegin',h)}catch(e){console.warn('wksum',e)}}
 DECO.add('주간 한눈에',{root:'#rpbody',deep:true,wait:300,run:wkSumPaint,now:true});
 
 /* ===== v475: 설정 검색 · 빈 날 안내 · 목표 보기 기본 2개 ===== */
@@ -18092,6 +18092,15 @@ async function gRefl(id){const g=GOALS.list.find(x=>x.id===id);if(!g||!g.done||g
 /* 20) 진행률 기준 한 줄 */
 function gpnPaint(){try{const V=document.getElementById('v-goal');if(!V||V.hidden||V.querySelector('.gpn'))return;const bar=V.querySelector('.gvbar');if(!bar)return;bar.insertAdjacentHTML('afterend','<details class="gpn"><summary>ⓘ 진행률은 이렇게 계산됩니다</summary><p>할 일·하위 목표가 있으면 완료 비율, 수치 목표는 목표값 대비 달성률, 습관 목표는 실천률, 시간 목표는 기록한 시간 대비입니다. 위 항목이 없는 목표는 완료를 누르기 전까지 0%이며 완료하면 100%입니다.</p></details>')}catch(e){}}
 DECO.add('진행률 안내',{root:'#v-goal',deep:true,wait:250,run:gpnPaint,now:true});
+
+/* ===== v479: 레벨 — 평가·세부 항목도 XP, XP가 오르면 ‘+N XP’ 떠오름 ===== */
+{const _x=xpDay;xpDay=function(o,d){const r=_x.apply(this,arguments);try{if(o){let n=0;Object.values(o.crit||{}).forEach(M=>Object.values(M||{}).forEach(v=>{if(v===1)n++;else if(v===.5)n+=.5}));const a=Math.min(20,Math.round(n*2));if(a>0){r.parts.push(['🧭 세부 항목 체크',a,Math.round(n)+'개']);r.xp+=a}
+    const ev=Object.keys(o.scUser||{}).filter(k=>o.scUser[k]).length;if(ev||n>0){r.parts.push(['🌙 저녁 평가',10,ev?ev+'기둥':'']);r.xp+=10}}}catch(e){}return r}}
+{const st=document.createElement('style');st.textContent=`.xpfl{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 150px);transform:translateX(-50%);z-index:8000;background:#58cc02;color:#fff;font-weight:800;padding:8px 16px;border-radius:999px;box-shadow:0 4px 14px rgba(0,0,0,.25);pointer-events:none;animation:xpflt 1.6s ease forwards}@keyframes xpflt{0%{opacity:0;transform:translate(-50%,10px)}15%{opacity:1;transform:translate(-50%,0)}75%{opacity:1}100%{opacity:0;transform:translate(-50%,-30px)}}@media (prefers-reduced-motion:reduce){.xpfl{animation:none}}.crxp{font-style:normal;font-weight:700;font-size:.82rem;color:#3f9a00}`;document.head.appendChild(st)}
+let XPLAST={d:'',xp:null};
+function xpFloat(){try{if(SET.xpOff||!cacheAll)return;const v=xpAll();if(!v)return;const T=today(),x=v.today.xp;if(XPLAST.d===T&&XPLAST.xp!=null&&x>XPLAST.xp){const g=xpGoal();document.querySelectorAll('.xpfl').forEach(e=>e.remove());const e=document.createElement('div');e.className='xpfl';e.textContent=`+${x-XPLAST.xp} XP · 오늘 ${x}/${g}`;document.body.appendChild(e);setTimeout(()=>e.remove(),1700)}XPLAST={d:T,xp:x}}catch(e){}}
+{const _p=xpPaint;xpPaint=function(){const r=_p.apply(this,arguments);try{xpFloat()}catch(e){}return r}}
+{const _f=flush;flush=async function(){const r=await _f.apply(this,arguments);try{XPC.k='';setTimeout(()=>{xpFloat();try{crqPaint()}catch(e){}},80)}catch(e){}return r}}
 </script>
 <!--BIBLE{--><!--}BIBLE-->
 <div id="miniov" class="miniov" hidden></div>
