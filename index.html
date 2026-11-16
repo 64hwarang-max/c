@@ -18047,6 +18047,51 @@ async function mvBlock(copy){try{if(!bES||bES.i==null)return;if(bES._read)bES._r
 function mvBtnPaint(){try{const O=document.getElementById('blockedit');if(!O||O.hidden||O.querySelector('.mvb'))return;const d=O.querySelector('#bdel');if(!d)return;d.insertAdjacentHTML('beforebegin','<div class="mvb"><button type="button" data-mvb="mv">📅 다른 날로 옮기기</button><button type="button" data-mvb="cp">📅 다른 날로 복사</button></div>')}catch(e){}}
 DECO.add('블록 다른 날',{root:'#blockedit',deep:true,wait:120,run:mvBtnPaint,now:true});
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-mvb]');if(!b)return;e.preventDefault();e.stopPropagation();mvBlock(b.dataset.mvb==='cp')},true);
+
+/* ===== v478: 빠른 메모 · 형광펜 · 사진 모아보기 · 멈춘 목표 · 완료 회고 · 진행률 안내 ===== */
+{const st=document.createElement('style');st.textContent=`.qmemo{display:flex;gap:6px;margin:6px 0 8px}.qmemo input{flex:1;min-width:0;padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:var(--paper);color:var(--ink);font:inherit}.qmemo button{flex:none;border:0;border-radius:12px;background:var(--pen);color:#fff;font:inherit;font-weight:700;padding:0 14px}
+.hlr{display:inline-flex;gap:5px;align-items:center;flex:0 0 auto}.hlr button{width:30px;height:30px;border-radius:50%;border:2px solid var(--line);padding:0;font-size:.7rem;color:var(--muted);background:var(--paper)}.hlr button[data-hlc="0"]{background:rgba(255,214,0,.55)}.hlr button[data-hlc="1"]{background:rgba(60,190,110,.5)}.hlr button[data-hlc="2"]{background:rgba(60,140,240,.45)}.hlr button[data-hlc="3"]{background:rgba(240,90,140,.45)}
+.bbtxt p[data-hl="0"]{background:rgba(255,214,0,.32)}.bbtxt p[data-hl="1"]{background:rgba(60,190,110,.28)}.bbtxt p[data-hl="2"]{background:rgba(60,140,240,.25)}.bbtxt p[data-hl="3"]{background:rgba(240,90,140,.25)}
+.phg{display:grid;grid-template-columns:repeat(3,1fr);gap:4px}.phg button{padding:0;border:0;background:none;aspect-ratio:1;overflow:hidden;border-radius:8px}.phg img{width:100%;height:100%;object-fit:cover;display:block}
+.mcrd{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:10px 12px;margin:10px 0}.mcrd h3{margin:0 0 6px;font-size:1rem}.mcrd p{margin:4px 0;font-size:.88rem}.mcrd small{color:var(--muted)}.gpn{margin:6px 0;font-size:.82rem;color:var(--muted)}.gpn summary{cursor:pointer}`;document.head.appendChild(st)}
+/* 25) 빠른 메모 */
+function qmemoPaint(){try{if(curSection!=='day')return;const B=document.getElementById('dayBody');if(!B||B.querySelector('.qmemo'))return;const h=document.createElement('div');h.className='qmemo';h.innerHTML='<input type="text" id="qmi" placeholder="⚡ 빠른 메모 — 한 줄 적고 나중에 분류" enterkeyhint="done"><button type="button" id="qmb">저장</button>';B.insertBefore(h,B.firstChild)}catch(e){}}
+function qmemoSave(){const i=document.getElementById('qmi');const v=(i&&i.value||'').trim();if(!v)return;const id='note-'+uid();const n={kind:'note',id,date:today(),topic:'',title:v.slice(0,24),body:v,photos:[],tags:['분류전'],created:Date.now(),updated:Date.now()};NOTES.set(id,n);saveNote(n,true);i.value='';toastAct('⚡ 노트에 담았습니다 (분류전)','열기',()=>{nEdit=id;go('note')})}
+document.addEventListener('click',e=>{if(e.target.closest&&e.target.closest('#qmb')){e.preventDefault();qmemoSave()}},true);
+document.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target&&e.target.id==='qmi'){e.preventDefault();qmemoSave()}},true);
+DECO.add('빠른 메모',{root:'#dayBody',deep:false,wait:200,run:qmemoPaint,now:true});
+/* 29) 형광펜 */
+const hlMap=()=>{const S=bbS();if(!S.hl||typeof S.hl!=='object')S.hl={};return S.hl};
+function hlPaint(){try{const R=document.getElementById('bbbody');if(!R)return;const H=hlMap();R.querySelectorAll('.bbtxt p[data-bbv]').forEach(p=>{const c=H[`${bbB}-${bbC}-${p.dataset.bbv}`];if(c==null){if(p.hasAttribute('data-hl'))p.removeAttribute('data-hl')}else if(p.dataset.hl!==String(c))p.dataset.hl=c});
+  const bar=R.querySelector('.bbbar');if(bar&&!bar.querySelector('.hlr'))bar.insertAdjacentHTML('afterbegin','<span class="hlr"><button type="button" data-hlc="0" aria-label="노랑"></button><button type="button" data-hlc="1" aria-label="초록"></button><button type="button" data-hlc="2" aria-label="파랑"></button><button type="button" data-hlc="3" aria-label="분홍"></button><button type="button" data-hlc="-1" aria-label="형광펜 지우기">✕</button></span>');
+  const vb=R.querySelector('.bbvnbar');if(vb&&!vb.querySelector('[data-hlall]')){const n=Object.keys(H).length;vb.insertAdjacentHTML('beforeend',` <button type="button" class="chip" data-hlall="1">🖍 형광펜 ${n}</button>`)}}catch(e){}}
+DECO.add('형광펜',{root:'#bbbody',deep:true,wait:120,run:hlPaint,now:true});
+document.addEventListener('click',async e=>{let b;if((b=e.target.closest&&e.target.closest('[data-hlc]'))){e.preventDefault();e.stopImmediatePropagation();const c=+b.dataset.hlc,H=hlMap();[...bbSel].forEach(v=>{const k=`${bbB}-${bbC}-${v}`;if(c<0)delete H[k];else H[k]=c});bbUISave(true);const x=document.getElementById('bbx');if(x)x.click();hlPaint();toast(c<0?'🖍 형광펜을 지웠습니다.':'🖍 형광펜을 칠했습니다.');return}
+  if((b=e.target.closest&&e.target.closest('[data-hlall]'))){e.preventDefault();e.stopImmediatePropagation();const H=hlMap();const keys=Object.keys(H).sort((a,z)=>{const A=a.split('-').map(Number),Z=z.split('-').map(Number);return A[0]-Z[0]||A[1]-Z[1]||A[2]-Z[2]});let BB=null;try{BB=await bbLoad()}catch(er){}
+    const S=$('#sheet');S.hidden=false;const names=['🟨 노랑','🟩 초록','🟦 파랑','🟪 분홍'];const rows=[0,1,2,3].map(c=>{const L=keys.filter(k=>H[k]===c);return L.length?`<p class="fl" style="margin:12px 0 4px">${names[c]} ${L.length}</p>${L.map(k=>{const[bk,ch,vs]=k.split('-').map(Number);const tx0=BB&&BB[bk]&&BB[bk][ch-1]?BB[bk][ch-1][vs-1]:'';return`<button class="frb" data-hlgo="${k}"><span>${esc(BBN[bk])} ${ch}:${vs}<small>${esc(String(tx0||'').slice(0,60))}</small></span></button>`}).join('')}`:''}).join('');
+    S.innerHTML=`<div class="sheetbox" role="dialog" aria-label="형광펜"><div class="shead"><b>🖍 형광펜 모아 보기</b><button class="del" id="hlx">닫기</button></div>${rows||'<p class="hint">절을 눌러 고른 뒤 색 단추를 누르면 칠해집니다.</p>'}</div>`;
+    const close=()=>{S.hidden=true;S.innerHTML=''};$('#hlx').onclick=close;S.onclick=ev=>{if(ev.target===S)close()};S.querySelectorAll('[data-hlgo]').forEach(g=>g.onclick=()=>{const[bk,ch,vs]=g.dataset.hlgo.split('-').map(Number);close();bbOpen(bk,ch,vs)})}},true);
+/* 27) 노트 사진 모아 보기 */
+function phBtnPaint(){try{const m=document.getElementById('nmode');if(!m||m.querySelector('[data-phg]'))return;const b=document.createElement('button');b.type='button';b.dataset.phg='1';b.textContent='📷 사진';m.appendChild(b)}catch(e){}}
+DECO.add('노트 사진 단추',{root:'#v-note',deep:true,wait:200,run:phBtnPaint,now:true});
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-phg]');if(!b)return;e.preventDefault();e.stopImmediatePropagation();
+  const L=[];[...NOTES.values()].filter(n=>(n.photos||[]).length).sort((a,z)=>(z.updated||0)-(a.updated||0)).forEach(n=>n.photos.forEach(p=>L.push([n,p])));
+  const S=$('#sheet');S.hidden=false;S.innerHTML=`<div class="sheetbox" role="dialog" aria-label="사진 모아 보기"><div class="shead"><b>📷 노트 사진 ${L.length}</b><button class="del" id="phx">닫기</button></div>${L.length?`<div class="phg">${L.slice(0,150).map(([n,p],i)=>`<button data-phn="${n.id}">${imgTag(p,'alt=""')}</button>`).join('')}</div>`:'<p class="hint">노트에 사진을 붙이면 여기에 모입니다.</p>'}</div>`;
+  const close=()=>{S.hidden=true;S.innerHTML=''};$('#phx').onclick=close;S.onclick=ev=>{if(ev.target===S)close()};S.querySelectorAll('[data-phn]').forEach(g=>g.onclick=()=>{close();nEdit=g.dataset.phn;go('note')})},true);
+/* 21·23) 나 화면: 멈춘 목표 · 완료한 목표(회고) */
+function gCreated(g){const t=parseInt(String(g.id||'').slice(0,8),36);return t>1.5e12&&t<2.5e12?t:0}
+function mineGoalsPaint(){try{const R=document.getElementById('minebody');if(!R||R.querySelector('.mcrd'))return;const T=today(),a=addD(T,-13);const stalled=[];
+  GOALS.list.filter(g=>g.title&&!g.done&&['w','m','y'].includes(g.lv)&&g.per===perKey(g.lv,T)).forEach(g=>{const c=gCreated(g);if(!c||Date.now()-c<14*864e5)return;let m={act:0,pl:0};try{m=goalMins(g,a,T)}catch(e){}if(!(m.act||m.pl))stalled.push(g)});
+  const done=GOALS.list.filter(g=>g.done&&g.title).sort((x,z)=>String(z.doneAt||'').localeCompare(String(x.doneAt||''))).slice(0,15);
+  let h='';if(stalled.length)h+=`<div class="mcrd"><h3>⏸ 멈춘 목표 ${stalled.length}</h3>${stalled.slice(0,4).map(g=>`<p>${esc(g.title)} <small>${{w:'1주',m:'1달',y:'올해'}[g.lv]} · 최근 2주 이 목표에 계획·실제 시간이 없습니다</small></p>`).join('')}<small>이번 주 계획에 시간 블록을 하나 넣어 다시 움직여 보십시오.</small></div>`;
+  if(done.length)h+=`<details class="mcrd"><summary><b>🏁 완료한 목표 ${GOALS.list.filter(g=>g.done&&g.title).length}</b></summary>${done.map(g=>`<p>✓ ${esc(g.title)} <small>${g.doneAt?md(g.doneAt):''}</small>${g.reflect?`<br><small>“${esc(g.reflect)}”</small>`:''}</p>`).join('')}</details>`;
+  if(h)R.insertAdjacentHTML('afterbegin',h)}catch(e){console.warn('mineg',e)}}
+DECO.add('나 목표 카드',{root:'#minebody',deep:false,wait:300,run:mineGoalsPaint,now:true});
+async function gRefl(id){const g=GOALS.list.find(x=>x.id===id);if(!g||!g.done||g.reflect||g._rq)return;g._rq=1;const v=await uiPrompt(`🏁 ‘${g.title}’ 완료! 무엇을 이루었는지 한 줄로 남길까요? (건너뛰려면 비워 두세요)`,'');delete g._rq;if(v&&v.trim()){g.reflect=v.trim().slice(0,80);saveGoals();toast('📝 회고를 남겼습니다.')}}
+['click','change'].forEach(ev=>document.addEventListener(ev,e=>{const b=e.target.closest&&e.target.closest('[data-gdone],[data-bkd],[data-gbdn]');if(!b)return;const id=b.dataset.gdone||b.dataset.bkd||b.dataset.gbdn;setTimeout(()=>gRefl(id),500)},true));
+/* 20) 진행률 기준 한 줄 */
+function gpnPaint(){try{const V=document.getElementById('v-goal');if(!V||V.hidden||V.querySelector('.gpn'))return;const bar=V.querySelector('.gvbar');if(!bar)return;bar.insertAdjacentHTML('afterend','<details class="gpn"><summary>ⓘ 진행률은 이렇게 계산됩니다</summary><p>할 일·하위 목표가 있으면 완료 비율, 수치 목표는 목표값 대비 달성률, 습관 목표는 실천률, 시간 목표는 기록한 시간 대비입니다. 위 항목이 없는 목표는 완료를 누르기 전까지 0%이며 완료하면 100%입니다.</p></details>')}catch(e){}}
+DECO.add('진행률 안내',{root:'#v-goal',deep:true,wait:250,run:gpnPaint,now:true});
 </script>
 <!--BIBLE{--><!--}BIBLE-->
 <div id="miniov" class="miniov" hidden></div>
