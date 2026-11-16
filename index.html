@@ -17983,6 +17983,25 @@ function wkSumPaint(){try{const R=document.getElementById('rpbody');if(!R||R.que
   const f=r=>`${AREA_E[r.x]||''} ${esc(r.l)} ${r.d>0?'+':''}${r.d.toFixed(1)}`;
   const h=`<div class="card wksum" style="--k:var(--pen)"><h3>📌 이번 주 한눈에</h3><ul class="list">${up&&up.d>0.05?`<li><small>가장 오른 기둥</small>${f(up)}</li>`:''}${dn&&dn.d<-0.05?`<li><small>가장 내려간 기둥</small>${f(dn)}</li>`:''}<li><small>다음 주 한 가지</small>${AREA_E[low.x]||''} ${esc(low.l)}(${low.v.toFixed(1)})에 시간을 먼저 배정해 보십시오</li></ul></div>`;k.insertAdjacentHTML('beforebegin',h)}catch(e){console.warn('wksum',e)}}
 DECO.add('주간 한눈에',{root:'#rpbody',deep:true,wait:300,run:wkSumPaint,now:true});
+
+/* ===== v475: 설정 검색 · 빈 날 안내 · 목표 보기 기본 2개 ===== */
+{const st=document.createElement('style');st.textContent=`.setq{width:100%;box-sizing:border-box;margin:8px 0;padding:11px 12px;border-radius:12px;border:1px solid var(--line);background:var(--paper);color:var(--ink);font:inherit}.emptyd{background:var(--paper);border:1px dashed var(--pen);border-radius:14px;padding:14px;margin:10px 0;text-align:center}.emptyd p{margin:0 0 10px;font-weight:700}.emptyd .crqc{margin:3px}.gvbar:not(.gvall) button[data-gvw]:not(.on):nth-of-type(n+3),.gvbar:not(.gvall) .gvord{display:none}.gvbar .gvmore{flex:none;border:1px dashed var(--line);background:none;color:var(--muted);border-radius:10px;padding:0 10px;font:inherit;font-size:.85rem;min-height:44px}`;document.head.appendChild(st)}
+/* 설정 찾기 */
+function setqPaint(){try{const V=document.getElementById('v-export');if(!V||V.hidden||V.querySelector('#setq'))return;const i=document.createElement('input');i.type='search';i.id='setq';i.className='setq';i.placeholder='🔍 설정 찾기 (예: 알림, 백업, 잠금)';i.setAttribute('enterkeyhint','search');const g=V.querySelector('.card,details');if(!g)return;V.insertBefore(i,V.firstElementChild)}catch(e){}}
+document.addEventListener('input',e=>{if(!e.target||e.target.id!=='setq')return;const q=e.target.value.trim().toLowerCase();const V=document.getElementById('v-export');if(!V)return;
+  V.querySelectorAll(':scope>.card,:scope>details').forEach(c=>{const hit=!q||c.textContent.toLowerCase().includes(q);c.style.display=hit?'':'none';if(q&&hit&&c.classList.contains('pclosed'))c.classList.remove('pclosed');if(q&&hit&&c.tagName==='DETAILS')c.open=true})},true);
+DECO.add('설정 찾기',{root:'#v-export',deep:false,wait:200,run:setqPaint,now:true});
+/* 빈 날 안내 */
+function emptyDayPaint(){try{if(curSection!=='day'||!D||typeof mode==='undefined'||mode!=='run')return;const B=document.getElementById('dayBody');if(!B)return;const old=B.querySelector('.emptyd');const empty=!(D.plan||[]).length&&!(D.time||[]).length;const sc=B.querySelector(':scope>.sched');
+  if(!empty||!sc){if(old)old.remove();return}if(old)return;let pv=0;try{const o=cacheAll&&cacheAll.get(addD(D.date,-1));pv=o?(o.plan||[]).filter(b=>b.s&&b.e).length:0}catch(e){}
+  (B.querySelector(':scope>.crqt')||sc).insertAdjacentHTML('beforebegin',`<div class="emptyd"><p>아직 오늘 일정이 없습니다</p><button type="button" class="crqc" data-ed="add">＋ 첫 계획 블록 추가</button>${pv?`<button type="button" class="crqc" data-ed="copy">📋 어제 계획 ${pv}개 가져오기</button>`:''}</div>`)}catch(e){console.warn('emptyd',e)}}
+DECO.add('빈 날 안내',{root:'#dayBody',deep:true,wait:250,run:emptyDayPaint,now:true});
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-ed]');if(!b)return;e.preventDefault();e.stopPropagation();
+  if(b.dataset.ed==='add'){openBlockEditor('plan',null,{});return}
+  try{const o=cacheAll.get(addD(D.date,-1));D.plan=(o.plan||[]).filter(x=>x.s&&x.e).map(x=>({id:uid(),s:x.s,e:x.e,act:x.act,cat:x.cat,who:x.who||'',area:x.area,goal:x.goal}));schedule();renderDay();toast('📋 어제 계획을 가져왔습니다.')}catch(er){console.warn(er)}},true);
+/* 목표 보기 6종 → 기본 2개 */
+function gvMorePaint(){try{document.querySelectorAll('.gvbar').forEach(b=>{if(b.querySelector('.gvmore'))return;let all=false;try{all=localStorage.getItem('gj-gvall')==='1'}catch(e){}b.classList.toggle('gvall',all);const m=document.createElement('button');m.type='button';m.className='gvmore';m.textContent=all?'접기 ‹':'⋯ 더보기';m.onclick=()=>{const on=!b.classList.contains('gvall');b.classList.toggle('gvall',on);m.textContent=on?'접기 ‹':'⋯ 더보기';try{localStorage.setItem('gj-gvall',on?'1':'0')}catch(e){}};b.appendChild(m)})}catch(e){}}
+DECO.add('목표 보기 더보기',{root:'body',deep:true,wait:200,run:gvMorePaint,now:true});
 </script>
 <!--BIBLE{--><!--}BIBLE-->
 <div id="miniov" class="miniov" hidden></div>
