@@ -5093,7 +5093,7 @@ function cwOpenUrl(u){try{const q=new URL(u);const v=q.searchParams.get('v'),d=q
 
 /* v4.40: 달력에서 날짜를 누르면 그날 시간표가 바로 열리고, ＋로 일정을 넣습니다 */
 let DTL=false;
-async function dayTl(d){await openDay(d);sMode='plan';go('day');DTL=true;renderDay();window.scrollTo(0,0)}
+async function dayTl(d){DTL=false;ZMD=0;ZMP=null;try{zmBarSync()}catch(e){}await openDay(d);mode='run';go('day');renderDay();window.scrollTo(0,0)}
 {openSection=HK.w('openSection','1:DTL끄기',openSection,_os=>function(v){DTL=false;return _os.apply(this,arguments)});}
 function dtlRender(){const V=$('#v-day');V.classList.add('dtl');try{zmBarSync()}catch(e){}
   const B=$('#dayBody');mode='run';sMode='plan';
@@ -16264,7 +16264,7 @@ async function syPutSafe(B,k,v){if(!k.startsWith('day:')||!v||typeof v!=='object
 {const _o=openDay;openDay=async function(d){try{staleGuardInstall()}catch(e){}return _o.apply(this,arguments)}}
 {const _f=flush0;flush0=async function(){try{staleGuardInstall()}catch(e){}return _f.apply(this,arguments)}}
 /* v390 ① 앱 버전 표시 · 새 버전 알림 (GitHub에서 마지막으로 성공한 빌드 번호와 비교) */
-var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/490})();
+var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/491})();
 const VRK='gj-verchk',VRURL='https://github.com/64hwarang-max/c/actions/workflows/build-apk.yml';
 const vrGet=()=>{try{return JSON.parse(localStorage.getItem(VRK)||'{}')}catch(e){return{}}};
 async function vrCheck(force){const c=vrGet();if(!force&&c.t&&Date.now()-c.t<6*36e5)return c;
