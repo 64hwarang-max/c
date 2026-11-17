@@ -16265,7 +16265,7 @@ async function syPutSafe(B,k,v){if(!k.startsWith('day:')||!v||typeof v!=='object
 {const _o=openDay;openDay=async function(d){try{staleGuardInstall()}catch(e){}return _o.apply(this,arguments)}}
 {const _f=flush0;flush0=async function(){try{staleGuardInstall()}catch(e){}return _f.apply(this,arguments)}}
 /* v390 ① 앱 버전 표시 · 새 버전 알림 (GitHub에서 마지막으로 성공한 빌드 번호와 비교) */
-var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/486})();
+var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/487})();
 const VRK='gj-verchk',VRURL='https://github.com/64hwarang-max/c/actions/workflows/build-apk.yml';
 const vrGet=()=>{try{return JSON.parse(localStorage.getItem(VRK)||'{}')}catch(e){return{}}};
 async function vrCheck(force){const c=vrGet();if(!force&&c.t&&Date.now()-c.t<6*36e5)return c;
@@ -18235,7 +18235,7 @@ function crqTodoHTML(){const X=crqData();const T=D&&D.date===today();
   const sc=SCORE.map(([k,l])=>{const v=+D.score[k]||0;return`<span>${AREA_E[k]||''}${esc(l)} <b>${v||'–'}</b></span>`}).join('');const left=X.n-X.d;
   let body='';
   if(CRQPICK){body=SCORE.map(([k])=>{let E=null;try{E=crEval(D,k)}catch(e){}if(!E||!E.rows.length)return'';return`<div class="crqg"><i>${AREA_E[k]||''} ${esc(areaName(k))}</i>${E.rows.map(r=>`<button type="button" class="crqc ${r.man===-1?'na':'ok'}" data-crpk="${k}|${r.it.id}">${r.man===-1?'✕':'☑'} ${esc(r.it.n)}</button>`).join('')}${crqEdit(k)}</div>`}).join('')+'<p class="hint">오늘 안 할 항목을 눌러 빼십시오(점수 계산에서 제외). 다시 누르면 돌아옵니다.</p>'}
-  else{body=X.G.map(([k,R])=>R.length?`<div class="crqg"><i>${AREA_E[k]||''} ${esc(areaName(k))}</i>${R.map(r=>crqChip(k,r)).join('')}</div>`:'').join('')+'<p class="hint">누를 때마다 ✓ → 4/5 → 3/5 → 2/5 → 1/5 → ○ · 길게 누르면 오늘 계획에 넣기 · 📅 계획에 있음 · 실제 일정에 적으면 자동 ✓</p>'}
+  else{let hid=0;const ez=ezOn()&&!CRQALL;body=X.G.map(([k,R])=>{if(!R.length)return'';let L=R;if(ez){const top=R.slice().sort((a,b)=>(+b.it.w||0)-(+a.it.w||0)).slice(0,2);L=R.filter(r=>top.includes(r)||r.pb||r.v>0);hid+=R.length-L.length}return`<div class="crqg"><i>${AREA_E[k]||''} ${esc(areaName(k))}</i>${L.map(r=>crqChip(k,r)).join('')}</div>`}).join('')+(ezOn()&&(hid||CRQALL)?`<div class="crqtop"><button type="button" class="crqc" data-crall="1">${CRQALL?'▴ 핵심만 보기':'＋ 나머지 '+hid+'개 보기'}</button></div>`:'')+'<p class="hint">누를 때마다 ✓ → 4/5 → 3/5 → 2/5 → 1/5 → ○ · 길게 누르면 오늘 계획에 넣기 · 📅 계획에 있음 · 실제 일정에 적으면 자동 ✓</p>'}
   const hr=new Date().getHours();
   return`<details class="crq crqt"${CRQOPEN?' open':''} data-crqk="t"><summary>✅ 오늘 챙길 것${(()=>{try{if(SET.xpOff)return'';const v=xpAll();return v?` <em class="crxp">⚡${v.today.xp}/${xpGoal()}</em>`:''}catch(e){return''}})()}<small>${X.n?(left?`남은 ${left}개`:'모두 했음 🎉'):'항목 없음'} ${X.d}/${X.n} ▾</small></summary>
    <div class="crqtop"><button type="button" class="crqc ${CRQPICK?'ok':''}" data-crpick="1">${CRQPICK?'✔ 고르기 끝':'☀️ 오늘 할 것 고르기'}</button></div>${body}
@@ -18281,6 +18281,29 @@ try{if(NTVM!=='dy')NTVM=localStorage.getItem('gj-ntv2')||'on'}catch(e){}
   const sc=A.querySelector('[data-onsec]');if(sc)sc.onclick=async()=>{const k=ON.k;const v=(await uiPrompt(`${dkName(k)} 안에 만들 섹션 이름`)||'').trim();if(!v)return;if(pilSubs(k).some(e=>e.name===v)){toast('이미 있는 섹션입니다.');return}if(!addSubCat(k,v))return;await saveSet().catch(()=>{});const e=pilSubs(k).find(x=>x.name===v);ON.e=e?ntEk(e):null;onSave();renderNotes()};
   const nw=A.querySelector('[data-onnew]');if(nw)nw.onclick=()=>ntNewPage(ON.e?'c|'+ON.e:'k|'+ON.k);
   const ok=A.querySelector('.onk.on');if(ok){const R=ok.parentElement;R.scrollLeft=Math.max(0,ok.offsetLeft-R.offsetLeft-(R.clientWidth-ok.offsetWidth)/2)}const tn=A.querySelector('#ntnew');if(tn&&A.querySelector('.onb'))tn.onclick=()=>ntNewPage(ON.e?'c|'+ON.e:'k|'+ON.k)}catch(e){console.warn('on',e)}return r}}
+
+/* ===== v487: 간단 모드(기본 켜짐) — 시작은 ‘한 가지’만, 챙길 것은 기둥별 핵심 2개, 나머지는 ‘더 적기’ ===== */
+const ezOn=()=>SET.easy!==false;let CRQALL=false,EZMORE=false;
+{const st=document.createElement('style');st.textContent=`#dayBody.ezstart:not(.ezmore)>*:not(.ezc):not(.jumpbar){display:none!important}
+.ezc{background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:14px;margin:10px 0}.ezc h2{margin:0 0 8px;font-size:1.05rem}.ezone{display:flex;gap:8px;align-items:center}.ezone input[type=checkbox]{width:24px;height:24px;flex:none;accent-color:var(--pen)}.ezone input[type=text]{flex:1;min-width:0;padding:12px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font:inherit;font-size:1rem}
+.ezg{display:flex;gap:8px;align-items:center;padding:7px 0;border-top:1px solid var(--line);font-size:.92rem}.ezg span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ezg small{color:var(--muted);flex:none}.ezg button{flex:none}.ezrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}`;document.head.appendChild(st)}
+function ezStartPaint(){try{const B=document.getElementById('dayBody');if(!B)return;const on=ezOn()&&curSection==='day'&&mode==='start'&&D;B.classList.toggle('ezstart',!!on);B.classList.toggle('ezmore',!!on&&EZMORE);const old=B.querySelector(':scope>.ezc');if(!on){if(old)old.remove();return}
+  const T=D.date;const G=GOALS.list.filter(g=>g.title&&!g.done&&((g.lv==='w'&&g.per===perKey('w',T))||(g.lv==='m'&&g.per===perKey('m',T)))).slice(0,6);
+  const sig=JSON.stringify([G.map(g=>[g.id,g.title,Math.round(prog(g)*100)]),EZMORE,T]);if(old&&old._s===sig)return;const foc=old&&old.contains(document.activeElement);if(foc)return;
+  const h=`<h2>⭐ 오늘 가장 중요한 한 가지</h2><div class="ezone"><input type="checkbox" id="ezdone" aria-label="했음"><input type="text" id="ezpri" placeholder="이것 하나만 하면 오늘은 성공" autocomplete="off"></div>
+   ${G.length?`<div style="margin-top:12px"><b style="font-size:.9rem">🎯 이번 주·달 목표</b>${G.map(g=>`<div class="ezg"><span>${esc(g.title)}</span><small>${Math.round(prog(g)*100)}%</small><button type="button" class="crqc" data-gab="${g.id}|30|0">오늘 30분</button></div>`).join('')}</div>`:''}
+   <div class="ezrow"><button type="button" class="btn" data-ezgo="1">시간표로 ›</button><button type="button" class="btn ghost" data-ezmore="1">${EZMORE?'▴ 접기':'＋ 더 적기 (아침 문장·사실 기록·아이디어)'}</button></div>`;
+  let c=old;if(!c){c=document.createElement('div');c.className='ezc';B.insertBefore(c,B.firstChild)}c.innerHTML=h;c._s=sig;
+  if(!Array.isArray(D.pri))D.pri=[];const p0=D.pri[0]||{};c.querySelector('#ezpri').value=p0.text||'';c.querySelector('#ezdone').checked=!!p0.done}catch(e){console.warn('ez',e)}}
+DECO.add('간단 시작',{root:'#dayBody',deep:false,wait:120,run:ezStartPaint,now:true});
+document.addEventListener('input',e=>{const t=e.target;if(!t||(t.id!=='ezpri'&&t.id!=='ezdone')||!D)return;if(!Array.isArray(D.pri))D.pri=[];if(!D.pri[0])D.pri[0]={text:'',done:false,link:''};if(t.id==='ezpri')D.pri[0].text=t.value;else D.pri[0].done=t.checked;schedule()},true);
+document.addEventListener('click',e=>{let b=e.target.closest&&e.target.closest('[data-ezmore]');if(b){e.preventDefault();EZMORE=!EZMORE;if(EZMORE){try{renderDay()}catch(_){}}ezStartPaint();return}
+  b=e.target.closest&&e.target.closest('[data-ezgo]');if(b){e.preventDefault();try{flush&&flush()}catch(_){}const r=document.querySelector('[data-cvi="run"]');if(r)r.click();else{mode='run';renderDay()}return}
+  b=e.target.closest&&e.target.closest('[data-crall]');if(b){e.preventDefault();e.stopPropagation();CRQALL=!CRQALL;CRQOPEN=true;crqPaint();return}
+  b=e.target.closest&&e.target.closest('#ezset');if(b){SET.easy=!ezOn();saveSet().catch(()=>{});b.textContent=ezSetTxt();toast(ezOn()?'🌱 간단 모드를 켰습니다.':'간단 모드를 껐습니다. 모든 칸이 다시 보입니다.');try{if(curSection==='day')renderDay()}catch(_){}}},true);
+const ezSetTxt=()=>ezOn()?'🌱 간단 모드: 켜짐 (끄기) — 시작은 한 가지만, 챙길 것은 핵심만':'🌱 간단 모드: 꺼짐 (켜기)';
+function ezSetBtn(){const V=document.getElementById('v-export');if(!V||V.hidden||document.getElementById('ezset'))return;const b=document.createElement('button');b.id='ezset';b.type='button';b.className='btn ghost';b.style.cssText='margin:8px 0 12px;display:block;width:100%;text-align:left';b.textContent=ezSetTxt();V.insertBefore(b,V.firstChild)}
+document.addEventListener('click',()=>setTimeout(ezSetBtn,250));
 </script>
 <!--BIBLE{--><!--}BIBLE-->
 <div id="miniov" class="miniov" hidden></div>
