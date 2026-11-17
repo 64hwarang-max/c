@@ -5097,10 +5097,9 @@ async function dayTl(d){await openDay(d);sMode='plan';go('day');DTL=true;renderD
 {openSection=HK.w('openSection','1:DTL끄기',openSection,_os=>function(v){DTL=false;return _os.apply(this,arguments)});}
 function dtlRender(){const V=$('#v-day');V.classList.add('dtl');try{zmBarSync()}catch(e){}
   const B=$('#dayBody');mode='run';sMode='plan';
-  B.innerHTML=`<div class="dtlbar"><button type="button" class="del" id="dtlback">‹ 하루 화면</button><button type="button" class="btn" id="dtladd">＋ 일정 추가</button></div>`+schedHTML('day');
+  B.innerHTML=`<div class="dtlbar"><button type="button" class="del" id="dtlback">‹ 하루 화면</button></div>`+schedHTML('day');
   bindSched(B,renderDay);
   $('#dtlback').onclick=()=>{DTL=false;mode='start';renderDay();scrollTo({top:0})};
-  $('#dtladd').onclick=()=>{const l=(D.plan||[]).filter(b=>b.e).slice(-1)[0];const s0=l?l.e:'09:00';openBlockEditor('plan',null,{s:s0,e:addMin(s0,60)})};
   try{hydrate(B)}catch(e){}}
 {renderDay=HK.w('renderDay','1:상세타임라인(DTL)',renderDay,_rd=>function(){
   if(DTL&&curSection==='day'&&!(ZMD>0)){try{dtlRender();return}catch(e){console.warn('dtl',e);DTL=false}}
@@ -16265,7 +16264,7 @@ async function syPutSafe(B,k,v){if(!k.startsWith('day:')||!v||typeof v!=='object
 {const _o=openDay;openDay=async function(d){try{staleGuardInstall()}catch(e){}return _o.apply(this,arguments)}}
 {const _f=flush0;flush0=async function(){try{staleGuardInstall()}catch(e){}return _f.apply(this,arguments)}}
 /* v390 ① 앱 버전 표시 · 새 버전 알림 (GitHub에서 마지막으로 성공한 빌드 번호와 비교) */
-var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/489})();
+var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/490})();
 const VRK='gj-verchk',VRURL='https://github.com/64hwarang-max/c/actions/workflows/build-apk.yml';
 const vrGet=()=>{try{return JSON.parse(localStorage.getItem(VRK)||'{}')}catch(e){return{}}};
 async function vrCheck(force){const c=vrGet();if(!force&&c.t&&Date.now()-c.t<6*36e5)return c;
