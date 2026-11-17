@@ -16265,7 +16265,7 @@ async function syPutSafe(B,k,v){if(!k.startsWith('day:')||!v||typeof v!=='object
 {const _o=openDay;openDay=async function(d){try{staleGuardInstall()}catch(e){}return _o.apply(this,arguments)}}
 {const _f=flush0;flush0=async function(){try{staleGuardInstall()}catch(e){}return _f.apply(this,arguments)}}
 /* v390 ① 앱 버전 표시 · 새 버전 알림 (GitHub에서 마지막으로 성공한 빌드 번호와 비교) */
-var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/488})();
+var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/489})();
 const VRK='gj-verchk',VRURL='https://github.com/64hwarang-max/c/actions/workflows/build-apk.yml';
 const vrGet=()=>{try{return JSON.parse(localStorage.getItem(VRK)||'{}')}catch(e){return{}}};
 async function vrCheck(force){const c=vrGet();if(!force&&c.t&&Date.now()-c.t<6*36e5)return c;
@@ -18326,12 +18326,13 @@ function crSchOpen(){if(!D||D.date!==today()){toast('오늘 화면에서만 넣�
   draw()}
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-crsch]');if(!b)return;e.preventDefault();e.stopPropagation();crSchOpen()},true);
 /* 오늘 시간표 위 ‘이번 주 목표’ 한 줄 */
-let WKGOPEN=false;
-function wkgPaint(){try{const B=document.getElementById('dayBody');if(!B)return;const old=B.querySelector(':scope>.wkg');const on=curSection==='day'&&mode==='run'&&D;const T=on?D.date:'';const G=on?GOALS.list.filter(g=>g.title&&!g.done&&((g.lv==='w'&&g.per===perKey('w',T))||(g.lv==='m'&&g.per===perKey('m',T)))).slice(0,8):[];
-  if(!G.length){if(old)old.remove();return}const sig=JSON.stringify([G.map(g=>[g.id,g.title,g.lv,Math.round(prog(g)*100)]),T]);if(old&&old._s===sig)return;
-  const d=old||document.createElement('details');d.className='wkg';d.open=WKGOPEN;d._s=sig;
-  d.innerHTML=`<summary>🎯 이번 주 목표 ${G.length}<small>${esc(G.map(g=>g.title).join(' · '))}</small></summary>${G.map(g=>`<div class="ezg"><span>${g.lv==='m'?'<small>[이달]</small> ':''}${esc(g.title)}</span><small>${Math.round(prog(g)*100)}%</small><button type="button" class="crqc" data-gab="${g.id}|30|0">오늘 30분</button></div>`).join('')}`;
-  if(!old){d.addEventListener('toggle',()=>{WKGOPEN=d.open});const a=B.querySelector(':scope>.crq.crqt')||B.querySelector(':scope>.sched');if(a)B.insertBefore(d,a);else B.appendChild(d)}}catch(e){}}
+const wkgList=T=>GOALS.list.filter(g=>g.title&&!g.done&&((g.lv==='w'&&g.per===perKey('w',T))||(g.lv==='m'&&g.per===perKey('m',T)))).slice(0,8);
+function wkgPaint(){try{const B=document.getElementById('dayBody');if(!B)return;const old=B.querySelector(':scope>.wkgb');const on=curSection==='day'&&mode==='run'&&D;const G=on?wkgList(D.date):[];
+  if(!G.length){if(old)old.remove();return}const t=`🎯 이번 주 목표 ${G.length}개 · ${G.map(g=>g.title).join(' · ')}`;if(old){if(old.textContent!==t)old.textContent=t;return}
+  const d=document.createElement('button');d.type='button';d.className='banner wkgb';d.dataset.nk='wkg';d.dataset.wkgo='1';d.textContent=t;B.insertBefore(d,B.firstChild)}catch(e){}}
+function wkgOpen(){const S=$('#sheet');S.hidden=false;const G=wkgList(D.date);S.innerHTML=`<div class="sheetbox" role="dialog" aria-label="이번 주 목표"><div class="shead"><b>🎯 이번 주 목표</b><button class="del" id="wkgx">닫기</button></div>${G.map(g=>`<div class="ezg"><span>${g.lv==='m'?'<small>[이달]</small> ':''}${esc(g.title)}</span><small>${Math.round(prog(g)*100)}%</small><button type="button" class="crqc" data-gab="${g.id}|30|0">오늘 30분</button></div>`).join('')||'<p class="empty">이번 주 목표가 없습니다.</p>'}<div class="row" style="margin-top:10px"><button class="btn ghost" id="wkgg">목표 화면 열기 ›</button></div></div>`;
+  S.querySelector('#wkgx').onclick=()=>{S.hidden=true;S.innerHTML=''};S.querySelector('#wkgg').onclick=()=>{S.hidden=true;S.innerHTML='';go('goal')}}
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-wkgo]');if(!b)return;e.preventDefault();wkgOpen()});
 DECO.add('오늘 이번 주 목표',{root:'#dayBody',deep:false,wait:200,run:wkgPaint,now:true});
 </script>
 <!--BIBLE{--><!--}BIBLE-->
