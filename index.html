@@ -3083,7 +3083,7 @@ async function lockSync(){const want=!!((typeof FC!=='undefined'&&FC)||(typeof R
   if(SET.fcPin&&pin!==PINON){PINON=pin;if(F){try{await F.pin({on:pin})}catch(e){}}else{try{if(pin&&!document.fullscreenElement)await document.documentElement.requestFullscreen();else if(!pin&&document.fullscreenElement)await document.exitFullscreen()}catch(e){}}}
   if(want===LOCKON)return;LOCKON=want;
   if(SET.fcDnd&&F){try{await F.setDnd({on:want})}catch(e){}}
-  if(want)toast(`🔒 몰입 잠금${SET.fcDnd?' · 알림 끔':''}${SET.fcPin&&pin?' · 앱 고정':''}`)}
+  if(want&&pin)toast(`🔒 몰입 잠금${SET.fcDnd?' · 알림 끔':''}${SET.fcPin?' · 앱 고정':''}`)}
 function fcPause(){if(!FC)return;if(FC.paused){FC.acc+=Date.now()-FC.pausedAt;FC.paused=false}else{FC.paused=true;FC.pausedAt=Date.now()}fcSave();renderFocus()}
 function fcFinish(){if(!FC)return;FC.ph='rate';FC.end=FC.paused?FC.pausedAt:Date.now();FC.paused=false;fcSave();keepAwake(false);renderFocus()}
 /* 몰입으로 잘게 나뉜 실제 기록을 하나로: 같은 활동이 30분 이내 간격으로 이어지면 합칩니다 */
@@ -16266,7 +16266,7 @@ async function syPutSafe(B,k,v){if(!k.startsWith('day:')||!v||typeof v!=='object
 {const _o=openDay;openDay=async function(d){try{staleGuardInstall()}catch(e){}return _o.apply(this,arguments)}}
 {const _f=flush0;flush0=async function(){try{staleGuardInstall()}catch(e){}return _f.apply(this,arguments)}}
 /* v390 ① 앱 버전 표시 · 새 버전 알림 (GitHub에서 마지막으로 성공한 빌드 번호와 비교) */
-var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/492})();
+var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/493})();
 const VRK='gj-verchk',VRURL='https://github.com/64hwarang-max/c/actions/workflows/build-apk.yml';
 const vrGet=()=>{try{return JSON.parse(localStorage.getItem(VRK)||'{}')}catch(e){return{}}};
 async function vrCheck(force){const c=vrGet();if(!force&&c.t&&Date.now()-c.t<6*36e5)return c;
@@ -18335,6 +18335,21 @@ function wkgOpen(){const S=$('#sheet');S.hidden=false;const G=wkgList(D.date);S.
   S.querySelector('#wkgx').onclick=()=>{S.hidden=true;S.innerHTML=''};S.querySelector('#wkgg').onclick=()=>{S.hidden=true;S.innerHTML='';go('goal')}}
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-wkgo]');if(!b)return;e.preventDefault();wkgOpen()});
 DECO.add('오늘 이번 주 목표',{root:'#dayBody',deep:false,wait:200,run:wkgPaint,now:true});
+
+/* ===== v493: 주기 할 일은 알림에서 바로 체크(루틴·몰입과 분리) · 알림을 누르면 관련 화면으로 ===== */
+function cySheet(){const S=$('#sheet');const draw=()=>{const L=cycDue().slice().sort((a,b)=>a.left-b.left);const due=L.filter(x=>x.left<=+x.c.remind);
+  S.hidden=false;S.innerHTML=`<div class="sheetbox" role="dialog" aria-label="주기 할 일"><div class="shead"><b>✂️ 주기 할 일</b><button class="del" id="cysx">닫기</button></div>
+  <p class="hint" style="margin:0 0 6px">손톱·이발처럼 날짜 간격으로 돌아오는 생활 관리입니다. 루틴·몰입과 따로 기록됩니다.</p>
+  ${(due.length?due:L.slice(0,5)).map(x=>`<div class="ezg"><span>${x.c.emo||'🔁'} ${esc(cyName(x.c))}</span><small>${x.left<0?(-x.left)+'일 지남':x.left===0?'오늘':x.left+'일 뒤'}</small><button type="button" class="crqc" data-cyq="${cycs().indexOf(x.c)}">✓ 오늘 함</button></div>`).join('')||'<p class="empty">등록된 주기 할 일이 없습니다.</p>'}
+  <div class="row" style="margin-top:10px"><button class="btn ghost" id="cysg">주기 할 일 관리 ›</button></div></div>`;
+  S.querySelector('#cysx').onclick=()=>{S.hidden=true;S.innerHTML='';try{if(curSection==='day')renderDay()}catch(e){}};
+  S.querySelector('#cysg').onclick=()=>{S.hidden=true;S.innerHTML='';go('cycle')};
+  S.querySelectorAll('[data-cyq]').forEach(b=>b.onclick=()=>{const c=cycs()[+b.dataset.cyq];if(!c)return;cyDone(c);draw()})};draw()}
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-dgo="cycle"]');if(!b)return;e.preventDefault();e.stopImmediatePropagation();cySheet()},true);
+/* 안내 알림(토스트)은 내용에 맞는 화면으로 이동 */
+const NTGO=[[/쓴 돈|지출|수입|예산|가계부|원 기록|💸|💳/,()=>go('budget')],[/주기 할 일|손톱|발톱|이발|✂️/,()=>cySheet()],[/몰입|🍅|집중/,()=>openFocus()],[/루틴/,()=>openRoutine()],[/노트|📝/,()=>go('note')],[/목표|🎯/,()=>go('goal')],[/성경|큐티|암송|📖/,()=>go('bible')],[/할 일|📋/,()=>go('task')],[/만남|연락|🤝/,()=>go('people')],[/운동|💪|건강/,()=>go('care')],[/습관/,()=>go('habit')],[/일정|계획|블록|📅|시간표/,async()=>{go('day');if(cur!==today())await openDay(today());mode='run';renderDay()}]];
+{const _p=nttPaint;nttPaint=function(){const r=_p.apply(this,arguments);try{document.querySelectorAll('#dash>.nttst').forEach(b=>{if(b._ng)return;b._ng=1;const id=b.dataset.nt;const x=NTT.L().find(y=>y.id===id);if(!x||x.a)return;const g=NTGO.find(([re])=>re.test(x.m));if(!g)return;b.textContent+=' ›';b.onclick=()=>{NTT.del(id);try{g[1]()}catch(e){console.warn('ntgo',e)}}})}catch(e){}return r}}
+{const _a=NTT.add.bind(NTT);NTT.add=function(m,lb,fn){if(!lb&&/^↩︎?\s*하던 화면에서 이어서/.test(String(m||'')))return;return _a(m,lb,fn)}}
 </script>
 <!--BIBLE{--><!--}BIBLE-->
 <div id="miniov" class="miniov" hidden></div>
