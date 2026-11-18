@@ -1708,7 +1708,7 @@ async function loadSet(){try{const s=await store.getDoc('settings');if(s){if(Arr
 async function saveSet(){await store.putDoc('settings',SET)}
 
 /* ---------- day ---------- */
-let cur=today(),D=blank(cur),mode=new Date().getHours()<11?'start':new Date().getHours()<20?'run':'pm',sec='growth',timer=null,dirty=false,prevDay=null;
+let cur=today(),D=blank(cur),mode='run',sec='growth',timer=null,dirty=false,prevDay=null;
 let dashT=null;function navScore(){const b=document.querySelector('nav.main [data-g="day"] .ne');if(!b)return;if(!b.dataset.e)b.dataset.e=b.textContent;const sc=D&&D.date===today()?scoreOf(D):null;b.innerHTML=`<span class="sunw">${b.dataset.e}${sc!=null?`<b>${sc}</b>`:''}</span>`}
 function schedule(){try{syncMeals(D)}catch(e){}setTimeout(()=>{try{navScore()}catch(e){}},50);try{floatScore()}catch(e){}widgetSoon();clearTimeout(dashT);dashT=setTimeout(()=>{const Dh=$('#dash');if(Dh&&!$('#v-day').hidden){Dh.innerHTML=dashHTML();bindDash(Dh);modeSubs()}},400);dirty=true;pendKeep();status('저장 중…');clearTimeout(timer);timer=setTimeout(flush,400);markFive()}
 async function draftRecover(){let n=0;const now=Date.now();
@@ -16266,7 +16266,7 @@ async function syPutSafe(B,k,v){if(!k.startsWith('day:')||!v||typeof v!=='object
 {const _o=openDay;openDay=async function(d){try{staleGuardInstall()}catch(e){}return _o.apply(this,arguments)}}
 {const _f=flush0;flush0=async function(){try{staleGuardInstall()}catch(e){}return _f.apply(this,arguments)}}
 /* v390 ① 앱 버전 표시 · 새 버전 알림 (GitHub에서 마지막으로 성공한 빌드 번호와 비교) */
-var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/494})();
+var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/495})();
 const VRK='gj-verchk',VRURL='https://github.com/64hwarang-max/c/actions/workflows/build-apk.yml';
 const vrGet=()=>{try{return JSON.parse(localStorage.getItem(VRK)||'{}')}catch(e){return{}}};
 async function vrCheck(force){const c=vrGet();if(!force&&c.t&&Date.now()-c.t<6*36e5)return c;
@@ -18364,24 +18364,26 @@ let TBPAN='';
 function tlpClose(){TBPAN='';const p=document.getElementById('tlpan');if(p)p.remove();tlpOn()}
 function tlpOn(){document.querySelectorAll('#toolrow .tlb').forEach(b=>{const k=b.dataset.cvi||(b.dataset.dbt==='glink'?'fav':'');if(k)b.classList.toggle('on',k===TBPAN)})}
 function tlpBig(){const k=TBPAN;tlpClose();if(k==='fav')openFav();else if(k==='gap')cvGap();else if(k==='fr')frOpen();else if(k==='start'){mode='start';renderDay();scrollTo({top:0})}}
-function tlpOpen(k){if(TBPAN===k){tlpClose();return}if(k==='fr'){try{if(FC){openFocus();return}if(RT){openRoutine();return}}catch(e){}}
+function tlpLeaveStart(){try{if(typeof mode!=='undefined'&&mode==='start'){mode='run';EZMORE=false;renderDay()}}catch(e){}}
+function tlpOpen(k){if(TBPAN===k){tlpClose();return}if(k!=='start')tlpLeaveStart();if(k==='fr'){try{if(FC){openFocus();return}if(RT){openRoutine();return}}catch(e){}}
   document.body.classList.remove('pilopen');try{const S=$('#sheet');if(S&&S.querySelector('#cvgap')){S.hidden=true;S.innerHTML=''}}catch(e){}
   TBPAN=k;const tr=document.getElementById('toolrow');if(!tr)return;let p=document.getElementById('tlpan');if(!p){p=document.createElement('div');p.id='tlpan'}tr.after(p);
   const T={fav:'⭐ 즐겨찾기',gap:'⏱️ 짜투리 시간',fr:'🎯 몰입·루틴',start:'🚀 시작'}[k];
   let body='';
-  if(k==='fav'){const L=favList().filter(favOK);body=`<div class="tpr">${L.map(x=>`<button type="button" class="tpc" data-tpfav="${esc(x)}">${esc(favLabel(x))}</button>`).join('')||'<span class="hint">즐겨찾기가 없습니다. ‘크게’에서 추가하십시오.</span>'}</div>`}
+  if(k==='fav'){const nz=x=>String(x||'').replace(/\s/g,'');let QN=[];try{QN=QLK().map(q=>nz(q.name))}catch(e){}const FL=(SET.favLinks||[]).filter(f=>!QN.includes(nz(f.name)));let ql='';try{ql=qlRowHTML()}catch(e){}body=`<div id="cvgap">${ql}</div>${FL.length?`<div class="tpr">${FL.map(f=>`<button type="button" class="tpc" data-tplnk="${esc(f.id)}">${esc(f.em||'🔗')} ${esc(f.name)}</button>`).join('')}</div>`:''}`}
   else if(k==='fr'){const L=fcRts();const tm=r=>r.items.reduce((a,x)=>a+(+x.min||0),0);body=`<div class="tpr"><button type="button" class="tpc pri" data-tpfc="1">🎯 몰입 시작</button><button type="button" class="tpc" data-tpwx="1">💼 업무실행</button>${L.map((r,i)=>`<button type="button" class="tpc" data-tprt="${i}">▶ ${esc(r.name||'루틴')} <small>${tm(r)}분</small></button>`).join('')}</div>`}
   else if(k==='start'){if(!Array.isArray(D.pri))D.pri=[];const p0=D.pri[0]||{};body=`<div class="tpone"><input type="checkbox" id="tppd" ${p0.done?'checked':''} aria-label="했음"><input type="text" id="tppri" value="${esc(p0.text||'')}" placeholder="⭐ 오늘 가장 중요한 한 가지" autocomplete="off"></div>`}
   else if(k==='gap'){body='<div id="cvgap"></div>'}
   p.innerHTML=`<div class="tph"><b>${T}</b><button type="button" data-tpbig="1">크게 ›</button><button type="button" class="tpx" data-tpx="1" aria-label="닫기">✕</button></div>${body}`;
-  if(k==='gap')cvGapFill();tlpOn()}
+  if(k==='gap')cvGapFill();if(k==='fav')try{qlIconApply()}catch(e){}tlpOn()}
 window.addEventListener('click',e=>{const t=e.target;if(!t.closest)return;
   const tb=t.closest('#toolrow [data-cvi="start"],#toolrow [data-cvi="fr"],#toolrow [data-cvi="gap"],#toolrow [data-dbt="glink"]');
   if(tb){if(typeof ZMD!=='undefined'&&ZMD>0)return;e.preventDefault();e.stopImmediatePropagation();tlpOpen(tb.dataset.cvi||'fav');return}
-  if(t.closest('[data-tlpil]')){TBPAN&&tlpClose();return}
-  const c=t.closest('#tlpan [data-tpbig],#tlpan [data-tpx],#tlpan [data-tpfav],#tlpan [data-tpfc],#tlpan [data-tpwx],#tlpan [data-tprt]');if(!c)return;e.preventDefault();e.stopImmediatePropagation();
+  if(t.closest('[data-tlpil]')){TBPAN&&tlpClose();if(typeof mode!=='undefined'&&mode==='start'){mode='run';EZMORE=false;try{renderDay()}catch(_){}}return}
+  const c=t.closest('#tlpan [data-tpbig],#tlpan [data-tpx],#tlpan [data-tpfav],#tlpan [data-tplnk],#tlpan [data-tpfc],#tlpan [data-tpwx],#tlpan [data-tprt]');if(!c)return;e.preventDefault();e.stopImmediatePropagation();
   if(c.dataset.tpbig)return tlpBig();if(c.dataset.tpx)return tlpClose();
   if(c.dataset.tpfav){tlpClose();favRun(c.dataset.tpfav);return}
+  if(c.dataset.tplnk){favLinkOpen(c.dataset.tplnk);return}
   if(c.dataset.tpfc){tlpClose();openFocus();return}if(c.dataset.tpwx){tlpClose();wxOpen();return}
   if(c.dataset.tprt!=null){const r=fcRts()[+c.dataset.tprt];tlpClose();if(!r)return;(async()=>{if(cur!==today())await openDay(today());openRoutine();if(!RT)rtStart(r);else renderRoutine()})()}},true);
 document.addEventListener('input',e=>{const t=e.target;if(!t||(t.id!=='tppri'&&t.id!=='tppd')||!D)return;if(!Array.isArray(D.pri))D.pri=[];if(!D.pri[0])D.pri[0]={text:'',done:false,link:''};if(t.id==='tppri')D.pri[0].text=t.value;else D.pri[0].done=t.checked;schedule()},true);
