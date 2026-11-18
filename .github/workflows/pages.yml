@@ -1,0 +1,37 @@
+name: 웹 앱(PWA) 올리기 — GitHub Pages
+
+on:
+  push:
+    branches: [main]
+    paths: ['index.html', 'pwa/**', '.github/workflows/pages.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: 올릴 파일 모으기
+        run: |
+          mkdir -p _site
+          cp index.html _site/index.html
+          cp pwa/* _site/
+          touch _site/.nojekyll
+          ls -la _site
+      - name: gh-pages 가지에 올리기
+        run: |
+          cd _site
+          git init -q -b gh-pages
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -qm "웹 앱 올리기 ${GITHUB_SHA::7}"
+          git push -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" gh-pages
+          echo "주소: https://${GITHUB_REPOSITORY_OWNER}.github.io/${GITHUB_REPOSITORY#*/}/"
