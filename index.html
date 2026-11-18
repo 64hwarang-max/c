@@ -16266,7 +16266,7 @@ async function syPutSafe(B,k,v){if(!k.startsWith('day:')||!v||typeof v!=='object
 {const _o=openDay;openDay=async function(d){try{staleGuardInstall()}catch(e){}return _o.apply(this,arguments)}}
 {const _f=flush0;flush0=async function(){try{staleGuardInstall()}catch(e){}return _f.apply(this,arguments)}}
 /* v390 ① 앱 버전 표시 · 새 버전 알림 (GitHub에서 마지막으로 성공한 빌드 번호와 비교) */
-var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/493})();
+var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/494})();
 const VRK='gj-verchk',VRURL='https://github.com/64hwarang-max/c/actions/workflows/build-apk.yml';
 const vrGet=()=>{try{return JSON.parse(localStorage.getItem(VRK)||'{}')}catch(e){return{}}};
 async function vrCheck(force){const c=vrGet();if(!force&&c.t&&Date.now()-c.t<6*36e5)return c;
@@ -17292,7 +17292,7 @@ function dayHeadArrange(){try{const V=document.getElementById('v-day');if(!V||!V
   let tr=V.querySelector(':scope>#toolrow');const dayB=V.querySelector(':scope>#dayBody');
   if(!tr){tr=document.createElement('div');tr.id='toolrow';tr.className='toolrow'}
   const sig=tlbHTML()+(document.body.classList.contains('pilopen')?'1':'0');if(tr.dataset.sig!==sig){tr.innerHTML=tlbHTML();tr.dataset.sig=sig}
-  if(dayB&&tr.nextElementSibling!==dayB)dayB.before(tr);
+  {const nx=tr.nextElementSibling;if(dayB&&nx!==dayB&&!(nx&&nx.id==='tlpan'&&nx.nextElementSibling===dayB))dayB.before(tr)}
   /* ② 날짜 이동 → 스케줄창 남은 시간 옆 */
   const st=V.querySelector('#dayBody .sched .stool');const dl=document.getElementById('dlabel');
   if(st&&dl){const tt=(dl.textContent||'').trim();const m=/(\d+\/\d+\s*\(.\))/.exec(tt);const lab=m?(tt.slice(0,m.index).trim().slice(0,3)?tt.slice(0,m.index).trim().slice(0,3)+' ':'')+m[1]:tt.slice(0,10);const td=dl.classList.contains('cvtd');
@@ -18350,6 +18350,43 @@ document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest
 const NTGO=[[/쓴 돈|지출|수입|예산|가계부|원 기록|💸|💳/,()=>go('budget')],[/주기 할 일|손톱|발톱|이발|✂️/,()=>cySheet()],[/몰입|🍅|집중/,()=>openFocus()],[/루틴/,()=>openRoutine()],[/노트|📝/,()=>go('note')],[/목표|🎯/,()=>go('goal')],[/성경|큐티|암송|📖/,()=>go('bible')],[/할 일|📋/,()=>go('task')],[/만남|연락|🤝/,()=>go('people')],[/운동|💪|건강/,()=>go('care')],[/습관/,()=>go('habit')],[/일정|계획|블록|📅|시간표/,async()=>{go('day');if(cur!==today())await openDay(today());mode='run';renderDay()}]];
 {const _p=nttPaint;nttPaint=function(){const r=_p.apply(this,arguments);try{document.querySelectorAll('#dash>.nttst').forEach(b=>{if(b._ng)return;b._ng=1;const id=b.dataset.nt;const x=NTT.L().find(y=>y.id===id);if(!x||x.a)return;const g=NTGO.find(([re])=>re.test(x.m));if(!g)return;b.textContent+=' ›';b.onclick=()=>{NTT.del(id);try{g[1]()}catch(e){console.warn('ntgo',e)}}})}catch(e){}return r}}
 {const _a=NTT.add.bind(NTT);NTT.add=function(m,lb,fn){if(!lb&&/^↩︎?\s*하던 화면에서 이어서/.test(String(m||'')))return;return _a(m,lb,fn)}}
+
+/* ===== v494: 도구줄(즐겨찾기·시작·몰입·루틴·짜투리)도 기둥처럼 작게 펼치기 — 아래 시간표는 그대로, ‘크게’로 지금 창 ===== */
+let TBPAN='';
+{const st=document.createElement('style');st.textContent=`#tlpan{margin:-2px 0 8px;padding:8px 10px;border:1px solid var(--line);border-radius:14px;background:var(--paper)}
+#tlpan .tph{display:flex;align-items:center;gap:6px;margin-bottom:6px}#tlpan .tph b{flex:1;font-size:.86rem}#tlpan .tph button{border:0;background:none;color:var(--pen);font:inherit;font-size:.78rem;padding:2px 4px;cursor:pointer}#tlpan .tph .tpx{color:var(--muted)}
+#tlpan .tpr{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}#tlpan .tpr::-webkit-scrollbar{display:none}
+#tlpan .tpc{flex:none;display:inline-flex;align-items:center;gap:4px;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:999px;padding:5px 10px;font:inherit;font-size:.78rem;white-space:nowrap;cursor:pointer;min-height:32px}#tlpan .tpc.pri{background:var(--pen);border-color:var(--pen);color:#fff}
+#tlpan .tpone{display:flex;gap:6px;align-items:center}#tlpan .tpone input[type=text]{flex:1;min-width:0;padding:8px 10px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font:inherit;font-size:.88rem}#tlpan .tpone input[type=checkbox]{width:20px;height:20px;accent-color:var(--pen)}
+#tlpan .tpsub{font-size:.72rem;color:var(--muted);margin:8px 0 4px}
+#tlpan #cvgap .qlrow{gap:4px;margin:0 0 6px;padding:0;overflow-x:auto;flex-wrap:nowrap}#tlpan #cvgap .qlh{display:none}#tlpan #cvgap .qlb{flex:none;min-width:0;width:52px;padding:2px 0}#tlpan #cvgap .qlb i,#tlpan #cvgap .qlb img{width:28px!important;height:28px!important;font-size:1.25rem!important;border-radius:8px}#tlpan #cvgap .qlb span{font-size:.6rem;max-width:52px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block}
+#tlpan #cvgap .fwh,#tlpan #cvgap .rq,#tlpan #cvgap .cvsug,#tlpan #cvgap .cvsgl{display:none!important}#tlpan #cvgap .fwrap{border:0;padding:0;margin:0;background:none}#tlpan #cvgap .gx-run{margin:0;padding:0;border:0}#tlpan #cvgap .rr:nth-of-type(n+5){display:none}#tlpan #cvgap .rcs button{padding:3px 8px;font-size:.74rem;min-height:28px}#tlpan #cvgap .rr{font-size:.82rem;padding:4px 0}#tlpan #cvgap .rr .rb{min-width:34px;min-height:32px}`;document.head.appendChild(st)}
+function tlpClose(){TBPAN='';const p=document.getElementById('tlpan');if(p)p.remove();tlpOn()}
+function tlpOn(){document.querySelectorAll('#toolrow .tlb').forEach(b=>{const k=b.dataset.cvi||(b.dataset.dbt==='glink'?'fav':'');if(k)b.classList.toggle('on',k===TBPAN)})}
+function tlpBig(){const k=TBPAN;tlpClose();if(k==='fav')openFav();else if(k==='gap')cvGap();else if(k==='fr')frOpen();else if(k==='start'){mode='start';renderDay();scrollTo({top:0})}}
+function tlpOpen(k){if(TBPAN===k){tlpClose();return}if(k==='fr'){try{if(FC){openFocus();return}if(RT){openRoutine();return}}catch(e){}}
+  document.body.classList.remove('pilopen');try{const S=$('#sheet');if(S&&S.querySelector('#cvgap')){S.hidden=true;S.innerHTML=''}}catch(e){}
+  TBPAN=k;const tr=document.getElementById('toolrow');if(!tr)return;let p=document.getElementById('tlpan');if(!p){p=document.createElement('div');p.id='tlpan'}tr.after(p);
+  const T={fav:'⭐ 즐겨찾기',gap:'⏱️ 짜투리 시간',fr:'🎯 몰입·루틴',start:'🚀 시작'}[k];
+  let body='';
+  if(k==='fav'){const L=favList().filter(favOK);body=`<div class="tpr">${L.map(x=>`<button type="button" class="tpc" data-tpfav="${esc(x)}">${esc(favLabel(x))}</button>`).join('')||'<span class="hint">즐겨찾기가 없습니다. ‘크게’에서 추가하십시오.</span>'}</div>`}
+  else if(k==='fr'){const L=fcRts();const tm=r=>r.items.reduce((a,x)=>a+(+x.min||0),0);body=`<div class="tpr"><button type="button" class="tpc pri" data-tpfc="1">🎯 몰입 시작</button><button type="button" class="tpc" data-tpwx="1">💼 업무실행</button>${L.map((r,i)=>`<button type="button" class="tpc" data-tprt="${i}">▶ ${esc(r.name||'루틴')} <small>${tm(r)}분</small></button>`).join('')}</div>`}
+  else if(k==='start'){if(!Array.isArray(D.pri))D.pri=[];const p0=D.pri[0]||{};body=`<div class="tpone"><input type="checkbox" id="tppd" ${p0.done?'checked':''} aria-label="했음"><input type="text" id="tppri" value="${esc(p0.text||'')}" placeholder="⭐ 오늘 가장 중요한 한 가지" autocomplete="off"></div>`}
+  else if(k==='gap'){body='<div id="cvgap"></div>'}
+  p.innerHTML=`<div class="tph"><b>${T}</b><button type="button" data-tpbig="1">크게 ›</button><button type="button" class="tpx" data-tpx="1" aria-label="닫기">✕</button></div>${body}`;
+  if(k==='gap')cvGapFill();tlpOn()}
+window.addEventListener('click',e=>{const t=e.target;if(!t.closest)return;
+  const tb=t.closest('#toolrow [data-cvi="start"],#toolrow [data-cvi="fr"],#toolrow [data-cvi="gap"],#toolrow [data-dbt="glink"]');
+  if(tb){if(typeof ZMD!=='undefined'&&ZMD>0)return;e.preventDefault();e.stopImmediatePropagation();tlpOpen(tb.dataset.cvi||'fav');return}
+  if(t.closest('[data-tlpil]')){TBPAN&&tlpClose();return}
+  const c=t.closest('#tlpan [data-tpbig],#tlpan [data-tpx],#tlpan [data-tpfav],#tlpan [data-tpfc],#tlpan [data-tpwx],#tlpan [data-tprt]');if(!c)return;e.preventDefault();e.stopImmediatePropagation();
+  if(c.dataset.tpbig)return tlpBig();if(c.dataset.tpx)return tlpClose();
+  if(c.dataset.tpfav){tlpClose();favRun(c.dataset.tpfav);return}
+  if(c.dataset.tpfc){tlpClose();openFocus();return}if(c.dataset.tpwx){tlpClose();wxOpen();return}
+  if(c.dataset.tprt!=null){const r=fcRts()[+c.dataset.tprt];tlpClose();if(!r)return;(async()=>{if(cur!==today())await openDay(today());openRoutine();if(!RT)rtStart(r);else renderRoutine()})()}},true);
+document.addEventListener('input',e=>{const t=e.target;if(!t||(t.id!=='tppri'&&t.id!=='tppd')||!D)return;if(!Array.isArray(D.pri))D.pri=[];if(!D.pri[0])D.pri[0]={text:'',done:false,link:''};if(t.id==='tppri')D.pri[0].text=t.value;else D.pri[0].done=t.checked;schedule()},true);
+DECO.add('도구줄 작은 창 자리',{root:()=>document.getElementById('v-day')||document.body,deep:false,wait:60,run:()=>{if(!TBPAN)return;const tr=document.getElementById('toolrow'),p=document.getElementById('tlpan');if(!tr){return}if(!p){tlpOpen((()=>{const k=TBPAN;TBPAN='';return k})());return}if(tr.nextElementSibling!==p)tr.after(p);tlpOn()},now:false});
+{const _o=openSection;openSection=function(v){if(v!=='day'&&TBPAN)tlpClose();return _o.apply(this,arguments)}}
 </script>
 <!--BIBLE{--><!--}BIBLE-->
 <div id="miniov" class="miniov" hidden></div>
