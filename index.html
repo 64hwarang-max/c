@@ -16266,7 +16266,7 @@ async function syPutSafe(B,k,v){if(!k.startsWith('day:')||!v||typeof v!=='object
 {const _o=openDay;openDay=async function(d){try{staleGuardInstall()}catch(e){}return _o.apply(this,arguments)}}
 {const _f=flush0;flush0=async function(){try{staleGuardInstall()}catch(e){}return _f.apply(this,arguments)}}
 /* v390 ① 앱 버전 표시 · 새 버전 알림 (GitHub에서 마지막으로 성공한 빌드 번호와 비교) */
-var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/495})();
+var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/496})();
 const VRK='gj-verchk',VRURL='https://github.com/64hwarang-max/c/actions/workflows/build-apk.yml';
 const vrGet=()=>{try{return JSON.parse(localStorage.getItem(VRK)||'{}')}catch(e){return{}}};
 async function vrCheck(force){const c=vrGet();if(!force&&c.t&&Date.now()-c.t<6*36e5)return c;
@@ -18241,12 +18241,12 @@ function crqTodoHTML(){const X=crqData();const T=D&&D.date===today();
   return`<details class="crq crqt"${CRQOPEN?' open':''} data-crqk="t"><summary>✅ 오늘 챙길 것${(()=>{try{if(SET.xpOff)return'';const v=xpAll();return v?` <em class="crxp">⚡${v.today.xp}/${xpGoal()}</em>`:''}catch(e){return''}})()}<small>${X.n?(left?`남은 ${left}개`:'모두 했음 🎉'):'항목 없음'} ${X.d}/${X.n} ▾</small></summary>
    <div class="crqtop"><button type="button" class="crqc ${CRQPICK?'ok':''}" data-crpick="1">${CRQPICK?'✔ 고르기 끝':'☀️ 오늘 할 것 고르기'}</button><button type="button" class="crqc" data-crsch="1">📅 일정에 넣기</button></div>${body}
    <button type="button" class="crqsc" data-evw="1" aria-label="기둥 점수 고치기">📊 ${sc}<span style="margin-left:auto;color:var(--muted)">고치기 ›</span></button>
-   <details class="crrf"${T&&hr>=18?' open':''}><summary>🌙 하루 돌아보기</summary><label><span>🙏 감사</span><input type="text" data-crrf="grat" placeholder="오늘 감사한 일"></label><label><span>👍 잘한 것</span><input type="text" data-crrf="great" placeholder="오늘 잘한 일"></label><label><span>🔧 고칠 점</span><input type="text" data-crrf="better" placeholder="내일 다르게 할 것"></label><button type="button" class="del" data-cvi="pm" style="margin-top:6px;color:var(--pen);padding:0">기록 전체 화면 열기 ›</button></details></details>`}
-const crrfGet=k=>k==='better'?String(D.better||'').split('\n')[0]:String((Array.isArray(D[k])?D[k][0]:'')||'');
+   <details class="crrf"${(CRRFO!=null?CRRFO:T&&hr>=18)?' open':''}><summary>🌙 하루 돌아보기</summary>${mcPriHTML()}<label><span>🙏 감사</span><input type="text" data-crrf="grat" placeholder="오늘 감사한 일"></label><label><span>👍 잘한 것</span><input type="text" data-crrf="great" placeholder="오늘 잘한 일"></label><label><span>🔧 고칠 점</span><input type="text" data-crrf="better" placeholder="내일 다르게 할 것"></label><label><span>🔍 예상 밖</span><input type="text" data-crrf="mcDiff" placeholder="오늘 내 예상과 달랐던 것 한 가지"></label><button type="button" class="del" data-cvi="pm" style="margin-top:6px;color:var(--pen);padding:0">기록 전체 화면 열기 ›</button></details></details>`}
+const crrfGet=k=>k==='mcDiff'?String(D.mcDiff||''):k==='better'?String(D.better||'').split('\n')[0]:String((Array.isArray(D[k])?D[k][0]:'')||'');
 function crrfFill(){try{document.querySelectorAll('.crq.crqt [data-crrf]').forEach(i=>{if(document.activeElement===i)return;const v=crrfGet(i.dataset.crrf);if(i.value!==v)i.value=v})}catch(e){}}
 {const _p=crqPaint;crqPaint=function(){const r=_p.apply(this,arguments);crrfFill();return r}}
 DECO.add('챙길 것 회고 채우기',{root:'#dayBody',deep:true,wait:250,run:crrfFill,now:true});
-document.addEventListener('input',e=>{const i=e.target;if(!i||!i.dataset||!i.dataset.crrf||!D)return;const k=i.dataset.crrf,v=i.value;if(k==='better'){const L=String(D.better||'').split('\n');L[0]=v;D.better=L.join('\n').replace(/^\n+$/,'')}else{if(!Array.isArray(D[k]))D[k]=['','',''];D[k][0]=v}schedule()},true);
+document.addEventListener('input',e=>{const i=e.target;if(!i||!i.dataset||!i.dataset.crrf||!D)return;const k=i.dataset.crrf,v=i.value;if(k==='mcDiff'){D.mcDiff=v}else if(k==='better'){const L=String(D.better||'').split('\n');L[0]=v;D.better=L.join('\n').replace(/^\n+$/,'')}else{if(!Array.isArray(D[k]))D[k]=['','',''];D[k][0]=v}schedule()},true);
 document.addEventListener('click',e=>{let b=e.target.closest&&e.target.closest('[data-crpick]');if(b){e.preventDefault();e.stopPropagation();CRQPICK=!CRQPICK;CRQOPEN=true;crqPaint();return}
   b=e.target.closest&&e.target.closest('[data-crpk]');if(b){e.preventDefault();e.stopPropagation();const[k,id]=b.dataset.crpk.split('|');D.crit=D.crit||{};const M=D.crit[k]=D.crit[k]||{};if(M[id]===-1)delete M[id];else M[id]=-1;if(!Object.keys(M).length)delete D.crit[k];if(D.scUser)delete D.scUser[k];try{applyDraft(D)}catch(_){}schedule();crqPaint()}},true);
 
@@ -18389,6 +18389,50 @@ window.addEventListener('click',e=>{const t=e.target;if(!t.closest)return;
 document.addEventListener('input',e=>{const t=e.target;if(!t||(t.id!=='tppri'&&t.id!=='tppd')||!D)return;if(!Array.isArray(D.pri))D.pri=[];if(!D.pri[0])D.pri[0]={text:'',done:false,link:''};if(t.id==='tppri')D.pri[0].text=t.value;else D.pri[0].done=t.checked;schedule()},true);
 DECO.add('도구줄 작은 창 자리',{root:()=>document.getElementById('v-day')||document.body,deep:false,wait:60,run:()=>{if(!TBPAN)return;const tr=document.getElementById('toolrow'),p=document.getElementById('tlpan');if(!tr){return}if(!p){tlpOpen((()=>{const k=TBPAN;TBPAN='';return k})());return}if(tr.nextElementSibling!==p)tr.after(p);tlpOn()},now:false});
 {const _o=openSection;openSection=function(v){if(v!=='day'&&TBPAN)tlpClose();return _o.apply(this,arguments)}}
+
+/* ===== v496: 메타인지 — ① 예측 정확도(계획 대비 실제) ② 하루 끝: 아침 한 가지 점검·예상 밖 ③ 주간 ‘나에 대한 발견’ ===== */
+{const st=document.createElement('style');st.textContent=`.mcpri{margin:6px 0 2px;padding:6px 8px;border-radius:10px;background:var(--bg);border:1px solid var(--line);font-size:.84rem}.mcpri b{display:block;margin-bottom:4px}.mcpri .row{gap:6px;flex-wrap:wrap}.mcpri input{flex:1;min-width:8em;padding:6px 8px;border-radius:8px;border:1px solid var(--line);background:var(--paper);color:var(--ink);font:inherit;font-size:.84rem}
+.mccal{margin:6px 0 0;padding:6px 10px;border-radius:10px;background:color-mix(in srgb,var(--acc) 10%,transparent);font-size:.8rem;color:var(--ink);display:flex;gap:6px;align-items:center;flex-wrap:wrap}.mccal button{border:1px solid var(--acc);background:none;color:var(--acc);border-radius:999px;padding:2px 9px;font:inherit;font-size:.76rem;cursor:pointer}
+.mcfind li{margin:4px 0}.mcfind small{color:var(--muted)}`;document.head.appendChild(st)}
+const mcJ=(w,a,b)=>{const c=String(w||'').trim().slice(-1).charCodeAt(0);return c>=0xAC00&&c<=0xD7A3?((c-0xAC00)%28?a:b):a};
+const MCM=x=>{if(!x)return 0;const[a,b]=x.split(':').map(Number);return a*60+b};
+function mcPairs(o){const P=[];(o.plan||[]).forEach(b=>{if(!b.s||!b.e||b.rt)return;const k=b.act||b.cat;const bs=MCM(b.s);let be=MCM(b.e);if(be<=bs)be+=1440;const T=(o.time||[]).filter(t=>t.s&&(t.act||t.cat)===k&&MCM(t.s)<be+60&&(t.e?MCM(t.e):MCM(t.s)+60)>bs-60);const act=T.reduce((a,t)=>a+(t.e?mins(t.s,t.e):0),0);P.push({cat:b.cat||'',act:b.act||'',pl:be-bs,ac:act,done:T.length>0})});return P}
+let MCC={k:'',v:null};
+function mcCal(){const end=today(),k=end+'|'+(cacheAll?cacheAll.size:0);if(MCC.k===k)return MCC.v;const by={},byA={};if(cacheAll)for(let i=1;i<=28;i++){const d=addD(end,-i);const o=cacheAll.get(d);if(!o)continue;mcPairs(o).forEach(p=>{[[by,p.cat],[byA,p.act]].forEach(([M,key])=>{if(!key)return;const r=M[key]=M[key]||{n:0,dn:0,pl:0,ac:0};r.n++;if(p.done){r.dn++;r.pl+=p.pl;r.ac+=p.ac}})})}
+  const fin=M=>{const R={};Object.entries(M).forEach(([key,r])=>{if(r.n>=3)R[key]={n:r.n,keep:r.dn/r.n,ratio:r.dn>=3&&r.pl?r.ac/r.pl:null}});return R};MCC={k,v:{cat:fin(by),act:fin(byA)}};return MCC.v}
+function mcTip(act,cat){const C=mcCal();const r=(act&&C.act[act])||(cat&&C.cat[cat]);if(!r)return null;return Object.assign({key:(act&&C.act[act])?act:cat},r)}
+/* ① 계획 블록 편집 창: 평소 걸리는 시간 제안 */
+function mcEdPaint(){try{if(!bES||bES.kind!=='plan')return;const be=document.getElementById('be'),bs=document.getElementById('bs');if(!be||!bs)return;let box=document.getElementById('mccal');const act=((document.getElementById('bact')||{}).value||bES.b.act||'').trim();const r=mcTip(act,bES.b.cat);const pl=bs.value&&be.value?mins(bs.value,be.value):0;
+  if(!r||r.ratio==null||!pl||Math.abs(r.ratio-1)<.15){if(box)box.remove();return}const sug=Math.max(5,Math.round(pl*r.ratio/5)*5);const f=m=>m>=60?`${Math.floor(m/60)}시간${m%60?' '+m%60+'분':''}`:m+'분';
+  const h=`📏 ‘${esc(r.key)}’${mcJ(r.key,'은','는')} 보통 계획의 <b>${r.ratio.toFixed(1)}배</b> 걸렸습니다(최근 4주 ${r.n}번) <button type="button" data-mcfix="${sug}">${f(sug)}으로 잡기</button>`;if(!box){box=document.createElement('div');box.id='mccal';box.className='mccal';(be.closest('.row,label,div')||be).after(box)}if(box._h!==h){box.innerHTML=h;box._h=h}}catch(e){}}
+{const _o=openBlockEditor;openBlockEditor=function(){const r=_o.apply(this,arguments);setTimeout(mcEdPaint,60);return r}}
+document.addEventListener('input',e=>{if(e.target&&['bs','be','bact'].includes(e.target.id))mcEdPaint()},true);
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-mcfix]');if(!b)return;e.preventDefault();const bs=document.getElementById('bs'),be=document.getElementById('be');if(!bs||!be||!bs.value)return;be.value=addMin(bs.value,+b.dataset.mcfix);be.dispatchEvent(new Event('input',{bubbles:true}));be.dispatchEvent(new Event('change',{bubbles:true}));toast('📏 평소 걸리는 시간으로 맞췄습니다.')},true);
+/* ② 하루 끝: 아침에 정한 한 가지 점검 */
+let CRRFO=null;document.addEventListener('toggle',e=>{const d=e.target;if(d&&d.classList&&d.classList.contains('crrf'))CRRFO=d.open},true);
+function mcPriHTML(){try{const p=(Array.isArray(D.pri)&&D.pri[0])||null;if(!p||!String(p.text||'').trim())return'';return`<div class="mcpri"><b>⭐ 아침에 정한 한 가지: ${esc(p.text)}</b><div class="row"><button type="button" class="crqc ${p.done?'ok':''}" data-mcp="1">✓ 했음</button><button type="button" class="crqc ${p.done===false&&p.why!=null?'part':''}" data-mcp="0">못 했음</button>${!p.done&&p.why!=null?`<input type="text" data-mcwhy="1" value="${esc(p.why||'')}" placeholder="왜 못 했나요? (한 줄)">`:''}</div></div>`}catch(e){return''}}
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-mcp]');if(!b||!D||!Array.isArray(D.pri)||!D.pri[0])return;e.preventDefault();e.stopPropagation();const p=D.pri[0];if(b.dataset.mcp==='1'){p.done=true;delete p.why}else{p.done=false;if(p.why==null)p.why=''}schedule();const d=b.closest('.mcpri');if(d)d.outerHTML=mcPriHTML();setTimeout(()=>{const i=document.querySelector('[data-mcwhy]');if(i&&b.dataset.mcp==='0')i.focus()},50)},true);
+document.addEventListener('input',e=>{const i=e.target;if(!i||!i.dataset||!i.dataset.mcwhy||!D||!D.pri||!D.pri[0])return;D.pri[0].why=i.value;schedule()},true);
+/* ③ 주간 리포트: 나에 대한 발견 */
+function mcFindPaint(){try{const R=document.getElementById('rpbody');if(!R||R.querySelector('.mcfind')||!cacheAll||typeof rpWk==='undefined'||!rpWk)return;const anchor=R.querySelector('.wknote')||R.querySelector('.wksum')||R.querySelector('.kpis');if(!anchor)return;
+  const end=addD(rpWk,6),days=[];for(let i=0;i<28;i++)days.push(addD(end,-i));const L=[];
+  /* 집중 잘 되는 시간대 */
+  const hb={};days.forEach(d=>{const o=cacheAll.get(d);(o&&o.time||[]).forEach(t=>{if(!t.s||!(+t.focus>0))return;const h=Math.floor(MCM(t.s)/120)*2;const r=hb[h]=hb[h]||{s:0,n:0};r.s+=+t.focus;r.n++})});const HB=Object.entries(hb).filter(([,r])=>r.n>=3).map(([h,r])=>({h:+h,v:r.s/r.n})).sort((a,b)=>b.v-a.v);
+  if(HB.length>=2)L.push(`🧠 집중이 가장 잘 되는 때: <b>${pad(HB[0].h)}~${pad(HB[0].h+2)}시</b> (집중도 ${HB[0].v.toFixed(1)}) · 가장 낮은 때 ${pad(HB[HB.length-1].h)}~${pad(HB[HB.length-1].h+2)}시`);
+  /* 요일별 계획 지키기 */
+  const wd={};days.forEach(d=>{const o=cacheAll.get(d);if(!o)return;const P=mcPairs(o);if(!P.length)return;const w=new Date(d+'T00:00').getDay();const r=wd[w]=wd[w]||{n:0,dn:0};r.n+=P.length;r.dn+=P.filter(p=>p.done).length});const WD=Object.entries(wd).filter(([,r])=>r.n>=3).map(([w,r])=>({w:+w,v:r.dn/r.n})).sort((a,b)=>b.v-a.v);const WN='일월화수목금토';
+  if(WD.length>=2)L.push(`📅 계획을 잘 지키는 요일 <b>${WN[WD[0].w]}요일</b>(${Math.round(WD[0].v*100)}%) · 자주 무너지는 요일 <b>${WN[WD[WD.length-1].w]}요일</b>(${Math.round(WD[WD.length-1].v*100)}%)`);
+  /* 예측 정확도 */
+  const C=mcCal().cat;const ov=Object.entries(C).filter(([,r])=>r.ratio!=null&&r.ratio>=1.2).sort((a,b)=>b[1].ratio-a[1].ratio)[0];const un=Object.entries(C).filter(([,r])=>r.ratio!=null&&r.ratio<=.8).sort((a,b)=>a[1].ratio-b[1].ratio)[0];const sk=Object.entries(C).filter(([,r])=>r.keep<.5).sort((a,b)=>a[1].keep-b[1].keep)[0];
+  if(ov)L.push(`⏳ <b>${esc(ov[0])}</b>${mcJ(ov[0],'은','는')} 계획보다 평균 ${ov[1].ratio.toFixed(1)}배 걸립니다 — 다음엔 넉넉히 잡으십시오.`);
+  if(un)L.push(`⚡ <b>${esc(un[0])}</b>${mcJ(un[0],'은','는')} 계획의 ${Math.round(un[1].ratio*100)}%만에 끝납니다.`);
+  if(sk)L.push(`🚧 <b>${esc(sk[0])}</b> 계획은 ${Math.round(sk[1].keep*100)}%만 실제로 했습니다 — 시간대나 양을 바꿔 보십시오.`);
+  /* 이번 주 예상 밖·못 한 이유 */
+  const W=weekDays(rpWk).map(d=>[d,cacheAll.get(d)]).filter(([,o])=>o);const diff=W.filter(([,o])=>String(o.mcDiff||'').trim()).map(([d,o])=>`<li><small>${md(d)}</small> ${esc(o.mcDiff)}</li>`);const why=W.filter(([,o])=>o.pri&&o.pri[0]&&o.pri[0].done===false&&String(o.pri[0].why||'').trim()).map(([d,o])=>`<li><small>${md(d)} 못 한 이유</small> ${esc(o.pri[0].why)}</li>`);const pk=W.filter(([,o])=>o.pri&&o.pri[0]&&String(o.pri[0].text||'').trim());
+  if(pk.length)L.push(`⭐ 아침에 정한 한 가지 ${pk.length}일 중 <b>${pk.filter(([,o])=>o.pri[0].done).length}일</b> 해냈습니다.`);
+  if(!L.length&&!diff.length&&!why.length)return;
+  anchor.insertAdjacentHTML('afterend',`<div class="card mcfind" style="--k:var(--acc)"><h3>🔍 나에 대한 발견 <small style="font-weight:400;color:var(--muted)">최근 4주 기록에서</small></h3>${L.length?`<ul class="list">${L.map(x=>`<li>${x}</li>`).join('')}</ul>`:'<p class="hint">기록이 더 쌓이면 패턴이 보입니다.</p>'}${diff.length||why.length?`<p class="mhead" style="margin:8px 0 2px">이번 주 예상과 달랐던 것</p><ul class="list">${[...diff,...why].join('')}</ul>`:''}</div>`)}catch(e){console.warn('mcfind',e)}}
+DECO.add('주간 나에 대한 발견',{root:'#rpbody',deep:true,wait:450,run:mcFindPaint,now:true});
 </script>
 <!--BIBLE{--><!--}BIBLE-->
 <div id="miniov" class="miniov" hidden></div>
