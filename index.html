@@ -16266,7 +16266,7 @@ async function syPutSafe(B,k,v){if(!k.startsWith('day:')||!v||typeof v!=='object
 {const _o=openDay;openDay=async function(d){try{staleGuardInstall()}catch(e){}return _o.apply(this,arguments)}}
 {const _f=flush0;flush0=async function(){try{staleGuardInstall()}catch(e){}return _f.apply(this,arguments)}}
 /* v390 ① 앱 버전 표시 · 새 버전 알림 (GitHub에서 마지막으로 성공한 빌드 번호와 비교) */
-var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/496})();
+var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/497})();
 const VRK='gj-verchk',VRURL='https://github.com/64hwarang-max/c/actions/workflows/build-apk.yml';
 const vrGet=()=>{try{return JSON.parse(localStorage.getItem(VRK)||'{}')}catch(e){return{}}};
 async function vrCheck(force){const c=vrGet();if(!force&&c.t&&Date.now()-c.t<6*36e5)return c;
@@ -18433,6 +18433,17 @@ function mcFindPaint(){try{const R=document.getElementById('rpbody');if(!R||R.qu
   if(!L.length&&!diff.length&&!why.length)return;
   anchor.insertAdjacentHTML('afterend',`<div class="card mcfind" style="--k:var(--acc)"><h3>🔍 나에 대한 발견 <small style="font-weight:400;color:var(--muted)">최근 4주 기록에서</small></h3>${L.length?`<ul class="list">${L.map(x=>`<li>${x}</li>`).join('')}</ul>`:'<p class="hint">기록이 더 쌓이면 패턴이 보입니다.</p>'}${diff.length||why.length?`<p class="mhead" style="margin:8px 0 2px">이번 주 예상과 달랐던 것</p><ul class="list">${[...diff,...why].join('')}</ul>`:''}</div>`)}catch(e){console.warn('mcfind',e)}}
 DECO.add('주간 나에 대한 발견',{root:'#rpbody',deep:true,wait:450,run:mcFindPaint,now:true});
+
+/* ===== v497: 웹 앱(PWA) 설치 — 구글 플레이 없이 ‘홈 화면에 설치’ ===== */
+let PWAP=null;const PWA_WEB=()=>!IS_NATIVE&&location.protocol==='https:'&&!/claude|anthropic|usercontent/.test(location.hostname);
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();PWAP=e;pwaBtnPaint();try{const k='gj-pwa-ask';const t=+localStorage.getItem(k)||0;if(Date.now()-t>7*864e5&&!IOS_STANDALONE){localStorage.setItem(k,Date.now());setTimeout(()=>toastAct('📲 성장일지를 앱처럼 홈 화면에 설치할 수 있습니다','설치',pwaInstall),3000)}}catch(_){}});
+window.addEventListener('appinstalled',()=>{PWAP=null;toast('📲 홈 화면에 설치했습니다. 이제 아이콘으로 바로 여십시오.');pwaBtnPaint()});
+async function pwaInstall(){if(PWAP){PWAP.prompt();try{await PWAP.userChoice}catch(e){}PWAP=null;pwaBtnPaint();return}
+  if(IS_IOS)toast('📱 Safari 아래쪽 공유 버튼(⬆️) › ‘홈 화면에 추가’를 누르십시오.');else toast('📲 브라우저 메뉴(⋮) › ‘앱 설치’ 또는 ‘홈 화면에 추가’를 누르십시오.')}
+function pwaBtnPaint(){const V=document.getElementById('v-export');if(!V)return;let b=document.getElementById('pwainst');const show=PWA_WEB()&&!IOS_STANDALONE;if(!show){if(b)b.remove();return}
+  if(!b){b=document.createElement('button');b.id='pwainst';b.type='button';b.className='btn';b.style.cssText='margin:8px 0;display:block;width:100%;text-align:left';b.onclick=pwaInstall;const ez=document.getElementById('ezset');if(ez)ez.after(b);else V.insertBefore(b,V.firstChild)}
+  b.textContent=PWAP?'📲 홈 화면에 앱으로 설치 (구글 플레이 없이)':'📲 홈 화면에 설치하는 방법';}
+document.addEventListener('click',()=>setTimeout(pwaBtnPaint,300));
 </script>
 <!--BIBLE{--><!--}BIBLE-->
 <div id="miniov" class="miniov" hidden></div>
