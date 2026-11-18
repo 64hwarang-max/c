@@ -16266,7 +16266,7 @@ async function syPutSafe(B,k,v){if(!k.startsWith('day:')||!v||typeof v!=='object
 {const _o=openDay;openDay=async function(d){try{staleGuardInstall()}catch(e){}return _o.apply(this,arguments)}}
 {const _f=flush0;flush0=async function(){try{staleGuardInstall()}catch(e){}return _f.apply(this,arguments)}}
 /* v390 ① 앱 버전 표시 · 새 버전 알림 (GitHub에서 마지막으로 성공한 빌드 번호와 비교) */
-var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/498})();
+var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/499})();
 const VRK='gj-verchk',VRURL='https://github.com/64hwarang-max/c/actions/workflows/build-apk.yml';
 const vrGet=()=>{try{return JSON.parse(localStorage.getItem(VRK)||'{}')}catch(e){return{}}};
 async function vrCheck(force){const c=vrGet();if(!force&&c.t&&Date.now()-c.t<6*36e5)return c;
@@ -18444,6 +18444,108 @@ function pwaBtnPaint(){const V=document.getElementById('v-export');if(!V)return;
   if(!b){b=document.createElement('button');b.id='pwainst';b.type='button';b.className='btn';b.style.cssText='margin:8px 0;display:block;width:100%;text-align:left';b.onclick=pwaInstall;const ez=document.getElementById('ezset');if(ez)ez.after(b);else V.insertBefore(b,V.firstChild)}
   b.textContent=PWAP?'📲 홈 화면에 앱으로 설치 (구글 플레이 없이)':'📲 홈 화면에 설치하는 방법';}
 document.addEventListener('click',()=>setTimeout(pwaBtnPaint,300));
+/* ===== v499: 월·주 한 장 보기 + 🌉 다리 만들기(1·3·5·10·30년 뒤의 나 → 영역별 행동 → 핵심 습관) ===== */
+(()=>{
+const css=document.createElement('style');css.textContent=`
+#grPage .pgbar{display:flex;gap:6px;align-items:center;margin-bottom:8px;flex-wrap:wrap}
+#grPage .pgbar .seg{margin:0}
+#grPage .pgl0{flex:1;text-align:center;font-weight:700}
+#grPage .pgw{overflow-x:auto;background:var(--paper);border:1px solid var(--line);border-radius:6px}
+#grPage table{border-collapse:collapse;font-size:.8rem}
+#grPage th,#grPage td{border-bottom:1px solid var(--line);padding:0;text-align:center}
+#grPage th{font-weight:500;color:var(--muted);font-size:.72rem;vertical-align:bottom}
+#grPage th.d,#grPage td.d{position:sticky;left:0;background:var(--paper);z-index:1;min-width:46px;border-right:1px solid var(--line);font-size:.76rem}
+#grPage td.d{cursor:pointer;line-height:1.1}
+#grPage tr.tdy td{background:color-mix(in srgb,var(--pen) 9%,var(--paper))}
+#grPage tr.tdy td.d{background:color-mix(in srgb,var(--pen) 14%,var(--paper))}
+#grPage .sun{color:#d4405a}#grPage .sat{color:#3d6fd8}
+#grPage .pgl{overflow:hidden;text-align:left;padding:0 8px;cursor:pointer;color:var(--ink);display:-webkit-box;-webkit-box-orient:vertical;line-height:1.25;font-size:.8rem}
+#grPage th.hv div{writing-mode:vertical-rl;margin:0 auto;height:78px;line-height:1.1;overflow:hidden;font-size:.72rem}
+#grPage td button{width:100%;height:100%;border:0;background:none;color:var(--pen);font:inherit;font-weight:700;cursor:pointer;padding:0}
+#grPage td button:disabled{cursor:default}
+#grPage td.hc{border-left:1px solid var(--line)}#grPage td.hc button{min-height:26px}
+#grPage td.n{font-size:.74rem;color:var(--muted);min-width:24px}
+#grPage .pgv{width:100%;margin:8px 0;padding:8px;border:1px solid var(--line);border-radius:6px;background:var(--paper);color:var(--ink);font:inherit;resize:vertical}
+#grPage .brg{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+#grPage .brg button,#sheet .brh button{border:1px solid var(--line);background:var(--paper);color:var(--ink);border-radius:999px;padding:5px 11px;font:inherit;font-size:.82rem;cursor:pointer}
+#grPage .brg button.has,#sheet .brh button.has{border-color:var(--pen)}
+#sheet .brh button.on{background:var(--pen);color:#fff;border-color:var(--pen)}
+#sheet .brh{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 10px}
+#sheet .bra{border:1px solid var(--line);border-radius:6px;margin:6px 0;padding:6px 10px;background:var(--paper)}
+#sheet .bra>summary{cursor:pointer;font-weight:600}
+#sheet .bri{display:flex;gap:8px;align-items:center;padding:3px 0}
+#sheet .bri span{flex:1}
+#sheet .bri button{border:0;background:none;color:var(--muted);cursor:pointer;font:inherit}
+#sheet .bri .hb{border:1px solid var(--line);border-radius:999px;padding:2px 8px;font-size:.76rem;color:var(--muted)}
+#sheet .bri .hb.on{background:var(--pen);color:#fff;border-color:var(--pen)}
+`;document.head.appendChild(css);
+const g=$('#grsub');if(g&&!g.querySelector('[data-gr=page]')){const b=document.createElement('button');b.dataset.gr='page';b.textContent='🗓️ 한 장';g.appendChild(b);b.onclick=()=>{growSub='page';renderGrow()}}
+const host=document.createElement('div');host.id='grPage';host.hidden=true;$('#growBody').after(host);
+{const _rg=renderGrow;renderGrow=function(){if(growSub==='page'){document.querySelectorAll('#grsub button').forEach(b=>b.classList.toggle('on',b.dataset.gr==='page'));$('#grHab').hidden=true;$('#growBody').hidden=true;host.hidden=false;pgRender();return}host.hidden=true;return _rg.apply(this,arguments)}}
+const BRH=[['Y1','1년 뒤'],['M3','3년 뒤'],['M5','5년 뒤'],['L10','10년 뒤'],['L30','30년 뒤']];
+const hzGet=k=>((GOALS.hz||{})[k])||'';
+const wkStart=d=>addD(d,-((parseD(d).getDay()+6)%7));
+let PGM='m',PGA=today();
+async function pgToggle(d,id){const m=await allMap();let o=d===D.date?D:(m.get(d)||norm({date:d}));o.habits[id]=!o.habits[id];m.set(d,o);
+  if(o===D){schedule()}else{try{status('저장 중…');await store.save(d,o);status('저장됨')}catch(e){status('저장하지 못했습니다.')}}pgRender()}
+async function pgRender(){
+  await flush();const m=await allMap();const T=today(),a=parseD(PGA);let days=[];
+  if(PGM==='m'){const y=a.getFullYear(),mo=a.getMonth(),n=new Date(y,mo+1,0).getDate();for(let i=1;i<=n;i++)days.push(ymd(new Date(y,mo,i)))}
+  else{const s=wkStart(PGA);for(let i=0;i<7;i++)days.push(addD(s,i))}
+  const H=SET.habits,RH=PGM==='m'?30:46,get=d=>d===D.date?D:(m.get(d)||null);
+  const cnt=d=>{const o=get(d);return o?H.filter(x=>(o.habits||{})[x.id]).length:0};
+  const label=PGM==='m'?`${a.getFullYear()}년 ${a.getMonth()+1}월`:`${md(days[0])} ~ ${md(days[6])}`;
+  const vk=PGM==='m'?PGA.slice(0,7):'w'+days[0];GOALS.vows=GOALS.vows||{};
+  const CW=96;let svg='';
+  {const mx=Math.max(1,H.length);let pts=[];days.forEach((d,i)=>{if(d>T)return;pts.push([4+(CW-8)*cnt(d)/mx,i*RH+RH/2])});
+   svg=`<svg width="${CW}" height="${days.length*RH}" style="display:block">${[0,.5,1].map(f=>`<line x1="${4+(CW-8)*f}" x2="${4+(CW-8)*f}" y1="0" y2="${days.length*RH}" stroke="var(--line)" stroke-dasharray="${f===.5?'3 3':''}"/>`).join('')}${pts.length>1?`<polyline points="${pts.map(p=>p.join(',')).join(' ')}" fill="none" stroke="var(--pen)" stroke-width="1.6"/>`:''}${pts.map(p=>`<circle cx="${p[0]}" cy="${p[1]}" r="3" fill="var(--pen)"/>`).join('')}</svg>`}
+  let done=0,tot=0,lines=0;
+  let t=`<table><thead><tr><th class="d" style="height:84px">${PGM==='m'?'일':'날짜'}</th><th style="min-width:${PGM==='m'?'110':'140'}px;text-align:left;padding-left:8px">기억에 남는 한 줄</th>${H.map(x=>`<th class="hv"><div>${esc(x.name)}</div></th>`).join('')}<th>${H.length?'합계':''}</th><th style="font-size:.7rem">달성 ${H.length}개 중</th></tr></thead><tbody>`;
+  days.forEach((d,i)=>{const x=parseD(d),o=get(d),dw=x.getDay(),c=cnt(d),ln=o&&tx(o.verdict)?o.verdict.trim():'';if(d<=T){tot+=H.length;done+=c}if(ln)lines++;
+    t+=`<tr class="${d===T?'tdy':''}" style="height:${RH}px"><td class="d ${dw===0?'sun':dw===6?'sat':''}" data-pgd="${d}">${x.getDate()}<br><small>${WD[dw]}</small></td><td><div class="pgl" data-pgd="${d}" style="height:${RH-2}px;-webkit-line-clamp:${PGM==='m'?1:2};${PGM==='m'?'line-height:'+(RH-2)+'px':'align-content:center'}">${esc(ln)||'<span style="color:var(--muted)">·</span>'}</div></td>`
+    +H.map(h=>{const on=!!(o&&(o.habits||{})[h.id]);return`<td class="hc" style="min-width:30px"><button data-pdd="${d}" data-pdi="${h.id}" ${d>T?'disabled':''} aria-label="${esc(h.name)} ${md(d)}">${on?'✕':''}</button></td>`}).join('')
+    +`<td class="n">${d<=T?c:''}</td>`+(i===0?`<td rowspan="${days.length}" style="padding:0;width:${CW}px;vertical-align:top;border-left:1px solid var(--line)">${svg}</td>`:'')+'</tr>'});
+  t+='</tbody></table>';
+  const hzY=hzGet('Y1').trim();
+  host.innerHTML=`<div class="pgbar"><div class="seg" style="--k:var(--pen)"><button data-pgm="m" class="${PGM==='m'?'on':''}">월</button><button data-pgm="w" class="${PGM==='w'?'on':''}">주</button></div><button class="iconbtn" id="pgp" aria-label="이전">‹</button><span class="pgl0">${label}</span><button class="iconbtn" id="pgn" aria-label="다음">›</button></div>
+  <label class="hint" style="display:block">${PGM==='m'?'이달의':'이번 주'} 다짐 <textarea id="pgvow" data-nostamp="1" class="pgv" rows="2" placeholder="${PGM==='m'?'예: 아침 걷기, 매일 독서 20분':'이번 주 꼭 지킬 것'}">${esc(GOALS.vows[vk]||'')}</textarea></label>
+  ${hzY?`<p class="hint" style="margin:0 0 6px">🔭 1년 뒤의 나 — ${esc(hzY.length>70?hzY.slice(0,70)+'…':hzY)}</p>`:''}
+  <div class="pgw">${H.length?t:'<p class="empty" style="padding:14px">습관이 없습니다. 아래 ‘다리 만들기’로 핵심 습관을 정하거나 습관표에서 더하십시오.</p>'}</div>
+  <p class="hint" style="margin:6px 0">칸을 누르면 ✕ 표시, 날짜나 한 줄을 누르면 그날 화면으로 갑니다. 오른쪽 선은 하루 달성 개수입니다 · 습관 ${tot?Math.round(done/tot*100):0}% · 한 줄 ${lines}/${days.filter(d=>d<=T).length}일</p>
+  <div class="brg"><button id="pgbr">🌉 다리 만들기 (그때의 나 → 행동 → 습관)</button>${BRH.map(([k,n])=>`<button data-brk="${k}" class="${tx(hzGet(k))?'has':''}">${n}${tx(hzGet(k))?' ✔':''}</button>`).join('')}</div>`;
+  host.querySelectorAll('[data-pgm]').forEach(b=>b.onclick=()=>{PGM=b.dataset.pgm;pgRender()});
+  $('#pgp').onclick=()=>{PGA=PGM==='m'?ymd(new Date(a.getFullYear(),a.getMonth()-1,1)):addD(PGA,-7);pgRender()};
+  $('#pgn').onclick=()=>{PGA=PGM==='m'?ymd(new Date(a.getFullYear(),a.getMonth()+1,1)):addD(PGA,7);pgRender()};
+  $('#pgvow').oninput=e=>{GOALS.vows[vk]=e.target.value;saveGoalsSoon()};
+  host.querySelectorAll('[data-pdd]').forEach(b=>b.onclick=()=>pgToggle(b.dataset.pdd,b.dataset.pdi));
+  host.querySelectorAll('[data-pgd]').forEach(b=>b.onclick=async()=>{await openDay(b.dataset.pgd);go('day')});
+  $('#pgbr').onclick=()=>pgBridge('Y1');host.querySelectorAll('[data-brk]').forEach(b=>b.onclick=()=>pgBridge(b.dataset.brk));
+}
+window.pgRender=pgRender;
+function pgBridge(lv){
+  const S=$('#sheet');S.hidden=false;GOALS.bridge=GOALS.bridge||{};GOALS.hz=GOALS.hz||{};
+  const items=()=>GOALS.bridge[lv]=GOALS.bridge[lv]||{};
+  const core=()=>{let n=0;Object.values(GOALS.bridge).forEach(A=>Object.values(A).forEach(L=>L.forEach(i=>{if(i.h)n++})));return n};
+  const draw=()=>{const I=items(),name=(BRH.find(x=>x[0]===lv)||[])[1];
+    S.innerHTML=`<div class="sheetbox" role="dialog" aria-label="다리 만들기"><div class="shead"><b>🌉 다리 만들기</b><button class="del" id="brx">닫기</button></div>
+    <div class="brh">${BRH.map(([k,n])=>`<button data-brh="${k}" class="${k===lv?'on':''} ${tx(hzGet(k))?'has':''}">${n}</button>`).join('')}</div>
+    <label class="hint" style="display:block"><b>${name}의 나</b>는 어떤 사람입니까? <textarea id="brme" data-nostamp="1" class="pgv" rows="3" style="width:100%;box-sizing:border-box" placeholder="예: 건강한 사람, 꾸준히 성장하는 사람, 가족에게 좋은 남편·아빠">${esc(hzGet(lv))}</textarea></label>
+    <p class="hint" style="margin:0 0 4px">${lv==='M3'||lv==='L10'||lv==='M5'||lv==='L30'?'🎯 목표 탭의 사다리·청사진에 적은 ‘그때의 나’와 같은 글입니다.':'1년 뒤의 모습은 월·주 한 장 보기 위쪽에 함께 보입니다.'}</p>
+    <p class="hint" style="margin:6px 0">그 모습이 되기 위한 <b>실천할 수 있는 행동</b>을 영역별로 적고, 가장 중요한 것을 <b>🔁 습관</b>으로 켭니다. 지금 핵심 습관 ${core()}/10 · 영역은 4~5개만 채우셔도 됩니다.</p>
+    ${SCORE.map(([k,l,d])=>{const L=I[k]||[];return`<details class="bra" ${L.length?'open':''}><summary>${l} <small class="hint">${d}${L.length?' · '+L.length+'개':''}</small></summary>${L.map(i=>`<div class="bri"><span>${esc(i.t)}</span><button class="hb ${i.h?'on':''}" data-brh2="${k}|${i.id}">🔁 습관</button><button data-brd="${k}|${i.id}" aria-label="삭제">✕</button></div>`).join('')}<div class="gl"><input type="text" data-brn="${k}" placeholder="예: 주 3회 30분 운동"><button class="btn small" data-bra="${k}">추가</button></div></details>`}).join('')}</div>`;
+    $('#brx').onclick=()=>{S.hidden=true;S.innerHTML='';if(!host.hidden)pgRender()};
+    S.querySelectorAll('[data-brh]').forEach(b=>b.onclick=()=>{lv=b.dataset.brh;draw()});
+    $('#brme').oninput=e=>{GOALS.hz[lv]=e.target.value;saveGoalsSoon()};
+    S.querySelectorAll('[data-bra]').forEach(b=>{const add=()=>{const k=b.dataset.bra,inp=S.querySelector(`[data-brn="${k}"]`),v=inp.value.trim();if(!v)return;(I[k]=I[k]||[]).push({id:'b'+uid(),t:v,h:false});saveGoalsSoon();draw()};b.onclick=add;S.querySelector(`[data-brn="${b.dataset.bra}"]`).onkeydown=e=>{if(e.key==='Enter'&&!e.isComposing){e.preventDefault();add()}}});
+    S.querySelectorAll('[data-brd]').forEach(b=>b.onclick=()=>{const[k,id]=b.dataset.brd.split('|');const it=(I[k]||[]).find(x=>x.id===id);if(!it)return;if(it.h)SET.habits=SET.habits.filter(h=>h.br!==id);I[k]=I[k].filter(x=>x.id!==id);saveGoalsSoon();SET.hEdited=1;saveSet().catch(()=>{});draw()});
+    S.querySelectorAll('[data-brh2]').forEach(b=>b.onclick=()=>{const[k,id]=b.dataset.brh2.split('|');const it=(I[k]||[]).find(x=>x.id===id);if(!it)return;
+      if(!it.h){if(core()>=10){toast('핵심 습관은 10개까지입니다. 하나를 끄고 켜십시오.');return}if(SET.habits.length>=20){toast('습관은 20개까지 둘 수 있습니다.');return}
+        const ex=SET.habits.find(h=>h.name===it.t);if(ex)ex.br=id;else SET.habits.push({id:'h'+uid(),name:it.t,br:id});it.h=true;toast(`✅ ‘${it.t}’을 습관표에 더했습니다.`)}
+      else{it.h=false;const h=SET.habits.find(x=>x.br===id);if(h)delete h.br;toast('습관 표시를 껐습니다. 습관표의 기록은 남습니다.')}
+      SET.hEdited=1;saveSet().catch(()=>{});saveGoalsSoon();widgetSoon();draw()});
+  };draw()}
+window.pgBridge=pgBridge;
+})();
 </script>
 <!--BIBLE{--><!--}BIBLE-->
 <div id="miniov" class="miniov" hidden></div>
