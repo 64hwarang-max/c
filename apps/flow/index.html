@@ -1,4 +1,13 @@
+<!doctype html>
+<html lang="ko"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>몰입루틴</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#2D5BD8">
+<link rel="apple-touch-icon" href="icon-180.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;700&family=Space+Grotesk:wght@500;700&display=swap">
@@ -302,4 +311,5 @@ function readEdit(){if(!EDIT)return;const n=$('#rn');if(n)EDIT.name=n.value;docu
 try{const r=JSON.parse(localStorage.getItem(RK)||'null');if(r&&r.segs){RUN=r;if(!RUN.rating){/* 꺼져 있던 동안 지난 구간 정리 */let g=0;while(!RUN.paused&&segLeft()<=0&&g++<50){const s=RUN.segs[RUN.i];RUN.done.push({n:s.n,k:s.k,pm:s.m,am:s.m,skip:false});if(RUN.i>=RUN.segs.length-1){RUN.ended=RUN.segStart+RUN.pz+s.m*60000;RUN.rating=true;break}RUN.segStart=RUN.segStart+RUN.pz+s.m*60000;RUN.pz=0;RUN.i++}}runSave();openRun()}}catch(e){RUN=null}
 route();
 })();
+try{if("serviceWorker" in navigator&&location.protocol.startsWith("http"))addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}))}catch(e){}
 </script>

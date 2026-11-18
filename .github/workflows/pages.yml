@@ -3,7 +3,7 @@ name: 웹 앱(PWA) 올리기 — GitHub Pages
 on:
   push:
     branches: [main]
-    paths: ['index.html', 'pwa/**', '.github/workflows/pages.yml']
+    paths: ['index.html', 'pwa/**', 'apps/flow/**', '.github/workflows/pages.yml']
   workflow_dispatch:
 
 permissions:
@@ -23,6 +23,9 @@ jobs:
           mkdir -p _site
           cp index.html _site/index.html
           cp pwa/* _site/
+          mkdir -p _site/flow
+          cp apps/flow/index.html _site/flow/index.html
+          cp apps/flow/pwa/* _site/flow/
           touch _site/.nojekyll
           ls -la _site
       - name: gh-pages 가지에 올리기
