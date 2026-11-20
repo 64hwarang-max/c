@@ -16268,7 +16268,7 @@ async function syPutSafe(B,k,v){if(!k.startsWith('day:')||!v||typeof v!=='object
 {const _o=openDay;openDay=async function(d){try{staleGuardInstall()}catch(e){}return _o.apply(this,arguments)}}
 {const _f=flush0;flush0=async function(){try{staleGuardInstall()}catch(e){}return _f.apply(this,arguments)}}
 /* v390 ① 앱 버전 표시 · 새 버전 알림 (GitHub에서 마지막으로 성공한 빌드 번호와 비교) */
-var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/507})();
+var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/508})();
 const VRK='gj-verchk',VRURL='https://github.com/64hwarang-max/c/actions/workflows/build-apk.yml';
 const vrGet=()=>{try{return JSON.parse(localStorage.getItem(VRK)||'{}')}catch(e){return{}}};
 async function vrCheck(force){const c=vrGet();if(!force&&c.t&&Date.now()-c.t<6*36e5)return c;
@@ -18258,7 +18258,7 @@ function crTabsHTML(T,hr,body){const t=crTabNow(T,hr);const tabs=[['s','🌅','�
       return`<div class="crev ${jog?'crevj':''}"><span>${AREA_E[k]||''} ${esc(areaName(k)||l)}${au?' <small title="기록·체크로 자동으로 매긴 점수">🤖</small>':''}</span>${inp}</div>`}).join('');
     c=`<div class="crevh"><b>오늘 점수 ${n?(sum/n).toFixed(1):'–'} <small style="font-weight:400">/ 10</small></b><small>${n}/${L.length}개 매김</small><span class="seg" style="--k:var(--pen);margin-left:auto"><button type="button" data-evm="jog" class="${jog?'on':''}" style="white-space:nowrap">🎛 0~10</button><button type="button" data-evm="btn" class="${jog?'':'on'}" style="white-space:nowrap">🔘 1~5</button></span></div>${rows||'<p class="hint">보일 기둥이 없습니다. 설정 → 점수·레벨 설정에서 고르십시오.</p>'}<p class="hint">${jog?'슬라이더를 밀어 0~10점을 고릅니다.':'버튼 1~5는 10점 만점으로 환산해 저장합니다(1→2점 … 5→10점).'} 🤖는 기록·체크로 자동 계산된 점수입니다.</p><div class="crqtop"><button type="button" class="crqc" data-cvi="pm">🔍 자세히 보기 (레이더·항목별)</button><button type="button" class="crqc" data-evw="1">🌙 한 장씩 평가하기</button><button type="button" class="crqc" data-evsopen="1">⚙️ 점수·레벨 설정</button></div>`}
   else{const RF=[['grat','🙏','감사','오늘 감사한 일'],['great','👍','잘한 것','오늘 잘한 일'],['better','🔧','고칠 점','내일 다르게 할 것'],['mcDiff','🔍','예상 밖','오늘 내 예상과 달랐던 것']];
-    c=`<div class="crrf" style="margin-top:4px;border:0;padding-top:0">${mcPriHTML()}${RF.map(([k,e,l,ph])=>{const n=crrN(k);return`<div class="crrg"><button type="button" class="crrl" data-crradd="${k}" title="누르면 한 칸 더">${e} ${l}<i>＋</i></button><div class="crrr">${Array.from({length:n},(_,i)=>`<input type="text" data-crrf="${k}" data-i="${i}" placeholder="${i?'또 한 가지':ph}">`).join('')}</div></div>`}).join('')}<p class="hint" style="margin:4px 0">항목 이름을 누르면 칸이 하나 더 늘어납니다.</p><button type="button" class="del" data-cvi="pm" style="margin-top:6px;color:var(--pen);padding:0">기록 전체 화면 열기 ›</button></div>`}
+    c=`<div class="crrf" style="margin-top:4px;border:0;padding-top:0">${typeof gmBlockHTML==='function'?gmBlockHTML():''}${mcPriHTML()}${RF.map(([k,e,l,ph])=>{const n=crrN(k);return`<div class="crrg"><button type="button" class="crrl" data-crradd="${k}" title="누르면 한 칸 더">${e} ${l}<i>＋</i></button><div class="crrr">${Array.from({length:n},(_,i)=>`<input type="text" data-crrf="${k}" data-i="${i}" placeholder="${i?'또 한 가지':ph}">`).join('')}</div></div>`}).join('')}<p class="hint" style="margin:4px 0">항목 이름을 누르면 칸이 하나 더 늘어납니다.</p><button type="button" class="del" data-cvi="pm" style="margin-top:6px;color:var(--pen);padding:0">기록 전체 화면 열기 ›</button></div>`}
   return`<div class="crtab" role="tablist">${tabs.map(([k,e,l])=>`<button type="button" role="tab" data-crtab="${k}" class="${k===t?'on':''}" aria-selected="${k===t}">${e} ${l}</button>`).join('')}</div><div class="crtbody">${c}</div>`}
 const crrfGet=(k,i)=>String(crrArr(k)[+i||0]||'');
 function crrfFill(){try{document.querySelectorAll('.crq.crqt [data-crpi]').forEach(pi=>{const p0=(Array.isArray(D.pri)&&D.pri[+pi.dataset.crpi])||{};if(document.activeElement!==pi&&pi.value!==(p0.text||''))pi.value=p0.text||''});document.querySelectorAll('.crq.crqt [data-crpd]').forEach(pd=>{const p0=(Array.isArray(D.pri)&&D.pri[+pd.dataset.crpd])||{};pd.checked=!!p0.done})}catch(e){}try{document.querySelectorAll('.crq.crqt [data-crrf]').forEach(i=>{if(document.activeElement===i)return;const v=crrfGet(i.dataset.crrf,i.dataset.i);if(i.value!==v)i.value=v})}catch(e){}}
@@ -18496,7 +18496,7 @@ function planGoalPaint(){try{const R=document.getElementById('pbody');if(!R||R.q
   const cur=GOALS.list.filter(g=>g.title&&!g.done&&['w','m'].includes(g.lv)&&g.per===perKey(g.lv,T)).slice(0,6);
   const stalled=[];GOALS.list.filter(g=>g.title&&!g.done&&['w','m','y'].includes(g.lv)&&g.per===perKey(g.lv,T)).forEach(g=>{const c=gCreated(g);if(!c||Date.now()-c<14*864e5)return;let m={act:0,pl:0};try{m=goalMins(g,a,T)}catch(e){}if(!(m.act||m.pl))stalled.push(g)});
   if(!cur.length&&!stalled.length)return;const LV={w:'이번 주',m:'이번 달',y:'올해'};
-  const h=`<div class="pgc">${cur.length?`<h3>🎯 이번 주·달 목표 → 계획에 넣기</h3>${cur.map(g=>`<div class="pgr"><b>${esc(g.title)}</b><small>${LV[g.lv]} · 진행 ${Math.round(prog(g)*100)}%</small><div class="pgb"><button type="button" class="crqc" data-gab="${g.id}|30|0">오늘 30분</button><button type="button" class="crqc" data-gab="${g.id}|60|1">내일 1시간</button></div></div>`).join('')}`:''}
+  const h=`<div class="pgc">${cur.length?`<h3>🎯 이번 주·달 목표 → 계획에 넣기</h3>${cur.map(g=>`<div class="pgr"><b>${esc(g.title)}</b><small>${LV[g.lv]} · 진행 ${Math.round(prog(g)*100)}%</small>${gmBar(g)}<div class="pgb"><button type="button" class="crqc" data-gmo="${g.id}">📏 측정</button><button type="button" class="crqc" data-gab="${g.id}|30|0">오늘 30분</button><button type="button" class="crqc" data-gab="${g.id}|60|1">내일 1시간</button></div></div>`).join('')}`:''}
    ${stalled.length?`<h3 style="margin-top:${cur.length?'12px':'0'}">⏸ 멈춘 목표 ${stalled.length}</h3>${stalled.slice(0,4).map(g=>`<div class="pgr"><b>${esc(g.title)}</b><small>${LV[g.lv]} · 최근 2주 이 목표에 계획·실제 시간이 없습니다</small><div class="pgb"><button type="button" class="crqc" data-gab="${g.id}|30|1">내일 30분 넣기</button></div></div>`).join('')}`:''}</div>`;
   R.insertAdjacentHTML('afterbegin',h)}catch(e){console.warn('pgoal',e)}}
 DECO.add('계획 목표 카드',{root:'#pbody',deep:false,wait:300,run:planGoalPaint,now:true});})();
@@ -18520,6 +18520,34 @@ function evsOpen(){const S=$('#sheet');S.hidden=false;const hid=SET.evHide||[];c
   $('#evxp').onchange=e=>{SET.xpOff=!e.target.checked;saveSet().catch(()=>{});try{xpCssApply();refreshAny()}catch(x){}};
   $('#evgl').onchange=e=>{const v=Math.max(10,Math.min(500,+e.target.value||50));SET.xpGoal=v;e.target.value=v;saveSet().catch(()=>{});toast('하루 목표 XP를 '+v+'로 정했습니다.')}}
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-evsopen]');if(!b)return;e.preventDefault();e.stopPropagation();evsOpen()},true);
+/* ===== v508: 목표 성과 측정 ===== */
+const GMT={cnt:['🔁 횟수','주 몇 회 했는지 — 연결된 시간표 블록·루틴·습관이 있는 날을 셉니다'],hrs:['⏱ 시간','주 몇 시간 썼는지 — 연결된 실제 시간(블록·루틴)을 합산합니다'],step:['🧩 단계','하위 단계·할 일을 마친 비율'],done:['✔️ 달성','이뤘다 / 아직 — 달성 체크만 봅니다']};
+function gMT(g){const m=g.meas;return m&&GMT[m.t]?m:null}
+function gMeas(g,asOf){const m=gMT(g);if(!m)return null;const r=perRange(g.lv,g.per);if(!r)return null;const T=asOf||today(),a=r[0],b=r[1];if(T<a)return null;const end=T<b?T:b;
+  const len=Math.round((parseD(b)-parseD(a))/864e5)+1,el=Math.round((parseD(end)-parseD(a))/864e5)+1,f=Math.min(1,el/len);let cur=0,tg=+m.n||1,lab='';
+  if(m.t==='cnt'){const ids=goalIds(g);for(let d=a;d<=end;d=addD(d,1)){const o=d===D.date?D:(cacheAll&&cacheAll.get(d));if(!o)continue;if((o.time||[]).some(x=>x.goal&&ids.has(x.goal)&&x.s&&x.e)||(o.routines||[]).some(x=>x.goal&&ids.has(x.goal))||(g.hid&&(o.habits||{})[g.hid]))cur++}lab=`${cur}/${tg}회`}
+  else if(m.t==='hrs'){cur=Math.round(goalMins(g,a,end).act/6)/10;lab=`${cur}/${tg}시간`}
+  else if(m.t==='step'){cur=prog(g);tg=1;lab=Math.round(cur*100)+'%'}
+  else{cur=g.done?1:0;tg=1;lab=g.done?'달성':'아직'}
+  const pct=Math.min(1,cur/tg),exp=tg*f;return{t:m.t,cur,tg,pct,lab,f,el,ratio:exp?cur/exp:1}}
+function gmBar(g){const M=gMeas(g);if(!M)return'<small class="gmn">📏 측정 기준 없음 — 눌러서 정하기</small>';const st=M.t==='done'?'':` · 경과 ${Math.round(M.f*100)}% 대비 ${M.ratio>=1?'순조':M.ratio>=.6?'조금 느림':'뒤처짐'}`;return`<div class="gmb"><i style="width:${Math.round(M.pct*100)}%"></i></div><small class="gmn">📏 ${M.lab}${st}</small>`}
+function gmBlockHTML(){try{const per=perKey('w',D.date);const L=GOALS.list.filter(g=>g.title&&g.lv==='w'&&g.per===per);if(!L.length)return'';return`<div class="gmk"><b>🎯 이번 주 목표 달성</b>${L.map(g=>`<button type="button" class="gmr" data-gmo="${g.id}"><span>${esc(g.title)}</span>${gmBar(g)}</button>`).join('')}</div>`}catch(e){return''}}
+function gMeasOpen(id){const g=GOALS.list.find(x=>x.id===id);if(!g)return;const S=$('#sheet');S.hidden=false;const m=Object.assign({t:'',n:3},g.meas||{});
+  const draw=()=>{S.innerHTML=`<div class="sheetbox" role="dialog" aria-label="성과 측정"><div class="shead"><b>📏 성과 측정</b><button class="del" id="gmx">닫기</button></div><p class="fl" style="margin-top:0">${esc(g.title)}</p>
+   <div class="seg" style="--k:var(--pen)">${Object.entries(GMT).map(([k,v])=>`<button data-gmt="${k}" class="${m.t===k?'on':''}">${v[0]}</button>`).join('')}</div>
+   ${m.t?`<p class="hint">${GMT[m.t][1]}</p>`:'<p class="hint">이 목표를 어떻게 잴지 하나만 고르세요. 시간표 블록에서 이 목표를 연결하면 자동으로 집계됩니다.</p>'}
+   ${m.t==='cnt'||m.t==='hrs'?`<label class="f" style="display:block;margin-top:8px">목표 ${m.t==='cnt'?'횟수(회)':'시간(h)'} <input type="number" id="gmn" min="0.5" max="99" step="0.5" value="${m.n}" style="width:6em"></label>`:''}
+   <div class="row" style="margin-top:10px"><button class="btn" id="gmok">저장</button>${g.meas?'<button class="del" id="gmoff">측정 끄기</button>':''}</div></div>`;
+   S.querySelectorAll('[data-gmt]').forEach(b=>b.onclick=()=>{m.t=b.dataset.gmt;const i=S.querySelector('#gmn');if(i)m.n=+i.value||m.n;draw()});
+   const fin=()=>{S.hidden=true;S.innerHTML='';saveGoals();try{applyDraft(D)}catch(e){}schedule();const p=document.querySelector('#pbody .pgc');if(p){p.remove();planGoalPaint()}if(document.querySelector('.crq.crqt')){CRQOPEN=true;crqPaint()}};
+   S.querySelector('#gmx').onclick=()=>{S.hidden=true;S.innerHTML=''};
+   S.querySelector('#gmok').onclick=()=>{if(!m.t)return;const i=S.querySelector('#gmn');if(i)m.n=+i.value||m.n;g.meas={t:m.t,n:+m.n||1};fin()};
+   const off=S.querySelector('#gmoff');if(off)off.onclick=()=>{delete g.meas;fin()}};draw()}
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-gmo]');if(!b)return;e.preventDefault();e.stopPropagation();gMeasOpen(b.dataset.gmo)},true);
+{const _ds=draftScores;draftScores=function(o){const out=_ds(o);try{if(!o||!o.date||o.date>today()||!hasAny({...o,score:{}}))return out;const by={};
+  GOALS.list.forEach(g=>{if(!g.title||!g.area||!gMT(g))return;const r=perRange(g.lv,g.per);if(!r||o.date<r[0]||o.date>r[1])return;const M=gMeas(g,o.date);if(!M)return;let v=null;if(M.t==='done'){if(g.done)v=10}else if(!(M.el<2&&!M.cur))v=M.ratio>=1?10:M.ratio>=.8?8:M.ratio>=.6?6:M.ratio>=.4?4:2;if(v==null)return;(by[g.area]=by[g.area]||[]).push({v,w:`${g.title} ${M.lab}`})});
+  Object.keys(by).forEach(k=>{const L=by[k],av=L.reduce((a,x)=>a+x.v,0)/L.length,why='🎯 '+L.map(x=>x.w).join(' · '),ex=out[k];out[k]=ex?{v:Math.round((ex.v+av)/2),why:why+' · '+ex.why}:{v:Math.round(av),why}})}catch(e){}return out}}
+(()=>{const st=document.createElement('style');st.textContent='.gmb{height:6px;border-radius:3px;background:var(--line);margin:5px 0 2px;overflow:hidden}.gmb i{display:block;height:100%;background:var(--pen,#4a7)}.gmn{color:var(--muted)}.gmk{border:1px solid var(--line);border-radius:12px;padding:8px 10px;margin:0 0 8px}.gmr{display:block;width:100%;text-align:left;background:none;border:0;border-top:1px dashed var(--line);padding:7px 0;color:inherit;font:inherit}.gmr:first-of-type{border-top:0}';document.head.appendChild(st)})();
 /* ===== v499: 월·주 한 장 보기 + 🌉 다리 만들기(1·3·5·10·30년 뒤의 나 → 영역별 행동 → 핵심 습관) ===== */
 (()=>{
 const css=document.createElement('style');css.textContent=`
