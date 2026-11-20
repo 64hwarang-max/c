@@ -16268,7 +16268,7 @@ async function syPutSafe(B,k,v){if(!k.startsWith('day:')||!v||typeof v!=='object
 {const _o=openDay;openDay=async function(d){try{staleGuardInstall()}catch(e){}return _o.apply(this,arguments)}}
 {const _f=flush0;flush0=async function(){try{staleGuardInstall()}catch(e){}return _f.apply(this,arguments)}}
 /* v390 ① 앱 버전 표시 · 새 버전 알림 (GitHub에서 마지막으로 성공한 빌드 번호와 비교) */
-var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/502})();
+var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/503})();
 const VRK='gj-verchk',VRURL='https://github.com/64hwarang-max/c/actions/workflows/build-apk.yml';
 const vrGet=()=>{try{return JSON.parse(localStorage.getItem(VRK)||'{}')}catch(e){return{}}};
 async function vrCheck(force){const c=vrGet();if(!force&&c.t&&Date.now()-c.t<6*36e5)return c;
@@ -18074,7 +18074,7 @@ function gCreated(g){const t=parseInt(String(g.id||'').slice(0,8),36);return t>1
 function mineGoalsPaint(){try{const R=document.getElementById('minebody');if(!R||R.querySelector('.mcrd'))return;const T=today(),a=addD(T,-13);const stalled=[];
   GOALS.list.filter(g=>g.title&&!g.done&&['w','m','y'].includes(g.lv)&&g.per===perKey(g.lv,T)).forEach(g=>{const c=gCreated(g);if(!c||Date.now()-c<14*864e5)return;let m={act:0,pl:0};try{m=goalMins(g,a,T)}catch(e){}if(!(m.act||m.pl))stalled.push(g)});
   const done=GOALS.list.filter(g=>g.done&&g.title).sort((x,z)=>String(z.doneAt||'').localeCompare(String(x.doneAt||''))).slice(0,15);
-  let h='';if(stalled.length)h+=`<div class="mcrd"><h3>⏸ 멈춘 목표 ${stalled.length}</h3>${stalled.slice(0,4).map(g=>`<p>${esc(g.title)} <small>${{w:'1주',m:'1달',y:'올해'}[g.lv]} · 최근 2주 이 목표에 계획·실제 시간이 없습니다</small> <button type="button" class="crqc" data-gab="${g.id}|30|1">이번 주 계획에 넣기</button></p>`).join('')}<small>이번 주 계획에 시간 블록을 하나 넣어 다시 움직여 보십시오.</small></div>`;
+  let h='';if(0&&stalled.length)h+=`<div class="mcrd"><h3>⏸ 멈춘 목표 ${stalled.length}</h3>${stalled.slice(0,4).map(g=>`<p>${esc(g.title)} <small>${{w:'1주',m:'1달',y:'올해'}[g.lv]} · 최근 2주 이 목표에 계획·실제 시간이 없습니다</small> <button type="button" class="crqc" data-gab="${g.id}|30|1">이번 주 계획에 넣기</button></p>`).join('')}<small>이번 주 계획에 시간 블록을 하나 넣어 다시 움직여 보십시오.</small></div>`;
   if(done.length)h+=`<details class="mcrd"><summary><b>🏁 완료한 목표 ${GOALS.list.filter(g=>g.done&&g.title).length}</b></summary>${done.map(g=>`<p>✓ ${esc(g.title)} <small>${g.doneAt?md(g.doneAt):''}</small>${g.reflect?`<br><small>“${esc(g.reflect)}”</small>`:''}</p>`).join('')}</details>`;
   if(h)R.insertAdjacentHTML('afterbegin',h)}catch(e){console.warn('mineg',e)}}
 DECO.add('나 목표 카드',{root:'#minebody',deep:false,wait:300,run:mineGoalsPaint,now:true});
@@ -18202,7 +18202,7 @@ function gAddBlock(g,dur,tomorrow){const cat=(guessBlock(g.title)||{}).cat||SET.
   if(!tomorrow&&D&&D.date===T){const fr=plFree(dur);if(fr){const f=m=>`${pad(Math.floor(m/60)%24)}:${pad(m%60)}`;const b=mk(f(fr.s));b.e=f(fr.s+Math.min(dur,fr.d));D.plan.push(b);D.plan.sort((a,z)=>(a.s||'99')<(z.s||'99')?-1:1);schedule();try{if(curSection==='day')renderDay()}catch(e){}toast(`🎯 오늘 ${b.s}~${b.e}에 ‘${g.title}’ 블록을 넣었습니다.`);return Promise.resolve(true)}}
   const d=addD(T,1);return dayPush(d,mk('19:00')).then(()=>{toast(`🎯 ${md(d)} 19:00에 ‘${g.title}’ 블록을 넣었습니다.`);return true})}
 async function dayPush(d,blk){if(D&&D.date===d){D.plan=D.plan||[];D.plan.push(blk);D.plan.sort((a,z)=>(a.s||'99')<(z.s||'99')?-1:1);schedule();try{if(curSection==='day')renderDay()}catch(e){}return}const o=norm((await store.load(d))||{date:d});o.plan=o.plan||[];o.plan.push(blk);o.plan.sort((a,z)=>(a.s||'99')<(z.s||'99')?-1:1);await store.save(d,o);try{if(cacheAll)cacheAll.set(d,o)}catch(e){}}
-function goalWeekPaint(){try{const R=document.getElementById('minebody');if(!R||R.querySelector('.mgw'))return;const T=today();const L=GOALS.list.filter(g=>g.title&&!g.done&&['w','m'].includes(g.lv)&&g.per===perKey(g.lv,T)).slice(0,5);if(!L.length)return;
+function goalWeekPaint(){return;try{const R=document.getElementById('minebody');if(!R||R.querySelector('.mgw'))return;const T=today();const L=GOALS.list.filter(g=>g.title&&!g.done&&['w','m'].includes(g.lv)&&g.per===perKey(g.lv,T)).slice(0,5);if(!L.length)return;
   R.insertAdjacentHTML('afterbegin',`<div class="mcrd mgw"><h3>🎯 이번 주·달 목표 → 일정에 넣기</h3>${L.map(g=>`<p>${esc(g.title)} <button type="button" class="crqc" data-gab="${g.id}|30|0">오늘 30분</button><button type="button" class="crqc" data-gab="${g.id}|60|1">내일 1시간</button></p>`).join('')}</div>`)}catch(e){}}
 DECO.add('나 목표 일정',{root:'#minebody',deep:false,wait:300,run:goalWeekPaint,now:true});
 document.addEventListener('click',async e=>{let b=e.target.closest&&e.target.closest('[data-gab]');if(b){e.preventDefault();e.stopImmediatePropagation();const[id,d,t]=b.dataset.gab.split('|');const g=GOALS.list.find(x=>x.id===id);if(g)await gAddBlock(g,+d,t==='1');return}
@@ -18478,6 +18478,16 @@ document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest
 document.addEventListener('pointermove',e=>{if(el&&(Math.abs(e.clientX-x0)>8||Math.abs(e.clientY-y0)>8)){clearTimeout(t);el=null}},true);
 ['pointerup','pointercancel'].forEach(n=>document.addEventListener(n,()=>{clearTimeout(t);setTimeout(()=>{el=null},0)},true));
 document.addEventListener('contextmenu',e=>{if(e.target.closest&&e.target.closest('[data-crex]'))e.preventDefault()},true);})();
+/* ===== v503: 이번 주·달 목표 · 멈춘 목표는 ‘계획’ 탭으로 ===== */
+(()=>{const st=document.createElement('style');st.textContent='.pgc{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:10px 12px;margin:0 0 10px}.pgc h3{margin:0 0 6px;font-size:1rem}.pgc .pgr{padding:7px 0;border-top:1px solid var(--line)}.pgc .pgr:first-of-type{border-top:0}.pgc .pgr b{display:block;font-weight:600;font-size:.92rem}.pgc .pgr small{display:block;color:var(--muted);font-size:.76rem;margin-top:1px}.pgc .pgb{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}.pgc .pgb button{white-space:nowrap}';document.head.appendChild(st);
+function planGoalPaint(){try{const R=document.getElementById('pbody');if(!R||R.querySelector('.pgc'))return;const T=today(),a=addD(T,-13);
+  const cur=GOALS.list.filter(g=>g.title&&!g.done&&['w','m'].includes(g.lv)&&g.per===perKey(g.lv,T)).slice(0,6);
+  const stalled=[];GOALS.list.filter(g=>g.title&&!g.done&&['w','m','y'].includes(g.lv)&&g.per===perKey(g.lv,T)).forEach(g=>{const c=gCreated(g);if(!c||Date.now()-c<14*864e5)return;let m={act:0,pl:0};try{m=goalMins(g,a,T)}catch(e){}if(!(m.act||m.pl))stalled.push(g)});
+  if(!cur.length&&!stalled.length)return;const LV={w:'이번 주',m:'이번 달',y:'올해'};
+  const h=`<div class="pgc">${cur.length?`<h3>🎯 이번 주·달 목표 → 계획에 넣기</h3>${cur.map(g=>`<div class="pgr"><b>${esc(g.title)}</b><small>${LV[g.lv]} · 진행 ${Math.round(prog(g)*100)}%</small><div class="pgb"><button type="button" class="crqc" data-gab="${g.id}|30|0">오늘 30분</button><button type="button" class="crqc" data-gab="${g.id}|60|1">내일 1시간</button></div></div>`).join('')}`:''}
+   ${stalled.length?`<h3 style="margin-top:${cur.length?'12px':'0'}">⏸ 멈춘 목표 ${stalled.length}</h3>${stalled.slice(0,4).map(g=>`<div class="pgr"><b>${esc(g.title)}</b><small>${LV[g.lv]} · 최근 2주 이 목표에 계획·실제 시간이 없습니다</small><div class="pgb"><button type="button" class="crqc" data-gab="${g.id}|30|1">내일 30분 넣기</button></div></div>`).join('')}`:''}</div>`;
+  R.insertAdjacentHTML('afterbegin',h)}catch(e){console.warn('pgoal',e)}}
+DECO.add('계획 목표 카드',{root:'#pbody',deep:false,wait:300,run:planGoalPaint,now:true});})();
 /* ===== v499: 월·주 한 장 보기 + 🌉 다리 만들기(1·3·5·10·30년 뒤의 나 → 영역별 행동 → 핵심 습관) ===== */
 (()=>{
 const css=document.createElement('style');css.textContent=`
