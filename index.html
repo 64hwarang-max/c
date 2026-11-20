@@ -16268,7 +16268,7 @@ async function syPutSafe(B,k,v){if(!k.startsWith('day:')||!v||typeof v!=='object
 {const _o=openDay;openDay=async function(d){try{staleGuardInstall()}catch(e){}return _o.apply(this,arguments)}}
 {const _f=flush0;flush0=async function(){try{staleGuardInstall()}catch(e){}return _f.apply(this,arguments)}}
 /* v390 ① 앱 버전 표시 · 새 버전 알림 (GitHub에서 마지막으로 성공한 빌드 번호와 비교) */
-var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/503})();
+var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/504})();
 const VRK='gj-verchk',VRURL='https://github.com/64hwarang-max/c/actions/workflows/build-apk.yml';
 const vrGet=()=>{try{return JSON.parse(localStorage.getItem(VRK)||'{}')}catch(e){return{}}};
 async function vrCheck(force){const c=vrGet();if(!force&&c.t&&Date.now()-c.t<6*36e5)return c;
@@ -18075,7 +18075,7 @@ function mineGoalsPaint(){try{const R=document.getElementById('minebody');if(!R|
   GOALS.list.filter(g=>g.title&&!g.done&&['w','m','y'].includes(g.lv)&&g.per===perKey(g.lv,T)).forEach(g=>{const c=gCreated(g);if(!c||Date.now()-c<14*864e5)return;let m={act:0,pl:0};try{m=goalMins(g,a,T)}catch(e){}if(!(m.act||m.pl))stalled.push(g)});
   const done=GOALS.list.filter(g=>g.done&&g.title).sort((x,z)=>String(z.doneAt||'').localeCompare(String(x.doneAt||''))).slice(0,15);
   let h='';if(0&&stalled.length)h+=`<div class="mcrd"><h3>⏸ 멈춘 목표 ${stalled.length}</h3>${stalled.slice(0,4).map(g=>`<p>${esc(g.title)} <small>${{w:'1주',m:'1달',y:'올해'}[g.lv]} · 최근 2주 이 목표에 계획·실제 시간이 없습니다</small> <button type="button" class="crqc" data-gab="${g.id}|30|1">이번 주 계획에 넣기</button></p>`).join('')}<small>이번 주 계획에 시간 블록을 하나 넣어 다시 움직여 보십시오.</small></div>`;
-  if(done.length)h+=`<details class="mcrd"><summary><b>🏁 완료한 목표 ${GOALS.list.filter(g=>g.done&&g.title).length}</b></summary>${done.map(g=>`<p>✓ ${esc(g.title)} <small>${g.doneAt?md(g.doneAt):''}</small>${g.reflect?`<br><small>“${esc(g.reflect)}”</small>`:''}</p>`).join('')}</details>`;
+  if(done.length)h+=`<details class="mcrd" open><summary><b>🏆 이룬 것 · 완료한 목표 ${GOALS.list.filter(g=>g.done&&g.title).length}</b></summary>${done.map(g=>`<p>✓ ${esc(g.title)} <small>${g.doneAt?md(g.doneAt):''}</small>${g.reflect?`<br><small>“${esc(g.reflect)}”</small>`:''}</p>`).join('')}<p><button type="button" class="crqc" onclick="go('wins')">🏆 이룬 것 전체 보기 ›</button></p></details>`;
   if(h)R.insertAdjacentHTML('afterbegin',h)}catch(e){console.warn('mineg',e)}}
 DECO.add('나 목표 카드',{root:'#minebody',deep:false,wait:300,run:mineGoalsPaint,now:true});
 async function gRefl(id){const g=GOALS.list.find(x=>x.id===id);if(!g||!g.done||g.reflect||g._rq)return;g._rq=1;const v=await uiPrompt(`🏁 ‘${g.title}’ 완료! 무엇을 이루었는지 한 줄로 남길까요? (건너뛰려면 비워 두세요)`,'');delete g._rq;if(v&&v.trim()){g.reflect=v.trim().slice(0,80);saveGoals();toast('📝 회고를 남겼습니다.')}}
