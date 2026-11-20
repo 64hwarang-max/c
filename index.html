@@ -8258,7 +8258,7 @@ function renderViewCard(){const C=$('#viewcard');if(!C)return;const f=+SET.fsz||
 const SGR=[['backup','💾','백업·복원'],['cloud','☁️','드라이브·기기 연동'],['view','🎨','화면·기능 고르기'],['show','👁️','화면에 보일 것'],['map','🗺️','메뉴 옮기기'],['watch','⌚','워치·건강'],['float','🍎','떠 있는 버튼'],['lock','🔒','앱 잠금'],['trash','🗑️','휴지통']];
 let sgCur='';
 /* 설정 칸 아래에 붙는 관리 단추(예전에는 감시 코드가 따로 붙였음) */
-const SGX=[['qlinks','🚀','앱 바로가기','data-qlmgr'],['areas','🏛️','삶의 기둥','data-armgr'],['alinks','🔗','연결 앱','data-almgr'],['xprules','⭐','경험치 기준','data-xropen']];
+const SGX=[['qlinks','🚀','앱 바로가기','data-qlmgr'],['areas','🏛️','삶의 기둥','data-armgr'],['alinks','🔗','연결 앱','data-almgr'],['xprules','⭐','경험치 기준','data-xropen'],['evset','📊','점수·레벨 설정','data-evsopen']];
 function setGrid(k,scroll){if(k==='map'){openSiteMap(true);return}sgCur=k===sgCur?'':k;const V=$('#v-export');if(!V)return;V.dataset.cur=sgCur;
   $('#sgrid').innerHTML=SGR.map(([key,e,l])=>`<button class="sgi ${sgCur===key?'on':''}" data-sgo="${key}"><i>${e}</i><span>${l}</span></button>`).join('');
   $('#sgrid').querySelectorAll('[data-sgo]').forEach(b=>b.onclick=()=>setGrid(b.dataset.sgo,true));
@@ -16268,7 +16268,7 @@ async function syPutSafe(B,k,v){if(!k.startsWith('day:')||!v||typeof v!=='object
 {const _o=openDay;openDay=async function(d){try{staleGuardInstall()}catch(e){}return _o.apply(this,arguments)}}
 {const _f=flush0;flush0=async function(){try{staleGuardInstall()}catch(e){}return _f.apply(this,arguments)}}
 /* v390 ① 앱 버전 표시 · 새 버전 알림 (GitHub에서 마지막으로 성공한 빌드 번호와 비교) */
-var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/504})();
+var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/505})();
 const VRK='gj-verchk',VRURL='https://github.com/64hwarang-max/c/actions/workflows/build-apk.yml';
 const vrGet=()=>{try{return JSON.parse(localStorage.getItem(VRK)||'{}')}catch(e){return{}}};
 async function vrCheck(force){const c=vrGet();if(!force&&c.t&&Date.now()-c.t<6*36e5)return c;
@@ -16874,7 +16874,7 @@ setGrid=function(k,scroll){if(k==='map'){openSiteMap(true);return}if(k==='pmd'){
   else{const back=`<button class="sgi" data-sgo="home"><i>‹</i><span>설정 처음</span></button>`;
     const src=sgCat==='sys'?SGR.filter(x=>SGS_K.includes(x[0])).map(tile).join(''):SGR.filter(x=>SGU_K.includes(x[0])).map(tile).join('')+[['pmd','🏛️','나만의 기둥'],...SGX.filter(x=>x[0]!=='alinks').map(x=>[x[0],x[1],x[2],x[3]])].map(x=>x[3]?`<button class="sgi" data-sgo="${x[0]}" ${x[3]}="1"><i>${x[1]}</i><span>${x[2]}</span></button>`:tile(x)).join('');
     G.innerHTML=back+src}
-  G.querySelectorAll('[data-sgo]').forEach(b=>{if(!b.getAttribute('data-qlmgr')&&!b.getAttribute('data-armgr')&&!b.getAttribute('data-xropen'))b.onclick=()=>setGrid(b.dataset.sgo,true)});
+  G.querySelectorAll('[data-sgo]').forEach(b=>{if(!b.getAttribute('data-qlmgr')&&!b.getAttribute('data-armgr')&&!b.getAttribute('data-xropen')&&!b.getAttribute('data-evsopen'))b.onclick=()=>setGrid(b.dataset.sgo,true)});
   if(sgCur&&scroll){const f=V.querySelector(`[data-sg~="${sgCur}"]`);if(f)setTimeout(()=>f.scrollIntoView({block:'start',behavior:'smooth'}),30)}};
 (function(){const st=document.createElement('style');st.textContent=`.sgrid.sgtop2{grid-template-columns:1fr 1fr!important;gap:10px!important}.sgi.sgbig{padding:20px 8px!important;gap:6px!important;border-radius:18px!important}.sgi.sgbig i{font-size:2rem!important}.sgi.sgbig span{font-size:.95rem!important;font-weight:700}.sgi.sgbig small{font-size:.7rem;color:var(--muted);text-align:center;line-height:1.3}`;document.head.appendChild(st)})();
 
@@ -18252,8 +18252,11 @@ function crTabsHTML(T,hr,body){const t=crTabNow(T,hr);const tabs=[['s','🌅','�
     c=`<div class="crsb"><b>⭐ 오늘 가장 중요한 한 가지</b><div class="ezone"><input type="checkbox" id="ezdone" aria-label="했음"><input type="text" id="ezpri" placeholder="이것 하나만 하면 오늘은 성공" autocomplete="off"></div>
      ${G.length?`<b style="display:block;margin-top:12px">🎯 이번 주·달 목표</b>${G.map(g=>`<div class="ezg"><span>${esc(g.title)}</span><small>${Math.round(prog(g)*100)}%</small><button type="button" class="crqc" data-gab="${g.id}|30|0">오늘 30분</button></div>`).join('')}`:'<p class="hint">이번 주·달 목표가 없습니다. 목표 탭에서 정하면 여기에 보입니다.</p>'}</div>`}
   else if(t==='c'){c=`<div class="crqtop"><button type="button" class="crqc ${CRQPICK?'ok':''}" data-crpick="1">${CRQPICK?'✔ 고르기 끝':'☀️ 오늘 할 것 고르기'}</button><button type="button" class="crqc" data-crsch="1">📅 일정에 넣기</button></div>${body}`}
-  else if(t==='e'){let sum=0,n=0;const rows=SCORE.map(([k,l])=>{const v=+D.score[k]||0;if(v){sum+=v;n++}const au=D.scAuto&&D.scAuto[k];return`<div class="crev"><span>${AREA_E[k]||''} ${esc(areaName(k)||l)}${au?' <small title="기록·체크로 자동으로 매긴 점수">🤖</small>':''}</span><span class="crevb">${[1,2,3,4,5].map(x=>`<button type="button" data-crsc="${k}|${x}" class="${v===x?(au?'on au':'on'):''}" aria-label="${esc(l)} ${x}점">${x}</button>`).join('')}</span></div>`}).join('');
-    c=`<div class="crevh"><b>오늘 점수 ${n?(sum/n).toFixed(1):'–'}</b><small>${n}/${SCORE.length}개 매김</small></div>${rows}<p class="hint">🤖는 기록·체크로 자동으로 매긴 점수입니다. 누르면 내 점수로 바뀌고, 같은 숫자를 다시 누르면 지워집니다.</p><button type="button" class="crqc" data-evw="1">🌙 한 장씩 평가하기 (항목별)</button>`}
+  else if(t==='e'){const jog=SET.evMode!=='btn',hid=SET.evHide||[];let sum=0,n=0;const L=SCORE.filter(([k])=>!hid.includes(k));
+    const rows=L.map(([k,l])=>{const v=+D.score[k]||0;if(v){sum+=v;n++}const au=D.scAuto&&D.scAuto[k];
+      const inp=jog?dialBtn(`data-crdl="${k}" aria-label="${esc(l)} 점수"`,v,au):`<span class="crevb">${[1,2,3,4,5].map(x=>`<button type="button" data-crsc="${k}|${x}" class="${Math.ceil(v/2)===x&&v?(au?'on au':'on'):''}" aria-label="${esc(l)} ${x*2}점">${x}</button>`).join('')}</span>`;
+      return`<div class="crev"><span>${AREA_E[k]||''} ${esc(areaName(k)||l)}${au?' <small title="기록·체크로 자동으로 매긴 점수">🤖</small>':''}</span>${inp}</div>`}).join('');
+    c=`<div class="crevh"><b>오늘 점수 ${n?(sum/n).toFixed(1):'–'} <small style="font-weight:400">/ 10</small></b><small>${n}/${L.length}개 매김</small><span class="seg" style="--k:var(--pen);margin-left:auto"><button type="button" data-evm="jog" class="${jog?'on':''}">🎛 조그</button><button type="button" data-evm="btn" class="${jog?'':'on'}">🔘 버튼</button></span></div>${rows||'<p class="hint">보일 기둥이 없습니다. 설정 → 점수·레벨 설정에서 고르십시오.</p>'}<p class="hint">${jog?'점수를 누르면 돌려서 0~10점을 고릅니다.':'버튼 1~5는 10점 만점으로 환산해 저장합니다(1→2점 … 5→10점).'} 🤖는 기록·체크로 자동 계산된 점수입니다.</p><div class="crqtop"><button type="button" class="crqc" data-cvi="pm">🔍 자세히 보기 (레이더·항목별)</button><button type="button" class="crqc" data-evw="1">🌙 한 장씩 평가하기</button><button type="button" class="crqc" data-evsopen="1">⚙️ 점수·레벨 설정</button></div>`}
   else{c=`<div class="crrf" style="margin-top:4px;border:0;padding-top:0">${mcPriHTML()}<label><span>🙏 감사</span><input type="text" data-crrf="grat" placeholder="오늘 감사한 일"></label><label><span>👍 잘한 것</span><input type="text" data-crrf="great" placeholder="오늘 잘한 일"></label><label><span>🔧 고칠 점</span><input type="text" data-crrf="better" placeholder="내일 다르게 할 것"></label><label><span>🔍 예상 밖</span><input type="text" data-crrf="mcDiff" placeholder="오늘 내 예상과 달랐던 것 한 가지"></label><button type="button" class="del" data-cvi="pm" style="margin-top:6px;color:var(--pen);padding:0">기록 전체 화면 열기 ›</button></div>`}
   return`<div class="crtab" role="tablist">${tabs.map(([k,e,l])=>`<button type="button" role="tab" data-crtab="${k}" class="${k===t?'on':''}" aria-selected="${k===t}">${e} ${l}</button>`).join('')}</div><div class="crtbody">${c}</div>`}
 const crrfGet=k=>k==='mcDiff'?String(D.mcDiff||''):k==='better'?String(D.better||'').split('\n')[0]:String((Array.isArray(D[k])?D[k][0]:'')||'');
@@ -18316,7 +18319,9 @@ document.addEventListener('input',e=>{const t=e.target;if(!t||(t.id!=='ezpri'&&t
 document.addEventListener('click',e=>{let b=e.target.closest&&e.target.closest('[data-ezmore]');if(b){e.preventDefault();EZMORE=!EZMORE;if(EZMORE){try{renderDay()}catch(_){}}ezStartPaint();return}
   b=e.target.closest&&e.target.closest('[data-ezgo]');if(b){e.preventDefault();try{flush&&flush()}catch(_){}const r=document.querySelector('[data-cvi="run"]');if(r)r.click();else{mode='run';renderDay()}return}
   b=e.target.closest&&e.target.closest('[data-crtab]');if(b){e.preventDefault();e.stopPropagation();CRTAB=b.dataset.crtab;CRQOPEN=true;crqPaint();return}
-  b=e.target.closest&&e.target.closest('[data-crsc]');if(b){e.preventDefault();e.stopPropagation();const[k,x]=b.dataset.crsc.split('|');const n=+x;D.score=D.score||{};D.score[k]=(+D.score[k]===n&&!(D.scAuto&&D.scAuto[k]))?0:n;D.scUser=D.scUser||{};D.scUser[k]=1;if(D.scAuto)delete D.scAuto[k];schedule();CRQOPEN=true;crqPaint();return}
+  b=e.target.closest&&e.target.closest('[data-evm]');if(b){e.preventDefault();e.stopPropagation();SET.evMode=b.dataset.evm;saveSet().catch(()=>{});CRQOPEN=true;crqPaint();return}
+  b=e.target.closest&&e.target.closest('[data-crdl]');if(b){e.preventDefault();e.stopPropagation();const k=b.dataset.crdl;const l=(SCORE.find(x=>x[0]===k)||[])[1]||'';dialPick({title:`${AREA_E[k]||''} ${l} 점수`,val:D.score[k],cb:n=>{D.score[k]=n;D.scUser=D.scUser||{};D.scUser[k]=1;if(D.scAuto)delete D.scAuto[k];schedule();CRQOPEN=true;crqPaint()}});return}
+  b=e.target.closest&&e.target.closest('[data-crsc]');if(b){e.preventDefault();e.stopPropagation();const[k,x]=b.dataset.crsc.split('|');const n=(+x)*2;D.score=D.score||{};D.score[k]=(+D.score[k]===n&&!(D.scAuto&&D.scAuto[k]))?0:n;D.scUser=D.scUser||{};D.scUser[k]=1;if(D.scAuto)delete D.scAuto[k];schedule();CRQOPEN=true;crqPaint();return}
   b=e.target.closest&&e.target.closest('[data-crex]');if(b){if(b._lp){b._lp=0;e.preventDefault();e.stopPropagation();return}e.preventDefault();e.stopPropagation();const k=b.dataset.crex;CRQEXP.has(k)?CRQEXP.delete(k):CRQEXP.add(k);CRQOPEN=true;crqPaint();return}
   b=e.target.closest&&e.target.closest('[data-crall]');if(b){e.preventDefault();e.stopPropagation();CRQALL=!CRQALL;CRQOPEN=true;crqPaint();return}
   b=e.target.closest&&e.target.closest('#ezset');if(b){SET.easy=!ezOn();saveSet().catch(()=>{});b.textContent=ezSetTxt();toast(ezOn()?'🌱 간단 모드를 켰습니다.':'간단 모드를 껐습니다. 모든 칸이 다시 보입니다.');try{if(curSection==='day')renderDay()}catch(_){}}},true);
@@ -18488,6 +18493,24 @@ function planGoalPaint(){try{const R=document.getElementById('pbody');if(!R||R.q
    ${stalled.length?`<h3 style="margin-top:${cur.length?'12px':'0'}">⏸ 멈춘 목표 ${stalled.length}</h3>${stalled.slice(0,4).map(g=>`<div class="pgr"><b>${esc(g.title)}</b><small>${LV[g.lv]} · 최근 2주 이 목표에 계획·실제 시간이 없습니다</small><div class="pgb"><button type="button" class="crqc" data-gab="${g.id}|30|1">내일 30분 넣기</button></div></div>`).join('')}`:''}</div>`;
   R.insertAdjacentHTML('afterbegin',h)}catch(e){console.warn('pgoal',e)}}
 DECO.add('계획 목표 카드',{root:'#pbody',deep:false,wait:300,run:planGoalPaint,now:true});})();
+/* ===== v505: 점수·레벨 설정 ===== */
+function evsOpen(){const S=$('#sheet');S.hidden=false;const hid=SET.evHide||[];const jog=SET.evMode!=='btn';
+  S.innerHTML=`<div class="sheetbox" role="dialog" aria-label="점수·레벨 설정"><div class="shead"><b>📊 점수·레벨 설정</b><button class="del" id="evx">닫기</button></div>
+   <p class="fl" style="margin-top:0">점수 입력 방식 (저장은 항상 10점 만점)</p>
+   <div class="seg" style="--k:var(--pen)"><button data-evsm="jog" class="${jog?'on':''}">🎛 조그형 0~10</button><button data-evsm="btn" class="${jog?'':'on'}">🔘 버튼 1~5</button></div>
+   <p class="fl">일일평가에 보일 기둥</p>
+   ${SCORE.map(([k,l])=>`<label class="chk"><input type="checkbox" data-evsh="${k}" ${hid.includes(k)?'':'checked'}>${AREA_E[k]||''} ${esc(areaName(k)||l)}</label>`).join('')}
+   <p class="hint">끈 기둥은 일일평가 칸에서만 숨깁니다. 레이더 차트·기록 화면의 점수와 기존 기록은 그대로입니다.</p>
+   <p class="fl">레벨·경험치</p>
+   <label class="chk"><input type="checkbox" id="evxp" ${SET.xpOff?'':'checked'}>레벨·경험치(XP) 표시</label>
+   <label class="f" style="display:block;margin-top:8px">하루 목표 XP <input type="number" id="evgl" min="10" max="500" step="5" value="${xpGoal()}" style="width:6em"></label>
+   <div class="row" style="margin-top:10px"><button type="button" class="btn small ghost" data-xropen="1">⭐ 경험치 기준(무엇이 몇 XP) 고치기</button></div></div>`;
+  const close=()=>{S.hidden=true;S.innerHTML='';try{crqPaint()}catch(e){}};$('#evx').onclick=close;S.onclick=e=>{if(e.target===S)close()};
+  S.querySelectorAll('[data-evsm]').forEach(b=>b.onclick=()=>{SET.evMode=b.dataset.evsm;saveSet().catch(()=>{});evsOpen()});
+  S.querySelectorAll('[data-evsh]').forEach(c=>c.onchange=()=>{const h=new Set(SET.evHide||[]);c.checked?h.delete(c.dataset.evsh):h.add(c.dataset.evsh);SET.evHide=[...h];saveSet().catch(()=>{})});
+  $('#evxp').onchange=e=>{SET.xpOff=!e.target.checked;saveSet().catch(()=>{});try{xpCssApply();refreshAny()}catch(x){}};
+  $('#evgl').onchange=e=>{const v=Math.max(10,Math.min(500,+e.target.value||50));SET.xpGoal=v;e.target.value=v;saveSet().catch(()=>{});toast('하루 목표 XP를 '+v+'로 정했습니다.')}}
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-evsopen]');if(!b)return;e.preventDefault();e.stopPropagation();evsOpen()},true);
 /* ===== v499: 월·주 한 장 보기 + 🌉 다리 만들기(1·3·5·10·30년 뒤의 나 → 영역별 행동 → 핵심 습관) ===== */
 (()=>{
 const css=document.createElement('style');css.textContent=`
