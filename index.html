@@ -14271,7 +14271,7 @@ function dqUsed(){const out=[];try{(cacheAll?[...cacheAll.values()]:[D]).forEach
 function dqLnTxt(l){return l?`${l.src==='계획'?'📋':'▶'} ${l.s}~${l.e} ${esc(l.act||'')}`:''}
 function dqClsForm(x,pre){const K=ntKeys();return`<div class="dq-cls"><select id="${pre}k" aria-label="대분류">${K.map(k=>`<option value="${esc(k)}" ${k===x.k?'selected':''}>${dkEmo(k)} ${esc(dkName(k))}</option>`).join('')}</select>
   <input type="text" id="${pre}c" list="${pre}cl" value="${esc(x.c||'')}" placeholder="중분류"><datalist id="${pre}cl">${dqMids(x.k).map(v=>`<option value="${esc(v)}">`).join('')}</datalist>
-  <input type="text" id="${pre}s" list="${pre}sl" value="${esc(x.s||'')}" placeholder="소분류"><datalist id="${pre}sl">${dqSubs(x.k,x.c).map(v=>`<option value="${esc(v)}">`).join('')}</datalist></div>`}
+  <input type="text" id="${pre}s" list="${pre}sl" value="${esc(x.s||'')}" placeholder="소분류"><datalist id="${pre}sl">${dqSubs(x.k,x.c).map(v=>`<option value="${esc(v)}">`).join('')}</datalist>${pre==='dqn'?'<button type="button" class="chip fbtn dqvw" data-dqv="cls" title="분류별로 모아 보기">🗂 모아</button>':''}</div>`}
 function dqClsBind(R,pre){const k=R.querySelector('#'+pre+'k'),c=R.querySelector('#'+pre+'c'),s=R.querySelector('#'+pre+'sl'),cl=R.querySelector('#'+pre+'cl');if(!k)return;
   const fill=()=>{cl.innerHTML=dqMids(k.value).map(v=>`<option value="${esc(v)}">`).join('');s.innerHTML=dqSubs(k.value,c.value.trim()).map(v=>`<option value="${esc(v)}">`).join('')};k.onchange=fill;c.oninput=fill;c.onchange=fill}
 function dqLnOpts(o,sel){const B=dqBlocks(o);return`<option value="auto" ${sel==='auto'?'selected':''}>🔗 적은 시각의 블록에 자동 연결</option><option value="" ${sel===''?'selected':''}>연결 안 함</option>${B.map((b,i)=>`<option value="${i}" ${sel===String(i)?'selected':''}>${b.src==='계획'?'📋 계획':'▶ 실행'} ${b.s}~${b.e} ${esc(b.act||b.cat||'')}</option>`).join('')}`}
@@ -14280,7 +14280,7 @@ function dqBlockHTML(b,o){if(DQE===b.id)return`<div class="dq-b on" data-dqb="${
   return`<div class="dq-b" data-dqb="${b.id}"><div class="dq-h"><b>🕘 ${esc(b.hm||'')}</b><span class="dq-c">${dqCls(b)}</span><button class="dq-ed" data-dqed="${b.id}" aria-label="고치기">✏️</button></div>${b.ln?`<div class="dq-l">${dqLnTxt(b.ln)}</div>`:''}<div class="dq-t">${esc(b.txt||'')}</div></div>`}
 async function renderDayNote(){const R=$('#nbody');document.querySelectorAll('#nmode button').forEach(b=>b.classList.toggle('on',b.dataset.nm==='dq'));$('#nmode').hidden=false;
   try{await allMap()}catch(e){}if(nView!=='dq'||nEdit)return;
-  const seg=`<div class="seg dq-seg" style="margin:10px 0"><button data-dqv="day" class="${DQV==='day'?'on':''}">📓 하루 페이지</button><button data-dqv="cls" class="${DQV==='cls'?'on':''}">🗂 분류별 모아보기</button></div>`;
+  const seg='';
   if(DQV==='cls'){R.innerHTML=`<div class="dnote">${seg}${dqClsView()}</div>`;dqBindCommon(R);return}
   const o=await dqDoc(nDate);o.dn=o.dn||[];const dt=parseD(nDate);const L=o.dn.slice().sort((a,b)=>(a.hm||'')<(b.hm||'')?-1:(a.hm||'')>(b.hm||'')?1:a.ts-b.ts);
   const ks=[...new Set(L.map(b=>b.k))];const F=L.filter(b=>!DQF||b.k===(DQF==='__e'?'':DQF));if(!DQC.k&&DQC.k!==''){DQC.k=''}
@@ -14304,11 +14304,11 @@ async function renderDayNote(){const R=$('#nbody');document.querySelectorAll('#n
     o.dn.push({id:'q'+uid(),ts:Date.now(),hm:h,k,c,s,txt:t,ln:pickLn($('#dqln').value,h)});DQC={k,c,s};try{localStorage.setItem('gj-dqc',JSON.stringify(DQC))}catch(e){}await dqSave(o);renderNotes();
     setTimeout(()=>{const p=document.querySelector('.dq-page');if(p&&p.lastElementChild)p.lastElementChild.scrollIntoView({block:'center'})},60)}}
 function dqClsView(){const U=dqUsed();const K=[...new Set(U.map(b=>b.k))];const fk=DQF==='__e'?'':DQF;const k=DQF&&K.includes(fk)?fk:(K[0]||'');
-  if(!U.length)return'<p class="empty">아직 하루 노트 블록이 없습니다. ‘하루 페이지’에서 블록을 적으면 분류별로 모입니다.</p>';
+  if(!U.length)return'<p class="empty">아직 하루 노트 블록이 없습니다. ‘하루 페이지’에서 블록을 적으면 분류별로 모입니다.</p><button type="button" class="chip fbtn dqvw" data-dqv="day">📓 하루</button>';
   const inK=U.filter(b=>b.k===k);const mids=[...new Set(inK.map(b=>b.c||'(중분류 없음)'))];const cm=DQC._m&&mids.includes(DQC._m)?DQC._m:'';
   const show=inK.filter(b=>!cm||(b.c||'(중분류 없음)')===cm).filter(b=>!DQC._s||(b.s||'')===DQC._s).sort((a,b)=>a.date<b.date?1:a.date>b.date?-1:(a.hm||'')<(b.hm||'')?1:-1);
   const subs=cm?[...new Set(inK.filter(b=>(b.c||'(중분류 없음)')===cm&&b.s).map(b=>b.s))]:[];
-  let last='';return`<div class="chips" style="margin:6px 0">${K.map(x=>`<button class="chip fbtn ${x===k?'on':''}" data-dqf="${esc(x||'__e')}">${dkEmo(x)} ${esc(dkName(x))} ${U.filter(b=>b.k===x).length}</button>`).join('')}</div>
+  let last='';return`<div class="chips" style="margin:6px 0">${K.map(x=>`<button class="chip fbtn ${x===k?'on':''}" data-dqf="${esc(x||'__e')}">${dkEmo(x)} ${esc(dkName(x))} ${U.filter(b=>b.k===x).length}</button>`).join('')}<button type="button" class="chip fbtn dqvw" data-dqv="day" title="하루 페이지로 보기">📓 하루</button></div>
    <div class="chips" style="margin:6px 0"><button class="chip fbtn ${!cm?'on':''}" data-dqm="">전체</button>${mids.map(m=>`<button class="chip fbtn ${m===cm?'on':''}" data-dqm="${esc(m)}">📂 ${esc(m)} ${inK.filter(b=>(b.c||'(중분류 없음)')===m).length}</button>`).join('')}</div>
    ${subs.length?`<div class="chips" style="margin:6px 0"><button class="chip fbtn ${!DQC._s?'on':''}" data-dqs="">전체</button>${subs.map(s=>`<button class="chip fbtn ${s===DQC._s?'on':''}" data-dqs="${esc(s)}">🗂 ${esc(s)}</button>`).join('')}</div>`:''}
    <div class="dq-page">${show.map(b=>{const dh=b.date!==last?`<div class="dq-d"><button class="del" data-dqgo="${b.date}">${b.date.slice(0,4)}.${md(b.date)} (${WD[parseD(b.date).getDay()]}) ›</button></div>`:'';last=b.date;return dh+`<div class="dq-b"><div class="dq-h"><b>🕘 ${esc(b.hm||'')}</b><span class="dq-c">${dqCls(b)}</span></div>${b.ln?`<div class="dq-l">${dqLnTxt(b.ln)}</div>`:''}<div class="dq-t">${esc(b.txt||'')}</div></div>`}).join('')}</div>`}
@@ -16268,7 +16268,7 @@ async function syPutSafe(B,k,v){if(!k.startsWith('day:')||!v||typeof v!=='object
 {const _o=openDay;openDay=async function(d){try{staleGuardInstall()}catch(e){}return _o.apply(this,arguments)}}
 {const _f=flush0;flush0=async function(){try{staleGuardInstall()}catch(e){}return _f.apply(this,arguments)}}
 /* v390 ① 앱 버전 표시 · 새 버전 알림 (GitHub에서 마지막으로 성공한 빌드 번호와 비교) */
-var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/520})();
+var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/521})();
 const VRK='gj-verchk',VRURL='https://github.com/64hwarang-max/c/actions/workflows/build-apk.yml';
 const vrGet=()=>{try{return JSON.parse(localStorage.getItem(VRK)||'{}')}catch(e){return{}}};
 async function vrCheck(force){const c=vrGet();if(!force&&c.t&&Date.now()-c.t<6*36e5)return c;
@@ -18725,6 +18725,7 @@ document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest
 (()=>{const st=document.createElement('style');st.textContent='#subnav:has(.snp>button:only-child){display:none!important}#v-note #nmode{margin:4px 0 6px!important}#nbody .nthead{display:flex;gap:6px;align-items:center;flex-wrap:nowrap}#nbody .nthead #ntq{flex:1 1 0;min-width:0}#nbody .nthead .btn{flex:0 0 auto;white-space:nowrap}#nbody .onb{display:flex;flex-wrap:wrap;align-items:center;gap:0 6px}#nbody .onb>.onrow{flex:1 1 0;min-width:0}#nbody .onb>.onrow:first-child{flex:0 0 auto}#nbody .onb>.onhd,#nbody .onb>.onpgs{flex:0 0 100%}';document.head.appendChild(st)})();
 document.addEventListener('input',e=>{const i=e.target;if(!i||!i.dataset||i.dataset.crsaf===undefined||!D)return;D.affirm=i.value;schedule()},true);
 (()=>{const st=document.createElement('style');st.textContent='.crsaw{margin:0 0 10px}.crqq{margin:0 0 8px;font-size:.88rem;line-height:1.45;color:var(--muted)}.crqal{display:block;font-weight:700;font-size:.95rem;margin:0 0 4px}.crsaw input{width:100%;box-sizing:border-box}';document.head.appendChild(st)})();
+(()=>{const st=document.createElement('style');st.textContent='.dq-cls:has(.dqvw){grid-template-columns:1.1fr 1fr 1fr auto}.dqvw{white-space:nowrap}';document.head.appendChild(st)})();
 /* ② 시간표 빈 칸을 누르면(또는 끌어서 범위를 잡으면) 그 자리에서 바로 쓰기 */
 window.qwOpen=function(kind,pre){const tl=document.querySelector(`.tl[data-kind="${kind}"]`);if(!tl||!pre||!pre.s){openBlockEditor(kind,null,pre);return}
   document.querySelectorAll('.qwi').forEach(x=>x.remove());
