@@ -14271,7 +14271,7 @@ function dqUsed(){const out=[];try{(cacheAll?[...cacheAll.values()]:[D]).forEach
 function dqLnTxt(l){return l?`${l.src==='계획'?'📋':'▶'} ${l.s}~${l.e} ${esc(l.act||'')}`:''}
 function dqClsForm(x,pre){const K=ntKeys();return`<div class="dq-cls"><select id="${pre}k" aria-label="대분류">${K.map(k=>`<option value="${esc(k)}" ${k===x.k?'selected':''}>${dkEmo(k)} ${esc(dkName(k))}</option>`).join('')}</select>
   <input type="text" id="${pre}c" list="${pre}cl" value="${esc(x.c||'')}" placeholder="중분류"><datalist id="${pre}cl">${dqMids(x.k).map(v=>`<option value="${esc(v)}">`).join('')}</datalist>
-  <input type="text" id="${pre}s" list="${pre}sl" value="${esc(x.s||'')}" placeholder="소분류"><datalist id="${pre}sl">${dqSubs(x.k,x.c).map(v=>`<option value="${esc(v)}">`).join('')}</datalist>${pre==='dqn'?'<button type="button" class="chip fbtn dqvw" data-dqv="cls" title="분류별로 모아 보기">🗂 모아</button>':''}</div>`}
+  <input type="text" id="${pre}s" list="${pre}sl" value="${esc(x.s||'')}" placeholder="소분류"><datalist id="${pre}sl">${dqSubs(x.k,x.c).map(v=>`<option value="${esc(v)}">`).join('')}</datalist></div>`}
 function dqClsBind(R,pre){const k=R.querySelector('#'+pre+'k'),c=R.querySelector('#'+pre+'c'),s=R.querySelector('#'+pre+'sl'),cl=R.querySelector('#'+pre+'cl');if(!k)return;
   const fill=()=>{cl.innerHTML=dqMids(k.value).map(v=>`<option value="${esc(v)}">`).join('');s.innerHTML=dqSubs(k.value,c.value.trim()).map(v=>`<option value="${esc(v)}">`).join('')};k.onchange=fill;c.oninput=fill;c.onchange=fill}
 function dqLnOpts(o,sel){const B=dqBlocks(o);return`<option value="auto" ${sel==='auto'?'selected':''}>🔗 적은 시각의 블록에 자동 연결</option><option value="" ${sel===''?'selected':''}>연결 안 함</option>${B.map((b,i)=>`<option value="${i}" ${sel===String(i)?'selected':''}>${b.src==='계획'?'📋 계획':'▶ 실행'} ${b.s}~${b.e} ${esc(b.act||b.cat||'')}</option>`).join('')}`}
@@ -14283,11 +14283,10 @@ async function renderDayNote(){const R=$('#nbody');document.querySelectorAll('#n
   const seg='';
   if(DQV==='cls'){R.innerHTML=`<div class="dnote">${seg}${dqClsView()}</div>`;dqBindCommon(R);return}
   const o=await dqDoc(nDate);o.dn=o.dn||[];const dt=parseD(nDate);const L=o.dn.slice().sort((a,b)=>(a.hm||'')<(b.hm||'')?-1:(a.hm||'')>(b.hm||'')?1:a.ts-b.ts);
-  const ks=[...new Set(L.map(b=>b.k))];const F=L.filter(b=>!DQF||b.k===(DQF==='__e'?'':DQF));if(!DQC.k&&DQC.k!==''){DQC.k=''}
+  const ks=[...new Set(L.map(b=>b.k))];const F=L;if(!DQC.k&&DQC.k!==''){DQC.k=''}
   try{const s=JSON.parse(localStorage.getItem('gj-dqc')||'null');if(s&&!DQC._ld){DQC=Object.assign({},s);DQC._ld=1}}catch(e){}
   const now=nDate===today()?dqNow():'';const auto=now?dqAuto(o,now):null;
-  R.innerHTML=`<div class="dnote">${seg}<div class="datebar"><button class="iconbtn" id="dqp" aria-label="전날">‹</button><button class="d iconbtn" id="dql" style="width:auto;border-radius:6px;border:0;background:none">${dt.getMonth()+1}월 ${dt.getDate()}일 (${WD[parseD(nDate).getDay()]})${nDate===today()?' · 오늘':''}</button><input type="date" id="dqpick" value="${nDate}" aria-label="날짜 선택"><button class="iconbtn" id="dqn" aria-label="다음날">›</button></div>
-   ${ks.length>1?`<div class="chips" style="margin:8px 0"><button class="chip fbtn ${!DQF?'on':''}" data-dqf="">전체 ${L.length}</button>${ks.map(k=>`<button class="chip fbtn ${DQF===(k||'__e')?'on':''}" data-dqf="${esc(k||'__e')}">${dkEmo(k)} ${esc(dkName(k))} ${L.filter(b=>b.k===k).length}</button>`).join('')}</div>`:''}
+  R.innerHTML=`<div class="dnote">${seg}<div class="datebar"><button class="iconbtn" id="dqp" aria-label="전날">‹</button><button class="d iconbtn" id="dql" style="width:auto;border-radius:6px;border:0;background:none">${dt.getMonth()+1}월 ${dt.getDate()}일 (${WD[parseD(nDate).getDay()]})${nDate===today()?' · 오늘':''}</button><input type="date" id="dqpick" value="${nDate}" aria-label="날짜 선택"><button class="iconbtn" id="dqn" aria-label="다음날">›</button><button type="button" class="chip fbtn dqvw" data-dqv="cls" title="분류별로 모아 보기" style="flex:0 0 auto;margin-left:6px">🗂 분류별</button></div>
    <div class="dq-page">${F.length?F.map(b=>dqBlockHTML(b,o)).join(''):'<p class="empty" style="padding:14px 4px">이 날 적은 블록이 없습니다.</p>'}</div>
    <div class="dq-new">${dqClsForm(DQC,'dqn')}<textarea id="dqt" rows="3" placeholder="지금 적을 것 (적는 시각이 자동으로 기록됩니다)" style="margin-top:8px"></textarea>
     <input type="hidden" id="dqh" value="${now}"><select id="dqln" hidden>${dqLnOpts(o,'auto')}</select>
@@ -16268,7 +16267,7 @@ async function syPutSafe(B,k,v){if(!k.startsWith('day:')||!v||typeof v!=='object
 {const _o=openDay;openDay=async function(d){try{staleGuardInstall()}catch(e){}return _o.apply(this,arguments)}}
 {const _f=flush0;flush0=async function(){try{staleGuardInstall()}catch(e){}return _f.apply(this,arguments)}}
 /* v390 ① 앱 버전 표시 · 새 버전 알림 (GitHub에서 마지막으로 성공한 빌드 번호와 비교) */
-var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/521})();
+var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/522})();
 const VRK='gj-verchk',VRURL='https://github.com/64hwarang-max/c/actions/workflows/build-apk.yml';
 const vrGet=()=>{try{return JSON.parse(localStorage.getItem(VRK)||'{}')}catch(e){return{}}};
 async function vrCheck(force){const c=vrGet();if(!force&&c.t&&Date.now()-c.t<6*36e5)return c;
