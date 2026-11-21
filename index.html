@@ -14282,11 +14282,15 @@ async function renderDayNote(){const R=$('#nbody');document.querySelectorAll('#n
   try{await allMap()}catch(e){}if(nView!=='dq'||nEdit)return;
   const seg='';
   if(DQV==='cls'){R.innerHTML=`<div class="dnote">${seg}${dqClsView()}</div>`;dqBindCommon(R);return}
+  if(DQV==='ago'||DQV==='rev'){const dt0=parseD(nDate);R.innerHTML=`<div class="dnote">${DQV==='ago'?`<div class="datebar"><button class="iconbtn" id="dqp" aria-label="전날">‹</button><button class="d iconbtn" id="dql" style="width:auto;border-radius:6px;border:0;background:none">${dt0.getMonth()+1}월 ${dt0.getDate()}일 (${WD[dt0.getDay()]})${nDate===today()?' · 오늘':''}</button><input type="date" id="dqpick" value="${nDate}" aria-label="날짜 선택"><button class="iconbtn" id="dqn" aria-label="다음날">›</button>${dqSel()}</div>${dqAgoHTML()}`:`<div class="dq-top" style="margin:8px 0">${dqSel()}</div>${dqRevHTML()}`}</div>`;dqBindCommon(R);
+    if(DQV==='ago'){$('#dqp').onclick=()=>{nDate=addD(nDate,-1);renderNotes()};$('#dqn').onclick=()=>{nDate=addD(nDate,1);renderNotes()};$('#dql').onclick=()=>{const p=$('#dqpick');p.showPicker?p.showPicker():p.click()};$('#dqpick').onchange=e=>{if(e.target.value){nDate=e.target.value;renderNotes()}}}
+    R.querySelectorAll('[data-rvok]').forEach(b=>b.onclick=async()=>{const[d,id,st]=b.dataset.rvok.split('|');const o=await dqDoc(d);const x=(o.dn||[]).find(z=>z.id===id);if(x){x.rv=[...new Set([...(x.rv||[]),+st])];await dqSave(o)}renderNotes()});
+    return}
   const o=await dqDoc(nDate);o.dn=o.dn||[];const dt=parseD(nDate);const L=o.dn.slice().sort((a,b)=>(a.hm||'')<(b.hm||'')?-1:(a.hm||'')>(b.hm||'')?1:a.ts-b.ts);
   const ks=[...new Set(L.map(b=>b.k))];const F=L;if(!DQC.k&&DQC.k!==''){DQC.k=''}
   try{const s=JSON.parse(localStorage.getItem('gj-dqc')||'null');if(s&&!DQC._ld){DQC=Object.assign({},s);DQC._ld=1}}catch(e){}
   const now=nDate===today()?dqNow():'';const auto=now?dqAuto(o,now):null;
-  R.innerHTML=`<div class="dnote">${seg}<div class="datebar"><button class="iconbtn" id="dqp" aria-label="전날">‹</button><button class="d iconbtn" id="dql" style="width:auto;border-radius:6px;border:0;background:none">${dt.getMonth()+1}월 ${dt.getDate()}일 (${WD[parseD(nDate).getDay()]})${nDate===today()?' · 오늘':''}</button><input type="date" id="dqpick" value="${nDate}" aria-label="날짜 선택"><button class="iconbtn" id="dqn" aria-label="다음날">›</button><button type="button" class="chip fbtn dqvw" data-dqv="cls" title="분류별로 모아 보기" style="flex:0 0 auto;margin-left:6px">🗂 분류별</button></div>
+  R.innerHTML=`<div class="dnote">${seg}<div class="datebar"><button class="iconbtn" id="dqp" aria-label="전날">‹</button><button class="d iconbtn" id="dql" style="width:auto;border-radius:6px;border:0;background:none">${dt.getMonth()+1}월 ${dt.getDate()}일 (${WD[parseD(nDate).getDay()]})${nDate===today()?' · 오늘':''}</button><input type="date" id="dqpick" value="${nDate}" aria-label="날짜 선택"><button class="iconbtn" id="dqn" aria-label="다음날">›</button>${dqSel()}</div>
    <div class="dq-page">${F.length?F.map(b=>dqBlockHTML(b,o)).join(''):'<p class="empty" style="padding:14px 4px">이 날 적은 블록이 없습니다.</p>'}</div>
    <div class="dq-new">${dqClsForm(DQC,'dqn')}<textarea id="dqt" rows="3" placeholder="지금 적을 것 (적는 시각이 자동으로 기록됩니다)" style="margin-top:8px"></textarea>
     <input type="hidden" id="dqh" value="${now}"><select id="dqln" hidden>${dqLnOpts(o,'auto')}</select>
@@ -14303,14 +14307,25 @@ async function renderDayNote(){const R=$('#nbody');document.querySelectorAll('#n
     o.dn.push({id:'q'+uid(),ts:Date.now(),hm:h,k,c,s,txt:t,ln:pickLn($('#dqln').value,h)});DQC={k,c,s};try{localStorage.setItem('gj-dqc',JSON.stringify(DQC))}catch(e){}await dqSave(o);renderNotes();
     setTimeout(()=>{const p=document.querySelector('.dq-page');if(p&&p.lastElementChild)p.lastElementChild.scrollIntoView({block:'center'})},60)}}
 function dqClsView(){const U=dqUsed();const K=[...new Set(U.map(b=>b.k))];const fk=DQF==='__e'?'':DQF;const k=DQF&&K.includes(fk)?fk:(K[0]||'');
-  if(!U.length)return'<p class="empty">아직 하루 노트 블록이 없습니다. ‘하루 페이지’에서 블록을 적으면 분류별로 모입니다.</p><button type="button" class="chip fbtn dqvw" data-dqv="day">📓 하루</button>';
+  if(!U.length)return'<p class="empty">아직 하루 노트 블록이 없습니다. ‘하루 페이지’에서 블록을 적으면 분류별로 모입니다.</p>'+dqSel();
   const inK=U.filter(b=>b.k===k);const mids=[...new Set(inK.map(b=>b.c||'(중분류 없음)'))];const cm=DQC._m&&mids.includes(DQC._m)?DQC._m:'';
   const show=inK.filter(b=>!cm||(b.c||'(중분류 없음)')===cm).filter(b=>!DQC._s||(b.s||'')===DQC._s).sort((a,b)=>a.date<b.date?1:a.date>b.date?-1:(a.hm||'')<(b.hm||'')?1:-1);
   const subs=cm?[...new Set(inK.filter(b=>(b.c||'(중분류 없음)')===cm&&b.s).map(b=>b.s))]:[];
-  let last='';return`<div class="chips" style="margin:6px 0">${K.map(x=>`<button class="chip fbtn ${x===k?'on':''}" data-dqf="${esc(x||'__e')}">${dkEmo(x)} ${esc(dkName(x))} ${U.filter(b=>b.k===x).length}</button>`).join('')}<button type="button" class="chip fbtn dqvw" data-dqv="day" title="하루 페이지로 보기">📓 하루</button></div>
+  let last='';return`<div class="chips" style="margin:6px 0">${K.map(x=>`<button class="chip fbtn ${x===k?'on':''}" data-dqf="${esc(x||'__e')}">${dkEmo(x)} ${esc(dkName(x))} ${U.filter(b=>b.k===x).length}</button>`).join('')}${dqSel()}</div>
    <div class="chips" style="margin:6px 0"><button class="chip fbtn ${!cm?'on':''}" data-dqm="">전체</button>${mids.map(m=>`<button class="chip fbtn ${m===cm?'on':''}" data-dqm="${esc(m)}">📂 ${esc(m)} ${inK.filter(b=>(b.c||'(중분류 없음)')===m).length}</button>`).join('')}</div>
    ${subs.length?`<div class="chips" style="margin:6px 0"><button class="chip fbtn ${!DQC._s?'on':''}" data-dqs="">전체</button>${subs.map(s=>`<button class="chip fbtn ${s===DQC._s?'on':''}" data-dqs="${esc(s)}">🗂 ${esc(s)}</button>`).join('')}</div>`:''}
    <div class="dq-page">${show.map(b=>{const dh=b.date!==last?`<div class="dq-d"><button class="del" data-dqgo="${b.date}">${b.date.slice(0,4)}.${md(b.date)} (${WD[parseD(b.date).getDay()]}) ›</button></div>`:'';last=b.date;return dh+`<div class="dq-b"><div class="dq-h"><b>🕘 ${esc(b.hm||'')}</b><span class="dq-c">${dqCls(b)}</span></div>${b.ln?`<div class="dq-l">${dqLnTxt(b.ln)}</div>`:''}<div class="dq-t">${esc(b.txt||'')}</div></div>`}).join('')}</div>`}
+const RVS=[1,3,7,14,30];
+function dqRevList(){const T=today(),out=[];try{dqUsed().forEach(b=>{if(!b.id||!tx(b.txt))return;const a=Math.round((parseD(T)-parseD(b.date))/864e5);if(a<1)return;const st=RVS.filter(v=>v<=a&&a<=v+3&&!(b.rv||[]).includes(v)).pop();if(st)out.push({b,st,a})})}catch(e){}return out.sort((x,y)=>y.a-x.a)}
+function dqSel(){const n=dqRevList().length;return`<select id="dqvsel" class="dqvw" aria-label="보기 방식">${[['day','📓 하루 보기'],['cls','🗂 분류별'],['ago','🕰 지난 오늘'],['rev','🔁 복습'+(n?' '+n:'')]].map(([v,l])=>`<option value="${v}" ${DQV===v?'selected':''}>${l}</option>`).join('')}</select>`}
+function dqBlk(b){return`<div class="dq-b"><div class="dq-h"><b>🕘 ${esc(b.hm||'')}</b><span class="dq-c">${dqCls(b)}</span></div>${b.ln?`<div class="dq-l">${dqLnTxt(b.ln)}</div>`:''}<div class="dq-t">${esc(b.txt||'')}</div></div>`}
+function dqAgoHTML(){const T=nDate||today(),mdk=T.slice(5),y0=+T.slice(0,4);const U=dqAll();const NS=[...NOTES.values()];
+  const ds=[...new Set([...U.map(b=>b.date),...NS.map(n=>n.date)].filter(d=>d&&d.slice(5)===mdk&&+d.slice(0,4)<y0))].sort().reverse();
+  const cards=ds.map(d=>{const bl=U.filter(b=>b.date===d).sort((a,b)=>(a.hm||'')<(b.hm||'')?-1:1);const ns=NS.filter(n=>n.date===d&&!n.person);if(!bl.length&&!ns.length)return'';const n=y0-(+d.slice(0,4));
+    return`<div class="dq-ago"><div class="dq-d"><b>${n}년 전 오늘 · ${md(d)} (${WD[parseD(d).getDay()]})</b></div>${bl.map(dqBlk).join('')}${ns.length?`<div class="page">${ns.map(x=>noteCard(x,false)).join('')}</div>`:''}</div>`}).filter(Boolean);
+  return cards.length?cards.join(''):`<p class="empty" style="padding:18px 4px">${mdk.replace('-','월 ')}일에 쓴 지난 해의 기록이 아직 없습니다. 쌓이면 1년 전·2년 전… 그날의 기록이 여기에 모입니다.</p>`}
+function dqRevHTML(){const L=dqRevList();const lab={1:'1일',3:'3일',7:'7일',14:'2주',30:'1달'};
+  return`<p class="hint" style="margin:4px 0 8px">적은 지 1·3·7·14·30일째에 다시 보여 줍니다. 읽고 ‘복습했음’을 누르면 그 차례는 사라집니다.</p>`+(L.length?L.map(({b,st,a})=>`<div class="dq-ago"><div class="dq-d"><b>${lab[st]} 차 복습 · ${md(b.date)} (${a}일 전)</b></div>${dqBlk(b)}<button type="button" class="btn small" data-rvok="${b.date}|${b.id}|${st}">✓ 복습했음</button></div>`).join(''):'<p class="empty" style="padding:18px 4px">오늘 복습할 하루 노트가 없습니다. 🎉</p>')}
 function dqBindCommon(R){R.querySelectorAll('[data-dqv]').forEach(b=>b.onclick=()=>{DQV=b.dataset.dqv;DQE=null;renderNotes()});
   R.querySelectorAll('.dq-seg~.chips [data-dqf], .dnote>.chips [data-dqf]').forEach(b=>b.onclick=()=>{DQF=b.dataset.dqf;DQC._m='';DQC._s='';renderNotes()});
   R.querySelectorAll('[data-dqm]').forEach(b=>b.onclick=()=>{DQC._m=b.dataset.dqm;DQC._s='';renderNotes()});R.querySelectorAll('[data-dqs]').forEach(b=>b.onclick=()=>{DQC._s=b.dataset.dqs;renderNotes()});
@@ -16267,7 +16282,7 @@ async function syPutSafe(B,k,v){if(!k.startsWith('day:')||!v||typeof v!=='object
 {const _o=openDay;openDay=async function(d){try{staleGuardInstall()}catch(e){}return _o.apply(this,arguments)}}
 {const _f=flush0;flush0=async function(){try{staleGuardInstall()}catch(e){}return _f.apply(this,arguments)}}
 /* v390 ① 앱 버전 표시 · 새 버전 알림 (GitHub에서 마지막으로 성공한 빌드 번호와 비교) */
-var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/522})();
+var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/523})();
 const VRK='gj-verchk',VRURL='https://github.com/64hwarang-max/c/actions/workflows/build-apk.yml';
 const vrGet=()=>{try{return JSON.parse(localStorage.getItem(VRK)||'{}')}catch(e){return{}}};
 async function vrCheck(force){const c=vrGet();if(!force&&c.t&&Date.now()-c.t<6*36e5)return c;
@@ -18725,6 +18740,11 @@ document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest
 document.addEventListener('input',e=>{const i=e.target;if(!i||!i.dataset||i.dataset.crsaf===undefined||!D)return;D.affirm=i.value;schedule()},true);
 (()=>{const st=document.createElement('style');st.textContent='.crsaw{margin:0 0 10px}.crqq{margin:0 0 8px;font-size:.88rem;line-height:1.45;color:var(--muted)}.crqal{display:block;font-weight:700;font-size:.95rem;margin:0 0 4px}.crsaw input{width:100%;box-sizing:border-box}';document.head.appendChild(st)})();
 (()=>{const st=document.createElement('style');st.textContent='.dq-cls:has(.dqvw){grid-template-columns:1.1fr 1fr 1fr auto}.dqvw{white-space:nowrap}';document.head.appendChild(st)})();
+document.addEventListener('change',e=>{const t=e.target;if(!t||t.id!=='dqvsel')return;DQV=t.value;DQF='';DQE=null;renderNotes()},true);
+function ebLink(){try{if(curSection!=='note'||nView!=='eb')return;const R=document.getElementById('nbody');if(!R||R.querySelector('.dqrvl'))return;const n=dqRevList().length;R.insertAdjacentHTML('afterbegin',`<button type="button" class="chip fbtn dqrvl" style="margin:6px 0">📓 하루 노트 복습 ${n}개 ›</button>`)}catch(e){}}
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('.dqrvl');if(!b)return;e.preventDefault();e.stopPropagation();DQV='rev';const m=document.querySelector('#nmode [data-nm="dq"]');if(m)m.click()},true);
+DECO.add('복습 하루노트 링크',{root:'#nbody',deep:true,wait:120,run:ebLink,now:true});
+(()=>{const st=document.createElement('style');st.textContent='select.dqvw{flex:0 0 auto;margin-left:6px;border:1px solid var(--line);background:var(--paper);color:inherit;border-radius:999px;padding:5px 8px;font:inherit;font-size:.82rem;max-width:42%}.dq-ago{border-top:1px dashed var(--line);padding:8px 0 4px}.dq-ago .dq-d b{font-size:.9rem}';document.head.appendChild(st)})();
 /* ② 시간표 빈 칸을 누르면(또는 끌어서 범위를 잡으면) 그 자리에서 바로 쓰기 */
 window.qwOpen=function(kind,pre){const tl=document.querySelector(`.tl[data-kind="${kind}"]`);if(!tl||!pre||!pre.s){openBlockEditor(kind,null,pre);return}
   document.querySelectorAll('.qwi').forEach(x=>x.remove());
