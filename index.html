@@ -16268,7 +16268,7 @@ async function syPutSafe(B,k,v){if(!k.startsWith('day:')||!v||typeof v!=='object
 {const _o=openDay;openDay=async function(d){try{staleGuardInstall()}catch(e){}return _o.apply(this,arguments)}}
 {const _f=flush0;flush0=async function(){try{staleGuardInstall()}catch(e){}return _f.apply(this,arguments)}}
 /* v390 ① 앱 버전 표시 · 새 버전 알림 (GitHub에서 마지막으로 성공한 빌드 번호와 비교) */
-var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/515})();
+var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/516})();
 const VRK='gj-verchk',VRURL='https://github.com/64hwarang-max/c/actions/workflows/build-apk.yml';
 const vrGet=()=>{try{return JSON.parse(localStorage.getItem(VRK)||'{}')}catch(e){return{}}};
 async function vrCheck(force){const c=vrGet();if(!force&&c.t&&Date.now()-c.t<6*36e5)return c;
@@ -18711,6 +18711,7 @@ document.addEventListener('click',e=>{if(e.target.closest&&e.target.closest('det
 document.addEventListener('click',e=>{const t=e.target.closest&&e.target.closest('#szzz,[data-zzzsl]');if(!t)return;e.preventDefault();e.stopPropagation();if(t.dataset.zzzsl!==undefined){openSleepAt();return}if(document.querySelector('.sched>.cpbar'))document.body.classList.toggle('cpbo');else openHrsMgr(()=>{try{(typeof refreshAny==='function'?refreshAny:renderDay)()}catch(x){renderDay()}})},true);
 (()=>{const st=document.createElement('style');st.textContent='.sched>.cpbar{display:none}body.cpbo .sched>.cpbar{display:block}.crev .crjg{flex:1 1 auto!important;order:0!important;min-width:0}.crev.crevj>span{flex:0 0 6.2em;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.crev.crevj .crjv{flex:0 0 1.8em;text-align:right}';document.head.appendChild(st)})();
 (()=>{const st=document.createElement('style');st.textContent='.plsub{border-top:1px dashed var(--line);padding:6px 0 2px}.plsub:first-of-type{border-top:0;padding-top:0}.plsub>summary{cursor:pointer;font-weight:700;font-size:.9rem;list-style:none;padding:2px 0 4px}.plsub>summary::-webkit-details-marker{display:none}';document.head.appendChild(st)})();
+(()=>{const st=document.createElement('style');st.textContent='.wmand{gap:5px!important}.wmt{flex-direction:row!important;flex-wrap:wrap;gap:2px 5px!important;min-height:0!important;padding:6px 6px!important;border-radius:10px!important;background:var(--paper,#fff)!important}.wmt.on{background:var(--acc,#2f6fed)!important}.wmt i{font-size:1.1rem!important}.wmt b{font-size:.8rem!important}.wmt small{font-size:.62rem!important;flex:0 0 100%;text-align:center;line-height:1.1}.wmt.wc small{display:none}.wmt.wc{background:var(--bg2,transparent)!important}';document.head.appendChild(st)})();
 /* ② 시간표 빈 칸을 누르면(또는 끌어서 범위를 잡으면) 그 자리에서 바로 쓰기 */
 window.qwOpen=function(kind,pre){const tl=document.querySelector(`.tl[data-kind="${kind}"]`);if(!tl||!pre||!pre.s){openBlockEditor(kind,null,pre);return}
   document.querySelectorAll('.qwi').forEach(x=>x.remove());
