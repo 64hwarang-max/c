@@ -16268,7 +16268,7 @@ async function syPutSafe(B,k,v){if(!k.startsWith('day:')||!v||typeof v!=='object
 {const _o=openDay;openDay=async function(d){try{staleGuardInstall()}catch(e){}return _o.apply(this,arguments)}}
 {const _f=flush0;flush0=async function(){try{staleGuardInstall()}catch(e){}return _f.apply(this,arguments)}}
 /* v390 ① 앱 버전 표시 · 새 버전 알림 (GitHub에서 마지막으로 성공한 빌드 번호와 비교) */
-var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/508})();
+var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/509})();
 const VRK='gj-verchk',VRURL='https://github.com/64hwarang-max/c/actions/workflows/build-apk.yml';
 const vrGet=()=>{try{return JSON.parse(localStorage.getItem(VRK)||'{}')}catch(e){return{}}};
 async function vrCheck(force){const c=vrGet();if(!force&&c.t&&Date.now()-c.t<6*36e5)return c;
@@ -18700,20 +18700,21 @@ window.qwParse=qwParse;window.qwAdd=qwAdd;
 window.qkPlanish=function(v){v=String(v||'').trim();if(!v)return false;if(/^[★☆*]/.test(v))return true;if(/했|함$|완료|\d\s*원|₩|^(감사|노트|만남|할 일)\s*[:：]|까지|내일|모레|어제|[월화수목금토일]요일|\d+\s*월\s*\d+\s*일/.test(v))return false;const o=qwParse(v);if(!o)return false;
   if(/^(오전|오후)?\s*\d{1,2}(\s+[^\d\s분시]|\s*[-~–]\s*\d{1,2}(\s|$))/.test(v))return true;if(o.s==null&&o.d!=null)return true;return false};
 window.qkPreview=function(v){const o=qwParse(v);if(!o)return'';if(o.pri)return'→ ⭐ 오늘 우선순위에 넣습니다';if(o.s!=null)return`→ 🗓 계획 ${fm(o.s)}~${fm(o.s+(o.d||60))} ${o.t}`;return`→ 🗓 계획 빈 시간에 ${o.d}분 · ${o.t}`};
+(()=>{const st=document.createElement('style');st.textContent='.qwq{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 2px}.qwq button{border:1px solid var(--line);background:var(--paper);color:inherit;border-radius:999px;padding:5px 10px;font:inherit;font-size:.85em}';document.head.appendChild(st)})();
 /* ② 시간표 빈 칸을 누르면(또는 끌어서 범위를 잡으면) 그 자리에서 바로 쓰기 */
 window.qwOpen=function(kind,pre){const tl=document.querySelector(`.tl[data-kind="${kind}"]`);if(!tl||!pre||!pre.s){openBlockEditor(kind,null,pre);return}
   document.querySelectorAll('.qwi').forEach(x=>x.remove());
-  const st=+tl.dataset.st,s=mins('00:00',pre.s),e=pre.e?mins('00:00',pre.e):s+30,d=Math.max(5,e-s);
+  const st=+tl.dataset.st,s=mins('00:00',pre.s),e0=pre.e?mins('00:00',pre.e):s+30;let d=Math.max(5,e0-s);const e=()=>s+d;
   const el=document.createElement('div');el.className='qwi';el.style.top=((s-st*60)*HPX/60)+'px';el.style.minHeight=Math.max(110,d*HPX/60)+'px';
   try{const sc=tl.closest('.sched')||tl.parentElement,R=sc.getBoundingClientRect(),T=tl.getBoundingClientRect();if(R.width>T.width+20){el.style.left=(R.left-T.left+8)+'px';el.style.right='auto';el.style.width=(R.width-16)+'px'}}catch(x){}
-  el.innerHTML=`<div class="qwt"><small>🕘 ${pre.s}~${fm(e)} ${kind==='time'?'실제':'계획'}</small><button type="button" data-qwm aria-label="자세히" title="자세히 설정">⋯ 자세히</button><button type="button" data-qwx aria-label="취소">✕</button></div><textarea data-nostamp="1" rows="2" placeholder="무엇을 하나요? (Enter로 넣기 · 줄 바꿈은 Shift+Enter)"></textarea><div class="qwt"><small>시간을 같이 쓰면 그 시간으로: 9-10 회의</small><button type="button" class="qwok" data-qwok>넣기</button></div>`;
+  el.innerHTML=`<div class="qwt"><small>🕘 <span data-qwr>${pre.s}~${fm(e())}</span> ${kind==='time'?'실제':'계획'}</small><button type="button" data-qwm aria-label="자세히" title="자세히 설정">⋯ 자세히</button><button type="button" data-qwx aria-label="취소">✕</button></div><textarea data-nostamp="1" rows="2" placeholder="무엇을 하나요? (Enter로 넣기 · 줄 바꿈은 Shift+Enter)"></textarea><div class="qwq">${[5,10,30,60,120].map(n=>`<button type="button" data-qwp="${n}">+${n<60?n+'분':n/60+'시간'}</button>`).join('')}<button type="button" data-qwp="0" aria-label="처음 길이로">↺</button></div><div class="qwt"><small>시간을 같이 쓰면 그 시간으로: 9-10 회의</small><button type="button" class="qwok" data-qwok>넣기</button></div>`;
   tl.appendChild(el);const ta=el.querySelector('textarea');let done=false;
   const close=()=>{done=true;el.remove()};
   const ok=()=>{const v=ta.value.trim();if(!v){close();return}done=true;el.remove();qwAdd(v,kind,{s,d})};
   ta.onkeydown=ev=>{if(ev.isComposing)return;if(ev.key==='Enter'&&!ev.shiftKey){ev.preventDefault();ok()}else if(ev.key==='Escape')close()};
   ta.onblur=()=>setTimeout(()=>{if(!done&&!el.contains(document.activeElement)){ta.value.trim()?ok():close()}},150);
-  el.querySelector('[data-qwm]').onclick=()=>{const v=ta.value.trim();close();openBlockEditor(kind,null,Object.assign({},pre,{e:fm(e),act:v}))};
-  el.querySelector('[data-qwx]').onclick=close;el.querySelector('[data-qwok]').onclick=ok;
+  el.querySelector('[data-qwm]').onclick=()=>{const v=ta.value.trim();close();openBlockEditor(kind,null,Object.assign({},pre,{e:fm(e()),act:v}))};
+  el.querySelectorAll('[data-qwp]').forEach(b=>{b.onpointerdown=ev=>ev.preventDefault();b.onclick=()=>{const n=+b.dataset.qwp;d=n?Math.min(d+n,24*60-s):Math.max(5,e0-s);el.querySelector('[data-qwr]').textContent=pre.s+'~'+fm(e());el.style.minHeight=Math.max(110,d*HPX/60)+'px';try{ta.focus()}catch(x){}}});el.querySelector('[data-qwx]').onclick=close;el.querySelector('[data-qwok]').onclick=ok;
   el.addEventListener('pointerdown',ev=>ev.stopPropagation());el.addEventListener('touchstart',ev=>ev.stopPropagation(),{passive:true});
   setTimeout(()=>{try{ta.focus()}catch(x){}},30);try{el.scrollIntoView({block:'nearest'})}catch(x){}};
 })();
