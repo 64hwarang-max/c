@@ -16282,7 +16282,7 @@ async function syPutSafe(B,k,v){if(!k.startsWith('day:')||!v||typeof v!=='object
 {const _o=openDay;openDay=async function(d){try{staleGuardInstall()}catch(e){}return _o.apply(this,arguments)}}
 {const _f=flush0;flush0=async function(){try{staleGuardInstall()}catch(e){}return _f.apply(this,arguments)}}
 /* v390 ① 앱 버전 표시 · 새 버전 알림 (GitHub에서 마지막으로 성공한 빌드 번호와 비교) */
-var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/524})();
+var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/525})();
 const VRK='gj-verchk',VRURL='https://github.com/64hwarang-max/c/actions/workflows/build-apk.yml';
 const vrGet=()=>{try{return JSON.parse(localStorage.getItem(VRK)||'{}')}catch(e){return{}}};
 async function vrCheck(force){const c=vrGet();if(!force&&c.t&&Date.now()-c.t<6*36e5)return c;
@@ -16850,12 +16850,13 @@ visGridHTML=function(VC,V){const M=GOALS.me,hz=GOALS.hz||{};const bk=bkList();co
   const B=[['goal','🪜','목표','#e5586e',ng||''],['bucket','🪣','버킷리스트','#f9a825',bk.length?bk.filter(b=>b.done).length+'/'+bk.length:''],['wish','🎁','갖고 싶은 것','#13b5b1',(M.wish||[]).length||'']];
   const tile=([k,e,l,c,b])=>`<button class="tgi ${VSEL===k?'on':''}" data-vsel="${k}" style="--k:${c}"><i>${e}</i><span>${l}</span>${b!==''?`<small>${b}</small>`:''}</button>`;
   let body='';if(VSEL==='board')body=(VC.blue||'')+(VC.board||'');else if(VSEL&&VC[VSEL])body=VC[VSEL];else if(VSEL&&VSEL!=='role'&&VSEL!=='goal')VSEL='';
-  return`<p class="vgh">✨ 비전</p><div class="tgrid vtiles">${A.map(tile).join('')}</div><p class="vgh">🎯 목표</p><div class="tgrid vtiles">${B.map(tile).join('')}</div>
-   <button type="button" class="xlink" data-vsel="map" style="margin:2px 0 6px">🧠 한눈에 보기 ›</button><div id="vsane"></div>${VSEL?body:'<p class="hint" style="text-align:center">칸을 누르면 그 내용이 아래에 열립니다.</p>'}`};
+  const chip=([k,e,l,c,b])=>`<button type="button" class="crqc ${VSEL===k?'vson':''}" data-vsel="${k}" style="--k:${c}">${e} ${l}${b!==''?`<small>${b}</small>`:''}</button>`;
+  const rw=(t,L)=>`<div class="vrow"><span class="vrl">${t}</span>${L.map(chip).join('')}</div>`;
+  return`<div class="vrows">${rw('✨ 비전',A)}${rw('🎯 목표',[...B,['map','🧠','한눈에 보기','#7c4dff','']])}</div><div id="vsane"></div>${VSEL?body:'<p class="hint" style="text-align:center">칸을 누르면 그 내용이 아래에 열립니다.</p>'}`};
 rlBoxSync=function(){try{if(typeof gSub==='undefined'||gSub!=='vision')return;const R=$('#glist');if(!R)return;const ex=R.querySelector(':scope>#rlbox');if(VSEL!=='role'){if(ex)ex.remove();return}if(ex)return;
   const d=document.createElement('div');d.id='rlbox';d.className='card nocol rlbox';d.innerHTML=rlBoxHTML();const mk=R.querySelector('#vsane');if(mk)mk.after(d);else R.prepend(d);rlBind(d)}catch(e){console.warn('roles',e)}};
 vgPaint=function(){if(curSection!=='vision')return;const R=$('#glist');if(!R)return;plCss();R.querySelectorAll('.vgwrap').forEach(e=>e.remove());if(VSEL!=='goal')return;const w=document.createElement('div');w.className='vgwrap';w.innerHTML=plGoalsHTML()+vgCalHTML();const mk=R.querySelector('#vsane');if(mk)mk.after(w);else R.appendChild(w)};
-(function(){const st=document.createElement('style');st.textContent=`.vgh{margin:10px 2px 4px;font-weight:700;font-size:.9rem;color:var(--muted)}#rlbox.rlf{padding:inherit}`;document.head.appendChild(st)})();
+(function(){const st=document.createElement('style');st.textContent=`.vrows{margin:4px 0 8px}.vrow{display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-start!important;gap:6px!important;margin:7px 0}.vrow .crqc{flex:0 0 auto;width:auto}.vrl{font-weight:700;font-size:.85rem;color:var(--muted);margin-right:2px;white-space:nowrap}.vrow .crqc{margin:0}.vrow .crqc small{margin-left:5px;opacity:.75}.vrow .crqc.vson{background:var(--k,var(--acc));color:#fff;border-color:var(--k,var(--acc))}.vgh{margin:10px 2px 4px;font-weight:700;font-size:.9rem;color:var(--muted)}#rlbox.rlf{padding:inherit}`;document.head.appendChild(st)})();
 
 /* ===== v420: 메뉴 재편 — 비전·목표는 계획으로 · 건강/재정/관계는 나로 · 관리는 성경만 · 돌아보기는 기간 카드로 ===== */
 function navV420(){try{if(!SET.navMap||SET.navV420)return;const M=SET.navMap;const mv=['vision','rv2','people','budget','care','cycle'];Object.keys(M).forEach(g=>{if(Array.isArray(M[g]))M[g]=M[g].filter(k=>!mv.includes(k))});
