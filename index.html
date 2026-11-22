@@ -16295,7 +16295,7 @@ async function syPutSafe(B,k,v){if(!k.startsWith('day:')||!v||typeof v!=='object
 {const _o=openDay;openDay=async function(d){try{staleGuardInstall()}catch(e){}return _o.apply(this,arguments)}}
 {const _f=flush0;flush0=async function(){try{staleGuardInstall()}catch(e){}return _f.apply(this,arguments)}}
 /* v390 ① 앱 버전 표시 · 새 버전 알림 (GitHub에서 마지막으로 성공한 빌드 번호와 비교) */
-var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/530})();
+var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/531})();
 const VRK='gj-verchk',VRURL='https://github.com/64hwarang-max/c/actions/workflows/build-apk.yml';
 const vrGet=()=>{try{return JSON.parse(localStorage.getItem(VRK)||'{}')}catch(e){return{}}};
 async function vrCheck(force){const c=vrGet();if(!force&&c.t&&Date.now()-c.t<6*36e5)return c;
@@ -18871,6 +18871,18 @@ document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest
   const C=gCands(g);const ids=[null,...C.map(x=>x.id)];if(g.parent&&!ids.includes(g.parent))ids.push(g.parent);const i=ids.indexOf(g.parent||null);g.parent=ids[(i+1)%ids.length];g.plk=1;saveGoals();
   const P=g.parent&&GOALS.list.find(y=>y.id===g.parent);b.classList.toggle('on',!!P);b.textContent=P?'↑ '+P.title:'↑ 연결';toast(P?`‘${g.title}’ → ‘${P.title}’에 연결했습니다.`:`‘${g.title}’ 연결을 풀었습니다.`)},true);
 (()=>{const st=document.createElement('style');st.textContent='.wlk{flex:0 1 auto;max-width:42%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border:1px dashed var(--line);background:none;color:var(--muted);border-radius:999px;padding:1px 8px;font:inherit;font-size:.72rem;cursor:pointer}.wlk.on{border-style:solid;color:var(--pen);border-color:var(--pen)}';document.head.appendChild(st)})();
+/* ===== v531: 계획 1일 칸 위쪽 = 그날 챙길 것 (기둥별 한 줄) ===== */
+function dcrHTML(d){const o=d===(D&&D.date)?D:((cacheAll&&cacheAll.get(d))||{date:d});let tot=0,ok=0;
+  const rows=SCORE.map(([k])=>{let E=null;try{E=crEval(o,k)}catch(e){}if(!E||!E.rows.length)return'';const R=E.rows.filter(r=>!r.na);tot+=R.length;ok+=R.filter(r=>r.v>=1).length;
+    return`<div class="dcr"><span class="dcl">${AREA_E[k]||''} ${esc(areaName(k))}</span><span class="dcs">${E.rows.map(r=>`<i class="${r.na?'na':r.v>=1?'ok':''}">${r.v>=1?'✓':'○'} ${esc(r.it.n)}</i>`).join(' ')}</span></div>`}).join('');
+  if(!rows)return'';const x=parseD(d);
+  return`<div class="card nocol dcrq" id="dcrq" style="--k:#2fbf71"><button type="button" class="dch" data-dcgo="${d}"><b>✅ ${d===today()?'오늘':`${x.getMonth()+1}/${x.getDate()}`} 챙길 것</b><small>${ok}/${tot}</small><i>열기 ›</i></button>${rows}</div>`}
+function dcrPaint(){try{if(curSection!=='plan'||PLP)return;const z=ZMP!=null&&ZMS[ZMP];const R=document.getElementById('pbody');if(!R)return;const old=document.getElementById('dcrq');if(!z||z[0]!=='d'||z[1]!==1){if(old)old.remove();return}
+  const d=(typeof zmAnc==='function'?zmAnc('plan'):pAnchor)||today();const h=dcrHTML(d);if(old&&old._d===d&&old._h===h){const tp=R.querySelector('.ptop');if(tp&&tp.nextElementSibling!==old)tp.after(old);return}if(old)old.remove();if(!h)return;const top=R.querySelector('.ptop');const t=document.createElement('template');t.innerHTML=h;const el=t.content.firstElementChild;el._d=d;el._h=h;if(top)top.after(el);else R.prepend(el)}catch(e){console.warn('dcr',e)}}
+{const _zr3=zmRender;zmRender=function(c){const r=_zr3.apply(this,arguments);if(c==='plan')setTimeout(dcrPaint,80);return r}}
+DECO.add('계획 1일 챙길 것',{root:'#pbody',deep:false,wait:200,run:dcrPaint,now:true});
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-dcgo]');if(!b)return;e.preventDefault();e.stopPropagation();try{dayTl(b.dataset.dcgo)}catch(x){go('day')}setTimeout(()=>{try{CRQOPEN=true;crqPaint()}catch(x){}},400)},true);
+(()=>{const st=document.createElement('style');st.textContent='.dcrq{padding:8px 12px!important}.dch{display:flex;align-items:baseline;gap:8px;width:100%;border:0;background:none;color:var(--ink);font:inherit;padding:2px 0 6px;text-align:left;cursor:pointer}.dch small{color:var(--muted)}.dch i{margin-left:auto;font-style:normal;color:var(--muted);font-size:.8rem}.dcr{display:flex;gap:8px;align-items:center;padding:3px 0;border-top:1px solid var(--line)}.dcl{flex:0 0 auto;min-width:6.2em;font-weight:700;font-size:.86rem}.dcs{flex:1 1 0;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:.84rem;color:var(--muted)}.dcs i{font-style:normal}.dcs i.ok{color:var(--pen);font-weight:600}.dcs i.na{opacity:.45}';document.head.appendChild(st)})();
 </script>
 <!--BIBLE{--><!--}BIBLE-->
 <div id="miniov" class="miniov" hidden></div>
