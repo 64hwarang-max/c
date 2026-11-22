@@ -16295,7 +16295,7 @@ async function syPutSafe(B,k,v){if(!k.startsWith('day:')||!v||typeof v!=='object
 {const _o=openDay;openDay=async function(d){try{staleGuardInstall()}catch(e){}return _o.apply(this,arguments)}}
 {const _f=flush0;flush0=async function(){try{staleGuardInstall()}catch(e){}return _f.apply(this,arguments)}}
 /* v390 ① 앱 버전 표시 · 새 버전 알림 (GitHub에서 마지막으로 성공한 빌드 번호와 비교) */
-var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/529})();
+var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/530})();
 const VRK='gj-verchk',VRURL='https://github.com/64hwarang-max/c/actions/workflows/build-apk.yml';
 const vrGet=()=>{try{return JSON.parse(localStorage.getItem(VRK)||'{}')}catch(e){return{}}};
 async function vrCheck(force){const c=vrGet();if(!force&&c.t&&Date.now()-c.t<6*36e5)return c;
@@ -18857,6 +18857,20 @@ DECO.add('비전 돌아가기',{root:'#v-goal',deep:false,wait:150,run:visBack,n
     if(line){const d=document.createElement('div');d.className='wmup';d.textContent=line;const tgt=g.querySelector('.wbth');if(tgt)tgt.after(d);else g.prepend(d);ch=true}});
   return ch?T.innerHTML:h}catch(e){return h}}}
 (()=>{const st=document.createElement('style');st.textContent='#visln{margin:8px 0 0}.visln{display:flex;align-items:center;gap:8px;width:100%;border:1px solid var(--line);background:var(--paper);color:var(--ink);border-radius:12px;padding:7px 10px;font:inherit;text-align:left;cursor:pointer}.visln b{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600;font-size:.9rem}.visln i{font-style:normal;color:var(--muted);font-size:.78rem;white-space:nowrap}.visln.on{border-color:#ff5c7a;box-shadow:inset 3px 0 0 #ff5c7a}.lfp h3{margin-bottom:6px}.lfr{display:flex;align-items:center;gap:8px;width:100%;border:0;border-top:1px solid var(--line);background:none;color:var(--ink);font:inherit;padding:8px 0;text-align:left;cursor:pointer}.lfr:first-of-type{border-top:0}.lfl{flex:0 0 auto;min-width:7.2em;font-weight:700;font-size:.9rem}.lfs{flex:1 1 0;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--muted);font-size:.88rem}.lfs em{font-style:normal;opacity:.6}.lfr .wmn{flex:0 0 auto;font-size:.72rem;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:0 6px}.visback{border:1px solid var(--line);background:var(--paper);color:var(--ink);border-radius:999px;padding:5px 12px;margin:0 0 8px;font:inherit;font-size:.85rem}body.zmL #v-plan #pbody>:not(:has(.lfp)):not(.lfp){display:none!important}.wmup{font-size:.78rem;color:var(--muted);margin:2px 0 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}';document.head.appendChild(st)})();
+/* ===== v530: 목표 상위 연결 — 주→달, 달·분기·반기→올해. 같은 기둥에 상위 목표가 하나뿐이면 자동 연결, 여럿이면 ↑ 단추로 골라 연결 ===== */
+const GUP={w:'m',m:'y',q:'y',h:'y'};
+function gCands(g){const up=GUP[g&&g.lv];if(!up||!g.area)return[];let a=null;try{const r=perRange(g.lv,g.per);a=r&&r[0]}catch(e){}if(!a)return[];const per=perKey(up,a);return(GOALS.list||[]).filter(x=>x&&x.id!==g.id&&x.title&&!x.bk&&x.lv===up&&x.per===per&&x.area===g.area)}
+function gLinkPass(){let ch=false;try{(GOALS.list||[]).forEach(g=>{if(!g||!g.title||g.plk||!GUP[g.lv]||g.done)return;if(g.parent){g.plk=1;return}const C=gCands(g);if(C.length===1){g.parent=C[0].id;g.plk=1;ch=true}else if(C.length>1){/* 여럿이면 사용자가 고름 */}})}catch(e){}return ch}
+{const _sg=saveGoals;saveGoals=function(){try{gLinkPass()}catch(e){}return _sg.apply(this,arguments)}}
+setTimeout(()=>{try{if(gLinkPass())saveGoals()}catch(e){}},2500);
+{const _pp4=pdPillarsHTML;pdPillarsHTML=function(lv,a){const h=_pp4.apply(this,arguments);if(!GUP[lv])return h;try{const T=document.createElement('template');T.innerHTML=h;let ch=false;
+  T.content.querySelectorAll('.wbg [data-wkgd]').forEach(x=>{const g=(GOALS.list||[]).find(y=>y.id===x.dataset.wkgd);if(!g)return;const C=gCands(g);const P=g.parent&&(GOALS.list||[]).find(y=>y.id===g.parent);if(!C.length&&!P)return;
+    const b=document.createElement('button');b.type='button';b.className='wlk'+(P?' on':'');b.dataset.wlk=g.id;b.textContent=P?'↑ '+P.title:'↑ 연결';b.title='상위 목표 연결 (누를 때마다 바뀜)';x.before(b);ch=true});
+  return ch?T.innerHTML:h}catch(e){return h}}}
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-wlk]');if(!b)return;e.preventDefault();e.stopPropagation();const g=(GOALS.list||[]).find(y=>y.id===b.dataset.wlk);if(!g)return;
+  const C=gCands(g);const ids=[null,...C.map(x=>x.id)];if(g.parent&&!ids.includes(g.parent))ids.push(g.parent);const i=ids.indexOf(g.parent||null);g.parent=ids[(i+1)%ids.length];g.plk=1;saveGoals();
+  const P=g.parent&&GOALS.list.find(y=>y.id===g.parent);b.classList.toggle('on',!!P);b.textContent=P?'↑ '+P.title:'↑ 연결';toast(P?`‘${g.title}’ → ‘${P.title}’에 연결했습니다.`:`‘${g.title}’ 연결을 풀었습니다.`)},true);
+(()=>{const st=document.createElement('style');st.textContent='.wlk{flex:0 1 auto;max-width:42%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border:1px dashed var(--line);background:none;color:var(--muted);border-radius:999px;padding:1px 8px;font:inherit;font-size:.72rem;cursor:pointer}.wlk.on{border-style:solid;color:var(--pen);border-color:var(--pen)}';document.head.appendChild(st)})();
 </script>
 <!--BIBLE{--><!--}BIBLE-->
 <div id="miniov" class="miniov" hidden></div>
