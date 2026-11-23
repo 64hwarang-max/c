@@ -14243,7 +14243,7 @@ function pcBanner(){try{const dash=$('#dash');if(!dash||curSection!=='day')retur
 {DECO.add('기둥 관리 배너',{deep:false,wait:380,run:()=>pcBanner()});setInterval(pcBanner,60000);setTimeout(pcBanner,2600);
  renderDay=HK.w('renderDay','29:기둥관리배너',renderDay,_rd3=>async function(){const r=await _rd3.apply(this,arguments);pcBanner();return r});}
 /* 진입점: 균형판 아래 단추 */
-{const add=()=>{document.querySelectorAll('.wbx:not(.cvdone)').forEach(c=>{c.classList.add('pcdone');const n=pcdDue().length+cadDue().length;c.insertAdjacentHTML('beforeend',`<button type="button" class="btn wbgo" data-pcopen="1" style="width:100%;margin-top:8px;background:var(--card);color:var(--ink);border:1px solid var(--line)">🏛️ 기둥별 관리 · 주기·기록${n?` <em class="pcb">${n}</em>`:''}</button>`)})};
+{const add=()=>{document.querySelectorAll('.wbx:not(.cvdone):not(.pcdone)').forEach(c=>{c.classList.add('pcdone');const n=pcdDue().length+cadDue().length;c.insertAdjacentHTML('beforeend',`<button type="button" class="btn wbgo" data-pcopen="1" style="width:100%;margin-top:8px;background:var(--card);color:var(--ink);border:1px solid var(--line)">🏛️ 기둥별 관리 · 주기·기록${n?` <em class="pcb">${n}</em>`:''}</button>`)})};
  DECO.add('기둥별 관리 단추',{run:add,now:'sync'});
  document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-pcopen]');if(b){e.preventDefault();pcOpen()}},true)}
 (function(){const st=document.createElement('style');st.textContent=`.pcx .pcxt{margin:6px 0}.pcb{font-style:normal;background:#e5484d;color:#fff;border-radius:9px;padding:0 6px;font-size:.7rem;margin-left:3px}
@@ -18900,4 +18900,25 @@ document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest
 <style id="qtsetcss">.qtset{margin:4px 0 8px}.qtset>summary{cursor:pointer;list-style:none;padding:4px 0}.qtset>summary::-webkit-details-marker{display:none}.qtset>summary u{margin-left:4px}.qtset[open]>summary{margin-bottom:4px}.qtnow{display:inline-block;font-size:.75em;font-weight:700;padding:1px 7px;border-radius:999px;background:#2e7d6b;color:#fff;vertical-align:1px}.qtcw{border-color:#2e7d6b}</style>
 </body></html>
 
-</body></html>
+<style id="oneline-css">
+h1,h2,h3,h4,summary,button,.chip,.btn,.mhead,.fl,.shead b,.pcrel,.plgi span,.card h3 small{white-space:nowrap!important}
+h1,h2,h3,h4,summary,.mhead,.fl,.shead b,.plgi span{overflow:hidden;text-overflow:ellipsis;min-width:0;max-width:100%}
+button,.chip,.btn{max-width:100%;overflow:hidden;text-overflow:ellipsis}
+</style>
+<script id="oneline-js">
+(function(){try{
+const SEL='h1,h2,h3,h4,summary,button,.chip,.btn,.mhead,.fl,.shead b,.pcrel,.plgi span';
+const MIN=9;let t=0,busy=false;
+function fit(){busy=true;try{
+ const els=[...document.querySelectorAll(SEL)].filter(e=>!e.closest('textarea,[contenteditable="true"]'));
+ els.forEach(e=>{if(e.dataset.olf){e.style.fontSize='';delete e.dataset.olf}});
+ const todo=els.filter(e=>e.offsetParent&&e.scrollWidth>e.clientWidth+1);
+ todo.forEach(e=>{let fs=parseFloat(getComputedStyle(e).fontSize)||14,n=0;
+  while(e.scrollWidth>e.clientWidth+1&&fs>MIN&&n<40){fs-=.5;e.style.fontSize=fs+'px';n++}
+  e.dataset.olf='1'});
+}catch(_){}busy=false}
+function later(){clearTimeout(t);t=setTimeout(fit,200)}
+new MutationObserver(m=>{if(!busy)later()}).observe(document.body,{childList:true,subtree:true,characterData:true});
+addEventListener('resize',later);addEventListener('load',later);setTimeout(fit,800);
+}catch(_){}})();
+</script>
