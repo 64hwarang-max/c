@@ -7346,7 +7346,7 @@ function cycDue(){const T=today();return cycs().map(c=>{const nx=cyNext(c);retur
 function cyDone(c){const T=today();c.last=T;delete c.nextFix;c.hist=(c.hist||[]).filter(d=>d!==T).concat(T).slice(-20);saveSet().catch(()=>{});scheduleNative();toast(`${c.emo||'🔁'} ${cyName(c)} 완료 · 다음 ${md(cyNext(c))}`)}
 function cyRow(x){const c=x.c;return`<div class="trow" style="--lc:#ff8a3d"><button class="tchk" data-cyt="${c.id}" aria-label="완료"></button><button class="tbody" data-cyo="1"><span class="tt">${c.emo||'🔁'} ${esc(cyName(c))}</span><span class="tmeta"><span class="${x.left<0?'od':''}">${x.left<0?-x.left+'일 지남':x.left===0?'오늘':md(x.next)}</span><span>${esc(cyLabel(c))}</span><span class="tl">${esc(c.grp||'주기 할 일')}</span></span></button></div>`}
 function cyGroup(days){const L=cycDue().filter(x=>x.left<=days).sort((a,b)=>a.left-b.left);return L.length?`<p class="mhead">🔁 주기 할 일 <span class="hint">${L.length}</span></p>${L.map(cyRow).join('')}`:''}
-function cyRowsDay(d){const T=today();return cycDue().filter(x=>d===T?x.left<=0:x.next===d).map(cyRow).join('')}
+function cyRowsDay(d){const T=today();return cycDue().filter(x=>d===T?x.left<=Math.max(0,x.c.remind==null?1:+x.c.remind):x.next===d).sort((a,b)=>a.left-b.left).map(cyRow).join('')}
 function bindCyRows(R,rer){R.querySelectorAll('[data-cyt]').forEach(b=>b.onclick=()=>{const c=cycs().find(x=>x.id===b.dataset.cyt);if(c){cyDone(c);rer()}});R.querySelectorAll('[data-cyo]').forEach(b=>b.onclick=()=>go('routine'))}
 const CYU=[['d','일마다'],['w','주마다'],['m','개월마다'],['y','년마다'],['md','매월 ○일']];
 function cyItemRow(c,i,T){const nx=cyNext(c);const left=nx?Math.round((parseD(nx)-parseD(T))/864e5):null;const st=left==null?'시작일 없음':left<0?`${-left}일 지남`:left===0?'오늘':`${left}일 뒤`;
@@ -16303,7 +16303,7 @@ async function syPutSafe(B,k,v){if(!k.startsWith('day:')||!v||typeof v!=='object
 {const _o=openDay;openDay=async function(d){try{staleGuardInstall()}catch(e){}return _o.apply(this,arguments)}}
 {const _f=flush0;flush0=async function(){try{staleGuardInstall()}catch(e){}return _f.apply(this,arguments)}}
 /* v390 ① 앱 버전 표시 · 새 버전 알림 (GitHub에서 마지막으로 성공한 빌드 번호와 비교) */
-var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/546})();
+var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/547})();
 const VRK='gj-verchk',VRURL='https://github.com/64hwarang-max/c/actions/workflows/build-apk.yml';
 const vrGet=()=>{try{return JSON.parse(localStorage.getItem(VRK)||'{}')}catch(e){return{}}};
 async function vrCheck(force){const c=vrGet();if(!force&&c.t&&Date.now()-c.t<6*36e5)return c;
@@ -19231,7 +19231,8 @@ const okA=k=>SCORE.some(x=>x[0]===k);
 function pilOf(title,t){try{if(t){if(t.area&&okA(t.area))return t.area;const L=(TASKS.lists||[]).find(l=>l.id===t.list);if(L&&LMAP[L.name]&&okA(LMAP[L.name]))return LMAP[L.name]}
   const g=guessBlock(title||'');if(g&&g.cat){const a=catArea(g.cat);if(a&&okA(a))return a}}catch(e){}return''}
 window.pkPil=pilOf;
-function keyOf(row){const b=row.querySelector('[data-to]');if(b){const t=(TASKS.items||[]).find(x=>x.id===b.dataset.to);return pilOf(t?t.title:'',t)}
+const CYP={'건강':'body','집안일':'life','관계':'rel','자기관리':'life','차량·기기':'life','재정':'fin'};
+function keyOf(row){const cy=row.querySelector('[data-cyt]');if(cy){try{const c=cycs().find(x=>x.id===cy.dataset.cyt);if(c){if(c.area&&okA(c.area))return c.area;const a=CYP[c.grp!==undefined&&c.grp!==''?c.grp:cyGuess(c.name)];if(a&&okA(a))return a;return pilOf(c.name,null)}}catch(e){}}const b=row.querySelector('[data-to]');if(b){const t=(TASKS.items||[]).find(x=>x.id===b.dataset.to);return pilOf(t?t.title:'',t)}
   const tt=row.querySelector('.tt');return pilOf(tt?tt.textContent.replace(/^\S+\s/,''):'',null)}
 const MODE=()=>LS('gj-pkm')==='all'?'all':'pil';
 function tog(P){let t=P.previousElementSibling&&P.previousElementSibling.classList.contains('pkm')?P.previousElementSibling:null;const m=MODE();const html=`<button type="button" data-pkm="pil" class="${m==='pil'?'on':''}">기둥별</button><button type="button" data-pkm="all" class="${m==='all'?'on':''}">전체</button>`;
@@ -19266,7 +19267,7 @@ const LS=(k,v)=>{try{if(v===undefined)return localStorage.getItem(k);localStorag
 const EVO=(()=>{try{return new Set(JSON.parse(LS('gj-evo')||'[]'))}catch(e){return new Set()}})();
 const sv=()=>LS('gj-evo',JSON.stringify([...EVO]));
 function chipsOf(k){try{const X=crqData();const g=X.G.find(([kk])=>kk===k);if(!g||!g[1].length)return'';return`<div class="xevc"><small>체크</small>${crmSub?crmSub(k,g[1]):g[1].map(r=>crqChip(k,r)).join('')}</div>`}catch(e){return''}}
-function panelHTML(k){let h=chipsOf(k);  try{h+=areaExtraHTML(k)}catch(e){}try{h+=areaNoteRow(k)}catch(e){}
+function panelHTML(k){let h=chipsOf(k);try{if(typeof cyPilLine==='function')h+=cyPilLine(k)}catch(e){}  try{h+=areaExtraHTML(k)}catch(e){}try{h+=areaNoteRow(k)}catch(e){}
   return h||'<p class="hint">이 기둥에 적을 기록 칸이 없습니다.</p>'}
 function build(row,k){const p=document.createElement('div');p.className='xevp';p.dataset.k=k;p.dataset.date=D.date;p.innerHTML=panelHTML(k);row.after(p);
   p.querySelectorAll('.panel').forEach(x=>{if(x.querySelector('[data-gocare],[data-xadd]'))x.remove()});
@@ -19297,6 +19298,34 @@ document.addEventListener('click',e=>{const t=e.target;if(!t.closest)return;let 
     if(!n){const J=JT[id];const nid='note-'+uid();n={kind:'note',id:nid,date:D.date,topic:ensureTopic(J.n),title:'',body:'',photos:[],tags:[J.n],jt:id,jf:{},created:Date.now(),updated:Date.now()};if(J.area)n.area=J.area;NOTES.set(nid,n);saveNote(n,true)}
     NLH=[];nEdit=n.id;nReturn='day';go('note',true);return}},true);
 const st2=document.createElement('style');st2.textContent=`.crqg>.crqwk{flex-basis:100%;width:100%}.crqj{display:contents}.crqj>small{display:none}.crqj .crqc{border-style:dashed}.crqj .crqc.on{outline:2px solid var(--pen)}.crqwk .wkp{margin:6px 0!important;box-shadow:none!important}.crqwk .wkp>h3{display:none}.xrun{margin:4px 0}.xrun>b{font-size:.88rem}.xrunc{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}.xrunc .crqc{font-size:.78rem;padding:4px 10px;min-height:30px}.xrunc .crqc.on{outline:2px solid var(--pen)}.xrunex .wkp{margin:8px 0 0!important;box-shadow:none!important}.xrunex .wkp>h3{display:none}`;document.head.appendChild(st2);
+})();
+</script>
+<script id="cy-js">
+/* v547: 관리항목(주기 할 일) 간격 인사이트 · 주기 조정 제안 */
+(function(){
+const DU={d:1,w:7,m:30.4,y:365};
+function stat(c){const H=(c.hist||[]).slice().sort();const iv=[];for(let i=1;i<H.length;i++)iv.push(Math.round((parseD(H[i])-parseD(H[i-1]))/864e5));
+  const tg=c.dom?30.4*Math.max(1,+c.every||1):Math.max(1,+c.every||1)*(DU[c.unit||'d']||1);const n=iv.length;const avg=n?iv.reduce((a,b)=>a+b,0)/n:0;
+  const late=iv.filter(x=>x>tg*1.2).length;const y=today().slice(0,4);const yc=H.filter(d=>d.startsWith(y)).length;
+  const l3=iv.slice(-3);const trend=l3.length===3&&l3[0]<l3[1]&&l3[1]<l3[2]?'up':l3.length===3&&l3[0]>l3[1]&&l3[1]>l3[2]?'down':'';
+  return{iv,n,avg,tg,late,yc,l3,trend}}
+window.cyStat=stat;
+function sugg(c,S){if(S.n<3||c.dom)return null;const r=S.avg/S.tg;if(r>0.8&&r<1.25)return null;const u=c.unit||'d';const v=Math.max(1,Math.round(S.avg/(DU[u]||1)));if(v===(+c.every||1))return null;return{v,u}}
+const UL={d:'일',w:'주',m:'개월',y:'년'};
+function insHTML(c,i){const S=stat(c);if(!S.n)return(c.hist||[]).length?'':'';const sg=sugg(c,S);const d=Math.round(S.avg-S.tg);
+  return`<div class="cyin">${Math.abs(d)>=1?`<span>📈 목표보다 <i class="${d>0?'lt':'er'}">${d>0?'+':''}${d}일</i></span>`:'<span>📈 목표대로</span>'}${S.l3.length?`<span>간격 ${S.l3.join('·')}일${S.trend==='up'?' <i class="lt">↗ 점점 늦어짐</i>':S.trend==='down'?' <i class="er">↘ 앞당겨짐</i>':''}</span>`:''}<span>지연 ${S.late}번 · 올해 ${S.yc}번</span>${sg?`<button type="button" class="crqc" data-cyadj="${i}|${sg.v}|${sg.u}">주기를 ${sg.v}${UL[sg.u]}로 바꾸기</button>`:''}${S.trend==='up'&&!sg?`<button type="button" class="crqc" data-cyrem="${i}">알림 2일 앞당기기</button>`:''}</div>`}
+const _ir=cyItemRow;cyItemRow=function(c,i,T){return _ir.apply(this,arguments)+insHTML(c,i)};
+function sumHTML(){const C=cycs();const L=C.map(c=>({c,S:stat(c)})).filter(x=>x.S.n>=2).map(x=>({...x,d:x.S.avg-x.S.tg})).filter(x=>x.d>=1||x.S.late).sort((a,b)=>(b.d/b.S.tg)-(a.d/a.S.tg));
+  const T=today();const due=cycDue().filter(x=>x.left<0).length;
+  return`<div class="cysum"><b>📊 한눈에</b><span>지금 지난 것 <b class="${due?'lt':''}">${due}</b> · 기록 있는 항목 ${C.filter(c=>(c.hist||[]).length).length}/${C.length}</span>${L.length?`<span>자주 밀리는 항목: ${L.slice(0,3).map(x=>`${x.c.emo||'🔁'} ${esc(cyName(x.c))} <i class="lt">+${Math.round(x.d)}일</i>`).join(' · ')}</span>`:'<span class="hint">두 번 이상 기록하면 실제 간격과 밀리는 항목을 보여 줍니다.</span>'}</div>`}
+const _ch=cyHTML;cyHTML=function(){const h=_ch.apply(this,arguments);return h.replace('<h3>🔁 주기 할 일</h3>','<h3>🔁 주기 할 일</h3>'+sumHTML())};
+document.addEventListener('click',e=>{const t=e.target;if(!t.closest)return;let b;
+  if(b=t.closest('[data-cyadj]')){e.preventDefault();e.stopPropagation();const[i,v,u]=b.dataset.cyadj.split('|');const c=cycs()[+i];if(!c)return;c.every=+v;c.unit=u;delete c.nextFix;saveSet().catch(()=>{});try{scheduleNative()}catch(_){}toast(`${c.emo||'🔁'} ${cyName(c)} · ${v}${UL[u]}마다로 바꿨습니다`);try{renderCycle()}catch(_){}return}
+  if(b=t.closest('[data-cyrem]')){e.preventDefault();e.stopPropagation();const c=cycs()[+b.dataset.cyrem];if(!c)return;c.remind=(+c.remind||0)+2;saveSet().catch(()=>{});try{scheduleNative()}catch(_){}toast(`알림을 ${c.remind}일 전으로 바꿨습니다`);try{renderCycle()}catch(_){}}},true);
+/* 돌아보기 기둥 펼치기: 그 기둥 관리항목 한 줄 */
+window.cyPilLine=function(k){try{const CYP={'건강':'body','집안일':'life','관계':'rel','자기관리':'life','차량·기기':'life','재정':'fin'};const L=cycs().filter(c=>(c.area||CYP[c.grp||cyGuess(c.name)]||'')===k);if(!L.length)return'';const D0=cycDue().filter(x=>L.includes(x.c));const od=D0.filter(x=>x.left<0);const nx=D0.filter(x=>x.left>=0).sort((a,b)=>a.left-b.left)[0];
+  return`<p class="cypl">🔁 관리항목 ${L.length}개${od.length?` · <b class="lt">지남 ${od.length}</b> (${od.slice(0,2).map(x=>esc(x.c.name)).join(', ')})`:''}${nx?` · 다음 ${esc(nx.c.name)} ${nx.left?nx.left+'일 뒤':'오늘'}`:''}</p>`}catch(e){return''}};
+const st=document.createElement('style');st.textContent=`.cyin{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:center;font-size:.74rem;color:var(--muted);margin:-2px 0 8px 34px}.cyin b{color:var(--ink)}.cyin i{font-style:normal}.cyin .lt,.cysum .lt,.cypl .lt{color:#c0392b}.cyin .er{color:#2e7d6b}.cyin .crqc{font-size:.72rem;padding:2px 8px;min-height:26px}.cysum{display:flex;flex-direction:column;gap:2px;font-size:.8rem;background:color-mix(in srgb,#ff8a3d 8%,transparent);border-radius:8px;padding:8px 10px;margin:0 0 10px}.cysum i{font-style:normal}.cypl{font-size:.78rem;margin:2px 0 6px;color:var(--muted)}`;document.head.appendChild(st);
 })();
 </script>
 </body></html>
