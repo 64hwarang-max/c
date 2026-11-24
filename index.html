@@ -16303,7 +16303,7 @@ async function syPutSafe(B,k,v){if(!k.startsWith('day:')||!v||typeof v!=='object
 {const _o=openDay;openDay=async function(d){try{staleGuardInstall()}catch(e){}return _o.apply(this,arguments)}}
 {const _f=flush0;flush0=async function(){try{staleGuardInstall()}catch(e){}return _f.apply(this,arguments)}}
 /* v390 ① 앱 버전 표시 · 새 버전 알림 (GitHub에서 마지막으로 성공한 빌드 번호와 비교) */
-var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/533})();
+var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/534})();
 const VRK='gj-verchk',VRURL='https://github.com/64hwarang-max/c/actions/workflows/build-apk.yml';
 const vrGet=()=>{try{return JSON.parse(localStorage.getItem(VRK)||'{}')}catch(e){return{}}};
 async function vrCheck(force){const c=vrGet();if(!force&&c.t&&Date.now()-c.t<6*36e5)return c;
@@ -18972,6 +18972,121 @@ document.addEventListener('click',async e=>{const t=e.target;if(!t.closest||!t.c
     else if(a==='edit'){const t2=await uiPrompt('실수 내용',o.t);if(t2==null)return;const c2=await uiPrompt('원인',o.c||'');if(c2==null)return;const l2=await uiPrompt('다음엔',o.l||'');if(l2==null)return;o.t=t2.trim()||o.t;o.c=c2.trim();o.l=l2.trim()}
     saveSet().catch(()=>{});mkDraw()}},true);
 const st2=document.createElement('style');st2.textContent=`.mkh{display:flex;align-items:center;gap:8px;margin:6px 0}.mkh small{color:var(--muted);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.mkf{display:flex;flex-direction:column;gap:6px;background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:10px;margin-bottom:8px}.mkch{margin:6px 0;flex-wrap:nowrap;overflow-x:auto}.mkch .chip{white-space:nowrap}#mkq{width:100%;margin-bottom:6px}.mky{border-top:1px solid var(--line)}.mky>summary{font-weight:700;padding:6px 0;cursor:pointer}.mkm{margin-left:6px}.mkm>summary{font-size:.9rem}.mky small{color:var(--muted);font-weight:400}.mki>summary{display:flex;align-items:center;gap:6px;font-size:.84rem;padding:4px 0;cursor:pointer;list-style:none;white-space:nowrap}.mki>summary::-webkit-details-marker{display:none}.mkd{color:var(--muted);font-size:.74rem;flex:none}.mkt{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis}.mkt em{color:var(--muted);font-style:normal}.mkr{color:#c0392b;font-size:.74rem}.mkok{color:#2e7d6b}.mki.fixed .mkt{opacity:.55;text-decoration:line-through}.mkb{padding:2px 0 8px 10px;font-size:.84rem}.mkb p{margin:2px 0}.mkb u{text-decoration:none;color:var(--muted);margin-right:4px}.mka{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}.mka button{border:1px solid var(--line);background:var(--paper);border-radius:8px;padding:4px 8px;font-size:.78rem}`;document.head.appendChild(st2);
+})();
+</script>
+<script id="xw-js">
+/* v534: 반복 업무 흐름 — 업무 › 회차(주기 반복) › 단계(기준일에서 거꾸로 계산한 기한) */
+(function(){
+const LS=(k,v)=>{try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){return null}};
+const XO=(()=>{try{return new Set(JSON.parse(LS('gj-xwo')||'[]'))}catch(e){return new Set()}})();
+const xoSave=()=>LS('gj-xwo',JSON.stringify([...XO]));
+const UN={d:'일',w:'주',m:'개월'};
+const TPL={
+  wk:{name:'주간 제작',ev:'방송',cyc:{t:'w',wd:3,sl:1},steps:[['주제·담당자 선정',8,'w','due'],['섭외·요청',6,'w','due'],['질문지·자료 요청',5,'w','due'],['답변·자료 정리',4,'w','due'],['구성안·원고',3,'w','due'],['촬영·제작',2,'w','sch'],['검토·시사',1,'w','sch'],['수정·탑재',2,'d','due'],['결과 확인',0,'d','due']]},
+  mo:{name:'월간 보고',ev:'보고',cyc:{t:'m',md:25},steps:[['자료 수집',10,'d','due'],['초안 작성',6,'d','due'],['상급자 검토',3,'d','sch'],['수정·결재',1,'d','due'],['보고·송고',0,'d','due']]},
+  qt:{name:'분기 보고',ev:'보고',cyc:{t:'q',md:20},steps:[['실적 취합',3,'w','due'],['분석·초안',2,'w','due'],['검토',1,'w','sch'],['보고',0,'d','due']]},
+  bl:{name:'',ev:'기준일',cyc:{t:'w',wd:1},steps:[['준비',1,'w','due'],['완료',0,'d','due']]}};
+function FL(){if(!Array.isArray(SET.flows))SET.flows=[];return SET.flows}
+const P=s=>parseD(s);const T=()=>today();
+const md=s=>{const d=P(s);return`${d.getMonth()+1}.${d.getDate()}`};
+const mdw=s=>{const d=P(s);return`${d.getMonth()+1}.${d.getDate()}(${WD[d.getDay()]})`};
+const days=(a,b)=>Math.round((P(a)-P(b))/864e5);
+const CIR='①②③④⑤⑥⑦⑧⑨⑩⑪⑫⑬⑭⑮⑯⑰⑱⑲⑳';
+/* 회차 날짜 만들기 */
+function epDates(f,from,to){const c=f.cyc||{},out=[];const s=f.start||T(),e=f.end||addD(s,365);const a=from&&from>s?from:s,b=to&&to<e?to:e;if(a>b)return out;
+  const dd=P(a),end=P(b);
+  const lastDay=(y,m)=>new Date(y,m+1,0).getDate();
+  if(c.t==='w'||c.t==='w2'){const st=P(s);while(st.getDay()!==(+c.wd||0))st.setDate(st.getDate()+1);const step=c.t==='w2'?14:7;
+    for(const d=new Date(st);d<=end;d.setDate(d.getDate()+step)){if(d<dd)continue;if(c.sl){const n=new Date(d);n.setDate(n.getDate()+7);if(n.getMonth()!==d.getMonth())continue}out.push(ymd(d))}}
+  else if(c.t==='m'||c.t==='q'){const k=c.t==='q'?3:1;const st=P(s);let y=st.getFullYear(),m=st.getMonth();if(c.t==='q')m=Math.floor(m/3)*3+2;/* 분기 마지막 달 */
+    for(let i=0;i<60;i++){const D0=new Date(y,m,Math.min(+c.md||1,lastDay(y,m)));if(D0>end)break;const v=ymd(D0);if(v>=s&&D0>=dd)out.push(v);m+=k;if(m>11){y+=Math.floor(m/12);m%=12}}}
+  else if(c.t==='mn'){const st=P(s);let y=st.getFullYear(),m=st.getMonth();
+    for(let i=0;i<60;i++){let D0;if((+c.nth||1)>=5){D0=new Date(y,m,lastDay(y,m));while(D0.getDay()!==(+c.wd||0))D0.setDate(D0.getDate()-1)}else{D0=new Date(y,m,1);while(D0.getDay()!==(+c.wd||0))D0.setDate(D0.getDate()+1);D0.setDate(D0.getDate()+7*((+c.nth||1)-1))}
+      if(D0>end)break;const v=ymd(D0);if(v>=s&&D0>=dd)out.push(v);m++;if(m>11){y++;m=0}}}
+  return out.filter(v=>!(f.ep&&f.ep[v]&&f.ep[v].skip))}
+function cycTxt(c){c=c||{};if(c.t==='w'||c.t==='w2')return`${c.t==='w2'?'격주':'매주'} ${WD[+c.wd||0]}요일${c.sl?' (마지막 주 제외)':''}`;if(c.t==='m')return`매월 ${c.md||1}일`;if(c.t==='q')return`분기 마지막 달 ${c.md||1}일`;if(c.t==='mn')return`매월 ${(+c.nth||1)>=5?'마지막':(c.nth||1)+'째'} ${WD[+c.wd||0]}요일`;return''}
+const E=(f,d)=>{f.ep=f.ep||{};return f.ep[d]||(f.ep[d]={})};
+const epR=(f,d)=>(f.ep&&f.ep[d])||{};
+function autoDue(d,st){const b=P(d),n=+(st.o!=null?st.o:st.n)||0;if(st.u==='m'){const x=new Date(b.getFullYear(),b.getMonth()-n,1);x.setDate(Math.min(b.getDate(),new Date(x.getFullYear(),x.getMonth()+1,0).getDate()));return ymd(x)}return addD(d,-(st.u==='w'?n*7:n))}
+function due(f,d,st){const r=epR(f,d);return(r.dl&&r.dl[st.id])||(r.pl&&r.pl[st.id])||autoDue(d,st)}
+const isDone=(f,d,st)=>!!(epR(f,d).done||{})[st.id];
+const unset=(f,d,st)=>st.k==='sch'&&!((epR(f,d).pl||{})[st.id]);
+function cur(f,d){const S=f.steps||[];return S.find(st=>!isDone(f,d,st)&&!(f.c0&&due(f,d,st)<f.c0))||S.find(st=>!isDone(f,d,st))}
+/* 오늘·7일 안에 할 단계 */
+function rows(f){const t=T(),lim=addD(t,7),lim21=addD(t,21),out=[];
+  epDates(f,addD(t,-60),addD(t,550)).forEach(d=>{(f.steps||[]).forEach(st=>{if(isDone(f,d,st))return;const du=due(f,d,st);if(f.c0&&du<f.c0&&!((epR(f,d).dl||{})[st.id])&&!((epR(f,d).pl||{})[st.id]))return;const un=unset(f,d,st);if(du<=(un?lim21:lim))out.push({d,st,du,un})})});
+  return out.sort((a,b)=>a.du<b.du?-1:a.du>b.du?1:a.d<b.d?-1:1)}
+function when(x){const n=days(x.du,T());if(x.un)return n<0?`가안 ${-n}일 지남`:`일정 미정 · 가안 ${md(x.du)}`;return n<0?`${-n}일 지연`:n===0?'오늘':n===1?'내일':'~'+mdw(x.du)}
+function rowHTML(f,x){const n=days(x.du,T());const c=x.un?'un':n<0?'late':n===0?'tdy':'';const i=(f.steps||[]).indexOf(x.st);
+  return`<div class="xwr ${c}"><button type="button" class="xwc" data-xwd="${f.id}|${x.d}|${x.st.id}" aria-label="${esc(x.st.n)} 완료">□</button><span class="xwn" data-xwgo="${f.id}|${x.d}">${md(x.d)} ${esc(f.ev||'기준일')} · ${CIR[i]||''}${esc(x.st.n)}${epR(f,x.d).t?` <em>${esc(epR(f,x.d).t)}</em>`:''}</span><small>${when(x)}</small></div>`}
+function epHTML(f,d){const r=epR(f,d),S=f.steps||[];const dn=S.filter(st=>isDone(f,d,st)).length,c=cur(f,d);const key=`e|${f.id}|${d}`;const old=st=>f.c0&&due(f,d,st)<f.c0;const late=S.some(st=>!isDone(f,d,st)&&!unset(f,d,st)&&!old(st)&&due(f,d,st)<T());
+  return`<details class="xwe${dn===S.length?' ok':late?' late':''}" data-xwo="${key}"${XO.has(key)?' open':''}><summary><b>${mdw(d)}</b><span>${r.t?esc(r.t):'<i>제목 없음</i>'}</span><small>${c?(CIR[S.indexOf(c)]||'')+esc(c.n):'완료 ✓'} · ${dn}/${S.length}</small></summary>
+   <div class="xwb"><input type="text" class="xwti" data-xwt="${f.id}|${d}" value="${esc(r.t||'')}" placeholder="회차 제목·주제·담당" maxlength="60" aria-label="회차 제목">
+   ${S.map((st,i)=>{const ok=isDone(f,d,st),du=due(f,d,st),un=unset(f,d,st),n=days(du,T());const pl=(r.pl||{})[st.id]||'';
+     const od=!ok&&old(st);return`<div class="xws${ok?' ok':od?' od':!un&&n<0?' late':''}"><button type="button" class="xwc" data-xwd="${f.id}|${d}|${st.id}" aria-label="${esc(st.n)} ${ok?'완료 취소':'완료'}">${ok?'✓':'□'}</button><span>${CIR[i]||''}${esc(st.n)}${st.k==='sch'?' <u>일정</u>':''}</span>${st.k==='sch'?`<input type="date" class="xwdt" data-xwp="${f.id}|${d}|${st.id}" value="${pl}" aria-label="${esc(st.n)} 날짜">`:`<small>${ok?md(r.done[st.id]):od?'등록 전':(n<0?`${-n}일 지연`:'~'+mdw(du))}</small>`}</div>`}).join('')}
+   <div class="xwa"><button type="button" data-xwskip="${f.id}|${d}">이 회차 없음</button></div></div></details>`}
+function flowHTML(f){const R=rows(f),t=T();const late=R.filter(x=>!x.un&&x.du<t).length,soon=R.filter(x=>!x.un&&x.du>=t).length,pend=R.filter(x=>x.un).length;
+  const key='f|'+f.id,ekey='l|'+f.id,more='m|'+f.id;const show=XO.has(more)?R:R.slice(0,6);
+  const E0=epDates(f,addD(t,-60),addD(t,400)).filter(d=>d>=t||(f.steps||[]).some(st=>!isDone(f,d,st))).slice(0,14);
+  return`<details class="xwf" data-xwo="${key}"${XO.has('c'+key)?'':' open'}><summary>${AREA_E[f.k]||'💼'} ${esc(f.name)}<small>${late?`<b>지연 ${late}</b> · `:''}7일 ${soon}${pend?` · 미정 ${pend}`:''}</small><button type="button" class="xwic" data-xwedit="${f.id}" aria-label="${esc(f.name)} 설정">⚙</button></summary>
+   ${show.map(x=>rowHTML(f,x)).join('')||'<p class="hint">7일 안에 할 단계가 없습니다.</p>'}${R.length>6?`<button type="button" class="xwm" data-xwmore="${f.id}">${XO.has(more)?'▴ 줄이기':'＋ '+(R.length-6)+'개 더'}</button>`:''}
+   <details class="xwl" data-xwo="${ekey}"${XO.has(ekey)?' open':''}><summary>📅 회차 보기 <small>${cycTxt(f.cyc)}</small></summary>${E0.map(d=>epHTML(f,d)).join('')||'<p class="hint">기간 안에 회차가 없습니다.</p>'}</details></details>`}
+function cardHTML(){const L=FL();const open=LS('gj-xwc')!=='0';
+  return`<details class="crq xwcard" data-xwcard="1"${open?' open':''}><summary>🔁 반복 업무<small>${L.length?L.length+'개 ▾':'＋ 추가 ▾'}</small></summary>${L.map(flowHTML).join('')||'<p class="hint">주기적으로 돌아오는 일(방송 제작, 월간 보고 등)을 단계로 나눠 두면, 기준일에서 거꾸로 계산한 기한에 맞춰 할 단계가 여기에 올라옵니다.</p>'}<button type="button" class="crqc" data-xwnew="1">＋ 반복 업무 만들기</button></details>`}
+function paint(force){try{if(curSection!=='day'||!D)return;const B=document.getElementById('dayBody');if(!B)return;const old=B.querySelector('.xwcard');
+  if(D.date!==T()&&!FL().length){if(old)old.remove();return}
+  const h=cardHTML();if(old&&old._h===h&&!force)return;const Tp=document.createElement('template');Tp.innerHTML=h;const el=Tp.content.firstElementChild;el._h=h;
+  if(old){old.replaceWith(el);return}const a=B.querySelector('.crqm')||B.querySelector(':scope>.sched')||B.querySelector('.crqt');if(a)a.insertAdjacentElement('afterend',el);else B.appendChild(el)}catch(e){console.error('xw',e)}}
+window.xwPaint=paint;
+DECO.add('반복 업무',{root:'#dayBody',deep:true,wait:220,run:()=>paint(),now:true});
+const save=()=>{try{saveSet()}catch(e){}};
+document.addEventListener('toggle',e=>{const d=e.target;if(!d||!d.dataset)return;if(d.dataset.xwcard){LS('gj-xwc',d.open?'1':'0');return}const k=d.dataset.xwo;if(!k)return;
+  if(k[0]==='f'){d.open?XO.delete('c'+k):XO.add('c'+k)}else{d.open?XO.add(k):XO.delete(k)}xoSave()},true);
+const F=id=>FL().find(x=>x.id===id);
+document.addEventListener('click',async e=>{const t=e.target;if(!t.closest)return;let b;
+  if(b=t.closest('[data-xwd]')){e.preventDefault();e.stopPropagation();const[id,d,sid]=b.dataset.xwd.split('|');const f=F(id);if(!f)return;const r=E(f,d);r.done=r.done||{};if(r.done[sid])delete r.done[sid];else{r.done[sid]=T();const st=f.steps.find(s=>s.id===sid);toast(`✓ ${md(d)} ${f.ev||''} · ${st?st.n:''}`)}save();paint(true);return}
+  if(b=t.closest('[data-xwgo]')){const[id,d]=b.dataset.xwgo.split('|');XO.add('l|'+id);XO.add(`e|${id}|${d}`);xoSave();paint(true);setTimeout(()=>{const el=document.querySelector(`[data-xwo="e|${id}|${d}"]`);if(el)el.scrollIntoView({block:'center',behavior:'smooth'})},60);return}
+  if(b=t.closest('[data-xwmore]')){const k='m|'+b.dataset.xwmore;XO.has(k)?XO.delete(k):XO.add(k);xoSave();paint(true);return}
+  if(b=t.closest('[data-xwskip]')){const[id,d]=b.dataset.xwskip.split('|');const f=F(id);if(!f||!(await uiConfirm(`${mdw(d)} 회차를 목록에서 뺄까요? (휴일·취소 등)`)))return;E(f,d).skip=1;save();paint(true);return}
+  if(b=t.closest('[data-xwedit]')){e.preventDefault();e.stopPropagation();openMgr(b.dataset.xwedit);return}
+  if(b=t.closest('[data-xwnew]')){e.preventDefault();openMgr(null);return}},true);
+document.addEventListener('change',e=>{const i=e.target;if(!i.dataset)return;
+  if(i.dataset.xwt){const[id,d]=i.dataset.xwt.split('|');const f=F(id);if(!f)return;const v=i.value.trim();if(v)E(f,d).t=v;else delete E(f,d).t;save();paint(true)}
+  else if(i.dataset.xwp){const[id,d,sid]=i.dataset.xwp.split('|');const f=F(id);if(!f)return;const r=E(f,d);r.pl=r.pl||{};if(i.value)r.pl[sid]=i.value;else delete r.pl[sid];save();paint(true)}},true);
+/* 설정창 */
+function openMgr(id){const S=$('#sheet');let f=id?JSON.parse(JSON.stringify(F(id))):null,tpl=null;
+  const fromTpl=k=>{const t=TPL[k];return{id:'xf'+uid(),name:t.name,ev:t.ev,k:'work',cyc:Object.assign({},t.cyc),start:T(),end:addD(T(),365),steps:t.steps.map(s=>({id:'s'+uid(),nm:s[0],n:s[1],u:s[2],k:s[3]}))}};
+  if(f)f.steps=(f.steps||[]).map(s=>({id:s.id,nm:s.n,n:+s.o||0,u:s.u||'d',k:s.k||'due'}));
+  const close=()=>{S.hidden=true;S.innerHTML=''};
+  const draw=()=>{if(!f){S.innerHTML=`<div class="sheetbox xwm1" role="dialog" aria-label="반복 업무 만들기"><div class="shead"><b>🔁 반복 업무 만들기</b><button class="del" id="xwx">닫기</button></div><p class="hint">비슷한 틀을 고른 뒤 이름·주기·단계를 고쳐 쓰십시오.</p>${Object.entries(TPL).map(([k,t])=>`<button type="button" class="xwtp" data-xwtp="${k}"><b>${t.name||'빈 틀'}</b><small>${cycTxt(t.cyc)} · ${t.steps.map(s=>s[0]).join(' → ')}</small></button>`).join('')}</div>`;S.hidden=false;{const x=$('#xwx');if(x)x.onclick=close}S.onclick=ev=>{if(ev.target===S)close()};S.querySelectorAll('[data-xwtp]').forEach(b=>b.onclick=()=>{f=fromTpl(b.dataset.xwtp);draw()});return}
+    const c=f.cyc;const ref=epDates(f,T(),addD(T(),400))[0];
+    S.innerHTML=`<div class="sheetbox xwm1" role="dialog" aria-label="반복 업무 설정"><div class="shead"><b>🔁 ${esc(f.name||'새 반복 업무')}</b><button class="del" id="xwx">닫기</button></div>
+     <label class="xwlb">업무 이름<input id="xwnm" value="${esc(f.name)}" maxlength="30" placeholder="예: 강군인사이드, 월간 계획 보고"></label>
+     <div class="xwrow"><label class="xwlb">기준일 이름<input id="xwev" value="${esc(f.ev||'')}" maxlength="6" placeholder="방송·보고·마감"></label><label class="xwlb">기둥<select id="xwk">${SCORE.map(([k,l])=>`<option value="${k}"${f.k===k?' selected':''}>${AREA_E[k]||''} ${esc(l)}</option>`).join('')}</select></label></div>
+     <div class="xwrow"><label class="xwlb">주기<select id="xwct"><option value="w"${c.t==='w'?' selected':''}>매주</option><option value="w2"${c.t==='w2'?' selected':''}>격주</option><option value="m"${c.t==='m'?' selected':''}>매월 ○일</option><option value="mn"${c.t==='mn'?' selected':''}>매월 ○째 ○요일</option><option value="q"${c.t==='q'?' selected':''}>분기</option></select></label>
+      ${c.t==='mn'?`<label class="xwlb">몇째<select id="xwnth">${[1,2,3,4,5].map(n=>`<option value="${n}"${(+c.nth||1)===n?' selected':''}>${n===5?'마지막':n+'째'}</option>`).join('')}</select></label>`:''}
+      ${c.t==='w'||c.t==='w2'||c.t==='mn'?`<label class="xwlb">요일<select id="xwwd">${[...WD].map((w,i)=>`<option value="${i}"${(+c.wd||0)===i?' selected':''}>${w}</option>`).join('')}</select></label>`:`<label class="xwlb">날짜<input id="xwmd" type="number" min="1" max="31" value="${c.md||1}"></label>`}</div>
+     ${c.t==='w'?`<label class="xwck"><input type="checkbox" id="xwsl"${c.sl?' checked':''}> 매월 마지막 주는 빼기</label>`:''}
+     <div class="xwrow"><label class="xwlb">시작<input type="date" id="xws" value="${f.start||T()}"></label><label class="xwlb">끝<input type="date" id="xwe" value="${f.end||addD(T(),365)}"></label></div>
+     <p class="hint">${cycTxt(c)} · 기간 안 ${epDates(f).length}회${ref?` · 다음 ${mdw(ref)}`:''}</p>
+     <p class="fl">단계 <small>(기준일 몇 일·주·개월 전까지 · <b>일정</b>은 촬영·검토처럼 날짜를 정할 일)</small></p>
+     ${f.steps.map((s,i)=>`<div class="xwst"><span>${CIR[i]||i+1}</span><input data-xws="${i}|nm" value="${esc(s.nm)}" maxlength="30" aria-label="단계 이름"><input data-xws="${i}|n" type="number" min="0" max="730" value="${s.n}" aria-label="기간"><select data-xws="${i}|u">${Object.entries(UN).map(([k,l])=>`<option value="${k}"${s.u===k?' selected':''}>${l} 전</option>`).join('')}</select><select data-xws="${i}|k"><option value="due"${s.k!=='sch'?' selected':''}>마감</option><option value="sch"${s.k==='sch'?' selected':''}>일정</option></select><button type="button" data-xwmv="${i}|-1"${i?'':' disabled'} aria-label="위로">↑</button><button type="button" data-xwdel="${i}" aria-label="지우기">✕</button>${ref?`<small>${mdw(autoDue(ref,{n:s.n,u:s.u}))}</small>`:''}</div>`).join('')}
+     <button type="button" class="crqc" id="xwadd">＋ 단계 추가</button>
+     <div class="row" style="justify-content:space-between;margin-top:12px">${id?'<button class="del" id="xwrm">이 업무 지우기</button>':'<span></span>'}<button class="btn" id="xwok">저장</button></div></div>`;
+    S.hidden=false;{const x=$('#xwx');if(x)x.onclick=close}S.onclick=ev=>{if(ev.target===S)close()};
+    const rd=()=>{f.name=$('#xwnm').value.trim();f.ev=$('#xwev').value.trim();f.k=$('#xwk').value;c.t=$('#xwct').value;const g=s=>S.querySelector(s);if(g('#xwwd'))c.wd=+g('#xwwd').value;if(g('#xwmd'))c.md=Math.max(1,Math.min(31,+g('#xwmd').value||1));if(g('#xwnth'))c.nth=+g('#xwnth').value;if(g('#xwsl'))c.sl=g('#xwsl').checked?1:0;if(c.t!=='w')delete c.sl;f.start=$('#xws').value||T();f.end=$('#xwe').value||addD(f.start,365)};
+    S.querySelectorAll('#xwct,#xwwd,#xwmd,#xwnth,#xwsl,#xws,#xwe').forEach(i=>i.onchange=()=>{rd();draw()});
+    S.querySelectorAll('[data-xws]').forEach(i=>i.onchange=()=>{rd();const[ix,k]=i.dataset.xws.split('|');const s=f.steps[+ix];if(k==='n')s.n=Math.max(0,Math.min(730,Math.round(+i.value)||0));else s[k]=k==='nm'?i.value.trim().slice(0,30):i.value;draw()});
+    S.querySelectorAll('[data-xwmv]').forEach(b=>b.onclick=()=>{rd();const[ix]=b.dataset.xwmv.split('|').map(Number);const a=f.steps;[a[ix-1],a[ix]]=[a[ix],a[ix-1]];draw()});
+    S.querySelectorAll('[data-xwdel]').forEach(b=>b.onclick=()=>{rd();if(f.steps.length<=1)return;f.steps.splice(+b.dataset.xwdel,1);draw()});
+    $('#xwadd').onclick=()=>{rd();f.steps.push({id:'s'+uid(),nm:'새 단계',n:0,u:'d',k:'due'});draw()};
+    const rm=$('#xwrm');if(rm)rm.onclick=async()=>{if(!(await uiConfirm(`'${f.name}'와 체크 기록을 모두 지울까요?`)))return;SET.flows=FL().filter(x=>x.id!==id);save();close();paint(true)};
+    $('#xwok').onclick=()=>{rd();if(!f.name){toast('업무 이름을 적어 주십시오.');return}const out={c0:(id&&F(id).c0)||T(),id:f.id,name:f.name.slice(0,30),ev:f.ev||'기준일',k:f.k,cyc:c,start:f.start,end:f.end,steps:f.steps.filter(s=>s.nm).map(s=>({id:s.id,n:s.nm,o:+s.n||0,u:s.u,k:s.k})),ep:(id&&F(id).ep)||{}};
+      const L=FL(),ix=L.findIndex(x=>x.id===out.id);if(ix>=0)L[ix]=out;else L.push(out);save();close();toast(`🔁 ${out.name} 저장`);paint(true)}};
+  draw()}
+window.xwOpen=openMgr;
+/* 단계 데이터 형식: {id,n:이름,o:기간,u:단위,k} → 계산용으로 맞춤 */
+const st2=document.createElement('style');st2.textContent=`html body #dayBody.ezstart:not(.ezmore)>.xwcard.xwcard{display:block!important}.xws.od span{color:var(--muted)}.xwf{border-top:1px solid var(--line);padding:2px 0}.xwf>summary,.xwl>summary,.xwe>summary{display:flex;align-items:center;gap:6px;cursor:pointer;list-style:none;min-height:34px}.xwf>summary::-webkit-details-marker,.xwl>summary::-webkit-details-marker,.xwe>summary::-webkit-details-marker{display:none}.xwf>summary{font-weight:700;font-size:.9rem}.xwf>summary::before,.xwl>summary::before{content:'▸';color:var(--muted)}.xwf[open]>summary::before,.xwl[open]>summary::before{content:'▾'}.xwf>summary small,.xwl>summary small{color:var(--muted);font-weight:400;font-size:.74rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.xwf>summary small b{color:#c0392b}.xwic{margin-left:auto;border:1px dashed var(--line);background:none;border-radius:8px;min-width:30px;min-height:28px}.xwr{display:flex;align-items:center;gap:6px;font-size:.82rem;min-height:34px;border-left:3px solid var(--line);padding-left:4px;margin:2px 0}.xwr.late{border-left-color:#c0392b}.xwr.tdy{border-left-color:#d68910}.xwr.un{border-left-style:dashed;border-left-color:#2e6bc0}.xwr .xwn{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}.xwr em{color:var(--muted);font-style:normal}.xwr small{flex:none;font-size:.72rem;color:var(--muted)}.xwr.late small{color:#c0392b;font-weight:700}.xwr.tdy small{color:#d68910;font-weight:700}.xwr.un small{color:#2e6bc0}.xwc{flex:none;width:30px;height:30px;border:1px solid var(--line);background:var(--paper);border-radius:6px;font-size:.9rem;padding:0}.xwm{border:0;background:none;color:var(--pen);font-size:.78rem;padding:4px 0}.xwl{margin:4px 0 2px}.xwl>summary{font-size:.82rem;font-weight:600}.xwe{border:1px solid var(--line);border-left:4px solid var(--line);border-radius:8px;margin:4px 0;padding:0 6px}.xwe.late{border-left-color:#c0392b}.xwe.ok{border-left-color:#2e7d6b;opacity:.75}.xwe>summary{font-size:.8rem}.xwe>summary b{flex:none}.xwe>summary span{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.xwe>summary i{color:var(--muted)}.xwe>summary small{flex:none;color:var(--muted);font-size:.72rem}.xwb{padding:2px 0 8px}.xwti{width:100%;margin:2px 0 4px;font-size:.84rem}.xws{display:flex;align-items:center;gap:6px;font-size:.82rem;min-height:34px}.xws span{flex:1;min-width:0}.xws u{text-decoration:none;font-size:.68rem;border:1px solid #2e6bc0;color:#2e6bc0;border-radius:4px;padding:0 3px}.xws small{color:var(--muted);font-size:.72rem}.xws.late small{color:#c0392b;font-weight:700}.xws.ok span{color:var(--muted);text-decoration:line-through}.xwdt{font-size:.76rem;max-width:8.5em}.xwa{display:flex;justify-content:flex-end;margin-top:4px}.xwa button{border:1px dashed var(--line);background:none;border-radius:8px;font-size:.74rem;padding:3px 8px;color:var(--muted)}.xwtp{display:flex;flex-direction:column;align-items:flex-start;gap:2px;width:100%;text-align:left;border:1px solid var(--line);background:var(--paper);border-radius:10px;padding:10px;margin:6px 0}.xwtp small{color:var(--muted);font-size:.74rem}.xwlb{display:flex;flex-direction:column;gap:2px;font-size:.78rem;color:var(--muted);flex:1;min-width:0;margin:4px 0}.xwrow{display:flex;gap:8px}.xwck{display:flex;gap:6px;align-items:center;font-size:.82rem;margin:4px 0}.xwst{display:flex;flex-wrap:wrap;align-items:center;gap:4px;padding:4px 0;border-top:1px solid var(--line)}.xwst>span{width:1.4em;color:var(--muted)}.xwst input:not([type=number]){flex:1;min-width:8em}.xwst input[type=number]{width:3.8em!important;flex:none!important}.xwst select{width:auto!important;flex:none!important;min-width:0}.xwst button{border:1px solid var(--line);background:none;border-radius:6px;min-width:30px;min-height:30px}.xwst small{width:100%;padding-left:1.8em;color:var(--muted);font-size:.72rem}`;document.head.appendChild(st2);
 })();
 </script>
 </body></html>
