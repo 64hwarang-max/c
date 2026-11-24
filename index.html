@@ -16303,7 +16303,7 @@ async function syPutSafe(B,k,v){if(!k.startsWith('day:')||!v||typeof v!=='object
 {const _o=openDay;openDay=async function(d){try{staleGuardInstall()}catch(e){}return _o.apply(this,arguments)}}
 {const _f=flush0;flush0=async function(){try{staleGuardInstall()}catch(e){}return _f.apply(this,arguments)}}
 /* v390 ① 앱 버전 표시 · 새 버전 알림 (GitHub에서 마지막으로 성공한 빌드 번호와 비교) */
-var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/554})();
+var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/555})();
 const VRK='gj-verchk',VRURL='https://github.com/64hwarang-max/c/actions/workflows/build-apk.yml';
 const vrGet=()=>{try{return JSON.parse(localStorage.getItem(VRK)||'{}')}catch(e){return{}}};
 async function vrCheck(force){const c=vrGet();if(!force&&c.t&&Date.now()-c.t<6*36e5)return c;
@@ -19041,7 +19041,7 @@ function flowHTML(f){const R=rows(f),t=T();const late=R.filter(x=>!x.un&&x.du<t)
 function cardHTML(){const L=FL();const open=LS('gj-xwc')!=='0';
   return`<details class="crq xwcard" data-xwcard="1"${open?' open':''}><summary>🔁 반복 업무<small>${L.length?L.length+'개 ▾':'＋ 추가 ▾'}</small></summary>${L.map(flowHTML).join('')||'<p class="hint">주기적으로 돌아오는 일(방송 제작, 월간 보고 등)을 단계로 나눠 두면, 기준일에서 거꾸로 계산한 기한에 맞춰 할 단계가 여기에 올라옵니다.</p>'}<button type="button" class="crqc" data-xwnew="1">＋ 반복 업무 만들기</button></details>`}
 function paint(force){try{if(curSection!=='day'||!D)return;const B=document.getElementById('dayBody');if(!B)return;const old=B.querySelector('.xwcard');
-  if(D.date!==T()&&!FL().length){if(old)old.remove();return}
+  if(mode==='pm'||(!FL().length&&(mode!=='start'||D.date!==T()))){if(old)old.remove();return}
   const h=cardHTML();if(old&&old._h===h&&!force)return;const Tp=document.createElement('template');Tp.innerHTML=h;const el=Tp.content.firstElementChild;el._h=h;
   if(old){old.replaceWith(el);return}const a=B.querySelector('.crqm')||B.querySelector(':scope>.sched');if(a)a.insertAdjacentElement('afterend',el);else B.appendChild(el)}catch(e){console.error('xw',e)}}
 window.xwPaint=paint;
@@ -19274,7 +19274,8 @@ function chipsOf(k){try{const X=crqData();const g=X.G.find(([kk])=>kk===k);if(!g
 function panelHTML(k){let h=chipsOf(k);try{if(typeof cyPilLine==='function')h+=cyPilLine(k)}catch(e){}  try{h+=areaExtraHTML(k)}catch(e){}try{h+=areaNoteRow(k)}catch(e){}
   return h||'<p class="hint">이 기둥에 적을 기록 칸이 없습니다.</p>'}
 function build(row,k){const p=document.createElement('div');p.className='xevp';p.dataset.k=k;p.dataset.date=D.date;p.innerHTML=panelHTML(k);row.after(p);
-  p.querySelectorAll('.panel').forEach(x=>{if(x.querySelector('[data-gocare],[data-xadd]'))x.remove()});
+  p.querySelectorAll('.crbox').forEach(x=>x.remove());
+  p.querySelectorAll('.panel').forEach(x=>{if(x.querySelector('[data-gocare],[data-xadd],[data-crsl],.crsl,[data-crv]')||/세부 평가/.test((x.querySelector('h2,h3')||{}).textContent||''))x.remove()});
   try{bindAll(p)}catch(e){console.warn('xev bind',e)}
   const W=p.querySelector('.xevwk .wkp');if(W)try{wkBind(W,()=>{const y=scrollY;const o=p;const r=o.previousElementSibling;o.remove();build(r,k);scrollTo(0,y);try{crqPaint()}catch(e){}})}catch(e){}}
 function paint(){try{if(curSection!=='day'||!D)return;const T=document.querySelector('#dayBody .crqt');if(!T)return;
@@ -19457,7 +19458,8 @@ const st=document.createElement('style');st.textContent=`.gam{margin-top:4px}.gl
 /* v553: 전체 항목 카드 정리 — 기둥 한 줄, 작은 칩, 편집 버튼은 ✎ 편집을 눌렀을 때만 */
 (function(){
 const LS=(k,v)=>{try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){return null}};
-function paint(){document.querySelectorAll('.crq.crqa').forEach(A=>{A.classList.toggle('crqed',LS('gj-crqed')==='1');const w=A.querySelector('[data-evw]');if(w&&!A.querySelector('[data-crqed]')){w.insertAdjacentHTML('afterend',`<button type="button" class="crqc" data-crqed="1">✎ 항목 편집</button>`)}const b=A.querySelector('[data-crqed]');if(b)b.textContent=LS('gj-crqed')==='1'?'✓ 편집 끝':'✎ 항목 편집'})}
+function paint(){document.querySelectorAll('.crq.crqm').forEach(A=>{A.classList.toggle('crqed',LS('gj-crqed')==='1');const h=A.querySelector(':scope>.hint');if(h&&!A.querySelector('[data-crqed]'))h.insertAdjacentHTML('beforebegin','<button type="button" class="crqc" data-crqed="1" style="margin:6px 0 0">✎ 항목 편집</button>');const b=A.querySelector('[data-crqed]');if(b)b.textContent=LS('gj-crqed')==='1'?'✓ 편집 끝':'✎ 항목 편집'});
+  document.querySelectorAll('.crq.crqa').forEach(A=>{A.classList.toggle('crqed',LS('gj-crqed')==='1');const w=A.querySelector('[data-evw]');if(w&&!A.querySelector('[data-crqed]')){w.insertAdjacentHTML('afterend',`<button type="button" class="crqc" data-crqed="1">✎ 항목 편집</button>`)}const b=A.querySelector('[data-crqed]');if(b)b.textContent=LS('gj-crqed')==='1'?'✓ 편집 끝':'✎ 항목 편집'})}
 DECO.add('전체 항목 정리',{root:'#dayBody',deep:true,wait:120,run:paint,now:true});
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-crqed]');if(!b)return;e.preventDefault();e.stopPropagation();LS('gj-crqed',LS('gj-crqed')==='1'?'0':'1');paint()},true);
 const st=document.createElement('style');st.textContent=`.crsy{font-style:normal;opacity:.45;font-size:.85em;margin-right:1px}.crqc.ok .crsy,.crqc.part .crsy,.crqc.bad .crsy{opacity:1}
@@ -19465,7 +19467,7 @@ const st=document.createElement('style');st.textContent=`.crsy{font-style:normal
 .crqa .crqg>i:first-child{position:absolute;left:0;top:12px;width:5em;font-style:normal;font-size:.78rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .crqa .crqc{font-size:.76rem!important;padding:3px 9px!important;min-height:28px!important;border-radius:14px}
 .crqa .crqc small{font-size:.66rem;opacity:.75;margin-left:3px}
-.crqa:not(.crqed) .crqc.ed{display:none!important}
+.crqa:not(.crqed) .crqc.ed{display:none!important}.crqm:not(.crqed) .crmr{display:none!important}.crqm>.hint{display:none}
 .crqa [data-evw],.crqa [data-crqed]{margin:0 4px 6px 0}`;document.head.appendChild(st);
 })();
 </script>
