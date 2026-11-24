@@ -16303,7 +16303,7 @@ async function syPutSafe(B,k,v){if(!k.startsWith('day:')||!v||typeof v!=='object
 {const _o=openDay;openDay=async function(d){try{staleGuardInstall()}catch(e){}return _o.apply(this,arguments)}}
 {const _f=flush0;flush0=async function(){try{staleGuardInstall()}catch(e){}return _f.apply(this,arguments)}}
 /* v390 ① 앱 버전 표시 · 새 버전 알림 (GitHub에서 마지막으로 성공한 빌드 번호와 비교) */
-var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/558})();
+var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/559})();
 const VRK='gj-verchk',VRURL='https://github.com/64hwarang-max/c/actions/workflows/build-apk.yml';
 const vrGet=()=>{try{return JSON.parse(localStorage.getItem(VRK)||'{}')}catch(e){return{}}};
 async function vrCheck(force){const c=vrGet();if(!force&&c.t&&Date.now()-c.t<6*36e5)return c;
@@ -19274,6 +19274,7 @@ function chipsOf(k){try{const X=crqData();const g=X.G.find(([kk])=>kk===k);if(!g
 function panelHTML(k){let h=chipsOf(k);try{if(typeof cyPilLine==='function')h+=cyPilLine(k)}catch(e){}  try{h+=areaExtraHTML(k)}catch(e){}try{h+=areaNoteRow(k)}catch(e){}
   return h||'<p class="hint">이 기둥에 적을 기록 칸이 없습니다.</p>'}
 function build(row,k){const p=document.createElement('div');p.className='xevp';p.dataset.k=k;p.dataset.date=D.date;p.innerHTML=panelHTML(k);row.after(p);
+  try{xUnwrap(p)}catch(e){}
   p.querySelectorAll('.crbox').forEach(x=>x.remove());
   p.querySelectorAll('.panel').forEach(x=>{if(x.querySelector('[data-gocare],[data-xadd],[data-crsl],.crsl,[data-crv]')||/세부 평가/.test((x.querySelector('h2,h3')||{}).textContent||''))x.remove()});
   try{bindAll(p)}catch(e){console.warn('xev bind',e)}
@@ -19289,21 +19290,54 @@ window.xevInto=(host,k)=>{host.innerHTML='';const an=document.createElement('i')
 DECO.add('평가 기둥 펼치기',{root:'#dayBody',deep:true,wait:200,run:paint,now:true});
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-xevk]');if(!b)return;e.preventDefault();e.stopPropagation();const k=b.dataset.xevk;EVO.has(k)?EVO.delete(k):EVO.add(k);sv();paint()},true);
 const st=document.createElement('style');st.textContent=`[data-xevk]{cursor:pointer;display:inline-flex;align-items:center;gap:2px}[data-xevk]::after{content:'▸';color:var(--muted);font-size:.7rem;margin-left:4px}[data-xevk].xon::after{content:'▾'}.xevp{margin:2px 0 8px;padding:6px 8px 8px;border-left:3px solid var(--pen);background:color-mix(in srgb,var(--pen) 5%,transparent);border-radius:0 8px 8px 0}.xevp .panel.sub{margin:6px 0!important;box-shadow:none!important}.xevp .panel.sub h2{font-size:.88rem}.xevc{display:flex;flex-wrap:wrap;gap:4px;align-items:center;margin-bottom:4px}.xevc>small{color:var(--muted);font-size:.72rem;margin-right:2px}.xevc .crqc{font-size:.76rem;padding:3px 8px;min-height:28px}.xevc .crsd{flex-basis:100%}.xevwk .wkp{margin:6px 0!important;box-shadow:none!important}.xevwk .wkp>h3{font-size:.88rem}`;document.head.appendChild(st);
-/* 챙길 것: 기둥마다 둘째 줄에 일지(실행 기록) */
+function xUnwrap(d){d.querySelectorAll('.axv').forEach(w=>{const ps=[...w.querySelectorAll('.panel')].filter(p=>!p.parentElement.closest('.panel'));const f=document.createDocumentFragment();ps.forEach(p=>{f.appendChild(p)});w.replaceWith(f)});d.querySelectorAll('.panel').forEach(p=>{p.classList.remove('pclosed','pcol');p.classList.add('nocol');p.removeAttribute('data-col');p.removeAttribute('data-pkey');p.removeAttribute('data-defopen')})}
+window.xUnwrap=xUnwrap;
+/* v559: 챙길 것 — 기둥마다 일지(기록판)를 골라 보이기, 누르면 그 기둥에 맞는 판이 그 자리에 열림 */
 function jtToday(id){return[...NOTES.values()].find(n=>n.jt===id&&n.date===D.date)}
-window.crqjHTML=function(k){try{const J=Object.entries(JT||{}).filter(([id,j])=>(j.area||'')===k&&id!=='ex');const out=[];
-  if(k==='body'){const n=(()=>{try{return wkList(D).length}catch(e){return 0}})();out.push(`<button type="button" class="crqc${LS('gj-xrun-ex')==='1'?' on':''}" data-xrun="ex">🏋️ 운동${n?' '+n:''}</button>`)}
-  J.forEach(([id,j])=>{const n=jtToday(id);out.push(`<button type="button" class="crqc${n?' ok':''}" data-xrunj="${esc(id)}">${esc(j.e||'📝')} 일지${n?' ✓':''}</button>`)});
-  if(!J.length&&k!=='body'){const L=[...NOTES.values()].filter(n=>n&&n.kind==='note'&&!n.jt&&n.date===D.date&&(()=>{try{return noteArea(n)===k}catch(e){return false}})());L.slice(0,3).forEach(n=>out.push(`<button type="button" class="crqc ok" data-opennote="${n.id}">📄 ${esc((n.title||'일지').slice(0,6))}</button>`));out.push(`<button type="button" class="crqc ed" data-newnote="${k}">📝 일지</button>`)}
-  return`<div class="crqj"><small>일지</small>${out.join('')}</div>${k==='body'&&LS('gj-xrun-ex')==='1'?'<div class="crqwk"></div>':''}`}catch(e){return''}};
-function wkPaint(){try{if(curSection!=='day'||!D||typeof wkPanelHTML!=='function')return;const X=document.querySelector('#dayBody .crqt .crqwk');if(!X||X._d===D.date&&X.firstChild)return;X._d=D.date;X.innerHTML=wkPanelHTML();const P=X.querySelector('.wkp');if(P)wkBind(P,()=>{const y=scrollY;X.innerHTML='';X._d='';wkPaint();scrollTo(0,y);try{crqPaint()}catch(e){}})}catch(e){console.warn('crqwk',e)}}
-DECO.add('챙길 것 운동 기록',{root:'#dayBody',deep:true,wait:200,run:wkPaint,now:true});
+const BL={fin:'💰 오늘 쓴 돈',rel:'🤝 만남 기록',body:'🍽 식사·수면',spirit:'🙏 기도·예배',work:'💼 한 일·내일',grow:'📚 공부·배운 것',home:'🏠 가정 기록',mind:'💗 감사·생각',habit:'✅ 습관',life:'😴 수면'};
+const TAGN={spirit:[['qt','📖 큐티','큐티'],['nur','🌱 양육','양육']]};
+function jOpts(k){const o=[];if(k==='body')o.push(['ex','🏋️ 운동']);
+  if(BL[k]){let h='';try{h=boardRaw(k)}catch(e){}if(h&&h.replace(/<[^>]+>/g,'').trim().length>2)o.push(['b',BL[k]])}
+  (TAGN[k]||[]).forEach(([id,l])=>o.push([id,l]));
+  Object.entries(JT||{}).filter(([id,j])=>(j.area||'')===k&&id!=='ex').forEach(([id,j])=>o.push(['jt:'+id,`${j.e||'📝'} ${j.n}`]));
+  o.push(['n','📝 노트']);return o}
+function jVis(k){const V=(SET.crqjV||{})[k];const O=jOpts(k);if(Array.isArray(V))return O.filter(x=>V.includes(x[0]));const def=O.filter(x=>x[0]!=='n');return def.length?def:O}
+function boardRaw(k){if(k==='life'){const h=lifeHTML('body')||'';const d=document.createElement('div');d.innerHTML=h;const p=[...d.querySelectorAll('.panel')].find(x=>/잠|수면/.test((x.querySelector('h2')||{}).textContent||''));return p?p.outerHTML:''}
+  const d=document.createElement('div');d.innerHTML=areaExtraHTML(k);xUnwrap(d);d.querySelectorAll('.crbox').forEach(x=>x.remove());d.querySelectorAll('.panel').forEach(x=>{if(/노트\s*$/.test(((x.querySelector('h2')||{}).textContent||'').replace(/[⠿▸▾]/g,'').trim()))x.remove()});d.querySelectorAll('.panel').forEach(x=>{if(x.querySelector('[data-gocare],[data-xadd]'))x.remove()});if(k==='body')d.querySelectorAll('.panel').forEach(x=>{if(/잠|수면/.test((x.querySelector('h2')||{}).textContent||'')&&false)x.remove()});return d.innerHTML}
+const JO=()=>LS('gj-crqjo')||'';
+window.crqjHTML=function(k){try{const out=[];const op=JO();
+  jVis(k).forEach(([id,l])=>{let ok=false,badge='';if(id==='ex'){const n=(()=>{try{return wkList(D).length}catch(e){return 0}})();if(n){ok=true;badge=' '+n}}
+    else if(id.startsWith('jt:'))ok=!!jtToday(id.slice(3));
+    else if(TAGN[k]&&TAGN[k].some(t=>t[0]===id)){const tg=TAGN[k].find(t=>t[0]===id)[2];ok=[...NOTES.values()].some(n=>n.date===D.date&&(n.tags||[]).includes(tg))}
+    const on=op===k+'|'+id;out.push(`<button type="button" class="crqc${ok?' ok':''}${on?' on':''}" data-crqj="${k}|${id}">${esc(l)}${badge}${ok&&!badge?' ✓':''}</button>`)});
+  const op2=op.startsWith(k+'|')&&(op.endsWith('|ex')||op.endsWith('|b'));
+  return`<div class="crqj">${out.join('')}</div>${op2?`<div class="crqb" data-b="${esc(op)}"></div>`:''}`}catch(e){return''}};
+function jPaint(){try{if(curSection!=='day'||!D)return;const X=document.querySelector('#dayBody .crqt .crqb');if(!X||X._d===D.date+X.dataset.b&&X.firstChild)return;X._d=D.date+X.dataset.b;const[k,id]=X.dataset.b.split('|');
+  if(id==='ex'&&typeof wkPanelHTML==='function'){X.innerHTML=wkPanelHTML();const P=X.querySelector('.wkp');if(P)wkBind(P,()=>{const y=scrollY;X.innerHTML='';X._d='';jPaint();scrollTo(0,y);try{crqPaint()}catch(e){}})}
+  else if(id==='b'){X.innerHTML=boardRaw(k);try{bindAll(X)}catch(e){console.warn('crqb bind',e)}}}catch(e){console.warn('crqb',e)}}
+DECO.add('챙길 것 기록판',{root:'#dayBody',deep:true,wait:200,run:jPaint,now:true});
+function tagNote(k,tg){let n=[...NOTES.values()].find(x=>x.date===D.date&&(x.tags||[]).includes(tg));if(!n){const tp=noteTopicFor(k);const id='note-'+uid();n={kind:'note',id,date:D.date,topic:tp&&tp.id,title:tg,body:'',photos:[],tags:[tg],area:k,created:Date.now(),updated:Date.now()};NOTES.set(id,n);saveNote(n,true)}NLH=[];nEdit=n.id;nReturn='day';go('note',true)}
+function openJt(id){let n=jtToday(id);if(!n){const J=JT[id];const nid='note-'+uid();n={kind:'note',id:nid,date:D.date,topic:ensureTopic(J.n),title:'',body:'',photos:[],tags:[J.n],jt:id,jf:{},created:Date.now(),updated:Date.now()};if(J.area)n.area=J.area;NOTES.set(nid,n);saveNote(n,true)}NLH=[];nEdit=n.id;nReturn='day';go('note',true)}
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-crqj]');if(!b)return;e.preventDefault();e.stopPropagation();const[k,id]=b.dataset.crqj.split('|');
+  if(id==='ex'||id==='b'){const v=k+'|'+id;LS('gj-crqjo',JO()===v?'':v);try{crqPaint()}catch(_){}return}
+  if(id.startsWith('jt:')){openJt(id.slice(3));return}
+  const tg=(TAGN[k]||[]).find(t=>t[0]===id);if(tg){tagNote(k,tg[2]);return}
+  if(id==='n'){const ex=[...NOTES.values()].find(n=>n&&n.kind==='note'&&!n.jt&&n.date===D.date&&(()=>{try{return noteArea(n)===k}catch(_){return false}})());if(ex){NLH=[];nEdit=ex.id;nReturn='day';go('note',true)}else{const tp=noteTopicFor(k);nReturn='day';go('note');newNote(tp&&tp.id,D.date,k)}}},true);
+/* 일지 고르기 */
+function openPick(){const S=$('#sheet');const close=()=>{S.hidden=true;S.innerHTML='';try{crqPaint()}catch(_){}};const dr=()=>{S.innerHTML=`<div class="sheetbox" role="dialog" aria-label="일지 고르기"><div class="shead"><b>📝 기둥별 일지 고르기</b><button class="del" id="jpx">닫기</button></div><p class="hint">오늘 챙길 것에서 기둥마다 보일 일지·기록판을 고르십시오. 눌러서 켜고 끕니다.</p>
+  ${SCORE.map(([k,l])=>{const V=jVis(k).map(x=>x[0]);return`<div class="jpr"><b>${AREA_E[k]||''} ${esc(l)}</b><div>${jOpts(k).map(([id,lab])=>`<button type="button" class="crqc${V.includes(id)?' ok':''}" data-jpk="${k}|${id}">${V.includes(id)?'✓ ':''}${esc(lab)}</button>`).join('')}</div></div>`}).join('')}<p class="hint">일지 양식(예: 큐티 일지·만남 일지)은 설정의 일지 양식에서 더 만들 수 있고, 만들면 여기에 나옵니다.</p></div>`;
+  S.hidden=false;{const x=$('#jpx');if(x)x.onclick=close}S.onclick=e=>{if(e.target===S)close()};
+  S.querySelectorAll('[data-jpk]').forEach(b=>b.onclick=()=>{const[k,id]=b.dataset.jpk.split('|');SET.crqjV=SET.crqjV||{};const V=jVis(k).map(x=>x[0]);const i=V.indexOf(id);if(i>=0)V.splice(i,1);else V.push(id);SET.crqjV[k]=V;saveSet().catch(()=>{});dr()})};dr()}
+window.crqjPick=openPick;
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-jpick]');if(!b)return;e.preventDefault();e.stopPropagation();openPick()},true);
+function pickBtn(){try{const T=document.querySelector('#dayBody .crqt');if(!T||!T.querySelector('.crqj'))return;if(T.querySelector('[data-jpick]'))return;const L=[...T.querySelectorAll('.crqg')].pop();if(L)L.insertAdjacentHTML('afterend','<div class="jpbar"><button type="button" class="crqc ed" data-jpick="1">⚙ 일지 고르기</button></div>')}catch(e){}}
+DECO.add('일지 고르기 버튼',{root:'#dayBody',deep:true,wait:200,run:pickBtn,now:true});
 document.addEventListener('click',e=>{const t=e.target;if(!t.closest)return;let b;
   if(b=t.closest('[data-xrun]')){e.preventDefault();e.stopPropagation();const k=b.dataset.xrun;if(k==='ex'){LS('gj-xrun-ex',LS('gj-xrun-ex')==='1'?'0':'1');try{crqPaint()}catch(err){}}else if(k==='book'){try{bkQuick()}catch(err){toast('독서 기록을 열 수 없습니다.')}}return}
   if(b=t.closest('[data-xrunj]')){e.preventDefault();e.stopPropagation();const id=b.dataset.xrunj;let n=jtToday(id);
     if(!n){const J=JT[id];const nid='note-'+uid();n={kind:'note',id:nid,date:D.date,topic:ensureTopic(J.n),title:'',body:'',photos:[],tags:[J.n],jt:id,jf:{},created:Date.now(),updated:Date.now()};if(J.area)n.area=J.area;NOTES.set(nid,n);saveNote(n,true)}
     NLH=[];nEdit=n.id;nReturn='day';go('note',true);return}},true);
-const st2=document.createElement('style');st2.textContent=`.crqg>.crqwk{flex-basis:100%;width:100%}.crqj{display:contents}.crqj>small{display:none}.crqj .crqc{border-style:dashed}.crqj .crqc.on{outline:2px solid var(--pen)}.crqwk .wkp{margin:6px 0!important;box-shadow:none!important}.crqwk .wkp>h3{display:none}.xrun{margin:4px 0}.xrun>b{font-size:.88rem}.xrunc{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}.xrunc .crqc{font-size:.78rem;padding:4px 10px;min-height:30px}.xrunc .crqc.on{outline:2px solid var(--pen)}.xrunex .wkp{margin:8px 0 0!important;box-shadow:none!important}.xrunex .wkp>h3{display:none}`;document.head.appendChild(st2);
+const st2=document.createElement('style');st2.textContent=`.crqg>.crqb{flex-basis:100%;width:100%;margin:4px 0 6px;padding:6px 8px;border-left:3px solid var(--pen);background:color-mix(in srgb,var(--pen) 5%,transparent);border-radius:0 8px 8px 0}.crqb .panel.sub{margin:4px 0!important;box-shadow:none!important}.crqb .wkp>h3{display:none}.crqj .crqc.on{outline:2px solid var(--pen)}.jpbar{display:flex;justify-content:flex-end;margin:4px 0}.jpr{padding:6px 0;border-top:1px solid var(--line)}.jpr>b{font-size:.86rem}.jpr>div{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}.jpr .crqc{font-size:.78rem;padding:4px 10px;min-height:30px}.crqg>.crqwk{flex-basis:100%;width:100%}.crqj{display:contents}.crqj>small{display:none}.crqj .crqc{border-style:dashed}.crqj .crqc.on{outline:2px solid var(--pen)}.crqwk .wkp{margin:6px 0!important;box-shadow:none!important}.crqwk .wkp>h3{display:none}.xrun{margin:4px 0}.xrun>b{font-size:.88rem}.xrunc{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}.xrunc .crqc{font-size:.78rem;padding:4px 10px;min-height:30px}.xrunc .crqc.on{outline:2px solid var(--pen)}.xrunex .wkp{margin:8px 0 0!important;box-shadow:none!important}.xrunex .wkp>h3{display:none}`;document.head.appendChild(st2);
 })();
 </script>
 <script id="cy-js">
