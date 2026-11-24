@@ -16303,7 +16303,7 @@ async function syPutSafe(B,k,v){if(!k.startsWith('day:')||!v||typeof v!=='object
 {const _o=openDay;openDay=async function(d){try{staleGuardInstall()}catch(e){}return _o.apply(this,arguments)}}
 {const _f=flush0;flush0=async function(){try{staleGuardInstall()}catch(e){}return _f.apply(this,arguments)}}
 /* v390 ① 앱 버전 표시 · 새 버전 알림 (GitHub에서 마지막으로 성공한 빌드 번호와 비교) */
-var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/541})();
+var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/542})();
 const VRK='gj-verchk',VRURL='https://github.com/64hwarang-max/c/actions/workflows/build-apk.yml';
 const vrGet=()=>{try{return JSON.parse(localStorage.getItem(VRK)||'{}')}catch(e){return{}}};
 async function vrCheck(force){const c=vrGet();if(!force&&c.t&&Date.now()-c.t<6*36e5)return c;
@@ -19258,20 +19258,29 @@ const st=document.createElement('style');st.textContent=`#pck>details.pkg{margin
 })();
 </script>
 <script id="ev-js">
-/* v541: 일일평가 안에서 오늘 운동 기록 쓰기 */
+/* v542: 일일평가 — 기둥 이름을 누르면 그 기둥의 오늘 기록(체크·기록 칸·운동·노트)을 바로 적기 */
 (function(){
 const LS=(k,v)=>{try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){return null}};
-function build(T){const old=T.querySelector('.xevw');const n=(()=>{try{return wkList(D).length}catch(e){return 0}})();const open=LS('gj-xev')!=='0';
-  const el=document.createElement('details');el.className='xevw';el.dataset.date=D.date;if(open)el.open=true;
-  el.innerHTML=`<summary>🏋️ 오늘 운동 기록 <small>${n?n+'개':'아직 없음'}</small></summary>${wkPanelHTML()}`;
-  const lk=T.querySelector('.xlk');if(old)old.replaceWith(el);else if(lk)lk.before(el);else return;
-  el.addEventListener('toggle',()=>LS('gj-xev',el.open?'1':'0'));
-  const P=el.querySelector('.wkp');if(P)wkBind(P,()=>{const y=scrollY;build(T);scrollTo(0,y);try{crqPaint()}catch(e){}})}
-function paint(){try{if(curSection!=='day'||!D||typeof wkPanelHTML!=='function')return;const T=document.querySelector('#dayBody .crqt');if(!T)return;
-  if(!T.querySelector('.xlk')){const o=T.querySelector('.xevw');if(o)o.remove();return}
-  const o=T.querySelector('.xevw');if(o&&o.dataset.date===D.date)return;build(T)}catch(e){console.warn('xev',e)}}
-DECO.add('평가 속 운동 기록',{root:'#dayBody',deep:true,wait:250,run:paint,now:true});
-const st=document.createElement('style');st.textContent=`.xevw{margin-top:10px;border-top:1px dashed var(--line);padding-top:6px}.xevw>summary{display:flex;align-items:center;gap:6px;font-weight:700;font-size:.88rem;cursor:pointer;list-style:none;min-height:34px}.xevw>summary::-webkit-details-marker{display:none}.xevw>summary::before{content:'▸';color:var(--muted)}.xevw[open]>summary::before{content:'▾'}.xevw>summary small{color:var(--muted);font-weight:400}.xevw .wkp{margin:4px 0 0!important;box-shadow:none!important;border:0!important;padding:0!important;background:none!important}.xevw .wkp>h3{display:none}`;document.head.appendChild(st);
+const EVO=(()=>{try{return new Set(JSON.parse(LS('gj-evo')||'[]'))}catch(e){return new Set()}})();
+const sv=()=>LS('gj-evo',JSON.stringify([...EVO]));
+function chipsOf(k){try{const X=crqData();const g=X.G.find(([kk])=>kk===k);if(!g||!g[1].length)return'';return`<div class="xevc"><small>체크</small>${crmSub?crmSub(k,g[1]):g[1].map(r=>crqChip(k,r)).join('')}</div>`}catch(e){return''}}
+function panelHTML(k){let h=chipsOf(k);try{if(k==='body'&&typeof wkPanelHTML==='function')h+=`<div class="xevwk">${wkPanelHTML()}</div>`}catch(e){}
+  try{h+=areaExtraHTML(k)}catch(e){}try{h+=areaNoteRow(k)}catch(e){}
+  return h||'<p class="hint">이 기둥에 적을 기록 칸이 없습니다.</p>'}
+function build(row,k){const p=document.createElement('div');p.className='xevp';p.dataset.k=k;p.dataset.date=D.date;p.innerHTML=panelHTML(k);row.after(p);
+  p.querySelectorAll('.panel').forEach(x=>{if(x.querySelector('[data-gocare],[data-xadd]'))x.remove()});
+  try{bindAll(p)}catch(e){console.warn('xev bind',e)}
+  const W=p.querySelector('.xevwk .wkp');if(W)try{wkBind(W,()=>{const y=scrollY;const o=p;const r=o.previousElementSibling;o.remove();build(r,k);scrollTo(0,y);try{crqPaint()}catch(e){}})}catch(e){}}
+function paint(){try{if(curSection!=='day'||!D)return;const T=document.querySelector('#dayBody .crqt');if(!T)return;
+  if(!T.querySelector('.xlk')){T.querySelectorAll('.xevp').forEach(x=>x.remove());return}
+  T.querySelectorAll('.crev').forEach(row=>{const c=row.querySelector('[data-crjg],[data-crsc]');if(!c)return;const k=c.dataset.crjg||c.dataset.crsc.split('|')[0];
+    const lb=row.firstElementChild;if(lb&&!lb.dataset.xevk){lb.dataset.xevk=k;lb.setAttribute('role','button');lb.tabIndex=0}if(lb)lb.classList.toggle('xon',EVO.has(k));
+    const nx=row.nextElementSibling;const has=nx&&nx.classList.contains('xevp')&&nx.dataset.k===k;
+    if(EVO.has(k)){if(has&&nx.dataset.date===D.date)return;if(has)nx.remove();build(row,k)}else if(has)nx.remove()});
+  const hint=T.querySelector('.crevh');if(hint&&!T.querySelector('.xevhint')){const p=document.createElement('p');p.className='hint xevhint';p.textContent='기둥 이름을 누르면 그 기둥의 오늘 기록(체크·운동·식사·지출 등)을 바로 적을 수 있습니다.';hint.after(p)}}catch(e){console.warn('xev',e)}}
+DECO.add('평가 기둥 펼치기',{root:'#dayBody',deep:true,wait:200,run:paint,now:true});
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-xevk]');if(!b)return;e.preventDefault();e.stopPropagation();const k=b.dataset.xevk;EVO.has(k)?EVO.delete(k):EVO.add(k);sv();paint()},true);
+const st=document.createElement('style');st.textContent=`[data-xevk]{cursor:pointer;display:inline-flex;align-items:center;gap:2px}[data-xevk]::after{content:'▸';color:var(--muted);font-size:.7rem;margin-left:4px}[data-xevk].xon::after{content:'▾'}.xevp{margin:2px 0 8px;padding:6px 8px 8px;border-left:3px solid var(--pen);background:color-mix(in srgb,var(--pen) 5%,transparent);border-radius:0 8px 8px 0}.xevp .panel.sub{margin:6px 0!important;box-shadow:none!important}.xevp .panel.sub h2{font-size:.88rem}.xevc{display:flex;flex-wrap:wrap;gap:4px;align-items:center;margin-bottom:4px}.xevc>small{color:var(--muted);font-size:.72rem;margin-right:2px}.xevc .crqc{font-size:.76rem;padding:3px 8px;min-height:28px}.xevc .crsd{flex-basis:100%}.xevwk .wkp{margin:6px 0!important;box-shadow:none!important}.xevwk .wkp>h3{font-size:.88rem}`;document.head.appendChild(st);
 })();
 </script>
 </body></html>
