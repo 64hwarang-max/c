@@ -16303,7 +16303,7 @@ async function syPutSafe(B,k,v){if(!k.startsWith('day:')||!v||typeof v!=='object
 {const _o=openDay;openDay=async function(d){try{staleGuardInstall()}catch(e){}return _o.apply(this,arguments)}}
 {const _f=flush0;flush0=async function(){try{staleGuardInstall()}catch(e){}return _f.apply(this,arguments)}}
 /* v390 ① 앱 버전 표시 · 새 버전 알림 (GitHub에서 마지막으로 성공한 빌드 번호와 비교) */
-var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/545})();
+var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/546})();
 const VRK='gj-verchk',VRURL='https://github.com/64hwarang-max/c/actions/workflows/build-apk.yml';
 const vrGet=()=>{try{return JSON.parse(localStorage.getItem(VRK)||'{}')}catch(e){return{}}};
 async function vrCheck(force){const c=vrGet();if(!force&&c.t&&Date.now()-c.t<6*36e5)return c;
@@ -19285,10 +19285,9 @@ const st=document.createElement('style');st.textContent=`[data-xevk]{cursor:poin
 /* 챙길 것: 기둥마다 둘째 줄에 일지(실행 기록) */
 function jtToday(id){return[...NOTES.values()].find(n=>n.jt===id&&n.date===D.date)}
 window.crqjHTML=function(k){try{const J=Object.entries(JT||{}).filter(([id,j])=>(j.area||'')===k&&id!=='ex');const out=[];
-  if(k==='body'){const n=(()=>{try{return wkList(D).length}catch(e){return 0}})();out.push(`<button type="button" class="crqc${LS('gj-xrun-ex')==='1'?' on':''}" data-xrun="ex">🏋️ 운동 기록${n?' '+n:''}</button>`)}
-  if(k==='grow'&&typeof bkQuick==='function')out.push(`<button type="button" class="crqc" data-xrun="book">📖 읽은 쪽수</button>`);
-  J.forEach(([id,j])=>{const n=jtToday(id);out.push(`<button type="button" class="crqc${n?' ok':''}" data-xrunj="${esc(id)}">${esc(j.e||'📝')} ${esc(j.n)}${n?' ✓':''}</button>`)});
-  if(!J.length){const L=[...NOTES.values()].filter(n=>n&&n.kind==='note'&&!n.jt&&n.date===D.date&&(()=>{try{return noteArea(n)===k}catch(e){return false}})());L.slice(0,3).forEach(n=>out.push(`<button type="button" class="crqc ok" data-opennote="${n.id}">📄 ${esc((n.title||'제목 없음').slice(0,12))}</button>`));out.push(`<button type="button" class="crqc ed" data-newnote="${k}">📝 ${esc(areaName(k))} 일지</button>`)}
+  if(k==='body'){const n=(()=>{try{return wkList(D).length}catch(e){return 0}})();out.push(`<button type="button" class="crqc${LS('gj-xrun-ex')==='1'?' on':''}" data-xrun="ex">🏋️ 운동${n?' '+n:''}</button>`)}
+  J.forEach(([id,j])=>{const n=jtToday(id);out.push(`<button type="button" class="crqc${n?' ok':''}" data-xrunj="${esc(id)}">${esc(j.e||'📝')} 일지${n?' ✓':''}</button>`)});
+  if(!J.length&&k!=='body'){const L=[...NOTES.values()].filter(n=>n&&n.kind==='note'&&!n.jt&&n.date===D.date&&(()=>{try{return noteArea(n)===k}catch(e){return false}})());L.slice(0,3).forEach(n=>out.push(`<button type="button" class="crqc ok" data-opennote="${n.id}">📄 ${esc((n.title||'일지').slice(0,6))}</button>`));out.push(`<button type="button" class="crqc ed" data-newnote="${k}">📝 일지</button>`)}
   return`<div class="crqj"><small>일지</small>${out.join('')}</div>${k==='body'&&LS('gj-xrun-ex')==='1'?'<div class="crqwk"></div>':''}`}catch(e){return''}};
 function wkPaint(){try{if(curSection!=='day'||!D||typeof wkPanelHTML!=='function')return;const X=document.querySelector('#dayBody .crqt .crqwk');if(!X||X._d===D.date&&X.firstChild)return;X._d=D.date;X.innerHTML=wkPanelHTML();const P=X.querySelector('.wkp');if(P)wkBind(P,()=>{const y=scrollY;X.innerHTML='';X._d='';wkPaint();scrollTo(0,y);try{crqPaint()}catch(e){}})}catch(e){console.warn('crqwk',e)}}
 DECO.add('챙길 것 운동 기록',{root:'#dayBody',deep:true,wait:200,run:wkPaint,now:true});
@@ -19297,7 +19296,7 @@ document.addEventListener('click',e=>{const t=e.target;if(!t.closest)return;let 
   if(b=t.closest('[data-xrunj]')){e.preventDefault();e.stopPropagation();const id=b.dataset.xrunj;let n=jtToday(id);
     if(!n){const J=JT[id];const nid='note-'+uid();n={kind:'note',id:nid,date:D.date,topic:ensureTopic(J.n),title:'',body:'',photos:[],tags:[J.n],jt:id,jf:{},created:Date.now(),updated:Date.now()};if(J.area)n.area=J.area;NOTES.set(nid,n);saveNote(n,true)}
     NLH=[];nEdit=n.id;nReturn='day';go('note',true);return}},true);
-const st2=document.createElement('style');st2.textContent=`.crqg>.crqj,.crqg>.crqwk{flex-basis:100%;width:100%}.crqj{display:flex;flex-wrap:wrap;align-items:center;gap:4px;margin:4px 0 2px;padding-top:4px;border-top:1px dotted var(--line)}.crqj>small{color:var(--muted);font-size:.7rem;margin-right:2px}.crqj .crqc{font-size:.74rem;padding:3px 8px;min-height:28px}.crqj .crqc.on{outline:2px solid var(--pen)}.crqwk .wkp{margin:6px 0!important;box-shadow:none!important}.crqwk .wkp>h3{display:none}.xrun{margin:4px 0}.xrun>b{font-size:.88rem}.xrunc{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}.xrunc .crqc{font-size:.78rem;padding:4px 10px;min-height:30px}.xrunc .crqc.on{outline:2px solid var(--pen)}.xrunex .wkp{margin:8px 0 0!important;box-shadow:none!important}.xrunex .wkp>h3{display:none}`;document.head.appendChild(st2);
+const st2=document.createElement('style');st2.textContent=`.crqg>.crqwk{flex-basis:100%;width:100%}.crqj{display:contents}.crqj>small{display:none}.crqj .crqc{border-style:dashed}.crqj .crqc.on{outline:2px solid var(--pen)}.crqwk .wkp{margin:6px 0!important;box-shadow:none!important}.crqwk .wkp>h3{display:none}.xrun{margin:4px 0}.xrun>b{font-size:.88rem}.xrunc{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}.xrunc .crqc{font-size:.78rem;padding:4px 10px;min-height:30px}.xrunc .crqc.on{outline:2px solid var(--pen)}.xrunex .wkp{margin:8px 0 0!important;box-shadow:none!important}.xrunex .wkp>h3{display:none}`;document.head.appendChild(st2);
 })();
 </script>
 </body></html>
