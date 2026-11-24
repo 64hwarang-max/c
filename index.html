@@ -16303,7 +16303,7 @@ async function syPutSafe(B,k,v){if(!k.startsWith('day:')||!v||typeof v!=='object
 {const _o=openDay;openDay=async function(d){try{staleGuardInstall()}catch(e){}return _o.apply(this,arguments)}}
 {const _f=flush0;flush0=async function(){try{staleGuardInstall()}catch(e){}return _f.apply(this,arguments)}}
 /* v390 ① 앱 버전 표시 · 새 버전 알림 (GitHub에서 마지막으로 성공한 빌드 번호와 비교) */
-var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/555})();
+var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/556})();
 const VRK='gj-verchk',VRURL='https://github.com/64hwarang-max/c/actions/workflows/build-apk.yml';
 const vrGet=()=>{try{return JSON.parse(localStorage.getItem(VRK)||'{}')}catch(e){return{}}};
 async function vrCheck(force){const c=vrGet();if(!force&&c.t&&Date.now()-c.t<6*36e5)return c;
@@ -19469,6 +19469,16 @@ const st=document.createElement('style');st.textContent=`.crsy{font-style:normal
 .crqa .crqc small{font-size:.66rem;opacity:.75;margin-left:3px}
 .crqa:not(.crqed) .crqc.ed{display:none!important}.crqm:not(.crqed) .crmr{display:none!important}.crqm>.hint{display:none}
 .crqa [data-evw],.crqa [data-crqed]{margin:0 4px 6px 0}`;document.head.appendChild(st);
+})();
+</script>
+<script id="pmslim-js">
+/* v556: 평가(닫는 시간) 화면은 레이더·전체 항목만 — 기둥별 점수·기록은 오늘 챙길 것 › 돌아보기 한 곳에서 */
+(function(){
+function slim(){try{if(curSection!=='day'||mode!=='pm')return;const r=document.querySelector('#dayBody .rate');const P=r&&r.closest('.panel');if(P&&!P.classList.contains('pmhid')&&!P.contains(document.getElementById('rdrag'))){P.style.setProperty('display','none','important');P.classList.add('pmhid')}
+  const R=document.getElementById('rdrag');const C=R&&(R.closest('.card')||R.closest('.panel'));if(C&&!C.querySelector('.pmgo')){const d=document.createElement('div');d.className='pmgo';d.innerHTML=`<button type="button" class="btn" data-pmgo="1">🌙 점수·기둥별 기록은 돌아보기에서 ›</button><small>팔각형을 끌어 점수를 고칠 수도 있습니다</small>`;C.appendChild(d)}}catch(e){console.warn('pmslim',e)}}
+DECO.add('평가 화면 정리',{root:'#dayBody',deep:true,wait:120,run:slim,now:true});
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-pmgo]');if(!b)return;e.preventDefault();e.stopPropagation();mode='run';CRTAB='r';CRQOPEN=true;try{renderDay()}catch(_){}setTimeout(()=>{const t=document.querySelector('#dayBody .crqt');if(t)t.scrollIntoView({block:'start',behavior:'smooth'})},80)},true);
+const st=document.createElement('style');st.textContent=`.pmgo{display:flex;flex-direction:column;align-items:center;gap:4px;margin:12px 0 4px}.pmgo .btn{width:100%}.pmgo small{color:var(--muted);font-size:.74rem}`;document.head.appendChild(st);
 })();
 </script>
 </body></html>
