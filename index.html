@@ -16303,7 +16303,7 @@ async function syPutSafe(B,k,v){if(!k.startsWith('day:')||!v||typeof v!=='object
 {const _o=openDay;openDay=async function(d){try{staleGuardInstall()}catch(e){}return _o.apply(this,arguments)}}
 {const _f=flush0;flush0=async function(){try{staleGuardInstall()}catch(e){}return _f.apply(this,arguments)}}
 /* v390 ① 앱 버전 표시 · 새 버전 알림 (GitHub에서 마지막으로 성공한 빌드 번호와 비교) */
-var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/537})();
+var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/538})();
 const VRK='gj-verchk',VRURL='https://github.com/64hwarang-max/c/actions/workflows/build-apk.yml';
 const vrGet=()=>{try{return JSON.parse(localStorage.getItem(VRK)||'{}')}catch(e){return{}}};
 async function vrCheck(force){const c=vrGet();if(!force&&c.t&&Date.now()-c.t<6*36e5)return c;
@@ -19197,7 +19197,12 @@ function pilOf(title,t){try{if(t){if(t.area&&okA(t.area))return t.area;const L=(
 window.pkPil=pilOf;
 function keyOf(row){const b=row.querySelector('[data-to]');if(b){const t=(TASKS.items||[]).find(x=>x.id===b.dataset.to);return pilOf(t?t.title:'',t)}
   const tt=row.querySelector('.tt');return pilOf(tt?tt.textContent.replace(/^\S+\s/,''):'',null)}
-function group(P){const rows=[...P.children].filter(e=>e.classList&&e.classList.contains('trow'));if(!rows.length)return;
+const MODE=()=>LS('gj-pkm')==='all'?'all':'pil';
+function tog(P){let t=P.previousElementSibling&&P.previousElementSibling.classList.contains('pkm')?P.previousElementSibling:null;const m=MODE();const html=`<button type="button" data-pkm="pil" class="${m==='pil'?'on':''}">기둥별</button><button type="button" data-pkm="all" class="${m==='all'?'on':''}">전체</button>`;
+  if(!t){t=document.createElement('div');t.className='pkm';P.parentNode.insertBefore(t,P)}if(t.innerHTML!==html)t.innerHTML=html}
+function ungroup(P){const D0=[...P.querySelectorAll(':scope>details.pkg')];if(!D0.length)return;const rows=D0.flatMap(d=>[...d.querySelectorAll(':scope>.trow')]).sort((x,y)=>(+x.dataset.pki||0)-(+y.dataset.pki||0));const hint=P.querySelector(':scope>p.hint');rows.forEach(r=>P.insertBefore(r,hint||null));D0.forEach(d=>d.remove())}
+function group(P){tog(P);if(MODE()==='all'){ungroup(P);return}const rows=[...P.children].filter(e=>e.classList&&e.classList.contains('trow'));if(!rows.length)return;
+  {let n=0;[...P.querySelectorAll('.trow')].forEach(r=>{if(r.parentNode===P||r.dataset.pki==null)r.dataset.pki=String(n);n++})}
   const G=new Map();rows.forEach(r=>{const k=keyOf(r);if(!G.has(k))G.set(k,[]);G.get(k).push(r)});
   const order=[...SCORE.map(x=>x[0]),''].filter(k=>G.has(k));
   [...P.querySelectorAll(':scope>details.pkg')].forEach(d=>{if(!d.querySelector('.trow'))d.remove()});
@@ -19213,9 +19218,9 @@ function openSet(){const S=$('#sheet');const ids=[...document.querySelectorAll('
   S.innerHTML=`<div class="sheetbox" role="dialog" aria-label="할 일 기둥 정하기"><div class="shead"><b>🏛 할 일 기둥 정하기</b><button class="del" id="pkx">닫기</button></div><p class="hint">한 번 정하면 그 할 일은 계속 그 기둥 아래에 접혀 보입니다.</p>${L.map(t=>{const k=pilOf(t.title,t);return`<div class="pkr"><span>${esc(t.title||'제목 없음')}</span><select data-pka="${t.id}" aria-label="기둥"><option value="">📎 기타</option>${SCORE.map(([a,l])=>`<option value="${a}"${k===a?' selected':''}>${AREA_E[a]||''} ${esc(l)}</option>`).join('')}</select></div>`}).join('')||'<p class="hint">할 일이 없습니다.</p>'}</div>`;
   S.hidden=false;{const x=$('#pkx');if(x)x.onclick=close}S.onclick=e=>{if(e.target===S)close()};
   S.querySelectorAll('[data-pka]').forEach(sel=>sel.onchange=()=>{const t=TASKS.items.find(x=>x.id===sel.dataset.pka);if(!t)return;if(sel.value)t.area=sel.value;else delete t.area;saveTasks();toast('기둥을 정했습니다')})}
-document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-pkset]');if(!b)return;e.preventDefault();e.stopPropagation();openSet()},true);
+document.addEventListener('click',e=>{const m=e.target.closest&&e.target.closest('[data-pkm]');if(m){e.preventDefault();e.stopPropagation();LS('gj-pkm',m.dataset.pkm);run();return}const b=e.target.closest&&e.target.closest('[data-pkset]');if(!b)return;e.preventDefault();e.stopPropagation();openSet()},true);
 document.addEventListener('toggle',e=>{const d=e.target;if(d&&d.classList&&d.classList.contains('pkg')){const k=d.dataset.pk;d.open?CL.delete(k):CL.add(k);LS('gj-pkf',JSON.stringify([...CL]))}},true);
-const st=document.createElement('style');st.textContent=`#pck>details.pkg{margin:0 0 2px}#pck>details.pkg>summary{display:flex;align-items:center;gap:6px;cursor:pointer;list-style:none;font-size:.8rem;font-weight:700;min-height:30px;padding:2px 2px;border-bottom:1px solid var(--line)}#pck>details.pkg>summary::-webkit-details-marker{display:none}#pck>details.pkg>summary::before{content:'▸';color:var(--muted);font-size:.7rem}#pck>details.pkg[open]>summary::before{content:'▾'}#pck>details.pkg>summary small{margin-left:auto;font-weight:400;color:var(--muted);white-space:nowrap}#pck>details.pkg>summary small b{color:#e65100}.pkset{font-size:.7rem;font-weight:500;border:1px dashed var(--line);border-radius:8px;padding:2px 6px;color:var(--muted);white-space:nowrap}.pkr{display:flex;align-items:center;gap:8px;padding:6px 0;border-top:1px solid var(--line)}.pkr span{flex:1;min-width:0;font-size:.86rem}.pkr select{width:auto!important;flex:none}`;document.head.appendChild(st);
+const st=document.createElement('style');st.textContent=`#pck>details.pkg{margin:0 0 2px}#pck>details.pkg>summary{display:flex;align-items:center;gap:6px;cursor:pointer;list-style:none;font-size:.8rem;font-weight:700;min-height:30px;padding:2px 2px;border-bottom:1px solid var(--line)}#pck>details.pkg>summary::-webkit-details-marker{display:none}#pck>details.pkg>summary::before{content:'▸';color:var(--muted);font-size:.7rem}#pck>details.pkg[open]>summary::before{content:'▾'}#pck>details.pkg>summary small{margin-left:auto;font-weight:400;color:var(--muted);white-space:nowrap}#pck>details.pkg>summary small b{color:#e65100}.pkm{display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;margin:2px 0 6px}.pkm button{flex:1;border:0;background:var(--paper);font-size:.76rem;padding:5px 4px;min-height:30px;color:var(--muted);white-space:nowrap}.pkm button.on{background:var(--pen);color:#fff;font-weight:700}.pkset{font-size:.7rem;font-weight:500;border:1px dashed var(--line);border-radius:8px;padding:2px 6px;color:var(--muted);white-space:nowrap}.pkr{display:flex;align-items:center;gap:8px;padding:6px 0;border-top:1px solid var(--line)}.pkr span{flex:1;min-width:0;font-size:.86rem}.pkr select{width:auto!important;flex:none}`;document.head.appendChild(st);
 })();
 </script>
 </body></html>
