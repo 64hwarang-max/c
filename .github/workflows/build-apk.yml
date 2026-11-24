@@ -1596,6 +1596,21 @@ jobs:
                   return d;
               }
 
+              private void toggleTask() {
+                  if (et == null) return;
+                  String cur = et.getText().toString();
+                  if (cur.startsWith("#할일")) {
+                      String r = cur.substring(3);
+                      while (r.startsWith(" ")) r = r.substring(1);
+                      et.setText(r);
+                      say("메모로 저장됩니다");
+                  } else {
+                      et.setText("#할일 " + cur);
+                      say("✅ 오늘 할 일로 들어갑니다");
+                  }
+                  et.setSelection(et.getText().length());
+              }
+
               private void insertTpl() {
                   if (et == null) return;
                   JSONObject m = curMemo();
@@ -1878,6 +1893,10 @@ jobs:
                   LinearLayout tools = new LinearLayout(this);
                   tools.setOrientation(LinearLayout.HORIZONTAL);
                   tools.setGravity(Gravity.CENTER);
+                  tools.addView(mbtn("✅ 할 일", new View.OnClickListener() {
+                      @Override
+                      public void onClick(View v) { toggleTask(); }
+                  }));
                   tools.addView(mbtn("📋 양식", new View.OnClickListener() {
                       @Override
                       public void onClick(View v) { insertTpl(); }
