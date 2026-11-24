@@ -16303,7 +16303,7 @@ async function syPutSafe(B,k,v){if(!k.startsWith('day:')||!v||typeof v!=='object
 {const _o=openDay;openDay=async function(d){try{staleGuardInstall()}catch(e){}return _o.apply(this,arguments)}}
 {const _f=flush0;flush0=async function(){try{staleGuardInstall()}catch(e){}return _f.apply(this,arguments)}}
 /* v390 ① 앱 버전 표시 · 새 버전 알림 (GitHub에서 마지막으로 성공한 빌드 번호와 비교) */
-var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/547})();
+var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/548})();
 const VRK='gj-verchk',VRURL='https://github.com/64hwarang-max/c/actions/workflows/build-apk.yml';
 const vrGet=()=>{try{return JSON.parse(localStorage.getItem(VRK)||'{}')}catch(e){return{}}};
 async function vrCheck(force){const c=vrGet();if(!force&&c.t&&Date.now()-c.t<6*36e5)return c;
@@ -19326,6 +19326,21 @@ document.addEventListener('click',e=>{const t=e.target;if(!t.closest)return;let 
 window.cyPilLine=function(k){try{const CYP={'건강':'body','집안일':'life','관계':'rel','자기관리':'life','차량·기기':'life','재정':'fin'};const L=cycs().filter(c=>(c.area||CYP[c.grp||cyGuess(c.name)]||'')===k);if(!L.length)return'';const D0=cycDue().filter(x=>L.includes(x.c));const od=D0.filter(x=>x.left<0);const nx=D0.filter(x=>x.left>=0).sort((a,b)=>a.left-b.left)[0];
   return`<p class="cypl">🔁 관리항목 ${L.length}개${od.length?` · <b class="lt">지남 ${od.length}</b> (${od.slice(0,2).map(x=>esc(x.c.name)).join(', ')})`:''}${nx?` · 다음 ${esc(nx.c.name)} ${nx.left?nx.left+'일 뒤':'오늘'}`:''}</p>`}catch(e){return''}};
 const st=document.createElement('style');st.textContent=`.cyin{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:center;font-size:.74rem;color:var(--muted);margin:-2px 0 8px 34px}.cyin b{color:var(--ink)}.cyin i{font-style:normal}.cyin .lt,.cysum .lt,.cypl .lt{color:#c0392b}.cyin .er{color:#2e7d6b}.cyin .crqc{font-size:.72rem;padding:2px 8px;min-height:26px}.cysum{display:flex;flex-direction:column;gap:2px;font-size:.8rem;background:color-mix(in srgb,#ff8a3d 8%,transparent);border-radius:8px;padding:8px 10px;margin:0 0 10px}.cysum i{font-style:normal}.cypl{font-size:.78rem;margin:2px 0 6px;color:var(--muted)}`;document.head.appendChild(st);
+})();
+</script>
+<script id="w168x-js">
+/* v548: 주간 시간 중분류 빼기 */
+(function(){
+const HID=()=>(SET.w168Hide=Array.isArray(SET.w168Hide)?SET.w168Hide:[]);
+const _wc=w168Cats;w168Cats=function(){const H=HID();return _wc.apply(this,arguments).filter(c=>!H.includes(c))};
+const _pp=pdPillarsHTML;pdPillarsHTML=function(){let h=_pp.apply(this,arguments);return h.replace(/(<input type="number"[^>]*data-w168="([^"]*)"[^>]*>)<\/label>/g,'$1<button type="button" class="wbcx" data-w168x="$2" aria-label="$2 빼기">✕</button></label>')};
+const re=()=>{try{wkcPaint(true)}catch(e){}try{wkcPaintDay(true)}catch(e){}try{w168Paint()}catch(e){}};
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-w168x]');if(!b)return;e.preventDefault();e.stopPropagation();const c=b.dataset.w168x;
+  ntSheet(`‘${c}’ 빼기`,[[`📋 주간 시간 목록에서만 빼기`,async()=>{HID().push(c);if(SET.w168)delete SET.w168[c];await saveSet().catch(()=>{});toast(`‘${c}’를 목록에서 뺐습니다`);re()}],
+   [`🗑 중분류 삭제 (지난 일정·노트 기록은 그대로)`,async()=>{const o=(SET.cats||[]).find(x=>x.name===c);if(!o){HID().push(c);await saveSet().catch(()=>{});re();return}if(SET.cats.length<=1)return;if(!await uiConfirm(`‘${c}’ 중분류를 지울까요? 지난 일정·노트 기록은 그대로 남습니다.`))return;SET.cats=SET.cats.filter(x=>x!==o);(SET.topics||[]).forEach(t=>{if(t.cat===c)delete t.cat});if(SET.w168)delete SET.w168[c];await saveSet().catch(()=>{});toast(`‘${c}’ 중분류를 지웠습니다`);re()}]])},true);
+/* 같은 이름을 다시 추가하면 다시 보이게 */
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-wkcat]');if(!b)return;const n0=(SET.cats||[]).length;setTimeout(()=>{try{const H=HID();const names=(SET.cats||[]).map(x=>x.name);const back=H.filter(x=>names.includes(x)&&(SET.cats||[]).length>=n0);/* 새로 만든 이름이 숨김에 있으면 풀기 */const last=(SET.cats||[])[SET.cats.length-1];if(last&&H.includes(last.name)){SET.w168Hide=H.filter(x=>x!==last.name);saveSet().catch(()=>{});re()}}catch(_){}},1500)},true);
+const st=document.createElement('style');st.textContent=`.wbtg label .wbcx{flex:none;border:0;background:none;color:var(--muted);min-width:30px;min-height:30px;font-size:.85rem;margin-left:2px}`;document.head.appendChild(st);
 })();
 </script>
 </body></html>
