@@ -16303,7 +16303,7 @@ async function syPutSafe(B,k,v){if(!k.startsWith('day:')||!v||typeof v!=='object
 {const _o=openDay;openDay=async function(d){try{staleGuardInstall()}catch(e){}return _o.apply(this,arguments)}}
 {const _f=flush0;flush0=async function(){try{staleGuardInstall()}catch(e){}return _f.apply(this,arguments)}}
 /* v390 ① 앱 버전 표시 · 새 버전 알림 (GitHub에서 마지막으로 성공한 빌드 번호와 비교) */
-var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/557})();
+var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/558})();
 const VRK='gj-verchk',VRURL='https://github.com/64hwarang-max/c/actions/workflows/build-apk.yml';
 const vrGet=()=>{try{return JSON.parse(localStorage.getItem(VRK)||'{}')}catch(e){return{}}};
 async function vrCheck(force){const c=vrGet();if(!force&&c.t&&Date.now()-c.t<6*36e5)return c;
@@ -19285,6 +19285,7 @@ function paint(){try{if(curSection!=='day'||!D)return;const T=document.querySele
     const nx=row.nextElementSibling;const has=nx&&nx.classList.contains('xevp')&&nx.dataset.k===k;
     if(EVO.has(k)){if(has&&nx.dataset.date===D.date)return;if(has)nx.remove();build(row,k)}else if(has)nx.remove()});
   const hint=T.querySelector('.crevh');if(hint&&!T.querySelector('.xevhint')){const p=document.createElement('p');p.className='hint xevhint';p.textContent='기둥 이름을 누르면 그 기둥의 오늘 기록(체크·운동·식사·지출 등)을 바로 적을 수 있습니다.';hint.after(p)}}catch(e){console.warn('xev',e)}}
+window.xevInto=(host,k)=>{host.innerHTML='';const an=document.createElement('i');an.hidden=true;host.appendChild(an);build(an,k)};
 DECO.add('평가 기둥 펼치기',{root:'#dayBody',deep:true,wait:200,run:paint,now:true});
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-xevk]');if(!b)return;e.preventDefault();e.stopPropagation();const k=b.dataset.xevk;EVO.has(k)?EVO.delete(k):EVO.add(k);sv();paint()},true);
 const st=document.createElement('style');st.textContent=`[data-xevk]{cursor:pointer;display:inline-flex;align-items:center;gap:2px}[data-xevk]::after{content:'▸';color:var(--muted);font-size:.7rem;margin-left:4px}[data-xevk].xon::after{content:'▾'}.xevp{margin:2px 0 8px;padding:6px 8px 8px;border-left:3px solid var(--pen);background:color-mix(in srgb,var(--pen) 5%,transparent);border-radius:0 8px 8px 0}.xevp .panel.sub{margin:6px 0!important;box-shadow:none!important}.xevp .panel.sub h2{font-size:.88rem}.xevc{display:flex;flex-wrap:wrap;gap:4px;align-items:center;margin-bottom:4px}.xevc>small{color:var(--muted);font-size:.72rem;margin-right:2px}.xevc .crqc{font-size:.76rem;padding:3px 8px;min-height:28px}.xevc .crsd{flex-basis:100%}.xevwk .wkp{margin:6px 0!important;box-shadow:none!important}.xevwk .wkp>h3{font-size:.88rem}`;document.head.appendChild(st);
@@ -19483,6 +19484,39 @@ document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest
 DECO.add('평가 화면 정리',{root:'#dayBody',deep:true,wait:120,run:slim,now:true});
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-pmgo]');if(!b)return;e.preventDefault();e.stopPropagation();mode='run';CRTAB='r';CRQOPEN=true;try{renderDay()}catch(_){}setTimeout(()=>{const t=document.querySelector('#dayBody .crqt');if(t)t.scrollIntoView({block:'start',behavior:'smooth'})},80)},true);
 const st=document.createElement('style');st.textContent=`.xrad{margin:6px 0 10px;text-align:center}.xrad svg{max-width:300px;width:100%;height:auto}.xradt{display:flex;align-items:baseline;justify-content:center;gap:6px}.xradt b{font-size:1.6rem;color:var(--pen)}.xradt small{color:var(--muted)}.pmgo{display:flex;flex-direction:column;align-items:center;gap:4px;margin:12px 0 4px}.pmgo .btn{width:100%}.pmgo small{color:var(--muted);font-size:.74rem}`;document.head.appendChild(st);
+})();
+</script>
+<script id="rv-js">
+/* v558: 돌아보기 — 조그 대신 다각형(끌어서 점수), 꼭짓점 이름을 누르면 일지·기록, 한 줄·반성·반복 */
+(function(){
+const LS=(k,v)=>{try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){return null}};
+let RVK='',DRAG=false;
+function jtFor(k){return Object.entries(JT||{}).filter(([id,j])=>(j.area||'')===k)}
+function openJournal(k){const J=jtFor(k);if(J.length){const[id,j]=J[0];let n=[...NOTES.values()].find(x=>x.jt===id&&x.date===D.date);if(!n){const nid='note-'+uid();n={kind:'note',id:nid,date:D.date,topic:ensureTopic(j.n),title:'',body:'',photos:[],tags:[j.n],jt:id,jf:{},created:Date.now(),updated:Date.now()};if(j.area)n.area=j.area;NOTES.set(nid,n);saveNote(n,true)}NLH=[];nEdit=n.id;nReturn='day';go('note',true);return}
+  const ex=[...NOTES.values()].find(n=>n&&n.kind==='note'&&!n.jt&&n.date===D.date&&(()=>{try{return noteArea(n)===k}catch(e){return false}})());if(ex){NLH=[];nEdit=ex.id;nReturn='day';go('note',true);return}
+  const tp=noteTopicFor(k);nReturn='day';go('note');newNote(tp&&tp.id,D.date,k)}
+function blockHTML(){const vals=SCORE.map(([k])=>+D.score[k]||0);const sc=scoreOf(D);
+  return`<div class="rvp" data-k="${vals.join(',')}|${RVK}"><div class="xradt"><b>${sc??'—'}</b><small>/ 100 · 꼭짓점 쪽으로 끌어 점수 · 이름을 누르면 일지·기록</small></div><div class="rvbox">${radar(vals,SHORT,null)}</div>
+   ${RVK?`<div class="rvsel"><b>${AREA_E[RVK]||''} ${esc(areaName(RVK))}</b><button type="button" class="crqc" data-rvj="${RVK}">📝 ${esc((jtFor(RVK)[0]||[])[1]?jtFor(RVK)[0][1].n:areaName(RVK)+' 일지')}</button><button type="button" class="crqc" data-rvx="">접기 ✕</button></div><div class="rvpanel"></div>`:''}
+   <div class="rvw"><button type="button" class="crqc" data-rvw="한 줄">📝 한 줄</button><button type="button" class="crqc" data-rvw="반성">🔧 반성</button><button type="button" class="crqc" data-rvw="반복">🔁 반복</button></div></div>`}
+function bind(el){const box=el.querySelector('.rvbox');const sv=box&&box.querySelector('svg');if(!sv)return;const n=SCORE.length;let k=-1,pid=null;
+  const pos=ev=>{const p=sv.createSVGPoint();p.x=ev.clientX;p.y=ev.clientY;const q=p.matrixTransform(sv.getScreenCTM().inverse());return[q.x-160,q.y-148]};
+  const upd=e=>{if(k<0)return;const[dx,dy]=pos(e);const ang=-Math.PI/2+k*2*Math.PI/n;const proj=dx*Math.cos(ang)+dy*Math.sin(ang);const v=Math.max(0,Math.min(10,Math.round(proj/96*10)));const key=SCORE[k][0];D.score[key]=v;D.scUser=D.scUser||{};D.scUser[key]=1;if(D.scAuto)delete D.scAuto[key];
+    sv.innerHTML=radarG(SCORE.map(([q])=>+D.score[q]||0),SHORT,null);const t=el.querySelector('.xradt b');if(t){const sc=scoreOf(D);t.textContent=sc??'—'}};
+  box.addEventListener('pointerdown',e=>{const lb=e.target.closest&&e.target.closest('text.rl');if(lb){const i=[...sv.querySelectorAll('text.rl')].indexOf(lb);if(i>=0){RVK=RVK===SCORE[i][0]?'':SCORE[i][0];paint(true)}e.preventDefault();return}
+    const[dx,dy]=pos(e);if(Math.hypot(dx,dy)<14)return;{const V=[...Array(n)].map((_,i)=>{const t=-Math.PI/2+i*2*Math.PI/n;return[112*Math.cos(t),112*Math.sin(t)]});let inside=false;for(let i=0,j=n-1;i<n;j=i++){const[xi,yi]=V[i],[xj,yj]=V[j];if((yi>dy)!==(yj>dy)&&dx<(xj-xi)*(dy-yi)/(yj-yi)+xi)inside=!inside}if(!inside)return}
+    let a=Math.atan2(dy,dx)+Math.PI/2;a=((a%(2*Math.PI))+2*Math.PI)%(2*Math.PI);k=Math.round(a/(2*Math.PI/n))%n;pid=e.pointerId;DRAG=true;try{box.setPointerCapture(pid)}catch(_){}e.preventDefault();upd(e)});
+  box.addEventListener('pointermove',e=>{if(k>=0&&e.pointerId===pid)upd(e)});
+  const end=()=>{if(k<0)return;k=-1;DRAG=false;schedule();try{crqPaint()}catch(_){}paint(true)};box.addEventListener('pointerup',end);box.addEventListener('pointercancel',end);
+  const pn=el.querySelector('.rvpanel');if(pn&&RVK&&typeof xevInto==='function')xevInto(pn,RVK)}
+function paint(force){try{if(DRAG||curSection!=='day'||!D)return;const T=document.querySelector('#dayBody .crqt');if(!T)return;const on=!!T.querySelector('.xlk');T.classList.toggle('rvpoly',on);const old=T.querySelector('.rvp');if(!on){if(old)old.remove();return}
+  const key=SCORE.map(([k])=>+D.score[k]||0).join(',')+'|'+RVK;if(old&&old.dataset.k===key&&!force)return;const hd=T.querySelector('.crevh');if(!hd)return;const tp=document.createElement('template');tp.innerHTML=blockHTML();const el=tp.content.firstElementChild;if(old)old.replaceWith(el);else hd.after(el);bind(el)}catch(e){console.warn('rv',e)}}
+DECO.add('돌아보기 다각형',{root:'#dayBody',deep:true,wait:150,run:()=>paint(),now:true});
+document.addEventListener('click',e=>{const t=e.target;if(!t.closest)return;let b;
+  if(b=t.closest('[data-rvj]')){e.preventDefault();e.stopPropagation();openJournal(b.dataset.rvj);return}
+  if(b=t.closest('[data-rvx]')){e.preventDefault();e.stopPropagation();RVK='';paint(true);return}
+  if(b=t.closest('[data-rvw]')){e.preventDefault();e.stopPropagation();const w=b.dataset.rvw;mode='pm';sec='growth';try{renderDay()}catch(_){}setTimeout(()=>{const x=[...document.querySelectorAll('#dayBody .jgrid .tgi')].find(y=>(y.textContent||'').includes(w));if(x){x.click();setTimeout(()=>{const o=document.querySelector('#dayBody .jgrid');if(o)o.scrollIntoView({block:'start',behavior:'smooth'})},120)}},250)}},true);
+const st=document.createElement('style');st.textContent=`.crqt.rvpoly .crev,.crqt.rvpoly .crev+.xevp,.crqt.rvpoly .xevhint,.crqt.rvpoly [data-xrad],.crqt.rvpoly .xrad{display:none!important}.rvp{margin:4px 0 10px}.rvp .xradt{display:flex;align-items:baseline;justify-content:center;gap:6px;flex-wrap:wrap;text-align:center}.rvp .xradt b{font-size:1.7rem;color:var(--pen)}.rvp .xradt small{color:var(--muted);font-size:.72rem}.rvbox{max-width:330px;margin:0 auto;touch-action:none}.rvbox svg{width:100%;height:auto;display:block}.rvbox text.rl{cursor:pointer;text-decoration:underline dotted}.rvsel{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:6px 0 2px;padding-top:6px;border-top:1px dashed var(--line)}.rvsel b{margin-right:auto;font-size:.9rem}.rvw{display:flex;gap:6px;justify-content:center;margin-top:8px}.rvw .crqc,.rvsel .crqc{font-size:.8rem;padding:5px 12px;min-height:32px}`;document.head.appendChild(st);
 })();
 </script>
 </body></html>
