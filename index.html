@@ -16303,7 +16303,7 @@ async function syPutSafe(B,k,v){if(!k.startsWith('day:')||!v||typeof v!=='object
 {const _o=openDay;openDay=async function(d){try{staleGuardInstall()}catch(e){}return _o.apply(this,arguments)}}
 {const _f=flush0;flush0=async function(){try{staleGuardInstall()}catch(e){}return _f.apply(this,arguments)}}
 /* v390 ① 앱 버전 표시 · 새 버전 알림 (GitHub에서 마지막으로 성공한 빌드 번호와 비교) */
-var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/553})();
+var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/554})();
 const VRK='gj-verchk',VRURL='https://github.com/64hwarang-max/c/actions/workflows/build-apk.yml';
 const vrGet=()=>{try{return JSON.parse(localStorage.getItem(VRK)||'{}')}catch(e){return{}}};
 async function vrCheck(force){const c=vrGet();if(!force&&c.t&&Date.now()-c.t<6*36e5)return c;
@@ -18924,7 +18924,7 @@ function cardHTML(){const X=crqData();const _l=LS('gj-crma');const _b=document.g
     return`<details class="crpd" data-crpl="${k}"${PCLOSED.has(k)?'':' open'}><summary>${AREA_E[k]||''} ${esc(areaName(k))} <small>${d}/${n}</small><button type="button" class="crmr" data-crma="${k}|" aria-label="${esc(areaName(k))} 항목 추가">＋</button><button type="button" class="crmr" data-cre="${k}" aria-label="편집">✎</button></summary><div class="crmb">${sub(k,R)||'<span class="hint">항목 없음 · ＋로 추가</span>'}</div></details>`}).join('');
   return`<details class="crq crqm"${open?' open':''} data-crmk="1"><summary>📋 체크리스트 · 기둥·업무<small>${X.d}/${X.n} ▾</small></summary>${body||'<p class="hint">항목이 없습니다.</p>'}<p class="hint">기둥·중분류 이름을 눌러 접기 · ＋ 항목 추가(중분류 입력 가능) · 누르면 0→5→–</p></details>`}
 function cardPaint(){try{if(curSection!=='day'||!D)return;const B=document.getElementById('dayBody');if(!B)return;const old=B.querySelector('.crqm');
-  if(mode==='run'||B.querySelector('.crqt')){if(old)old.remove();return}
+  if(mode==='run'||mode==='pm'||B.querySelector('.crqt')||B.querySelector('.crqa')||B.querySelector('#rdrag')){if(old)old.remove();return}
   const h=cardHTML();if(old&&old._h===h)return;const T=document.createElement('template');T.innerHTML=h;const el=T.content.firstElementChild;el._h=h;if(old)old.replaceWith(el);else B.appendChild(el)}catch(e){console.error(e)}}
 DECO.add('체크리스트 기둥카드',{root:'#dayBody',deep:true,wait:200,run:cardPaint,now:true});
 document.addEventListener('toggle',e=>{const d=e.target;if(!d||!d.dataset)return;
