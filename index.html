@@ -16303,7 +16303,7 @@ async function syPutSafe(B,k,v){if(!k.startsWith('day:')||!v||typeof v!=='object
 {const _o=openDay;openDay=async function(d){try{staleGuardInstall()}catch(e){}return _o.apply(this,arguments)}}
 {const _f=flush0;flush0=async function(){try{staleGuardInstall()}catch(e){}return _f.apply(this,arguments)}}
 /* v390 ① 앱 버전 표시 · 새 버전 알림 (GitHub에서 마지막으로 성공한 빌드 번호와 비교) */
-var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/540})();
+var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/541})();
 const VRK='gj-verchk',VRURL='https://github.com/64hwarang-max/c/actions/workflows/build-apk.yml';
 const vrGet=()=>{try{return JSON.parse(localStorage.getItem(VRK)||'{}')}catch(e){return{}}};
 async function vrCheck(force){const c=vrGet();if(!force&&c.t&&Date.now()-c.t<6*36e5)return c;
@@ -19255,6 +19255,23 @@ function openSet(){const S=$('#sheet');const ids=[...document.querySelectorAll('
 document.addEventListener('click',e=>{const m=e.target.closest&&e.target.closest('[data-pkm]');if(m){e.preventDefault();e.stopPropagation();LS('gj-pkm',m.dataset.pkm);run();return}const b=e.target.closest&&e.target.closest('[data-pkset]');if(!b)return;e.preventDefault();e.stopPropagation();openSet()},true);
 document.addEventListener('toggle',e=>{const d=e.target;if(d&&d.classList&&d.classList.contains('pkg')){const k=d.dataset.pk;d.open?CL.delete(k):CL.add(k);LS('gj-pkf',JSON.stringify([...CL]))}},true);
 const st=document.createElement('style');st.textContent=`#pck>details.pkg{margin:0 0 2px}#pck>details.pkg>summary{display:flex;align-items:center;gap:6px;cursor:pointer;list-style:none;font-size:.8rem;font-weight:700;min-height:30px;padding:2px 2px;border-bottom:1px solid var(--line)}#pck>details.pkg>summary::-webkit-details-marker{display:none}#pck>details.pkg>summary::before{content:'▸';color:var(--muted);font-size:.7rem}#pck>details.pkg[open]>summary::before{content:'▾'}#pck>details.pkg>summary small{margin-left:auto;font-weight:400;color:var(--muted);white-space:nowrap}#pck>details.pkg>summary small b{color:#e65100}.pkm{display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;margin:2px 0 6px}.pkm button{flex:1;border:0;background:var(--paper);font-size:.76rem;padding:5px 4px;min-height:30px;color:var(--muted);white-space:nowrap}.pkm button.on{background:var(--pen);color:#fff;font-weight:700}.pkset{font-size:.7rem;font-weight:500;border:1px dashed var(--line);border-radius:8px;padding:2px 6px;color:var(--muted);white-space:nowrap}.pkr{display:flex;align-items:center;gap:8px;padding:6px 0;border-top:1px solid var(--line)}.pkr span{flex:1;min-width:0;font-size:.86rem}.pkr select{width:auto!important;flex:none}`;document.head.appendChild(st);
+})();
+</script>
+<script id="ev-js">
+/* v541: 일일평가 안에서 오늘 운동 기록 쓰기 */
+(function(){
+const LS=(k,v)=>{try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){return null}};
+function build(T){const old=T.querySelector('.xevw');const n=(()=>{try{return wkList(D).length}catch(e){return 0}})();const open=LS('gj-xev')!=='0';
+  const el=document.createElement('details');el.className='xevw';el.dataset.date=D.date;if(open)el.open=true;
+  el.innerHTML=`<summary>🏋️ 오늘 운동 기록 <small>${n?n+'개':'아직 없음'}</small></summary>${wkPanelHTML()}`;
+  const lk=T.querySelector('.xlk');if(old)old.replaceWith(el);else if(lk)lk.before(el);else return;
+  el.addEventListener('toggle',()=>LS('gj-xev',el.open?'1':'0'));
+  const P=el.querySelector('.wkp');if(P)wkBind(P,()=>{const y=scrollY;build(T);scrollTo(0,y);try{crqPaint()}catch(e){}})}
+function paint(){try{if(curSection!=='day'||!D||typeof wkPanelHTML!=='function')return;const T=document.querySelector('#dayBody .crqt');if(!T)return;
+  if(!T.querySelector('.xlk')){const o=T.querySelector('.xevw');if(o)o.remove();return}
+  const o=T.querySelector('.xevw');if(o&&o.dataset.date===D.date)return;build(T)}catch(e){console.warn('xev',e)}}
+DECO.add('평가 속 운동 기록',{root:'#dayBody',deep:true,wait:250,run:paint,now:true});
+const st=document.createElement('style');st.textContent=`.xevw{margin-top:10px;border-top:1px dashed var(--line);padding-top:6px}.xevw>summary{display:flex;align-items:center;gap:6px;font-weight:700;font-size:.88rem;cursor:pointer;list-style:none;min-height:34px}.xevw>summary::-webkit-details-marker{display:none}.xevw>summary::before{content:'▸';color:var(--muted)}.xevw[open]>summary::before{content:'▾'}.xevw>summary small{color:var(--muted);font-weight:400}.xevw .wkp{margin:4px 0 0!important;box-shadow:none!important;border:0!important;padding:0!important;background:none!important}.xevw .wkp>h3{display:none}`;document.head.appendChild(st);
 })();
 </script>
 </body></html>
