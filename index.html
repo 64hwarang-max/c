@@ -16303,7 +16303,7 @@ async function syPutSafe(B,k,v){if(!k.startsWith('day:')||!v||typeof v!=='object
 {const _o=openDay;openDay=async function(d){try{staleGuardInstall()}catch(e){}return _o.apply(this,arguments)}}
 {const _f=flush0;flush0=async function(){try{staleGuardInstall()}catch(e){}return _f.apply(this,arguments)}}
 /* v390 ① 앱 버전 표시 · 새 버전 알림 (GitHub에서 마지막으로 성공한 빌드 번호와 비교) */
-var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/556})();
+var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/557})();
 const VRK='gj-verchk',VRURL='https://github.com/64hwarang-max/c/actions/workflows/build-apk.yml';
 const vrGet=()=>{try{return JSON.parse(localStorage.getItem(VRK)||'{}')}catch(e){return{}}};
 async function vrCheck(force){const c=vrGet();if(!force&&c.t&&Date.now()-c.t<6*36e5)return c;
@@ -18315,7 +18315,7 @@ function crTabsHTML(T,hr,body){const t=crTabNow(T,hr);const tabs=[['s','🌅','�
     const rows=L.map(([k,l])=>{const v=+D.score[k]||0;if(v){sum+=v;n++}const au=D.scAuto&&D.scAuto[k];
       const inp=jog?`<input type="range" class="crjg" min="0" max="10" step="1" value="${v}" data-crjg="${k}" aria-label="${esc(l)} 점수" style="--dc:${v?scCol(v):'var(--line)'};--pc:${v*10}%"><b class="crjv" data-crjv="${k}">${v||'—'}</b>`:`<span class="crevb">${[1,2,3,4,5].map(x=>`<button type="button" data-crsc="${k}|${x}" class="${Math.ceil(v/2)===x&&v?(au?'on au':'on'):''}" aria-label="${esc(l)} ${x*2}점">${x}</button>`).join('')}</span>`;
       return`<div class="crev ${jog?'crevj':''}"><span>${AREA_E[k]||''} ${esc(areaName(k)||l)}${au?' <small title="기록·체크로 자동으로 매긴 점수">🤖</small>':''}</span>${inp}</div>`}).join('');
-    c=`<div class="crevh"><b>오늘 점수 ${n?(sum/n).toFixed(1):'–'} <small style="font-weight:400">/ 10</small></b><small>${n}/${L.length}개 매김</small></div>${rows||'<p class="hint">보일 기둥이 없습니다. 설정 → 점수·레벨 설정에서 고르십시오.</p>'}<p class="hint">${jog?'슬라이더를 밀어 0~10점을 고릅니다.':'버튼 1~5는 10점 만점으로 환산해 저장합니다(1→2점 … 5→10점).'} 🤖는 기록·체크로 자동 계산된 점수입니다.</p><div class="crqtop"><button type="button" class="crqc" data-cvi="pm">🔍 자세히 보기 (레이더·항목별)</button><button type="button" class="crqc" data-evw="1">🌙 한 장씩 평가하기</button><button type="button" class="crqc" data-evsopen="1">⚙️ 점수·레벨 설정</button></div>`+crRfHTML()}
+    c=`<div class="crevh"><b>오늘 점수 ${n?(sum/n).toFixed(1):'–'} <small style="font-weight:400">/ 10</small></b><small>${n}/${L.length}개 매김</small></div>${rows||'<p class="hint">보일 기둥이 없습니다. 설정 → 점수·레벨 설정에서 고르십시오.</p>'}<p class="hint">${jog?'슬라이더를 밀어 0~10점을 고릅니다.':'버튼 1~5는 10점 만점으로 환산해 저장합니다(1→2점 … 5→10점).'} 🤖는 기록·체크로 자동 계산된 점수입니다.</p><div class="crqtop"><button type="button" class="crqc" data-xrad="1">🕸 레이더 보기</button><button type="button" class="crqc" data-evw="1">🌙 한 장씩 평가하기</button><button type="button" class="crqc" data-evsopen="1">⚙️ 점수·레벨 설정</button></div>`+crRfHTML()}
   else if(t==='x'){c='<div class="xrunslot"></div>'}
   else{c=crRfHTML()}
   return`<div class="crtab" role="tablist">${tabs.map(([k,e,l])=>`<button type="button" role="tab" data-crtab="${k}" class="${k===t?'on':''}" aria-selected="${k===t}">${e} ${l}</button>`).join('')}</div><div class="crtbody">${c}</div>`}
@@ -19474,11 +19474,15 @@ const st=document.createElement('style');st.textContent=`.crsy{font-style:normal
 <script id="pmslim-js">
 /* v556: 평가(닫는 시간) 화면은 레이더·전체 항목만 — 기둥별 점수·기록은 오늘 챙길 것 › 돌아보기 한 곳에서 */
 (function(){
-function slim(){try{if(curSection!=='day'||mode!=='pm')return;const r=document.querySelector('#dayBody .rate');const P=r&&r.closest('.panel');if(P&&!P.classList.contains('pmhid')&&!P.contains(document.getElementById('rdrag'))){P.style.setProperty('display','none','important');P.classList.add('pmhid')}
+function slim(){try{if(curSection!=='day'||mode!=='pm')return;document.querySelectorAll('#dayBody .pmsec.ev').forEach(x=>x.style.setProperty('display','none','important'));{const R0=document.getElementById('rdrag');const C0=R0&&(R0.closest('.card')||R0.closest('.panel'));if(C0)C0.style.setProperty('display','none','important')}const r=document.querySelector('#dayBody .rate');const P=r&&r.closest('.panel');if(P&&!P.classList.contains('pmhid')&&!P.contains(document.getElementById('rdrag'))){P.style.setProperty('display','none','important');P.classList.add('pmhid')}
   const R=document.getElementById('rdrag');const C=R&&(R.closest('.card')||R.closest('.panel'));if(C&&!C.querySelector('.pmgo')){const d=document.createElement('div');d.className='pmgo';d.innerHTML=`<button type="button" class="btn" data-pmgo="1">🌙 점수·기둥별 기록은 돌아보기에서 ›</button><small>팔각형을 끌어 점수를 고칠 수도 있습니다</small>`;C.appendChild(d)}}catch(e){console.warn('pmslim',e)}}
+function radPaint(){try{const T=document.querySelector('#dayBody .crqt');if(!T)return;const on=(()=>{try{return localStorage.getItem('gj-xrad')==='1'}catch(e){return false}})();const b=T.querySelector('[data-xrad]');if(b)b.textContent=on?'🕸 레이더 접기':'🕸 레이더 보기';const old=T.querySelector('.xrad');if(!on||!b){if(old)old.remove();return}
+  const vals=SCORE.map(([k])=>+D.score[k]||0);const key=vals.join(',');if(old&&old.dataset.k===key)return;const sc=scoreOf(D);const h=`<div class="xrad" data-k="${key}"><div class="xradt"><b>${sc??'—'}</b><small>/ 100 · 삶의 기둥</small></div>${radar(vals,SHORT,null)}</div>`;if(old)old.outerHTML=h;else{const hd=T.querySelector('.crevh');if(hd)hd.insertAdjacentHTML('afterend',h)}}catch(e){console.warn('xrad',e)}}
+DECO.add('돌아보기 레이더',{root:'#dayBody',deep:true,wait:150,run:radPaint,now:true});
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-xrad]');if(!b)return;e.preventDefault();e.stopPropagation();try{localStorage.setItem('gj-xrad',localStorage.getItem('gj-xrad')==='1'?'0':'1')}catch(_){}radPaint()},true);
 DECO.add('평가 화면 정리',{root:'#dayBody',deep:true,wait:120,run:slim,now:true});
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-pmgo]');if(!b)return;e.preventDefault();e.stopPropagation();mode='run';CRTAB='r';CRQOPEN=true;try{renderDay()}catch(_){}setTimeout(()=>{const t=document.querySelector('#dayBody .crqt');if(t)t.scrollIntoView({block:'start',behavior:'smooth'})},80)},true);
-const st=document.createElement('style');st.textContent=`.pmgo{display:flex;flex-direction:column;align-items:center;gap:4px;margin:12px 0 4px}.pmgo .btn{width:100%}.pmgo small{color:var(--muted);font-size:.74rem}`;document.head.appendChild(st);
+const st=document.createElement('style');st.textContent=`.xrad{margin:6px 0 10px;text-align:center}.xrad svg{max-width:300px;width:100%;height:auto}.xradt{display:flex;align-items:baseline;justify-content:center;gap:6px}.xradt b{font-size:1.6rem;color:var(--pen)}.xradt small{color:var(--muted)}.pmgo{display:flex;flex-direction:column;align-items:center;gap:4px;margin:12px 0 4px}.pmgo .btn{width:100%}.pmgo small{color:var(--muted);font-size:.74rem}`;document.head.appendChild(st);
 })();
 </script>
 </body></html>
