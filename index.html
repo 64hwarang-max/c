@@ -16303,7 +16303,7 @@ async function syPutSafe(B,k,v){if(!k.startsWith('day:')||!v||typeof v!=='object
 {const _o=openDay;openDay=async function(d){try{staleGuardInstall()}catch(e){}return _o.apply(this,arguments)}}
 {const _f=flush0;flush0=async function(){try{staleGuardInstall()}catch(e){}return _f.apply(this,arguments)}}
 /* v390 ① 앱 버전 표시 · 새 버전 알림 (GitHub에서 마지막으로 성공한 빌드 번호와 비교) */
-var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/538})();
+var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/539})();
 const VRK='gj-verchk',VRURL='https://github.com/64hwarang-max/c/actions/workflows/build-apk.yml';
 const vrGet=()=>{try{return JSON.parse(localStorage.getItem(VRK)||'{}')}catch(e){return{}}};
 async function vrCheck(force){const c=vrGet();if(!force&&c.t&&Date.now()-c.t<6*36e5)return c;
@@ -19114,75 +19114,107 @@ const st=document.createElement('style');st.textContent=`.xlk{margin-top:10px;pa
 })();
 </script>
 <script id="nb-js">
-/* v536: 노트북(권) — 굿노트처럼 한 권 안에서 장을 넘기며 쓰기 */
+/* v539: 노트북(권) — 여러 주제를 한 권으로 묶고, 권 안에서 장을 넘기며 쓰기 */
 (function(){
 const LS=(k,v)=>{try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){return null}};
 const TPL={blank:['빈 종이',''],line:['줄',''],grid:['모눈',''],meet:['회의록','일시:\n참석:\n안건:\n\n논의:\n\n결정:\n할 일:\n'],rev:['원고 검토','대상:\n수정 요청:\n\n확인 필요:\n\n회신:\n'],corn:['코넬식','핵심어:\n\n필기:\n\n요약:\n']};
-let NB=null;/* 열린 권의 topic id */
-const pages=tid=>[...NOTES.values()].filter(n=>!n.person&&(n.topic||'')===tid&&!(n.kind&&n.kind!=='note')).sort((a,b)=>(a.date<b.date?-1:a.date>b.date?1:(a.created||0)-(b.created||0)));
-const lastUp=L=>L.reduce((m,n)=>Math.max(m,n.updated||n.created||0),0);
-function books(){const all=[...NOTES.values()].filter(n=>!n.person);const ids=new Set(all.map(n=>n.topic||''));
-  return SET.topics.filter(t=>t.nb||ids.has(t.id)).map(t=>{const L=pages(t.id);return{t,n:L.length,u:lastUp(L)}}).sort((a,b)=>(b.t.pin?1:0)-(a.t.pin?1:0)||b.u-a.u)}
-function shelfHTML(){const B=books();const md2=ms=>{if(!ms)return'';const d=new Date(ms);return`${d.getMonth()+1}.${d.getDate()}`};
-  return`<div class="nbsh"><div class="nbsh-h"><b>📚 노트북</b><small>${B.length}권 · 권을 열면 장을 넘기며 봅니다</small><button type="button" class="btn small" id="nbnew">＋ 새 노트</button></div>
-   <div class="nbgrid">${B.map(({t,n,u})=>`<button type="button" class="nbcv" data-nbo="${esc(t.id)}" style="--k:${tcol(t)}"><span class="nbsp"></span><b>${esc(t.name)}</b><small>${n}장${u?' · '+md2(u):''}${t.tpl&&t.tpl!=='blank'?' · '+TPL[t.tpl][0]:''}</small>${t.pin?'<i>📌</i>':''}</button>`).join('')||'<p class="hint">아직 노트가 없습니다. ＋ 새 노트로 한 권을 만드십시오.</p>'}</div></div>`}
-function pageHTML(n,i,t){const RT=n.bdoc||(n.body?mdToHtml(n.body):'');const ph=(n.photos||[]).slice(0,4).map(p=>imgTag(p,'alt="" loading="lazy"')).join('');
-  return`<article class="nbp nbt-${t.tpl||'blank'}" data-nbp="${n.id}" id="nbp-${n.id}"><header><span>${i+1}</span><b>${esc(n.title||'제목 없음')}</b><small>${md(n.date)}</small></header><div class="nbc">${RT||'<p class="hint">빈 장 · 눌러서 쓰기</p>'}${ph?`<div class="nbph">${ph}</div>`:''}</div></article>`}
-function bookHTML(){const t=SET.topics.find(x=>x.id===NB);if(!t)return'';const L=pages(t.id);
-  return`<div class="nbbk" style="--k:${tcol(t)}"><div class="nbbar"><button type="button" class="del" id="nbback">‹ 책장</button><b>${esc(t.name)}</b><button type="button" class="nbar2" id="nbprev" aria-label="이전 장">‹</button><small id="nbpn">${L.length?`1 / ${L.length}`:'0장'}</small><button type="button" class="nbar2" id="nbnext" aria-label="다음 장">›</button><button type="button" class="xwic" id="nbset" aria-label="이 노트 설정">⚙</button></div>
-   ${L.length?`<div class="nbidx">${L.map((n,i)=>`<button type="button" data-nbj="${i}">${i+1}. ${esc((n.title||'제목 없음').slice(0,14))}</button>`).join('')}</div>`:''}
-   <div class="nbpages" id="nbpages">${L.map((n,i)=>pageHTML(n,i,t)).join('')}<div class="nbp nbadd"><button type="button" class="btn" id="nbadd">＋ 다음 장 쓰기</button><small>${TPL[t.tpl||'blank'][0]} 종이</small></div></div>
-   </div>`}
-function bind(R){const box=$('#nbpages');const t=SET.topics.find(x=>x.id===NB);const L=t?pages(t.id):[];
+const RULES=[['다이어리',/다이어리|일기|과거|둥둥|메모|자유 노트|반성|태도/],['신앙',/신앙|말씀|묵상|설교|예배|기도|감사|섬김|양육|큐티|QT/i],['업무',/업무|정신전력|연구|보고/],['건강',/운동|식사|밥|수면|휴식|건강|식단/],['생활',/생활|이동|정리|이발|집안/],['관계·가정',/가족|관계|교제|가정|동문|친구/],['자기계발',/자기계발|독서|공부|어학/]];
+const AREA_BOOK={spirit:'신앙',work:'업무',body:'건강',life:'생활',rel:'관계·가정',home:'관계·가정',grow:'자기계발'};
+function autoBooks(){if(SET.nbAuto)return;let ch=0;(SET.topics||[]).forEach(t=>{if(t.book||t.id==='t-people')return;const r=RULES.find(([,re])=>re.test(t.name||''));const b=r?r[0]:AREA_BOOK[t.area];if(b){t.book=b;ch++}});SET.nbAuto=1;if(ch)saveSet().catch(()=>{})}
+const NBK=()=>(SET.nbk=SET.nbk||{});
+const keyOf=t=>t.book?'b:'+t.book:'t:'+t.id;
+let NB=null,NBF='';/* 열린 권, 섹션(주제) 필터 */
+const isPage=n=>!n.person&&!(n.kind&&n.kind!=='note');
+function books(){const all=[...NOTES.values()].filter(isPage);const cnt={},up={};all.forEach(n=>{const k=n.topic||'';cnt[k]=(cnt[k]||0)+1;up[k]=Math.max(up[k]||0,n.updated||n.created||0)});
+  const M=new Map();(SET.topics||[]).forEach(t=>{if(!(cnt[t.id]||t.nb||t.book))return;const k=keyOf(t);if(!M.has(k))M.set(k,{k,name:t.book||t.name,topics:[],n:0,u:0});const B=M.get(k);B.topics.push(t);B.n+=cnt[t.id]||0;B.u=Math.max(B.u,up[t.id]||0)});
+  return[...M.values()].map(B=>{const o=B.k.startsWith('b:')?NBK()[B.name]||{}:B.topics[0];B.c=o.c??B.topics[0].c??0;B.tpl=o.tpl||'blank';B.pin=!!o.pin;return B}).sort((a,b)=>(b.pin?1:0)-(a.pin?1:0)||b.u-a.u)}
+const bookBy=k=>books().find(B=>B.k===k);
+const cfg=B=>B.k.startsWith('b:')?(NBK()[B.name]=NBK()[B.name]||{}):B.topics[0];
+const colOf=c=>`var(${NCOL[(c??0)%NCOL.length]})`;
+function pagesOf(B){const ids=new Set((NBF?[NBF]:B.topics.map(t=>t.id)));return[...NOTES.values()].filter(n=>isPage(n)&&ids.has(n.topic||'')).sort((a,b)=>(a.date<b.date?-1:a.date>b.date?1:(a.created||0)-(b.created||0)))}
+const md2=ms=>{if(!ms)return'';const d=new Date(ms);return`${d.getMonth()+1}.${d.getDate()}`};
+function shelfHTML(){const B=books();
+  return`<div class="nbsh"><div class="nbsh-h"><b>📚 노트북</b><small>${B.length}권</small><button type="button" class="btn small ghost" id="nborg">🗂 정리</button><button type="button" class="btn small" id="nbnew">＋ 새 노트</button></div>
+   <div class="nbgrid">${B.map(b=>`<button type="button" class="nbcv" data-nbo="${esc(b.k)}" style="--k:${colOf(b.c)}"><span class="nbsp"></span><b>${esc(b.name)}</b><small>${b.n}장${b.u?' · '+md2(b.u):''}${b.topics.length>1?` · 섹션 ${b.topics.length}`:''}</small>${b.pin?'<i>📌</i>':''}</button>`).join('')||'<p class="hint">아직 노트가 없습니다. ＋ 새 노트로 한 권을 만드십시오.</p>'}</div></div>`}
+function shell(n,i,B){return`<article class="nbp nbt-${B.tpl}" data-nbp="${n.id}" data-i="${i}"><header><span>${i+1}</span><b>${esc(n.title||'제목 없음')}</b><small>${md(n.date)}</small></header><div class="nbc"></div></article>`}
+function fill(el,B){if(el._f)return;el._f=1;const n=NOTES.get(el.dataset.nbp);if(!n)return;const RT=n.bdoc||(n.body?mdToHtml(n.body):'');const ph=(n.photos||[]).slice(0,4).map(p=>imgTag(p,'alt="" loading="lazy"')).join('');const t=B.topics.length>1?(SET.topics.find(x=>x.id===n.topic)||{}).name:'';
+  el.querySelector('.nbc').innerHTML=`${t?`<p class="nbsec">${esc(t)}</p>`:''}${RT||'<p class="hint">빈 장 · 눌러서 쓰기</p>'}${ph?`<div class="nbph">${ph}</div>`:''}`;try{hydrate(el)}catch(e){}}
+function bookHTML(B){const L=pagesOf(B);const big=L.length>40;
+  return`<div class="nbbk" style="--k:${colOf(B.c)}"><div class="nbbar"><button type="button" class="del" id="nbback">‹ 책장</button><b>${esc(B.name)}</b><button type="button" class="nbar2" id="nbprev" aria-label="이전 장">‹</button><small id="nbpn">${L.length?`1 / ${L.length}`:'0장'}</small><button type="button" class="nbar2" id="nbnext" aria-label="다음 장">›</button><button type="button" class="xwic" id="nbset" aria-label="이 노트 설정">⚙</button></div>
+   ${B.topics.length>1?`<div class="nbidx nbsecs"><button type="button" data-nbs="" class="${NBF?'':'on'}">전체</button>${B.topics.map(t=>`<button type="button" data-nbs="${esc(t.id)}" class="${NBF===t.id?'on':''}">${esc(t.name)}</button>`).join('')}</div>`:''}
+   ${L.length?(big?`<div class="nbjump"><input type="range" id="nbrng" min="1" max="${L.length}" value="${L.length}" aria-label="장 이동"><input type="date" id="nbdt" aria-label="날짜로 이동" value="${L[L.length-1].date}"></div>`:`<div class="nbidx">${L.map((n,i)=>`<button type="button" data-nbj="${i}">${i+1}. ${esc((n.title||'제목 없음').slice(0,14))}</button>`).join('')}</div>`):''}
+   <div class="nbpages" id="nbpages">${L.map((n,i)=>shell(n,i,B)).join('')}<div class="nbp nbadd"><button type="button" class="btn" id="nbadd">＋ 다음 장 쓰기</button><small>${TPL[B.tpl][0]} 종이${NBF?' · '+esc((SET.topics.find(x=>x.id===NBF)||{}).name||''):''}</small></div></div></div>`}
+function bind(R,B){const box=$('#nbpages');const L=pagesOf(B);const els=box?[...box.querySelectorAll('[data-nbp]')]:[];
   const cur=()=>box?Math.round(box.scrollLeft/Math.max(1,box.clientWidth)):0;
-  const goP=(i,sm)=>{if(!box)return;i=Math.max(0,Math.min(L.length,i));box.scrollTo({left:i*box.clientWidth,behavior:sm===false?'auto':'smooth'})};
-  const upd=()=>{const i=cur();const pn=$('#nbpn');if(pn)pn.textContent=L.length?`${Math.min(i+1,L.length)} / ${L.length}`:'0장';R.querySelectorAll('[data-nbj]').forEach(b=>b.classList.toggle('on',+b.dataset.nbj===i));LS('gj-nbp:'+NB,String(i))};
+  const lazy=i=>{for(let j=i-2;j<=i+2;j++)if(els[j])fill(els[j],B)};
+  const goP=(i,sm)=>{if(!box)return;i=Math.max(0,Math.min(L.length,i));lazy(i);box.scrollTo({left:i*box.clientWidth,behavior:sm===false?'auto':'smooth'})};
+  const upd=()=>{const i=cur();lazy(i);const pn=$('#nbpn');if(pn)pn.textContent=L.length?`${Math.min(i+1,L.length)} / ${L.length}`:'0장';R.querySelectorAll('[data-nbj]').forEach(b=>b.classList.toggle('on',+b.dataset.nbj===i));const rg=$('#nbrng');if(rg&&document.activeElement!==rg)rg.value=Math.min(i+1,L.length);const dt=$('#nbdt');if(dt&&L[i]&&document.activeElement!==dt)dt.value=L[i].date;LS('gj-nbp:'+B.k+NBF,String(i))};
   if(box){box.addEventListener('scroll',()=>{clearTimeout(box._t);box._t=setTimeout(upd,80)},{passive:true});['touchstart','touchmove','touchend'].forEach(ev=>box.addEventListener(ev,e=>e.stopPropagation(),{passive:true}));
-    const saved=LS('gj-nbp:'+NB);const start=saved!=null?Math.min(+saved,Math.max(0,L.length-1)):Math.max(0,L.length-1);requestAnimationFrame(()=>{goP(start,false);upd()})}
+    const sv=LS('gj-nbp:'+B.k+NBF);const start=sv!=null?Math.min(+sv,Math.max(0,L.length-1)):Math.max(0,L.length-1);requestAnimationFrame(()=>{goP(start,false);upd()})}
   R.querySelectorAll('[data-nbj]').forEach(b=>b.onclick=()=>goP(+b.dataset.nbj));
+  R.querySelectorAll('[data-nbs]').forEach(b=>b.onclick=()=>{NBF=b.dataset.nbs;draw()});
+  const rg=$('#nbrng');if(rg)rg.oninput=()=>goP(+rg.value-1,false);
+  const dt=$('#nbdt');if(dt)dt.onchange=()=>{const v=dt.value;if(!v)return;let i=L.findIndex(n=>n.date>=v);if(i<0)i=L.length-1;goP(i,false)};
   const pv=$('#nbprev'),nx=$('#nbnext');if(pv)pv.onclick=()=>goP(cur()-1);if(nx)nx.onclick=()=>goP(cur()+1);
-  R.querySelectorAll('[data-nbp]').forEach(a=>a.onclick=e=>{if(e.target.closest('a'))return;NLH=[];nReturn=null;nEdit=a.dataset.nbp;renderNotes();window.scrollTo(0,0)});
-  const bk=$('#nbback');if(bk)bk.onclick=()=>{NB=null;LS('gj-nbo','');renderNotes()};
-  const ad=$('#nbadd');if(ad)ad.onclick=()=>addPage(t);
-  const st=$('#nbset');if(st)st.onclick=()=>openSet(t)}
-function addPage(t){if(!t)return;const id='note-'+uid();const tp=TPL[t.tpl||'blank'];const n={kind:'note',id,date:today(),topic:t.id,title:'',body:tp[1]||'',photos:[],created:Date.now(),updated:Date.now()};if(t.area)n.area=t.area;NOTES.set(id,n);saveNote(n,true);LS('gj-nbp:'+t.id,String(pages(t.id).length-1));NLH=[];nReturn=null;nEdit=id;renderNotes();window.scrollTo(0,0);setTimeout(()=>{const x=$('#ntitle');if(x)x.focus()},50)}
-function openSet(t){const S=$('#sheet');const close=()=>{S.hidden=true;S.innerHTML=''};
-  S.innerHTML=`<div class="sheetbox" role="dialog" aria-label="노트 설정"><div class="shead"><b>📕 ${esc(t.name)}</b><button class="del" id="nbx">닫기</button></div>
-   <label class="xwlb">이름<input id="nbnm" value="${esc(t.name)}" maxlength="30"></label>
-   <p class="fl">종이(새 장의 기본 양식)</p><div class="nbtp">${Object.entries(TPL).map(([k,v])=>`<button type="button" data-nbtp="${k}" class="nbt-${k}${(t.tpl||'blank')===k?' on':''}">${v[0]}</button>`).join('')}</div>
-   <p class="fl">표지 색</p><div class="nbtp">${NCOL.map((c,i)=>`<button type="button" data-nbc="${i}" class="nbcol${((t.c??0)%NCOL.length)===i?' on':''}" style="background:var(${c})" aria-label="색 ${i+1}"></button>`).join('')}</div>
-   <label class="xwck"><input type="checkbox" id="nbpin"${t.pin?' checked':''}> 📌 책장 맨 앞에 두기</label>
-   <div class="row" style="justify-content:flex-end;margin-top:12px"><button class="btn" id="nbok">저장</button></div></div>`;
+  els.forEach(a=>a.onclick=e=>{if(e.target.closest('a'))return;NLH=[];nReturn=null;nEdit=a.dataset.nbp;renderNotes();window.scrollTo(0,0)});
+  const bk=$('#nbback');if(bk)bk.onclick=()=>{NB=null;NBF='';LS('gj-nbo','');draw()};
+  const ad=$('#nbadd');if(ad)ad.onclick=()=>addPage(B);
+  const st=$('#nbset');if(st)st.onclick=()=>openSet(B)}
+function mainTopic(B){if(NBF)return NBF;const c=cfg(B);if(c.main&&B.topics.some(t=>t.id===c.main))return c.main;const cnt={};[...NOTES.values()].forEach(n=>{cnt[n.topic]=(cnt[n.topic]||0)+1});return B.topics.slice().sort((a,b)=>(cnt[b.id]||0)-(cnt[a.id]||0))[0].id}
+function addPage(B){const tid=mainTopic(B);const t=SET.topics.find(x=>x.id===tid);const id='note-'+uid();const n={kind:'note',id,date:today(),topic:tid,title:'',body:TPL[B.tpl][1]||'',photos:[],created:Date.now(),updated:Date.now()};if(t&&t.area)n.area=t.area;NOTES.set(id,n);saveNote(n,true);LS('gj-nbp:'+B.k+NBF,String(pagesOf(B).length-1));NLH=[];nReturn=null;nEdit=id;renderNotes();window.scrollTo(0,0);setTimeout(()=>{const x=$('#ntitle');if(x)x.focus()},50)}
+function openSet(B){const S=$('#sheet');const close=()=>{S.hidden=true;S.innerHTML=''};const c=cfg(B);const multi=B.k.startsWith('b:');
+  S.innerHTML=`<div class="sheetbox" role="dialog" aria-label="노트 설정"><div class="shead"><b>📕 ${esc(B.name)}</b><button class="del" id="nbx">닫기</button></div>
+   <label class="xwlb">이름<input id="nbnm" value="${esc(B.name)}" maxlength="30"></label>
+   <p class="fl">종이(새 장의 기본 양식)</p><div class="nbtp">${Object.entries(TPL).map(([k,v])=>`<button type="button" data-nbtp="${k}" class="nbt-${k}${B.tpl===k?' on':''}">${v[0]}</button>`).join('')}</div>
+   <p class="fl">표지 색</p><div class="nbtp">${NCOL.map((cc,i)=>`<button type="button" data-nbc="${i}" class="nbcol${((B.c??0)%NCOL.length)===i?' on':''}" style="background:var(${cc})" aria-label="색 ${i+1}"></button>`).join('')}</div>
+   ${multi?`<label class="xwlb">새 장을 넣을 섹션<select id="nbmain">${B.topics.map(t=>`<option value="${esc(t.id)}"${mainTopic(B)===t.id?' selected':''}>${esc(t.name)}</option>`).join('')}</select></label>`:''}
+   <label class="xwck"><input type="checkbox" id="nbpin"${B.pin?' checked':''}> 📌 책장 맨 앞에 두기</label>
+   <div class="row" style="justify-content:space-between;margin-top:12px"><button class="del" id="nbsec">🗂 이 권에 넣을 주제</button><button class="btn" id="nbok">저장</button></div></div>`;
   S.hidden=false;{const x=$('#nbx');if(x)x.onclick=close}S.onclick=e=>{if(e.target===S)close()};
-  let tp=t.tpl||'blank',c=t.c??0;S.querySelectorAll('[data-nbtp]').forEach(b=>b.onclick=()=>{tp=b.dataset.nbtp;S.querySelectorAll('[data-nbtp]').forEach(x=>x.classList.toggle('on',x===b))});
-  S.querySelectorAll('[data-nbc]').forEach(b=>b.onclick=()=>{c=+b.dataset.nbc;S.querySelectorAll('[data-nbc]').forEach(x=>x.classList.toggle('on',x===b))});
-  $('#nbok').onclick=()=>{const v=$('#nbnm').value.trim();if(v)t.name=v.slice(0,30);t.tpl=tp;t.c=c;if($('#nbpin').checked)t.pin=1;else delete t.pin;saveSet().catch(()=>{});close();renderNotes()}}
-function draw(){const R=$('#nbody');document.querySelectorAll('#nmode button').forEach(b=>b.classList.toggle('on',b.dataset.nm==='nb'));$('#nmode').hidden=false;
-  if(NB&&!SET.topics.some(x=>x.id===NB))NB=null;
-  if(NB){R.innerHTML=bookHTML();bind(R);return}
+  let tp=B.tpl,co=B.c??0;S.querySelectorAll('[data-nbtp]').forEach(b=>b.onclick=()=>{tp=b.dataset.nbtp;S.querySelectorAll('[data-nbtp]').forEach(x=>x.classList.toggle('on',x===b))});
+  S.querySelectorAll('[data-nbc]').forEach(b=>b.onclick=()=>{co=+b.dataset.nbc;S.querySelectorAll('[data-nbc]').forEach(x=>x.classList.toggle('on',x===b))});
+  $('#nbsec').onclick=()=>{close();openOrg(B.name)};
+  $('#nbok').onclick=()=>{const v=($('#nbnm').value.trim()||B.name).slice(0,30);
+    if(multi){const o=NBK()[B.name]||{};delete NBK()[B.name];B.topics.forEach(t=>t.book=v);NBK()[v]=Object.assign(o,{tpl:tp,c:co});const m=$('#nbmain');if(m)NBK()[v].main=m.value;if($('#nbpin').checked)NBK()[v].pin=1;else delete NBK()[v].pin;NB='b:'+v}
+    else{const t=B.topics[0];t.name=v;t.tpl=tp;t.c=co;if($('#nbpin').checked)t.pin=1;else delete t.pin}
+    LS('gj-nbo',NB||'');saveSet().catch(()=>{});close();draw()}}
+/* 정리: 주제마다 어느 권에 넣을지 */
+function openOrg(focus){const S=$('#sheet');const close=()=>{S.hidden=true;S.innerHTML='';draw()};const cnt={};[...NOTES.values()].forEach(n=>{if(isPage(n))cnt[n.topic||'']=(cnt[n.topic||'']||0)+1});
+  const T=(SET.topics||[]).filter(t=>t.id!=='t-people').sort((a,b)=>(cnt[b.id]||0)-(cnt[a.id]||0));const BN=()=>[...new Set(T.map(t=>t.book).filter(Boolean))].sort();
+  const dr=()=>{S.innerHTML=`<div class="sheetbox" role="dialog" aria-label="노트북 정리"><div class="shead"><b>🗂 노트북 정리</b><button class="del" id="nbx">닫기</button></div><p class="hint">주제(분류)마다 넣을 권을 고르십시오. 같은 권으로 묶인 주제는 그 권 안의 섹션이 됩니다. 노트 자체는 옮기거나 바꾸지 않습니다.</p>
+    ${T.map(t=>`<div class="pkr${focus&&t.book===focus?' nbfx':''}"><span>${esc(t.name)} <small>${cnt[t.id]||0}장</small></span><select data-nbbk="${esc(t.id)}" aria-label="${esc(t.name)} 권"><option value="">따로 한 권</option>${BN().map(b=>`<option value="${esc(b)}"${t.book===b?' selected':''}>${esc(b)}</option>`).join('')}<option value="__new">＋ 새 권…</option></select></div>`).join('')}</div>`;
+    S.hidden=false;{const x=$('#nbx');if(x)x.onclick=close}S.onclick=e=>{if(e.target===S)close()};
+    S.querySelectorAll('[data-nbbk]').forEach(sel=>sel.onchange=async()=>{const t=SET.topics.find(x=>x.id===sel.dataset.nbbk);if(!t)return;let v=sel.value;if(v==='__new'){v=(await uiPrompt('새 권 이름','')||'').trim().slice(0,30);if(!v){dr();return}}if(v)t.book=v;else delete t.book;saveSet().catch(()=>{});dr()})};dr()}
+function draw(){const R=$('#nbody');document.querySelectorAll('#nmode button').forEach(b=>b.classList.toggle('on',b.dataset.nm==='nb'));$('#nmode').hidden=false;autoBooks();
+  let B=NB?bookBy(NB):null;if(NB&&!B){NB=null;NBF=''}
+  if(B){if(NBF&&!B.topics.some(t=>t.id===NBF))NBF='';R.innerHTML=bookHTML(B);bind(R,B);return}
   R.innerHTML=shelfHTML();
-  R.querySelectorAll('[data-nbo]').forEach(b=>b.onclick=()=>{NB=b.dataset.nbo;LS('gj-nbo',NB);draw();window.scrollTo(0,0)});
-  const nw=$('#nbnew');if(nw)nw.onclick=async()=>{const v=await uiPrompt('새 노트 이름 (예: 강군인사이드 2027, 교안 작업)','');if(!v||!v.trim())return;let t=SET.topics.find(x=>x.name===v.trim());if(!t){t={id:'t-'+uid(),name:v.trim().slice(0,30),c:SET.topics.length};SET.topics.push(t)}t.nb=1;await saveSet().catch(()=>{});NB=t.id;LS('gj-nbo',NB);draw()}}
-window.nbDraw=draw;
-{const o=LS('gj-nbo');if(o)NB=o}
+  R.querySelectorAll('[data-nbo]').forEach(b=>b.onclick=()=>{NB=b.dataset.nbo;NBF='';LS('gj-nbo',NB);draw();window.scrollTo(0,0)});
+  const og=$('#nborg');if(og)og.onclick=()=>openOrg();
+  const nw=$('#nbnew');if(nw)nw.onclick=async()=>{const v=await uiPrompt('새 노트 이름 (예: 강군인사이드 2027, 교안 작업)','');if(!v||!v.trim())return;let t=SET.topics.find(x=>x.name===v.trim());if(!t){t={id:'t-'+uid(),name:v.trim().slice(0,30),c:SET.topics.length};SET.topics.push(t)}t.nb=1;await saveSet().catch(()=>{});NB=keyOf(t);LS('gj-nbo',NB);draw()}}
+window.nbDraw=draw;window.nbOrg=openOrg;
+{const o=LS('gj-nbo');if(o)NB=o.includes(':')?o:'t:'+o}
 const _rn=renderNotes;renderNotes=function(){if(nView==='nb'&&!nEdit){try{autoLinkTopics()}catch(e){}return draw()}return _rn.apply(this,arguments)};
 /* 편집 화면: 그 권의 종이(줄·모눈) 배경 */
-const _re=renderEditor;renderEditor=function(){const r=_re.apply(this,arguments);try{const n=NOTES.get(nEdit);const t=n&&SET.topics.find(x=>x.id===n.topic);const p=document.querySelector('#nbody .paper');if(p&&t&&(t.tpl==='line'||t.tpl==='grid'))p.classList.add('nbt-'+t.tpl)}catch(e){}return r};
-const st=document.createElement('style');st.textContent=`.nbsh-h{display:flex;align-items:center;gap:8px;margin:8px 0}.nbsh-h small{flex:1;color:var(--muted);font-size:.74rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+const _re=renderEditor;renderEditor=function(){const r=_re.apply(this,arguments);try{const n=NOTES.get(nEdit);const t=n&&SET.topics.find(x=>x.id===n.topic);const tpl=t?(t.book?(NBK()[t.book]||{}).tpl:t.tpl):'';const p=document.querySelector('#nbody .paper');if(p&&(tpl==='line'||tpl==='grid'))p.classList.add('nbt-'+tpl)}catch(e){}return r};
+const st=document.createElement('style');st.textContent=`.nbsh-h{display:flex;align-items:center;gap:6px;margin:8px 0}.nbsh-h small{flex:1;color:var(--muted);font-size:.74rem;white-space:nowrap}
 .nbgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px}
 .nbcv{position:relative;display:flex;flex-direction:column;justify-content:flex-end;gap:2px;aspect-ratio:3/4;padding:12px 10px 12px 18px;text-align:left;border:1px solid var(--line);border-radius:4px 10px 10px 4px;background:linear-gradient(135deg,color-mix(in srgb,var(--k) 22%,var(--paper)),var(--paper));box-shadow:2px 3px 0 color-mix(in srgb,var(--k) 30%,transparent)}
 .nbcv .nbsp{position:absolute;left:0;top:0;bottom:0;width:9px;background:var(--k);border-radius:4px 0 0 4px}.nbcv b{font-size:.95rem;line-height:1.3;overflow-wrap:anywhere}.nbcv small{color:var(--muted);font-size:.72rem}.nbcv i{position:absolute;top:6px;right:8px;font-style:normal}
-.nbbar{opacity:1!important;visibility:visible!important;transform:none!important;display:flex;align-items:center;gap:8px;margin:8px 0 6px}.nbbar b{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.nbbar small{color:var(--muted);font-variant-numeric:tabular-nums}
-.nbidx{display:flex;gap:4px;overflow-x:auto;padding-bottom:6px;scrollbar-width:none}.nbidx button{flex:none;border:1px solid var(--line);background:var(--paper);border-radius:8px;font-size:.72rem;padding:3px 8px;white-space:nowrap}.nbidx button.on{border-color:var(--k);background:color-mix(in srgb,var(--k) 18%,var(--paper));font-weight:700}
+.nbbar{opacity:1!important;visibility:visible!important;transform:none!important;display:flex;align-items:center;gap:8px;margin:8px 0 6px}.nbbar b{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.nbbar small{color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+.nbar2{border:1px solid var(--line);background:var(--paper);border-radius:999px;width:36px;height:32px;font-size:1rem;flex:none}
+.nbidx{display:flex;gap:4px;overflow-x:auto;padding-bottom:6px;scrollbar-width:none}.nbidx button{flex:none;border:1px solid var(--line);background:var(--paper);border-radius:8px;font-size:.72rem;padding:3px 8px;white-space:nowrap}.nbidx button.on{border-color:var(--k);background:color-mix(in srgb,var(--k) 18%,var(--paper));font-weight:700}.nbsecs button{font-size:.76rem;padding:4px 10px}
+.nbjump{display:flex;gap:8px;align-items:center;margin-bottom:6px}.nbjump input[type=range]{flex:1;accent-color:var(--k)}.nbjump input[type=date]{width:auto!important;flex:none;font-size:.8rem}
 .nbpages{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;overscroll-behavior-x:contain;gap:0;scrollbar-width:none;border-radius:10px}.nbpages::-webkit-scrollbar,.nbidx::-webkit-scrollbar{display:none}
 .nbp{flex:0 0 100%;scroll-snap-align:start;box-sizing:border-box;min-height:62vh;max-height:70vh;overflow-y:auto;background:var(--paper);border:1px solid var(--line);border-left:6px solid var(--k);border-radius:6px 10px 10px 6px;padding:10px 14px 18px;cursor:pointer}
 .nbp header{display:flex;align-items:baseline;gap:8px;border-bottom:1px solid var(--line);padding-bottom:6px;margin-bottom:8px}.nbp header span{color:var(--muted);font-size:.74rem;font-variant-numeric:tabular-nums}.nbp header b{flex:1;min-width:0}.nbp header small{color:var(--muted);font-size:.74rem}
+.nbsec{display:inline-block;margin:0 0 6px;font-size:.7rem;color:var(--k);border:1px solid var(--k);border-radius:6px;padding:0 6px}
 .nbc{font-size:.9rem;line-height:1.75;overflow-wrap:anywhere}.nbc img{max-width:100%;border-radius:6px}.nbph{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px}
 .nbt-line,.paper.nbt-line{background-image:repeating-linear-gradient(to bottom,transparent 0 calc(1.75em - 1px),color-mix(in srgb,var(--muted) 22%,transparent) calc(1.75em - 1px) 1.75em)!important;background-attachment:local}
 .nbt-grid,.paper.nbt-grid{background-image:linear-gradient(color-mix(in srgb,var(--muted) 16%,transparent) 1px,transparent 1px),linear-gradient(90deg,color-mix(in srgb,var(--muted) 16%,transparent) 1px,transparent 1px)!important;background-size:20px 20px!important;background-attachment:local}
 .nbadd{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;cursor:default;border-left-style:dashed}.nbadd small{color:var(--muted)}
-.nbar2{border:1px solid var(--line);background:var(--paper);border-radius:999px;width:36px;height:32px;font-size:1rem;flex:none}.nbnav{display:flex;justify-content:space-between;margin-top:6px}.nbnav button{border:1px solid var(--line);background:var(--paper);border-radius:999px;width:44px;height:36px;font-size:1.1rem}
-.nbtp{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 8px}.nbtp button{border:1px solid var(--line);border-radius:8px;padding:8px 10px;min-width:64px;min-height:44px;background-color:var(--paper);font-size:.8rem}.nbtp button.on{outline:2px solid var(--pen);font-weight:700}.nbtp .nbcol{min-width:36px;width:36px;height:36px;border-radius:50%;padding:0}`;document.head.appendChild(st);
+.nbtp{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 8px}.nbtp button{border:1px solid var(--line);border-radius:8px;padding:8px 10px;min-width:64px;min-height:44px;background-color:var(--paper);font-size:.8rem}.nbtp button.on{outline:2px solid var(--pen);font-weight:700}.nbtp .nbcol{min-width:36px;width:36px;height:36px;border-radius:50%;padding:0}
+.pkr small{color:var(--muted);font-size:.72rem}.nbfx{background:color-mix(in srgb,var(--pen) 8%,transparent)}`;document.head.appendChild(st);
 })();
 </script>
 <script id="pk-js">
