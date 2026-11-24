@@ -16303,7 +16303,7 @@ async function syPutSafe(B,k,v){if(!k.startsWith('day:')||!v||typeof v!=='object
 {const _o=openDay;openDay=async function(d){try{staleGuardInstall()}catch(e){}return _o.apply(this,arguments)}}
 {const _f=flush0;flush0=async function(){try{staleGuardInstall()}catch(e){}return _f.apply(this,arguments)}}
 /* v390 ① 앱 버전 표시 · 새 버전 알림 (GitHub에서 마지막으로 성공한 빌드 번호와 비교) */
-var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/551})();
+var APPV=(()=>{try{const m=String(BUILD).match(/^v(\d+)/);if(m)return +m[1]}catch(e){}return /*APPV*/552})();
 const VRK='gj-verchk',VRURL='https://github.com/64hwarang-max/c/actions/workflows/build-apk.yml';
 const vrGet=()=>{try{return JSON.parse(localStorage.getItem(VRK)||'{}')}catch(e){return{}}};
 async function vrCheck(force){const c=vrGet();if(!force&&c.t&&Date.now()-c.t<6*36e5)return c;
@@ -19089,6 +19089,7 @@ function openMgr(id){const S=$('#sheet');let f=id?JSON.parse(JSON.stringify(F(id
       const L=FL(),ix=L.findIndex(x=>x.id===out.id);if(ix>=0)L[ix]=out;else L.push(out);save();close();toast(`🔁 ${out.name} 저장`);paint(true)}};
   draw()}
 window.xwOpen=openMgr;
+window.xwEpDone=(fid,a,b)=>{const f=F(fid);if(!f)return 0;return epDates(f,a,b).filter(d=>(f.steps||[]).length&&(f.steps||[]).every(st=>isDone(f,d,st))).length};
 /* 단계 데이터 형식: {id,n:이름,o:기간,u:단위,k} → 계산용으로 맞춤 */
 const st2=document.createElement('style');st2.textContent=`html body #dayBody.ezstart:not(.ezmore)>.xwcard.xwcard{display:block!important}.xws.od span{color:var(--muted)}.xwf{border-top:1px solid var(--line);padding:2px 0}.xwf>summary,.xwl>summary,.xwe>summary{display:flex;align-items:center;gap:6px;cursor:pointer;list-style:none;min-height:34px}.xwf>summary::-webkit-details-marker,.xwl>summary::-webkit-details-marker,.xwe>summary::-webkit-details-marker{display:none}.xwf>summary{font-weight:700;font-size:.9rem}.xwf>summary::before,.xwl>summary::before{content:'▸';color:var(--muted)}.xwf[open]>summary::before,.xwl[open]>summary::before{content:'▾'}.xwf>summary small,.xwl>summary small{color:var(--muted);font-weight:400;font-size:.74rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.xwf>summary small b{color:#c0392b}.xwic{margin-left:auto;border:1px dashed var(--line);background:none;border-radius:8px;min-width:30px;min-height:28px}.xwr{display:flex;align-items:center;gap:6px;font-size:.82rem;min-height:34px;border-left:3px solid var(--line);padding-left:4px;margin:2px 0}.xwr.late{border-left-color:#c0392b}.xwr.tdy{border-left-color:#d68910}.xwr.un{border-left-style:dashed;border-left-color:#2e6bc0}.xwr .xwn{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}.xwr em{color:var(--muted);font-style:normal}.xwr small{flex:none;font-size:.72rem;color:var(--muted)}.xwr.late small{color:#c0392b;font-weight:700}.xwr.tdy small{color:#d68910;font-weight:700}.xwr.un small{color:#2e6bc0}.xwc{flex:none;width:30px;height:30px;border:1px solid var(--line);background:var(--paper);border-radius:6px;font-size:.9rem;padding:0}.xwm{border:0;background:none;color:var(--pen);font-size:.78rem;padding:4px 0}.xwl{margin:4px 0 2px}.xwl>summary{font-size:.82rem;font-weight:600}.xwe{border:1px solid var(--line);border-left:4px solid var(--line);border-radius:8px;margin:4px 0;padding:0 6px}.xwe.late{border-left-color:#c0392b}.xwe.ok{border-left-color:#2e7d6b;opacity:.75}.xwe>summary{font-size:.8rem}.xwe>summary b{flex:none}.xwe>summary span{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.xwe>summary i{color:var(--muted)}.xwe>summary small{flex:none;color:var(--muted);font-size:.72rem}.xwb{padding:2px 0 8px}.xwti{width:100%;margin:2px 0 4px;font-size:.84rem}.xws{display:flex;align-items:center;gap:6px;font-size:.82rem;min-height:34px}.xws span{flex:1;min-width:0}.xws u{text-decoration:none;font-size:.68rem;border:1px solid #2e6bc0;color:#2e6bc0;border-radius:4px;padding:0 3px}.xws small{color:var(--muted);font-size:.72rem}.xws.late small{color:#c0392b;font-weight:700}.xws.ok span{color:var(--muted);text-decoration:line-through}.xwdt{font-size:.76rem;max-width:8.5em}.xwa{display:flex;justify-content:flex-end;margin-top:4px}.xwa button{border:1px dashed var(--line);background:none;border-radius:8px;font-size:.74rem;padding:3px 8px;color:var(--muted)}.xwtp{display:flex;flex-direction:column;align-items:flex-start;gap:2px;width:100%;text-align:left;border:1px solid var(--line);background:var(--paper);border-radius:10px;padding:10px;margin:6px 0}.xwtp small{color:var(--muted);font-size:.74rem}.xwlb{display:flex;flex-direction:column;gap:2px;font-size:.78rem;color:var(--muted);flex:1;min-width:0;margin:4px 0}.xwrow{display:flex;gap:8px}.xwck{display:flex;gap:6px;align-items:center;font-size:.82rem;margin:4px 0}.xwst{display:flex;flex-wrap:wrap;align-items:center;gap:4px;padding:4px 0;border-top:1px solid var(--line)}.xwst>span{width:1.4em;color:var(--muted)}.xwst input:not([type=number]){flex:1;min-width:8em}.xwst input[type=number]{width:3.8em!important;flex:none!important}.xwst select{width:auto!important;flex:none!important;min-width:0}.xwst button{border:1px solid var(--line);background:none;border-radius:6px;min-width:30px;min-height:30px}.xwst small{width:100%;padding-left:1.8em;color:var(--muted);font-size:.72rem}`;document.head.appendChild(st2);
 })();
@@ -19367,6 +19368,85 @@ function undoBase(){try{if(SET&&!SET.crBasePUser&&SET.crBaseP&&SET.crBaseP.life=
 document.addEventListener('change',e=>{const i=e.target;if(!i.dataset||i.dataset.crbk===undefined)return;const k=i.dataset.crbk;SET.crBaseP=SET.crBaseP||{};SET.crBasePUser=1;if(i.value==='')delete SET.crBaseP[k];else SET.crBaseP[k]=Math.max(0,Math.min(90,Math.round(+i.value||0)));Promise.resolve(saveSet()).catch(()=>{});toast(`${areaName(k)} 기본점수: ${i.value===''?'전체 기본점수 따름':SET.crBaseP[k]+'점'}`);try{crqPaint()}catch(_){}},true);
 const _ap=crApp;crApp=function(it,o,r){if(r&&r.nd&&(it.src==='oversleep'||it.src==='latebed'))return false;return _ap.apply(this,arguments)};
 let n=0;const t=setInterval(()=>{n++;if(typeof SET==='object'&&SET&&Array.isArray(SET.cats)&&SET.cats.length){migrate();undoBase();clearInterval(t)}else if(n>60)clearInterval(t)},500);
+})();
+</script>
+<script id="gl-js">
+/* v552: 비전→목표→계획→실행→기록→평가→피드백 연결 보완
+   ① 목표 '기록 연동' 진행률 ② 주간 계획↔실제 비교 ③ 다음 주 조정 ④ 실수 → 역코딩·다짐 ⑤ 정렬 점검 */
+(function(){
+const LS=(k,v)=>{try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){return null}};
+const dayO=d=>d===D.date?D:(cacheAll&&cacheAll.get(d))||null;
+const days=(a,b)=>{const out=[];const T=today();const e=b<T?b:T;for(let d=a;d<=e;d=addD(d,1))out.push(d);return out};
+/* ① 목표: 기록 연동 */
+GOALK.auto='📊 기록 연동';GKDESC.auto='실행 기록(체크·운동·시간·반복 업무)으로 진행률을 자동 계산';
+function amSrcs(){const L=[['wkn','🏋️ 운동한 날 수','일'],['km','🏃 유산소 거리','km'],['wmin','⏱ 운동 시간','분']];
+  try{const C=crAll();SCORE.forEach(([k,l])=>(C[k]||[]).filter(it=>!crRev(it)).forEach(it=>L.push([`cr:${k}|${it.id}`,`✅ ${l} · ${it.n} 한 날`,'일'])))}catch(e){}
+  try{(SET.cats||[]).forEach(c=>L.push([`cat:${c.name}`,`⏱ ${c.name} 실제 시간`,'시간']))}catch(e){}
+  try{(SET.flows||[]).forEach(f=>L.push([`flow:${f.id}`,`🔁 ${f.name} 회차 완료`,'회']))}catch(e){}
+  return L}
+function amRange(g){let r=null;try{r=perRange(g.lv,g.per)}catch(e){}if(!r||!r[0])r=[g.am&&g.am.from||addD(today(),-365),addD(today(),3650)];return r}
+function amVal(g){const am=g.am;if(!am||!am.s)return null;const[a,b]=amRange(g);const s=am.s;
+  if(s.startsWith('flow:'))return typeof xwEpDone==='function'?xwEpDone(s.slice(5),a,b):0;
+  let v=0;days(a,b).forEach(d=>{const o=dayO(d);if(!o)return;
+    if(s==='wkn'){if(wkList(o).length)v++}
+    else if(s==='km'){wkList(o).forEach(x=>{if(x.t==='cardio')v+=+x.km||0})}
+    else if(s==='wmin'){wkList(o).forEach(x=>{v+=+x.min||0})}
+    else if(s.startsWith('cat:')){const c=s.slice(4);(o.time||[]).forEach(t=>{if(t&&t.cat===c)v+=mins(t.s,t.e)/60})}
+    else if(s.startsWith('cr:')){const[k,id]=s.slice(3).split('|');try{const E=crEval(o,k);const r=E&&E.rows.find(x=>x.it.id===id);if(r&&!r.na&&r.v>=1)v++}catch(e){}}});
+  return Math.round(v*10)/10}
+window.goalAmVal=amVal;
+const _pg=prog;prog=function(g,seen){try{if(g&&g.kind==='auto'&&g.am&&g.am.s&&!g.done){const v=amVal(g);const t=+g.am.t||0;if(t>0&&v!=null)return Math.max(0,Math.min(1,v/t))}}catch(e){}return _pg.apply(this,arguments)};
+const _gk=gKindRow;gKindRow=function(g){let x=_gk.apply(this,arguments);if((g.kind||'proj')!=='auto')return x;const L=amSrcs();const cur=(g.am||{}).s||'';const u=(L.find(z=>z[0]===cur)||[])[2]||'';const v=cur?amVal(g):null;
+  return x+`<div class="gnum gam"><select data-gam="${g.id}" aria-label="측정 기준" style="flex:1;min-width:0;width:auto"><option value="">측정할 기록 고르기</option>${L.map(([k,l])=>`<option value="${esc(k)}"${k===cur?' selected':''}>${esc(l)}</option>`).join('')}</select><span class="gpw">목표 <input type="number" min="0" step="any" inputmode="decimal" data-gamt="${g.id}" value="${(g.am||{}).t??''}" style="width:4.2em"> ${esc(u)}</span></div>${cur?`<p class="hint" style="margin:0 0 6px">📊 이 기간 지금까지 <b>${v}</b>${esc(u)}${+(g.am||{}).t?` / ${g.am.t}${esc(u)} (${Math.round(Math.min(1,v/(+g.am.t))*100)}%)`:' · 목표 수치를 넣으면 진행률이 계산됩니다'}</p>`:''}`};
+function gReRender(){try{renderGoals()}catch(e){}try{wkcPaint(true)}catch(e){}try{wkcPaintDay(true)}catch(e){}}
+document.addEventListener('change',e=>{const i=e.target;if(!i.dataset)return;let g;
+  if(i.dataset.gam){g=GOALS.list.find(x=>x.id===i.dataset.gam);if(!g)return;g.am=Object.assign({},g.am||{},{s:i.value});if(!g.am.t){const m=(g.title||'').match(/(\d+(?:\.\d+)?)/);if(m)g.am.t=+m[1]}saveGoalsSoon();gReRender()}
+  else if(i.dataset.gamt){g=GOALS.list.find(x=>x.id===i.dataset.gamt);if(!g)return;g.am=Object.assign({},g.am||{},{t:+i.value||0});saveGoalsSoon();gReRender()}},true);
+/* 제목으로 짐작해 기록 연동 제안 */
+window.goalAmGuess=g=>{const t=g.title||'';if(/km|킬로/.test(t)&&/뛰|달리|러닝|조깅|걷/.test(t))return'km';if(/운동/.test(t)&&/회|번/.test(t))return'wkn';return''};
+/* ②③ 주간 돌아보기: 계획↔실제 · 다음 주 조정 */
+function weekOf(){try{return mondayOf((WKC&&WKC.a)||today())}catch(e){return mondayOf(today())}}
+function planAct(W){const P={},A={},PC={},AC={};const w168=SET.w168||{};Object.entries(w168).forEach(([c,h])=>{const k=catArea(c)||'';P[k]=(P[k]||0)+(+h||0);PC[c]=+h||0});
+  for(let i=0;i<7;i++){const d=addD(W,i);const o=dayO(d);if(!o)continue;(o.time||[]).forEach(t=>{if(!t||!t.cat)return;const h=mins(t.s,t.e)/60;const k=catArea(t.cat)||'';A[k]=(A[k]||0)+h;AC[t.cat]=(AC[t.cat]||0)+h})}
+  return{P,A,PC,AC}}
+function revHTML(W){const{P,A,PC,AC}=planAct(W);const T=today();const past=W<=T;if(!past)return'';const el=Math.min(7,Math.round((parseD(T)-parseD(W))/864e5)+1);const fr=el/7;
+  const R=SCORE.map(([k,l])=>({k,l,p:Math.round((P[k]||0)*fr*10)/10,a:Math.round((A[k]||0)*10)/10})).filter(x=>x.p||x.a);R.forEach(x=>x.d=Math.round((x.a-x.p)*10)/10);
+  const top=R.slice().sort((a,b)=>Math.abs(b.d)-Math.abs(a.d)).filter(x=>Math.abs(x.d)>=1).slice(0,4);
+  const cats=Object.keys({...PC,...AC}).map(c=>({c,p:PC[c]||0,a:Math.round((AC[c]||0)/fr)})).filter(x=>x.p&&x.a>0&&el>=3&&Math.abs(x.a-x.p)>=3).sort((a,b)=>Math.abs(b.a-b.p)-Math.abs(a.a-a.p)).slice(0,3);
+  const per=perOf('w',W),nper=perOf('w',addD(W,7));const G=goalsAt('w',per).filter(g=>{try{return prog(g)<1&&!g.done}catch(e){return false}});const NG=goalsAt('w',nper).map(g=>g.title);
+  const rep=(Array.isArray(SET.mk)?SET.mk:[]).filter(o=>o.date>=W&&o.date<=addD(W,6)).length;
+  return`<div class="glrev"><b>📊 계획 ↔ 실제</b> <small class="glsm">${el<7?`${el}일째 · 계획은 ${el}일치로 비례`:'한 주 전체'}</small>${top.length?top.map(x=>`<div class="glr"><span>${AREA_E[x.k]||''} ${esc(x.l)}</span><small>계획 ${x.p}h → 실제 ${x.a}h</small><i class="${x.d>0?'up':'dn'}">${x.d>0?'+':''}${x.d}h</i></div>`).join(''):'<p class="hint">계획과 실제가 크게 다른 기둥이 없습니다(1시간 미만).</p>'}
+   <b style="margin-top:8px;display:block">🔧 다음 주 조정</b>
+   ${cats.map(x=>`<button type="button" class="crqc" data-gladj="${esc(x.c)}|${x.a}">${esc(x.c)} 주간 시간 ${x.p}h → ${x.a}h로${el<7?' (예상)':''}</button>`).join('')}
+   ${G.map(g=>NG.includes(g.title)?`<span class="crqc ok">✓ ${esc(g.title)} 다음 주에 있음</span>`:`<button type="button" class="crqc" data-glcarry="${g.id}|${nper}">↪ ${esc(g.title)} (${Math.round(prog(g)*100)}%) 다음 주로</button>`).join('')}
+   ${!cats.length&&!G.length?'<p class="hint">조정할 시간·이어갈 목표가 없습니다.</p>':''}${rep?`<p class="hint">🧩 이번 주 실수 기록 ${rep}건 — 노트 › 실수에서 다음엔을 점검하십시오.</p>`:''}</div>`}
+function revPaint(){try{document.querySelectorAll('#wkcard').forEach(C=>{const ln=C.querySelector('#wkcline');const old=C.querySelector('.glrev');if(!ln){if(old)old.remove();return}const W=weekOf();const h=revHTML(W);if(old&&old._h===h)return;if(old)old.remove();if(!h)return;const T=document.createElement('template');T.innerHTML=h;const el=T.content.firstElementChild;el._h=h;const lab=ln.closest('label')||ln;lab.before(el)})}catch(e){console.warn('glrev',e)}}
+DECO.add('주간 계획↔실제',{root:'body',deep:true,wait:250,run:revPaint,now:true});
+document.addEventListener('click',e=>{const t=e.target;if(!t.closest)return;let b;
+  if(b=t.closest('[data-gladj]')){e.preventDefault();e.stopPropagation();const[c,h]=b.dataset.gladj.split('|');SET.w168=SET.w168||{};SET.w168[c]=+h;saveSet().catch(()=>{});toast(`⏳ ${c} 주간 시간 ${h}h로 조정`);try{w168Paint()}catch(_){}gReRender();return}
+  if(b=t.closest('[data-glcarry]')){e.preventDefault();e.stopPropagation();const[id,np]=b.dataset.glcarry.split('|');const g=GOALS.list.find(x=>x.id===id);if(!g)return;const n=JSON.parse(JSON.stringify(g));n.id=uid();n.per=np;n.tasks=(g.tasks||[]).filter(x=>!x.done).map(x=>({...x,id:uid()}));delete n.done;delete n.doneAt;n.from=g.id;GOALS.list.push(n);saveGoalsSoon();toast(`↪ 다음 주 목표: ${g.title}`);gReRender();return}},true);
+/* ④ 실수 → 역코딩 항목 · 시작 탭 다짐 */
+document.addEventListener('click',async e=>{const b=e.target.closest&&e.target.closest('[data-mkx]');if(!b)return;e.preventDefault();e.stopPropagation();const[a,id]=b.dataset.mkx.split('|');const o=(SET.mk||[]).find(x=>x.id===id);if(!o)return;
+  if(a==='rev'){const k=o.k||'mind';const n=o.t.slice(0,20);if(crAddItem(k,n)){const L=crAll()[k];const it=L[L.length-1];it.rev=true;it.w=it.w||10;o.revId=it.id;saveSet().catch(()=>{});toast(`⚠ ${areaName(k)}에 역코딩 항목 ‘${n}’ 추가`)}else toast('이미 있는 항목입니다')}
+  else if(a==='pin'){o.pin=!o.pin;saveSet().catch(()=>{});toast(o.pin?'📌 시작 탭에 띄웁니다':'📌 내렸습니다')}
+  try{mkDrawPublic&&mkDrawPublic()}catch(_){}try{renderNotes()}catch(_){}},true);
+/* 실수 항목 펼침에 버튼 넣기 */
+const mkObs=new MutationObserver(()=>{document.querySelectorAll('.mki .mka').forEach(A=>{if(A.querySelector('[data-mkx]'))return;const id=(A.closest('.mki')||{}).dataset.mki;const o=(SET.mk||[]).find(x=>x.id===id);if(!o)return;A.insertAdjacentHTML('afterbegin',`<button type="button" data-mkx="rev|${id}">${o.revId?'⚠ 역코딩 항목 있음':'⚠ 역코딩 항목으로'}</button><button type="button" data-mkx="pin|${id}">${o.pin?'📌 다짐 내리기':'📌 시작 탭 다짐으로'}</button>`)})});
+mkObs.observe(document.body,{childList:true,subtree:true});
+function pinHTML(){const L=(Array.isArray(SET.mk)?SET.mk:[]).filter(o=>!o.ok&&(o.pin||(o.r||[]).length>=1)).slice(-3);if(!L.length)return'';return`<div class="glpin"><b>⚠ 되풀이 주의</b>${L.map(o=>`<p>${esc(o.t)}${o.l?` → <em>${esc(o.l)}</em>`:''}${(o.r||[]).length?` <small>×${o.r.length+1}</small>`:''}</p>`).join('')}</div>`}
+const _ct=crTabsHTML;crTabsHTML=function(T,hr,body){let h=_ct.apply(this,arguments);try{if(crTabNow(T,hr)==='s')h+=pinHTML()}catch(e){}return h};
+/* ⑤ 정렬 점검표 */
+function alignHTML(){const T=today(),W=mondayOf(T);const{P,A}=planAct(W);const V=((GOALS.vis||{}).pboard)||{};
+  const pers={y:perOf('y',T),q:perOf('q',T),m:perOf('m',T),w:perOf('w',T)};
+  const sc=k=>{let s=0,n=0;for(let i=0;i<7;i++){const o=dayO(addD(T,-i));const v=o&&o.score&&+o.score[k];if(v){s+=v;n++}}return n?Math.round(s/n*10)/10:null};
+  const rows=SCORE.map(([k,l])=>{const vis=tx(V[k])||GOALS.list.some(g=>(g.lv==='S'||String(g.lv).startsWith('L'))&&(g.area===k));const gs=GOALS.list.filter(g=>g.area===k&&Object.entries(pers).some(([lv,p])=>g.lv===lv&&g.per===p)).length;const p=Math.round(P[k]||0),a=Math.round((A[k]||0)*10)/10,s=sc(k);
+    const cell=(ok,t)=>`<td class="${ok?'':'gx'}">${t}</td>`;return`<tr><th>${AREA_E[k]||''} ${esc(l)}</th>${cell(vis,vis?'✓':'—')}${cell(gs,gs||'—')}${cell(p,p?p+'h':'—')}${cell(a,a?a+'h':'—')}${cell(s!=null,s!=null?s:'—')}</tr>`}).join('');
+  return`<details class="glal" ${LS('gj-glal')==='0'?'':'open'}><summary>🧭 정렬 점검 <small>비전 → 목표 → 계획 → 실행 → 평가</small></summary><table><thead><tr><th></th><th>비전</th><th>목표</th><th>계획</th><th>실제</th><th>점수</th></tr></thead><tbody>${rows}</tbody></table><p class="hint">목표는 올해·분기·이달·이번 주 목표 수, 계획은 주간 시간, 실제는 이번 주 실행 시간, 점수는 최근 7일 평균입니다. 빨간 칸이 끊긴 고리입니다.</p></details>`}
+window.alignHTML=alignHTML;
+function alignPaint(){try{const R=document.getElementById('glist');if(!R||curSection!=='goal')return;const old=R.querySelector(':scope>.glal');const h=alignHTML();if(old&&old._h===h)return;if(old)old.remove();const T=document.createElement('template');T.innerHTML=h;const el=T.content.firstElementChild;el._h=h;el.addEventListener('toggle',()=>LS('gj-glal',el.open?'1':'0'));R.prepend(el)}catch(e){console.warn('glal',e)}
+  try{document.querySelectorAll('#wkcard .glrev').forEach(G=>{if(G.querySelector('.glal'))return;G.insertAdjacentHTML('beforeend',alignHTML())})}catch(e){}}
+DECO.add('정렬 점검',{root:'body',deep:true,wait:300,run:alignPaint,now:true});
+const st=document.createElement('style');st.textContent=`.gam{margin-top:4px}.glrev{border:1px solid var(--line);border-radius:10px;padding:10px;margin:10px 0;background:var(--paper)}.glrev>b{font-size:.86rem}.glsm{color:var(--muted);font-size:.72rem;font-weight:400}.glr{display:flex;align-items:center;gap:8px;font-size:.82rem;padding:3px 0}.glr span{flex:1;min-width:0}.glr small{color:var(--muted)}.glr i{font-style:normal;font-weight:700;min-width:3.4em;text-align:right}.glr i.up{color:#c0392b}.glr i.dn{color:#2e6bc0}.glrev .crqc{font-size:.76rem;padding:3px 8px;min-height:28px;margin:3px 3px 0 0}.glpin{margin-top:10px;padding:8px 10px;border-left:3px solid #c0392b;background:color-mix(in srgb,#c0392b 6%,transparent);border-radius:0 8px 8px 0}.glpin b{font-size:.84rem}.glpin p{margin:3px 0;font-size:.82rem}.glpin em{font-style:normal;color:var(--muted)}.glal{border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin:0 0 10px;background:var(--paper)}.glal>summary{cursor:pointer;font-weight:700;font-size:.9rem;list-style:none;display:flex;gap:6px;align-items:baseline}.glal>summary::-webkit-details-marker{display:none}.glal>summary small{color:var(--muted);font-weight:400;font-size:.72rem}.glal table{width:100%;border-collapse:collapse;margin-top:6px;font-size:.78rem}.glal th,.glal td{padding:4px 2px;text-align:center;border-bottom:1px solid var(--line);white-space:nowrap}.glal tbody th{text-align:left;font-weight:600}.glal td.gx{color:#c0392b;background:color-mix(in srgb,#c0392b 7%,transparent)}`;document.head.appendChild(st);
 })();
 </script>
 </body></html>
